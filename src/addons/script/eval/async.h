@@ -8,13 +8,6 @@
 
 #ifdef FLECS_SCRIPT_ASYNC
 
-typedef enum flecs_script_future_state_t {
-    FlecsScriptFuturePending,
-    FlecsScriptFutureResolved,
-    FlecsScriptFutureRejected,
-    FlecsScriptFutureCancelled
-} flecs_script_future_state_t;
-
 struct ecs_script_future_t {
     ecs_entity_t type;
     ecs_value_t value;
@@ -26,19 +19,29 @@ struct ecs_script_future_t {
     ecs_function_ctx_t function_ctx;
     ecs_os_mutex_t mutex;
     int32_t refs;
-    flecs_script_future_state_t state;
+    ecs_script_future_status_t status;
 };
 
-ecs_script_future_t* flecs_script_future_start(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_entity_t type,
-    ecs_function_calldata_t *calldata,
-    int32_t argc,
-    ecs_value_t *argv);
+ecs_expr_function_t* flecs_script_await_call(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_node_t *stmt,
+    ecs_expr_node_t *expr);
 
-flecs_script_future_state_t flecs_script_future_poll(
-    const ecs_script_future_t *future);
+/* Create a future and invoke the async function callback. The future is
+ * returned with two references: one for the caller and one for the callback. */
+ecs_script_future_t* flecs_script_future_launch(
+    ecs_world_t *world,
+    const ecs_function_calldata_t *calldata,
+    ecs_entity_t type,
+    ecs_entity_t entity,
+    int32_t argc,
+    const ecs_value_t *argv);
+
+void flecs_script_await_launch(
+    ecs_world_t *world,
+    flecs_script_async_state_t *async,
+    const ecs_expr_function_t *call,
+    ecs_value_t *argv);
 
 /* Async statement evaluation, invoked by the script runner */
 
@@ -52,9 +55,9 @@ bool flecs_script_try_catch(
     ecs_script_runner_t *r,
     flecs_script_frame_t *frame);
 
-int32_t flecs_script_find_catch(
+int32_t flecs_script_catch(
     ecs_script_eval_visitor_t *v,
-    const flecs_script_async_state_t *state,
+    flecs_script_async_state_t *state,
     const ecs_script_try_t *node);
 
 int flecs_script_await_poll(

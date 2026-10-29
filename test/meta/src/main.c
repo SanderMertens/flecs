@@ -210,6 +210,8 @@ void StructTypes_use_before_registering_reflection(void);
 void StructTypes_use_before_registering_reflection_w_hooks(void);
 void StructTypes_redefine_same_members_in_use(void);
 void StructTypes_redefine_member_after_nested_type_changed(void);
+void StructTypes_struct_wo_members(void);
+void StructTypes_struct_wo_members_add_member(void);
 
 // Testsuite 'NestedStructTypes'
 void NestedStructTypes_1_bool(void);
@@ -1333,6 +1335,8 @@ void MetaUtils_struct_w_overflow_array_size(void);
 void MetaUtils_struct_w_array_size_error_no_leak(void);
 void MetaUtils_struct_w_zero_array_size(void);
 void MetaUtils_struct_w_numeric_array_size(void);
+void MetaUtils_struct_w_32_members(void);
+void MetaUtils_struct_w_64_members(void);
 
 // Testsuite 'OpaqueTypes'
 void OpaqueTypes_ser_i32_type_to_json(void);
@@ -1417,6 +1421,9 @@ void StructInheritance_cursor_set_value_derived(void);
 void StructInheritance_cursor_set_value_derived_member(void);
 void StructInheritance_cursor_set_value_base_to_derived_fails(void);
 void StructInheritance_cursor_set_value_unrelated_fails(void);
+void StructInheritance_empty_base(void);
+void StructInheritance_empty_base_empty_derived(void);
+void StructInheritance_empty_base_add_member(void);
 
 // Testsuite 'Misc'
 void Misc_primitive_from_stage(void);
@@ -2323,6 +2330,14 @@ bake_test_case StructTypes_testcases[] = {
     {
         "redefine_member_after_nested_type_changed",
         StructTypes_redefine_member_after_nested_type_changed
+    },
+    {
+        "struct_wo_members",
+        StructTypes_struct_wo_members
+    },
+    {
+        "struct_wo_members_add_member",
+        StructTypes_struct_wo_members_add_member
     }
 };
 
@@ -6740,6 +6755,14 @@ bake_test_case MetaUtils_testcases[] = {
     {
         "struct_w_numeric_array_size",
         MetaUtils_struct_w_numeric_array_size
+    },
+    {
+        "struct_w_32_members",
+        MetaUtils_struct_w_32_members
+    },
+    {
+        "struct_w_64_members",
+        MetaUtils_struct_w_64_members
     }
 };
 
@@ -7066,6 +7089,18 @@ bake_test_case StructInheritance_testcases[] = {
     {
         "cursor_set_value_unrelated_fails",
         StructInheritance_cursor_set_value_unrelated_fails
+    },
+    {
+        "empty_base",
+        StructInheritance_empty_base
+    },
+    {
+        "empty_base_empty_derived",
+        StructInheritance_empty_base_empty_derived
+    },
+    {
+        "empty_base_add_member",
+        StructInheritance_empty_base_add_member
     }
 };
 
@@ -7566,7 +7601,7 @@ static bake_test_suite suites[] = {
         "StructTypes",
         NULL,
         NULL,
-        40,
+        42,
         StructTypes_testcases
     },
     {
@@ -7671,7 +7706,7 @@ static bake_test_suite suites[] = {
         "MetaUtils",
         NULL,
         NULL,
-        33,
+        35,
         MetaUtils_testcases
     },
     {
@@ -7685,7 +7720,7 @@ static bake_test_suite suites[] = {
         "StructInheritance",
         NULL,
         NULL,
-        49,
+        52,
         StructInheritance_testcases
     },
     {

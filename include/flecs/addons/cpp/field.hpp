@@ -108,6 +108,40 @@ protected:
     bool is_shared_;
 };
 
+/** Wrapper class around a field matched through component inheritance.
+ *
+ * Same interface as field, but uses a runtime stride so it can iterate a field
+ * whose stored (derived) component is larger than T. Unlike field, this does
+ * not assert when the matched id is a subtype of T.
+ *
+ * @tparam T Base component type of the field.
+ *
+ * @ingroup cpp_iterator
+ */
+template <typename T>
+struct base_field {
+    static_assert(std::is_empty<T>::value == false,
+        "invalid type for field, cannot iterate empty type");
+
+    base_field(T* array, size_t stride, size_t count, bool is_shared = false)
+        : data_(array)
+        , stride_(stride)
+        , count_(count)
+        , is_shared_(is_shared) {}
+
+    base_field(iter &iter, int field);
+
+    T& operator[](size_t index) const;
+    T& operator*() const;
+    T* operator->() const;
+
+protected:
+    T* data_;
+    size_t stride_;
+    size_t count_;
+    bool is_shared_;
+};
+
 } // namespace flecs
 
 /** @} */

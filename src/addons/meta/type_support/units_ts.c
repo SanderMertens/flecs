@@ -94,6 +94,7 @@ static bool flecs_unit_validate(
                 ecs_get_name(world, t));
             goto error;
         }
+
         if (!ecs_has(world, over, EcsUnit)) {
             ecs_err("entity '%s' for unit '%s' used as over is not a unit",
                 ecs_get_name(world, over), ecs_get_name(world, t));
@@ -107,6 +108,7 @@ static bool flecs_unit_validate(
                 ecs_get_name(world, t));
             goto error;
         }
+
         const EcsUnitPrefix *prefix_ptr = ecs_get(world, prefix, EcsUnitPrefix);
         if (!prefix_ptr) {
             ecs_err("entity '%s' for unit '%s' used as prefix is not a prefix",
@@ -170,6 +172,7 @@ static bool flecs_unit_validate(
                 goto error;
             }
         }
+
         if (!symbol && derived_symbol && (prefix || over)) {
             ecs_os_free(data->symbol);
             data->symbol = derived_symbol;
@@ -202,18 +205,17 @@ static void flecs_set_unit(ecs_iter_t *it) {
 }
 
 static void flecs_unit_quantity_monitor(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
 
     int i, count = it->count;
     if (it->event == EcsOnAdd) {
         for (i = 0; i < count; i ++) {
             ecs_entity_t e = it->entities[i];
-            ecs_add_pair(world, e, EcsQuantity, e);
+            ecs_add_pair(it->stage, e, EcsQuantity, e);
         }
     } else {
         for (i = 0; i < count; i ++) {
             ecs_entity_t e = it->entities[i];
-            ecs_remove_pair(world, e, EcsQuantity, e);
+            ecs_remove_pair(it->stage, e, EcsQuantity, e);
         }
     }
 }

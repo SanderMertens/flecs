@@ -1978,7 +1978,9 @@ Entity e = world.obtainEntity(world.entity()).set(new TimeOfDay(0));
 </ul>
 </div>
 
-Observers may match terms on multiple different sources. However, when an observer matches components both on the `$this` source (default) and on a fixed source, the fixed source terms will not match events. The reason for this is that otherwise emitting an event for a fixed source term would mean iterating all matching entities for the `$this` term. If an observer only has fixed source terms, events will be matched for each of the terms.
+Observers may match terms on multiple different sources. When an observer matches components both on the `$this` source (default) and on a fixed source (this includes singletons), an event for a fixed source term invokes the observer for all entities that match the `$this` terms. This means that emitting an event for a fixed source term iterates all matching entities for the `$this` terms. If an observer only has fixed source terms, events will be matched for each of the terms.
+
+To prevent this behavior, add `EcsInOutFilter` to the fixed source term which will prevent it from producing events (see Filter Terms).
 
 ## Event Propagation
 When an observer has a query that uses (up) relationship traversal, events are propagated along the relationship edge. For example, when an observer requests component `Position` from a parent entity, setting `Position` on the parent will propagate an `OnSet` event along the `ChildOf` edge, notifying all child entities of the parent. 
@@ -2588,7 +2590,7 @@ widget.emit(Resize.class, new Resize(100, 200));
 </div>
 
 ### Enqueue vs. Emit
-Events can be emitted with either the `emit` or `enqueue` operation. The `emit` operation invokes observers directly, whereas `enqueue` will enqueue the event in the command queue if the world is in deferred mode. When the world is not in deferred mode, `enqueue` defaults to the behavior of `emit`.
+Events can be emitted with either the `emit` or `enqueue` operation. The `emit` operation invokes observers directly, whereas `enqueue` adds the event to the command queue when passed a stage. When passed the actual world, `enqueue` behaves like `emit`.
 
 When `enqueue` adds an event to the command queue, the event data is copied in, meaning that the application does not need to keep the event data alive. This is done using the regular `copy` hook that can be registered using `ecs_set_hooks`. In C++ the copy assignment operator is used. Note that as a result, for an event with data to be enqueued in C++, the type has to be copyable. If no copy hook is registered, the behavior defaults to a `memcpy`.
 
@@ -2611,10 +2613,10 @@ ecs_observer(world, {
 // Observer is invoked as part of operation
 ecs_set(world, e, Position, {10, 20});
 
-ecs_defer_begin(world);
-ecs_add(world, e, Position, {30, 40});
+ecs_world_t *stage = ecs_get_stage(world, 0);
+ecs_set(stage, e, Position, {30, 40});
 // Operation is delayed until here, observer is also invoked here
-ecs_defer_end(world);
+ecs_merge(stage);
 ```
 
 </li>
@@ -2630,10 +2632,10 @@ world.observer<Position>()
 // Observer is invoked as part of operation
 e.set(Position{10, 20});
 
-world.defer_begin();
-e.set(Position{20, 30});
+auto stage = world.get_stage(0);
+e.mut(stage).set(Position{20, 30});
 // Operation is delayed until here, observer is also invoked here
-world.defer_end();
+stage.merge();
 ```
 
 </li>
@@ -2650,10 +2652,6 @@ world.Observer<Position>()
 // Observer is invoked as part of operation
 e.Set(new Position(10, 20));
 
-world.DeferBegin();
-e.Set(new Position(20, 30));
-// Operation is delayed until here, observer is also invoked here
-world.DeferEnd();
 ```
 
 </li>
@@ -2669,10 +2667,6 @@ world
 // Observer is invoked as part of operation
 e.set(Position { x: 10.0, y: 20.0 });
 
-world.defer_begin();
-e.set(Position { x: 20.0, y: 30.0 });
-// Operation is delayed until here, observer is also invoked here
-world.defer_end();
 ```
 
 </li>

@@ -27,13 +27,8 @@ ecs_entity_t flecs_get_prefab_instance_child(
 void flecs_tree_spawner_assert_not_instantiated(
     ecs_world_t *world,
     ecs_entity_t parent);
-void flecs_prefab_assert_not_instantiated(
-    ecs_world_t *world,
-    ecs_entity_t prefab,
-    const ecs_table_diff_t *diff);
 #else
 #define flecs_tree_spawner_assert_not_instantiated(world, parent)
-#define flecs_prefab_assert_not_instantiated(world, prefab, diff)
 #endif
 
 /* Called during bootstrap to register spawner entities with the world. */
@@ -77,9 +72,15 @@ void flecs_spawner_instantiate(
     ecs_entity_t instance,
     const ecs_instantiate_ctx_t *ctx);
 
+void flecs_tree_spawner_fini(
+    ecs_world_t *world,
+    ecs_entity_t parent);
+
 void EcsTreeSpawner_free(
     EcsTreeSpawner *ptr);
 
+#else
+#define flecs_tree_spawner_fini(world, parent)
 #endif
 
 

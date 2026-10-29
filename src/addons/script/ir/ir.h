@@ -61,14 +61,14 @@ typedef enum ecs_script_ir_op_kind_t {
     EcsIrBinary,
     EcsIrBinaryI8,
     EcsIrBinaryI16,
+    EcsIrBinaryI32,
+    EcsIrBinaryI64,
     EcsIrBinaryU8,
     EcsIrBinaryU16,
     EcsIrBinaryU32,
     EcsIrBinaryU64,
-    EcsIrBinaryI64,
-    EcsIrBinaryI32,
-    EcsIrBinaryF64,
     EcsIrBinaryF32,
+    EcsIrBinaryF64,
     EcsIrJumpIfFalse,
     EcsIrJumpIfTrue,
     EcsIrCast,
@@ -77,7 +77,6 @@ typedef enum ecs_script_ir_op_kind_t {
     EcsIrInitAlloc,
     EcsIrInitConst,
     EcsIrInitAssign,
-    EcsIrInitOp,
     EcsIrInitSwizzle,
     EcsIrDynBegin,
     EcsIrDynPush,
@@ -99,6 +98,8 @@ typedef enum ecs_script_ir_op_kind_t {
     EcsIrRange,
     EcsIrNew,
     EcsIrScript,
+    EcsIrTemplateRef,
+    EcsIrTemplateRefValue,
     EcsIrToBool,
     EcsIrReturn,
     EcsIrOpKindLast
@@ -111,13 +112,17 @@ typedef enum ecs_script_ir_op_kind_t {
 #define EcsIrIdDirect        (1u << 1)
 #define EcsIrInPlace         (1u << 0)
 #define EcsIrCallMethod      (1u << 1)
-#define EcsIrAwaitMethod     (1u << 0)
 #define EcsIrAwaitVar        (1u << 1)
 #define EcsIrAnnotNoTarget   (1u << 0)
 #define EcsIrAnnotBadTarget  (1u << 1)
 #define EcsIrComponentPartial   (1u << 2)
+#define EcsIrTemplateRefVar  (1u << 1)
 #define EcsIrElementMap      (1u << 0)
 #define EcsIrElementVector   (1u << 1)
+#define EcsIrEndsExpr        (1u << 0)
+#define EcsIrVisitorStatic   (1u << 0)
+#define EcsIrGlobalMut       (1u << 0)
+#define EcsIrBinaryInPlace   (1u << 15)
 
 typedef enum ecs_script_ir_profile_stat_t {
     EcsIrProfileRun,
@@ -135,15 +140,6 @@ typedef enum ecs_script_ir_profile_stat_t {
 const char* flecs_script_ir_op_name(
     ecs_script_ir_op_kind_t kind);
 
-typedef enum ecs_script_ir_num_class_t {
-    EcsIrNumNone,
-    EcsIrNumSigned,
-    EcsIrNumUnsigned,
-    EcsIrNumFloat
-} ecs_script_ir_num_class_t;
-
-typedef void (*ecs_script_ir_cast_t)(void *dst, const void *src);
-
 typedef struct ecs_script_ir_op_t {
     uint16_t kind;
     uint16_t flags;
@@ -158,17 +154,17 @@ typedef struct ecs_script_ir_op_t {
         ecs_entity_t entity;
         void *ptr;
         const char *str;
-        ecs_script_ir_cast_t cast;
+        flecs_expr_cast_t cast;
     } imm;
     const void *node;
 } ecs_script_ir_op_t;
 
 typedef struct ecs_script_ir_id_t {
+    const ecs_script_id_t *id;
     ecs_id_t eval;
     ecs_id_t flag;
     ecs_entity_t first_eval;
     ecs_entity_t second_eval;
-    ecs_entity_t interface;
     const char *first;
     const char *second;
     const ecs_type_info_t *ti;
@@ -178,7 +174,7 @@ typedef struct ecs_script_ir_id_t {
     int32_t second_sp;
     int32_t first_reg;
     int32_t second_reg;
-    int32_t value_sp;
+    int32_t index_reg;
     int32_t component_slot;
     ecs_id_t cache_id;
     const ecs_type_info_t *cache_ti;
@@ -253,10 +249,8 @@ typedef struct ecs_script_ir_frame_t {
         } if_;
         struct {
             flecs_script_for_state_t state;
-            int32_t var_count;
             int32_t vscratch_top;
             int32_t vheap_count;
-            int32_t var_index[3];
         } for_;
         struct {
             int32_t scratch_top;
@@ -302,6 +296,7 @@ typedef struct ecs_script_ir_vm_t {
     ecs_vec_t cursors;
     ecs_vec_t pending_marks;
     ecs_entity_t last_entity;
+    ecs_value_t *result;
     bool cond;
     bool dirty;
     bool can_suspend;
@@ -330,14 +325,6 @@ void flecs_script_ir_vm_fini(
     ecs_script_ir_vm_t *vm,
     const ecs_script_eval_desc_t *desc);
 
-ecs_script_ir_vm_t* flecs_script_ir_vm_new(
-    ecs_script_impl_t *script,
-    const ecs_script_eval_desc_t *desc);
-
-void flecs_script_ir_vm_free(
-    ecs_script_ir_vm_t *vm,
-    const ecs_script_eval_desc_t *desc);
-
 void flecs_script_ir_vm_pool_fini(
     ecs_script_runtime_t *r);
 
@@ -354,14 +341,10 @@ flecs_script_run_status_t flecs_script_ir_vm_resume(
 const char* flecs_script_ir_vm_stmt_pos(
     const ecs_script_ir_vm_t *vm);
 
-int flecs_script_ir_eval_root(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_impl_t *script);
-
-int flecs_script_ir_eval_template(
+int flecs_script_ir_eval(
     ecs_script_eval_visitor_t *v,
     ecs_script_impl_t *script,
-    ecs_script_template_t *template);
+    const ecs_script_node_t *node);
 
 void flecs_script_ir_call_function(
     const ecs_function_ctx_t *ctx,

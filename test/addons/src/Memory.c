@@ -247,24 +247,24 @@ void Memory_commands_memory(void) {
     test_assert(mem.bytes_commands >= 0);
 
     /* Create deferred operations to test command memory usage */
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     
     /* Create multiple entities with components to generate commands */
     for (int i = 0; i < 10; i++) {
-        ecs_entity_t e = ecs_new(world);
-        ecs_set(world, e, Position, {i * 10.0f, i * 20.0f});
-        ecs_add(world, e, Velocity);
+        ecs_entity_t e = ecs_new(stage_1);
+        ecs_set(stage_1, e, Position, {i * 10.0f, i * 20.0f});
+        ecs_add(stage_1, e, Velocity);
         
         /* Create unique name for each entity */
         char name[32];
         sprintf(name, "TestEntity_%d", i);
-        ecs_set_name(world, e, name);
+        ecs_set_name(stage_1, e, name);
     }
     
     /* Add some more complex operations */
-    ecs_entity_t e1 = ecs_new(world);
-    ecs_entity_t e2 = ecs_new(world);
-    ecs_add_pair(world, e1, EcsChildOf, e2);
+    ecs_entity_t e1 = ecs_new(stage_1);
+    ecs_entity_t e2 = ecs_new(stage_1);
+    ecs_add_pair(stage_1, e1, EcsChildOf, e2);
     
     /* Get memory statistics while deferred (should show increased usage) */
     mem = ecs_misc_memory_get(world);
@@ -272,7 +272,7 @@ void Memory_commands_memory(void) {
     test_assert(mem.bytes_commands >= initial_commands); /* Should have command queue data */
     test_assert(mem.bytes_commands > initial_commands);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     
     /* Get statistics after flush - some memory might be retained for reuse */
     mem = ecs_misc_memory_get(world);
@@ -280,17 +280,15 @@ void Memory_commands_memory(void) {
     test_assert(mem.bytes_commands >= 0);
 
     /* Test with multiple defer levels */
-    ecs_defer_begin(world);
-    ecs_defer_begin(world);
+    ecs_world_t *stage_2 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     
-    ecs_entity_t nested_e = ecs_new(world);
-    ecs_set(world, nested_e, Position, {100.0f, 200.0f});
+    ecs_entity_t nested_e = ecs_new(stage_2);
+    ecs_set(stage_2, nested_e, Position, {100.0f, 200.0f});
     
-    mem = ecs_misc_memory_get(world);
+    mem = ecs_misc_memory_get(stage_2);
     test_assert(mem.bytes_commands >= 0);
     
-    ecs_defer_end(world);
-    ecs_defer_end(world);
+    ecs_merge(stage_2);
 
     ecs_fini(world);
 }
@@ -457,6 +455,92 @@ void Memory_sparse_tag_memory(void) {
         ecs_component_memory_t mem = ecs_component_memory_get(world);
         test_assert(mem.bytes_sparse_components > 0);
     }
+
+    ecs_fini(world);
+}
+
+void Memory_root_table_memory(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_table_memory_t before = ecs_tables_memory_get(world);
+
+    for (int i = 0; i < 1000; i++) {
+        ecs_new(world);
+    }
+
+    ecs_table_memory_t after = ecs_tables_memory_get(world);
+    test_assert(after.count == before.count);
+    test_assert(after.bytes_entities > before.bytes_entities);
+    test_assert(after.bytes_entities >= 1000 * ECS_SIZEOF(ecs_entity_t));
+
+    ecs_fini(world);
+}
+
+void Memory_toggle_bitset_memory(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsCanToggle);
+
+    ecs_component_memory_t before = ecs_component_memory_get(world);
+
+    for (int i = 0; i < 10; i++) {
+        ecs_entity_t e = ecs_new_w(world, Position);
+        ecs_enable_component(world, e, Position, true);
+    }
+
+    ecs_component_memory_t after = ecs_component_memory_get(world);
+    test_assert(after.bytes_toggle_bitsets >= before.bytes_toggle_bitsets +
+        ECS_SIZEOF(void*) + 2 * ECS_SIZEOF(int32_t) + ECS_SIZEOF(uint64_t));
+
+    ecs_fini(world);
+}
+
+static void Memory_dummy_observer(ecs_iter_t *it) {
+    (void)it;
+}
+
+void Memory_wildcard_observer_memory(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_misc_memory_t before = ecs_misc_memory_get(world);
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = EcsWildcard }},
+        .events = { EcsOnAdd },
+        .callback = Memory_dummy_observer
+    });
+
+    ecs_misc_memory_t after = ecs_misc_memory_get(world);
+    test_assert(after.bytes_observers > before.bytes_observers);
+
+    ecs_fini(world);
+}
+
+void Memory_entity_range_memory(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entities_memory_t before = ecs_entity_memory_get(world);
+
+    ecs_entity_range_new(world, 5000, 0);
+
+    ecs_entities_memory_t after = ecs_entity_memory_get(world);
+    test_assert(after.bytes_entity_index > before.bytes_entity_index);
+
+    ecs_fini(world);
+}
+
+void Memory_world_memory_collection_time(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsStats);
+
+    EcsWorldMemory value = {0};
+    char *json = ecs_ptr_to_json(world, ecs_id(EcsWorldMemory), &value);
+    test_assert(json != NULL);
+    test_assert(strstr(json, "\"collection_time\":") != NULL);
+    test_assert(strstr(json, "\"bytes_toggle_bitsets\":") != NULL);
+    ecs_os_free(json);
 
     ecs_fini(world);
 }

@@ -31,11 +31,13 @@ typedef struct ecs_script_eval_visitor_t {
     uint64_t input;
     uint64_t internal;
     ecs_script_state_t *state;
+    ecs_vec_t *run_refs;
     int32_t symbol_offset;
     int32_t visit;
     int32_t scope_slot;
     int32_t for_slot;
     bool force;
+    const ecs_script_template_ref_t *id_ref;
 } ecs_script_eval_visitor_t;
 
 int flecs_script_eval(
@@ -54,15 +56,6 @@ typedef struct flecs_script_scope_state_t {
     int32_t scope_slot;
 } flecs_script_scope_state_t;
 
-void flecs_script_eval_scope_enter(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_scope_t *node,
-    flecs_script_scope_state_t *state);
-
-void flecs_script_eval_scope_leave(
-    ecs_script_eval_visitor_t *v,
-    const flecs_script_scope_state_t *state);
-
 struct flecs_script_entity_state_t {
     ecs_script_entity_t *node;
     ecs_entity_t eval;
@@ -76,10 +69,23 @@ struct flecs_script_entity_state_t {
     bool created;
 };
 
+void flecs_script_scope_add_ids(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t entity,
+    ecs_script_scope_t *scope,
+    const ecs_id_t *ids,
+    int32_t count);
+
 FLECS_API
 int flecs_script_eval_entity_enter(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node,
+    flecs_script_entity_state_t *state);
+
+int flecs_script_eval_entity_enter_w_name(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_entity_t *node,
+    const ecs_value_t *name,
     flecs_script_entity_state_t *state);
 
 void flecs_script_eval_entity_leave(
@@ -109,11 +115,6 @@ typedef struct flecs_script_pair_scope_state_t {
     bool force;
 } flecs_script_pair_scope_state_t;
 
-int flecs_script_eval_pair_scope_enter(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_pair_scope_t *node,
-    flecs_script_pair_scope_state_t *state);
-
 void flecs_script_eval_pair_scope_leave(
     ecs_script_eval_visitor_t *v,
     const flecs_script_pair_scope_state_t *state);
@@ -127,9 +128,12 @@ typedef enum flecs_script_for_kind_t {
 
 typedef struct flecs_script_for_state_t {
     flecs_script_for_kind_t kind;
-    ecs_script_var_t *elem_var;
-    ecs_script_var_t *key_var;
-    ecs_script_var_t *index_var;
+    ecs_script_vars_t *vars;
+    int32_t var_base;
+    int32_t elem_var;
+    int32_t key_var;
+    int32_t index_var;
+    ecs_entity_t var_types[3];
     int32_t index;
     int32_t from;
     int32_t count;
@@ -199,6 +203,10 @@ flecs_script_run_status_t flecs_script_runner_run_scope(
     ecs_script_runner_t *r,
     ecs_script_scope_t *scope);
 
+int flecs_script_eval_run(
+    ecs_script_runner_t *r,
+    ecs_script_node_t *node);
+
 /* Evaluate an entity statement embedded in an expression, either in the
  * context of an in-progress evaluation (v != NULL) or standalone. */
 int flecs_script_eval_entity(
@@ -230,19 +238,29 @@ void flecs_script_eval_error_(
 #define flecs_script_eval_error(v, node, ...)\
     flecs_script_eval_error_(v, (const ecs_script_node_t*)node, __VA_ARGS__)
 
+void flecs_script_eval_warn_(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_node_t *node,
+    const char *fmt,
+    ...);
+
+#define flecs_script_eval_warn(v, node, ...)\
+    flecs_script_eval_warn_(v, (const ecs_script_node_t*)node, __VA_ARGS__)
+
 bool flecs_script_is_builtin(
     const ecs_world_t *world,
-    ecs_entity_t e);
-
-bool flecs_script_is_script_scope(
-    const ecs_world_t *world,
-    ecs_entity_t script,
     ecs_entity_t e);
 
 bool flecs_script_can_own_entity(
     const ecs_world_t *world,
     ecs_entity_t script,
     ecs_entity_t e);
+
+ecs_entity_t flecs_script_new_entity(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t parent,
+    const char *name,
+    bool non_fragmenting_parent);
 
 ecs_entity_t flecs_script_create_entity(
     ecs_script_eval_visitor_t *v,
@@ -252,6 +270,10 @@ const ecs_type_info_t* flecs_script_get_type_info(
     ecs_script_eval_visitor_t *v,
     const void *node,
     ecs_id_t id);
+
+ecs_expr_eval_desc_t flecs_script_expr_desc(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t type);
 
 int flecs_script_eval_expr(
     ecs_script_eval_visitor_t *v,
@@ -263,14 +285,99 @@ int flecs_script_assign_value(
     ecs_script_assign_t *node,
     const void *src);
 
+ecs_entity_t flecs_script_lookup_name(
+    ecs_script_eval_visitor_t *v,
+    const char *name);
+
 int flecs_script_eval_id_elem(
     ecs_script_eval_visitor_t *v,
-    void *node,
-    ecs_expr_node_t **name_expr,
+    const void *node,
+    const char *const *name,
     ecs_entity_t eval,
     int32_t slot,
     int32_t sp,
     ecs_entity_t *elem);
+
+int flecs_script_eval_id_resolve(
+    ecs_script_eval_visitor_t *v,
+    const void *node,
+    const ecs_script_id_t *id,
+    const char *first_name,
+    const char *second_name,
+    int32_t index,
+    ecs_id_t *out);
+
+int flecs_script_eval_interface_id(
+    ecs_script_eval_visitor_t *v,
+    const void *node,
+    const ecs_script_id_t *id,
+    ecs_id_t *out);
+
+int flecs_script_eval_tag_id(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_tag_t *node,
+    ecs_id_t id,
+    bool resolved);
+
+int flecs_script_eval_with_tag_id(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_tag_t *node,
+    ecs_id_t id);
+
+int flecs_script_eval_component_check(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_component_t *node,
+    ecs_id_t id,
+    bool resolved);
+
+int flecs_script_eval_partial_check(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_component_t *node,
+    ecs_id_t id,
+    bool check_released);
+
+int flecs_script_eval_component_visit(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_component_t *node,
+    ecs_id_t id,
+    const EcsScriptVisitor *visitor);
+
+int flecs_script_eval_component_add(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_component_t *node,
+    ecs_id_t id);
+
+int flecs_script_value_to_bool(
+    ecs_script_eval_visitor_t *v,
+    const void *node,
+    const ecs_value_t *value,
+    bool *out);
+
+bool flecs_script_stmt_support(
+    const ecs_script_node_t *node);
+
+static inline bool flecs_script_eval_force(
+    const ecs_script_eval_visitor_t *v,
+    const ecs_script_node_t *node,
+    bool prev)
+{
+    return prev || (node->direct_input & v->input) ||
+        (node->direct_internal & v->internal);
+}
+
+static inline void flecs_script_const_var_init(
+    ecs_script_var_t *var,
+    const ecs_type_info_t *ti,
+    ecs_entity_t type,
+    void *ptr,
+    bool owned)
+{
+    var->is_const = true;
+    var->type_info = ti;
+    var->value.type = type;
+    var->value.ptr = ptr;
+    var->owned = owned;
+}
 
 FLECS_API
 void flecs_script_eval_visit_init(
@@ -368,29 +475,25 @@ void flecs_script_eval_for_leave(
     ecs_script_eval_visitor_t *v,
     flecs_script_for_state_t *state);
 
-int flecs_script_for_collection_kind(
+void flecs_script_for_prepare(
     ecs_script_eval_visitor_t *v,
     ecs_script_for_t *node,
-    ecs_entity_t type,
-    flecs_script_for_kind_t *kind,
-    ecs_entity_t *key_type,
-    ecs_entity_t *elem_type);
+    flecs_script_for_state_t *state);
 
-int flecs_script_for_check_var_count(
+int flecs_script_for_init(
     ecs_script_eval_visitor_t *v,
     ecs_script_for_t *node,
-    flecs_script_for_kind_t kind);
+    flecs_script_for_state_t *state,
+    const ecs_value_t *collection);
 
-bool flecs_script_for_has_index_var(
-    flecs_script_for_kind_t kind,
-    int32_t loop_var_count);
-
-ecs_script_var_t* flecs_script_for_declare_var(
+int flecs_script_for_declare_vars(
     ecs_script_eval_visitor_t *v,
     ecs_script_for_t *node,
-    const char *name,
-    ecs_entity_t type,
-    bool alloc);
+    flecs_script_for_state_t *state,
+    bool alloc_elem);
+
+bool flecs_script_for_next(
+    flecs_script_for_state_t *state);
 
 /* Runtime bookkeeping helpers shared with the IR runtime */
 
@@ -402,16 +505,8 @@ void flecs_script_with_set_count(
     ecs_script_eval_visitor_t *v,
     int32_t count);
 
-int32_t flecs_script_symbol_runtime_slot(
-    const ecs_script_eval_visitor_t *v,
-    int32_t slot);
-
-void flecs_script_apply_with(
-    ecs_script_eval_visitor_t *v,
-    ecs_entity_t entity);
-
 ecs_entity_t flecs_script_get_src(
-    ecs_script_eval_visitor_t *v,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
 
@@ -424,15 +519,14 @@ void flecs_script_track_component(
     int32_t component_slot,
     ecs_id_t component);
 
-const ecs_script_var_t* flecs_script_template_prop_var(
-    ecs_script_eval_visitor_t *v,
-    const void *node,
-    int32_t sp,
-    ecs_id_t id);
-
 bool flecs_script_scope_visited(
     ecs_script_eval_visitor_t *v,
     int32_t slot);
+
+bool flecs_script_component_released(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t src,
+    ecs_id_t component);
 
 /* Functions shared between type and eval visitor */
 
@@ -455,5 +549,65 @@ int flecs_script_eval_const(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_node_t *node,
     bool export);
+
+int flecs_script_eval_pair_elem(
+    ecs_script_eval_visitor_t *v,
+    const void *node,
+    const char *const *name,
+    const char *str,
+    ecs_entity_t eval,
+    int32_t symbol,
+    int32_t sp,
+    ecs_entity_t *out);
+
+static inline FLECS_ALWAYS_INLINE int flecs_script_eval_pair_scope_enter(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_pair_scope_t *node,
+    const char *first_name,
+    const char *second_name,
+    flecs_script_pair_scope_state_t *state)
+{
+    const ecs_script_id_t *id = &node->id;
+    ecs_entity_t first, second;
+    if (flecs_script_eval_pair_elem(v, node,
+        id->first_expr ? &first_name : NULL, id->first, id->first_eval,
+        id->first_symbol, id->first_sp, &first))
+    {
+        return -1;
+    }
+
+    if (flecs_script_eval_pair_elem(v, node,
+        id->second_expr ? &second_name : NULL, id->second, id->second_eval,
+        id->second_symbol, id->second_sp, &second))
+    {
+        return -1;
+    }
+
+    state->with_relationship = v->with_relationship;
+    state->second = 0;
+    state->with_relationship_sp = v->with_relationship_sp;
+    state->force = v->force;
+
+    v->with_relationship = first;
+
+    if (state->with_relationship != first) {
+        ecs_value_t *value = flecs_script_with_append(v, NULL);
+        value->type = ecs_pair(first, second);
+        value->ptr = NULL;
+        v->with_relationship_sp = ecs_vec_count(&v->r->with) - 1;
+    } else {
+        ecs_value_t *value = &ecs_vec_get_t(
+            &v->r->with, ecs_script_with_value_t,
+            v->with_relationship_sp)->value;
+        ecs_assert(ECS_PAIR_FIRST(value->type) == (uint32_t)first,
+            ECS_INTERNAL_ERROR, NULL);
+        state->second = ECS_PAIR_SECOND(value->type);
+        value->type = ecs_pair(first, second);
+        value->ptr = NULL;
+    }
+
+    v->force = flecs_script_eval_force(v, &node->node, state->force);
+    return 0;
+}
 
 #endif

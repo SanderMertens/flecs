@@ -461,14 +461,14 @@ void SerializeEntityToJson_serialize_component_tag_pair_w_all_inherit_kinds(void
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t_override = ecs_entity(world, { .name = "t_override" });
-    ecs_add_pair(world, t_override, EcsOnInstantiate, EcsOverride);
+    ecs_add_pair(world, t_override, EcsOnInstantiate, EcsCopy);
     ecs_entity_t t_inherit = ecs_entity(world, { .name = "t_inherit" });
     ecs_add_pair(world, t_inherit, EcsOnInstantiate, EcsInherit);
     ecs_entity_t t_dont_inherit = ecs_entity(world, { .name = "t_dont_inherit" });
     ecs_add_pair(world, t_dont_inherit, EcsOnInstantiate, EcsDontInherit);
 
     ecs_entity_t c_override = ecs_entity(world, { .name = "c_override" });
-    ecs_add_pair(world, c_override, EcsOnInstantiate, EcsOverride);
+    ecs_add_pair(world, c_override, EcsOnInstantiate, EcsCopy);
     ecs_component(world, {
         .entity = c_override,
         .type.size = 4, .type.alignment = 4

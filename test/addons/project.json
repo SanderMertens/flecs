@@ -205,7 +205,19 @@
                 "register_run_after_callback_ctx",
                 "set_group",
                 "run_w_query_next",
-                "missing_callback"
+                "missing_callback",
+                "locked_storage_cached",
+                "locked_storage_mixed",
+                "locked_storage_cached_immediate",
+                "locked_storage_mixed_immediate",
+                "locked_storage_cached_immediate_w_stage",
+                "locked_storage_mixed_immediate_w_stage",
+                "locked_storage_cached_other",
+                "locked_storage_mixed_other",
+                "locked_storage_cached_immediate_other",
+                "locked_storage_mixed_immediate_other",
+                "locked_storage_cached_immediate_w_stage_other",
+                "locked_storage_mixed_immediate_w_stage_other"
             ]
         }, {
             "id": "SystemPeriodic",
@@ -381,7 +393,12 @@
                 "commands_memory",
                 "table_memory_histogram",
                 "sparse_component_memory",
-                "sparse_tag_memory"
+                "sparse_tag_memory",
+                "root_table_memory",
+                "toggle_bitset_memory",
+                "wildcard_observer_memory",
+                "entity_range_memory",
+                "world_memory_collection_time"
             ]
         }, {
             "id": "Run",
@@ -391,7 +408,8 @@
                 "run_w_param",
                 "run_no_match",
                 "run_w_interrupt",
-                "run_staging"
+                "run_staging",
+                "run_with_stage"
             ]
         }, {
             "id": "MultiThread",
@@ -400,6 +418,7 @@
                 "worker_kind": ["thread", "task"]
             },
             "testcases": [
+                "create_query_from_stage",
                 "2_thread_1_entity",
                 "2_thread_2_entity",
                 "2_thread_5_entity",
@@ -572,7 +591,18 @@
                 "world_builtin",
                 "world_modules",
                 "world_builtin_and_modules",
-                "world_explicit_false"
+                "world_explicit_false",
+                "app_enable_rest",
+                "readonly",
+                "command_new_session",
+                "command_run",
+                "command_run_error",
+                "command_run_offset_limit",
+                "command_run_string_lines",
+                "command_history",
+                "command_history_results",
+                "command_delete_session",
+                "command_invalid_session"
             ]
         }, {
             "id": "Metrics",

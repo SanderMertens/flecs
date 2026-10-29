@@ -63,6 +63,7 @@ static char* flecs_strbuf_itoa(
 		}
 		ptr = p1;
 	}
+
     return ptr;
 }
 
@@ -82,10 +83,12 @@ static void flecs_strbuf_ftoa(
         if (nan_delim) {
             ecs_strbuf_appendch(out, nan_delim);
         }
+
         ecs_strbuf_appendstrn(out, nan ? "NaN" : "Inf", 3);
         if (nan_delim) {
             ecs_strbuf_appendch(out, nan_delim);
         }
+
         return;
     }
 
@@ -114,6 +117,7 @@ static void flecs_strbuf_ftoa(
         *ptr++ = (char)('0' + c);
         f -= c;
     }
+
 	*ptr = 0;
 
     /* Remove trailing 0s */
@@ -159,6 +163,7 @@ static void flecs_strbuf_ftoa(
                     p1 --;
                     break;
                 }
+
                 p1[0] = c;
                 c = t;
                 exp ++;
@@ -189,14 +194,39 @@ static void flecs_strbuf_grow(
     if (!b->content) {
         b->content = b->small_string;
         b->size = ECS_STRBUF_SMALL_STRING_SIZE;
-    } else if (b->content == b->small_string) {
-        b->size *= 2;
-        b->content = ecs_os_malloc_n(char, b->size);
-        ecs_os_memcpy(b->content, b->small_string, b->length);
     } else {
-        b->size *= 2;
-        if (b->size < 16) b->size = 16;
-        b->content = ecs_os_realloc_n(b->content, char, b->size);
+        /* Double the size, but don't let the int32_t wrap past 1GB, and don't
+         * store a NULL buffer when the allocation fails: both would surface
+         * later as an unrelated assert in flecs_strbuf_ptr. */
+        int64_t size = (int64_t)b->size * 2;
+        if (size < 16) {
+            size = 16;
+        }
+        if (size > INT32_MAX) {
+            size = INT32_MAX;
+        }
+        if (size <= b->size) {
+            ecs_abort(ECS_OUT_OF_MEMORY,
+                "string buffer cannot grow past %d bytes", b->size);
+        }
+
+        char *content;
+        if (b->content == b->small_string) {
+            content = ecs_os_malloc_n(char, (ecs_size_t)size);
+            if (content) {
+                ecs_os_memcpy(content, b->small_string, b->length);
+            }
+        } else {
+            content = ecs_os_realloc_n(b->content, char, (ecs_size_t)size);
+        }
+
+        if (!content) {
+            ecs_abort(ECS_OUT_OF_MEMORY,
+                "string buffer: failed to allocate %d bytes", (ecs_size_t)size);
+        }
+
+        b->content = content;
+        b->size = (ecs_size_t)size;
     }
 }
 
@@ -368,6 +398,7 @@ void ecs_strbuf_mergebuff(
     if (src->content && src->length) {
         flecs_strbuf_appendstr(b, src->content, src->length);
     }
+
     ecs_strbuf_reset(src);
 }
 
@@ -418,6 +449,7 @@ void ecs_strbuf_reset(
     if (b->content && b->content != b->small_string) {
         ecs_os_free(b->content);
     }
+
     *b = ECS_STRBUF_INIT;
 }
 
@@ -483,6 +515,7 @@ void ecs_strbuf_list_next(
             ecs_strbuf_appendstr(b, sep);
         }
     }
+
     b->list_stack[list_sp].count ++;
 }
 

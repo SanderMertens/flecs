@@ -39,25 +39,7 @@ static void TryCatch_cancel_callback(
     tc_cancel_count ++;
 }
 
-static void TryCatch_reset(void)
-{
-    ecs_os_zeromem(tc_futures);
-    tc_future_count = 0;
-    tc_cancel_count = 0;
-}
-
 /* Register a "fail" async function and return the world */
-static void TryCatch_register_fail(
-    ecs_world_t *world)
-{
-    ecs_async_function(world, {
-        .name = "fail",
-        .return_type = ecs_id(ecs_i32_t),
-        .callback = TryCatch_store_callback,
-        .cancel = TryCatch_cancel_callback
-    });
-}
-
 void TryCatch_parse_try_catch_all(void) {
     ecs_world_t *world = ecs_init();
 
@@ -73,6 +55,28 @@ void TryCatch_parse_try_catch_all(void) {
     test_assert(strstr(str, "try") != NULL);
     test_assert(strstr(str, "catch") != NULL);
     test_assert(strstr(str, "Handled") != NULL);
+    ecs_os_free(str);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void TryCatch_parse_try_catch_no_space_before_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        "try{\n"
+        "  await fail()\n"
+        "} catch{\n"
+        "  Handled {}\n"
+        "}", &ir_desc, NULL);
+    test_assert(script != NULL);
+
+    char *str = ecs_script_ast_to_str(script, false);
+    test_assert(strstr(str, "try") != NULL);
+    test_assert(strstr(str, "catch") != NULL);
+    test_assert(strstr(str, "Handled") != NULL);
+    test_assert(strstr(str, "entity: try") == NULL);
     ecs_os_free(str);
 
     ecs_script_free(script);
@@ -191,8 +195,16 @@ void TryCatch_parse_catch_var_error(void) {
 void TryCatch_try_in_plain_eval(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "try {\n"
@@ -211,8 +223,16 @@ void TryCatch_try_in_plain_eval(void) {
 void TryCatch_catch_all_reject(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "try {\n"
@@ -249,8 +269,16 @@ void TryCatch_catch_all_reject(void) {
 void TryCatch_catch_typed_match(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_entity_t err = ecs_entity(world, { .name = "DestinationGone" });
 
@@ -287,8 +315,16 @@ void TryCatch_catch_typed_match(void) {
 void TryCatch_catch_typed_no_match_propagates(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_entity_t unused = ecs_entity(world, { .name = "DestinationGone" });
     (void)unused;
@@ -328,8 +364,16 @@ void TryCatch_catch_typed_no_match_propagates(void) {
 void TryCatch_catch_typed_falls_through_to_catch_all(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_entity_t unused = ecs_entity(world, { .name = "DestinationGone" });
     (void)unused;
@@ -367,8 +411,16 @@ void TryCatch_catch_typed_falls_through_to_catch_all(void) {
 void TryCatch_catch_first_match_wins(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_entity_t err = ecs_entity(world, { .name = "DestinationGone" });
 
@@ -404,8 +456,16 @@ void TryCatch_catch_first_match_wins(void) {
 void TryCatch_plain_reject_not_caught_by_typed(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_entity_t unused = ecs_entity(world, { .name = "DestinationGone" });
     (void)unused;
@@ -442,8 +502,16 @@ void TryCatch_plain_reject_not_caught_by_typed(void) {
 void TryCatch_runtime_error_not_caught(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "Payload" }),
@@ -481,8 +549,16 @@ void TryCatch_runtime_error_not_caught(void) {
 void TryCatch_runtime_error_is_terminal(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "Payload" }),
@@ -519,8 +595,16 @@ void TryCatch_runtime_error_is_terminal(void) {
 void TryCatch_await_in_catch(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "try {\n"
@@ -561,8 +645,16 @@ void TryCatch_await_in_catch(void) {
 void TryCatch_reject_in_catch_propagates(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "try {\n"
@@ -604,8 +696,16 @@ void TryCatch_reject_in_catch_propagates(void) {
 void TryCatch_nested_try_inner_catches(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "try {\n"
@@ -640,8 +740,16 @@ void TryCatch_nested_try_inner_catches(void) {
 void TryCatch_nested_try_outer_catches(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_entity_t unused = ecs_entity(world, { .name = "DestinationGone" });
     (void)unused;
@@ -681,8 +789,16 @@ void TryCatch_nested_try_outer_catches(void) {
 void TryCatch_try_in_entity_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "Parent {\n"
@@ -723,8 +839,16 @@ void TryCatch_try_in_entity_scope(void) {
 void TryCatch_error_in_with_scope_unwinds(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
     (void)tag;
@@ -763,8 +887,16 @@ void TryCatch_error_in_with_scope_unwinds(void) {
 void TryCatch_error_in_for_unwinds(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "try {\n"
@@ -805,8 +937,16 @@ void TryCatch_error_in_for_unwinds(void) {
 void TryCatch_loop_forever_catch_resets(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "try {\n"
@@ -841,8 +981,16 @@ void TryCatch_loop_forever_catch_resets(void) {
 void TryCatch_loop_count_catch(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "try {\n"
@@ -886,8 +1034,16 @@ void TryCatch_loop_count_catch(void) {
 void TryCatch_loop_uncaught_error_is_terminal(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_entity_t unused = ecs_entity(world, { .name = "DestinationGone" });
     (void)unused;
@@ -927,8 +1083,16 @@ void TryCatch_loop_uncaught_error_is_terminal(void) {
 void TryCatch_cancel_not_caught(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "try {\n"
@@ -944,7 +1108,7 @@ void TryCatch_cancel_not_caught(void) {
 
     ecs_script_task_cancel(task);
     test_int(tc_cancel_count, 1);
-    test_bool(ecs_script_future_is_cancelled(tc_futures[0]), true);
+    test_int(ecs_script_future_status(tc_futures[0]), EcsScriptFutureCancelled);
     ecs_script_future_release(tc_futures[0]);
 
     test_int(ecs_script_task_resume(task, NULL),
@@ -959,8 +1123,16 @@ void TryCatch_cancel_not_caught(void) {
 void TryCatch_resolve_skips_catch(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "try {\n"
@@ -993,8 +1165,16 @@ void TryCatch_resolve_skips_catch(void) {
 void TryCatch_catch_error_from_using_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_entity_t errors = ecs_entity(world, { .name = "errors" });
     ecs_entity_t err = ecs_entity(world, {
@@ -1028,8 +1208,16 @@ void TryCatch_catch_error_from_using_scope(void) {
 void TryCatch_reject_id_twice_fails(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_entity_t err = ecs_entity(world, { .name = "DestinationGone" });
 
@@ -1063,8 +1251,16 @@ void TryCatch_reject_id_twice_fails(void) {
 void TryCatch_reject_id_null_msg(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_entity_t err = ecs_entity(world, { .name = "DestinationGone" });
 
@@ -1093,8 +1289,16 @@ void TryCatch_reject_id_null_msg(void) {
 void TryCatch_vars_preserved_across_catch(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "Position" }),
@@ -1147,8 +1351,16 @@ void TryCatch_vars_preserved_across_catch(void) {
 void TryCatch_free_while_pending_in_try(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
     (void)tag;
@@ -1181,8 +1393,16 @@ void TryCatch_free_while_pending_in_try(void) {
 void TryCatch_free_while_pending_in_catch(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "try {\n"
@@ -1214,8 +1434,16 @@ void TryCatch_free_while_pending_in_catch(void) {
 void TryCatch_this_var_in_catch(void) {
     ecs_world_t *world = ecs_init();
 
-    TryCatch_reset();
-    TryCatch_register_fail(world);
+    ecs_os_zeromem(tc_futures);
+    tc_future_count = 0;
+    tc_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fail",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = TryCatch_store_callback,
+        .cancel = TryCatch_cancel_callback
+    });
 
     ecs_entity_t ecs_id(TCDrone) = ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "TCDrone" }),
@@ -1263,6 +1491,27 @@ void TryCatch_this_var_in_catch(void) {
         EcsScriptTaskDone);
 
     ecs_script_task_free(task);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void TryCatch_parse_catch_on_next_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        "try {\n"
+        "  await fail()\n"
+        "}\n"
+        "catch {\n"
+        "  Handled {}\n"
+        "}", &ir_desc, NULL);
+    test_assert(script != NULL);
+
+    char *str = ecs_script_ast_to_str(script, false);
+    test_assert(strstr(str, "catch") != NULL);
+    test_assert(strstr(str, "Handled") != NULL);
+    ecs_os_free(str);
+
     ecs_script_free(script);
     ecs_fini(world);
 }

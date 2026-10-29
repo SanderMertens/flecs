@@ -33,7 +33,9 @@ void Mut_declaration(void) {
     test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type,
         ecs_id(ecs_i32_t));
 
-    test_assert(ecs_get(world, foo, EcsStruct) == NULL);
+    st = ecs_get(world, foo, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 0);
 
     ecs_fini(world);
 }
@@ -389,10 +391,10 @@ void Mut_deferred_modified_reinstantiates(void) {
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     float value = 50;
-    ecs_set_id(world, e, mut, sizeof(float), &value);
-    ecs_defer_end(world);
+    ecs_set_id(stage_1, e, mut, sizeof(float), &value);
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
@@ -1108,72 +1110,6 @@ void Mut_fold_const(void) {
     test_assert(p != NULL);
     test_int(p->x, 8);
     test_int(p->y, 10);
-
-    ecs_fini(world);
-}
-
-void Mut_assign_add(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Position" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "template Foo {"
-    LINE "  mut value: f32 = 6"
-    LINE "  Position: {y += value / 2}"
-    LINE "}"
-    LINE "e {"
-    LINE "  Position: {10, 20}"
-    LINE "  Foo: {}"
-    LINE "}";
-
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-    const Position *p = ecs_get(world, e, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 23);
-
-    ecs_fini(world);
-}
-
-void Mut_assign_mul(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Position" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "template Foo {"
-    LINE "  mut value: f32 = 6"
-    LINE "  Position: {y *= value / 2}"
-    LINE "}"
-    LINE "e {"
-    LINE "  Position: {10, 20}"
-    LINE "  Foo: {}"
-    LINE "}";
-
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-    const Position *p = ecs_get(world, e, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 60);
 
     ecs_fini(world);
 }
@@ -2065,6 +2001,7 @@ void Mut_set_from_stage(void) {
 
     test_int(ecs_mut_var_get_t(world, "v", ecs_i32_t), 20);
 
+    ecs_merge(stage);
     ecs_fini(world);
 }
 
@@ -2094,6 +2031,7 @@ void Mut_set_struct_from_stage(void) {
     test_flt(p.x, 30.5);
     test_flt(p.y, 40.5);
 
+    ecs_merge(stage);
     ecs_fini(world);
 }
 
@@ -2116,6 +2054,54 @@ void Mut_modified_from_stage(void) {
     ecs_mut_var_modified(stage, var);
 
     test_int(ecs_mut_var_get_t(world, "v", ecs_i32_t), 20);
+
+    ecs_merge(stage);
+    ecs_fini(world);
+}
+
+void Mut_typed_mut_single_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Foo { mut value: i32 = 10 }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, foo, "mut");
+    test_assert(mut != 0);
+
+    const EcsStruct *st = ecs_get(world, mut, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 1);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "value");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type,
+        ecs_id(ecs_i32_t));
+
+    ecs_fini(world);
+}
+
+void Mut_typed_mut_w_semicolon(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  mut value: i32 = 10; mut other: i32 = 20"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, foo, "mut");
+    test_assert(mut != 0);
+
+    const EcsStruct *st = ecs_get(world, mut, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 2);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "value");
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "other");
 
     ecs_fini(world);
 }

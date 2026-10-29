@@ -3534,7 +3534,7 @@ void QueryBuilder_iter_w_stage(void) {
 
     int32_t count = 0;
     q.iter(stage).each([&](flecs::iter& it, size_t i, Position&) {
-        test_assert(it.world() == stage);
+        test_assert(it.stage() == stage);
         test_assert(it.entity(i) == e1);
         count ++;
     });
@@ -5893,4 +5893,23 @@ void QueryBuilder_value_pair_w_0_value(void) {
 
     test_int(count1, 1);
     test_int(count2, 1);
+}
+
+void QueryBuilder_term_ref_flags_preserve_id(void) {
+    flecs::world ecs;
+
+    struct Tag { };
+
+    flecs::entity e = ecs.entity();
+
+    auto q = ecs.query_builder()
+        .with<Tag>().src().id(e).flags(flecs::IsEntity)
+        .build();
+
+    test_uint(ECS_TERM_REF_ID(&q.c_ptr()->terms[0].src), e);
+    test_assert(q.c_ptr()->terms[0].src.id & flecs::IsEntity);
+
+    test_false(q.is_true());
+    e.add<Tag>();
+    test_true(q.is_true());
 }

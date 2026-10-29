@@ -33,9 +33,10 @@ typedef struct ecs_parser_t {
     char *token_keep;
     bool significant_newline;
     bool merge_variable_members;
-    bool function_token;
+    bool async_scope;
     int16_t scope_depth;
     int16_t expr_depth;
+    int16_t elem_depth;
 
     ecs_world_t *world;
 

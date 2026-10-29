@@ -127,7 +127,6 @@ void flecs_modified_id_if(
 /* Like regular set, but uses move instead of copy. */
 void flecs_set_id_move(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_id_t id,
     size_t size,
@@ -135,6 +134,16 @@ void flecs_set_id_move(
     ecs_cmd_kind_t cmd_kind);
 
 /* Add single component id. */
+void flecs_add_id_now(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t component);
+
+void flecs_remove_id_now(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t component);
+
 void flecs_add_id(
     ecs_world_t *world,
     ecs_entity_t entity,

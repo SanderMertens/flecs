@@ -6,7 +6,7 @@
 #ifndef FLECS_ORDERED_CHILDREN_H
 #define FLECS_ORDERED_CHILDREN_H
 
-/* Initialize ordered children storage. */
+/* Enable ordered children storage and populate it with existing children. */
 void flecs_ordered_children_init(
     ecs_world_t *world,
     ecs_component_record_t *cr);
@@ -16,12 +16,7 @@ void flecs_ordered_children_fini(
     ecs_world_t *world,
     ecs_component_record_t *cr);
 
-/* Populate ordered children storage with existing children. */
-void flecs_ordered_children_populate(
-    ecs_world_t *world,
-    ecs_component_record_t *cr);
-
-/* Clear ordered children storage. */
+/* Disable ordered children storage. */
 void flecs_ordered_children_clear(
     ecs_component_record_t *cr);
 
@@ -37,7 +32,6 @@ void flecs_ordered_children_reparent(
 void flecs_ordered_children_unparent(
     ecs_world_t *world,
     const ecs_table_t *src,
-    const ecs_table_t *dst,
     int32_t row,
     int32_t count);
 
@@ -48,26 +42,19 @@ void flecs_ordered_children_reorder(
     const ecs_entity_t *children,
     int32_t child_count);
 
+/* Promote ordered children storage to track prefab children. */
+void flecs_ordered_children_set_prefab(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
+
 /* Directly add child to ordered children array. */
 void flecs_ordered_entities_append(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_entity_t e);
 
-/* Promote ordered children storage to track prefab children. */
-void flecs_ordered_children_set_prefab(
-    ecs_world_t *world,
-    ecs_component_record_t *cr);
-
 /* Directly remove child from ordered children array. */
-/* Keep the position of a child that is about to be re-added to the same parent
- * with a different ChildOf representation. Pass -1 to clear. */
-void flecs_ordered_entities_keep_position(
-    ecs_component_record_t *cr,
-    ecs_entity_t e,
-    int32_t index);
-
-int32_t flecs_ordered_entities_remove(
+void flecs_ordered_entities_remove(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_entity_t e);

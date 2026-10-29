@@ -59,6 +59,7 @@ char* flecs_chresc(
         } else {
             *bptr = in;
         }
+
         break;
     }
 
@@ -104,6 +105,9 @@ const char* flecs_chrparse(
             break;
         case '"':
             ch = '"';
+            break;
+        case '`':
+            ch = '`';
             break;
         case '0':
             ch = '\0';
@@ -160,6 +164,7 @@ ecs_size_t flecs_stresc(
             written++;
         }
     }
+
     return written;
 error:
     return 0;
@@ -194,7 +199,7 @@ const char* flecs_parse_digit(
     char *tptr = token;
     char ch = ptr[0];
 
-    if (!isdigit(ch) && ch != '-') {
+    if (!isdigit((unsigned char)ch) && ch != '-') {
         ecs_parser_error(NULL, NULL, 0, "invalid start of number '%s'", ptr);
         return NULL;
     }
@@ -204,7 +209,7 @@ const char* flecs_parse_digit(
     ptr ++;
 
     for (; (ch = *ptr); ptr ++) {
-        if (!isdigit(ch) && (ch != '.') && !flecs_parse_is_e(ch)) {
+        if (!isdigit((unsigned char)ch) && (ch != '.') && !flecs_parse_is_e(ch)) {
             if (ch != '-' || !flecs_parse_is_e(ptr[-1])) {
                 break;
             }
@@ -227,7 +232,7 @@ const char* flecs_parse_digit(
 const char* flecs_parse_ws_eol(
     const char *ptr)
 {
-    while (isspace(*ptr)) {
+    while (isspace((unsigned char)*ptr)) {
         ptr ++;
     }
 

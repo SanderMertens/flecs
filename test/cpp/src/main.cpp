@@ -8,6 +8,7 @@
 
 #include <cpp.h>
 
+// Testsuite 'Script'
 void Script_function(void);
 void Script_function_scope_and_ctx(void);
 void Script_method(void);
@@ -676,6 +677,7 @@ void System_lookup_and_update_run(void);
 void System_lookup_and_update_ctx(void);
 void System_set_group(void);
 void System_run_w_0_src_query(void);
+void System_multithread_system_frame_offset(void);
 
 // Testsuite 'Event'
 void Event_evt_1_id_entity(void);
@@ -715,6 +717,8 @@ void Iterable_page_each(void);
 void Iterable_page_iter(void);
 void Iterable_worker_each(void);
 void Iterable_worker_iter(void);
+void Iterable_frame_offset(void);
+void Iterable_worker_frame_offset(void);
 
 // Testsuite 'Query'
 void Query_term_each_component(void);
@@ -724,6 +728,9 @@ void Query_term_each_pair_type(void);
 void Query_term_each_pair_id(void);
 void Query_term_each_pair_relation_wildcard(void);
 void Query_term_each_pair_object_wildcard(void);
+void Query_term_each_sparse_component(void);
+void Query_term_each_dont_fragment_component(void);
+void Query_term_each_dont_fragment_pair_object_wildcard(void);
 void Query_term_get_id(void);
 void Query_term_get_subj(void);
 void Query_term_get_pred(void);
@@ -856,6 +863,7 @@ void Query_iter_targets_field_out_of_range(void);
 void Query_iter_targets_field_not_a_pair(void);
 void Query_iter_targets_field_not_set(void);
 void Query_copy_operators(void);
+void Query_move_assign(void);
 void Query_optional_singleton(void);
 void Query_optional_module(void);
 void Query_has_entity(void);
@@ -885,6 +893,12 @@ void Query_sparse_query_convert_to_query_1_term(void);
 void Query_sparse_query_convert_to_query_3_terms(void);
 void Query_world_each_sparse(void);
 void Query_world_each_sparse_w_entity(void);
+void Query_component_inheritance_each(void);
+void Query_component_inheritance_each_multiple_derived(void);
+void Query_component_inheritance_each_entity(void);
+void Query_component_inheritance_base_field(void);
+void Query_component_inheritance_field_asserts(void);
+void Query_component_inheritance_virtual(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -1078,6 +1092,7 @@ void QueryBuilder_pred_eq(void);
 void QueryBuilder_pred_eq_name(void);
 void QueryBuilder_pred_match(void);
 void QueryBuilder_value_pair_w_0_value(void);
+void QueryBuilder_term_ref_flags_preserve_id(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -1187,6 +1202,23 @@ void Observer_untyped_field(void);
 void Observer_reuse_observer_builder(void);
 void Observer_single_term_observer_w_var_get_var_pair_second(void);
 void Observer_single_term_observer_w_var_get_var_pair_first(void);
+void Observer_component_inheritance_each_multi_entity(void);
+void Observer_delete_w_on_remove_removing_other_w_world(void);
+void Observer_delete_w_on_remove_removing_other_w_stage(void);
+void Observer_clear_w_on_remove_removing_other_w_world(void);
+void Observer_clear_w_on_remove_removing_other_w_stage(void);
+void Observer_delete_with_w_on_remove_removing_other_w_world(void);
+void Observer_delete_with_w_on_remove_removing_other_w_stage(void);
+void Observer_remove_all_w_on_remove_removing_other_w_world(void);
+void Observer_remove_all_w_on_remove_removing_other_w_stage(void);
+void Observer_delete_parent_w_on_remove_removing_other_from_child_w_world(void);
+void Observer_delete_parent_w_on_remove_removing_other_from_child_w_stage(void);
+void Observer_remove_w_on_remove_removing_other_w_world(void);
+void Observer_remove_w_on_remove_removing_other_w_stage(void);
+void Observer_set_w_on_add_adding_other_w_world(void);
+void Observer_set_w_on_add_adding_other_w_stage(void);
+void Observer_no_terms_custom_event(void);
+void Observer_no_terms_on_add(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -1297,6 +1329,8 @@ void ComponentLifecycle_move_ctor_no_default_ctor(void);
 void ComponentLifecycle_on_validate_hook(void);
 void ComponentLifecycle_on_validate_hook_blocks_on_set(void);
 void ComponentLifecycle_on_validate_hook_blocks_observer(void);
+void ComponentLifecycle_delete_w_on_remove_hook_removing_other_w_world(void);
+void ComponentLifecycle_delete_w_on_remove_hook_removing_other_w_stage(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref_by_ptr(void);
@@ -4382,6 +4416,10 @@ bake_test_case System_testcases[] = {
     {
         "run_w_0_src_query",
         System_run_w_0_src_query
+    },
+    {
+        "multithread_system_frame_offset",
+        System_multithread_system_frame_offset
     }
 };
 
@@ -4528,6 +4566,14 @@ bake_test_case Iterable_testcases[] = {
     {
         "worker_iter",
         Iterable_worker_iter
+    },
+    {
+        "frame_offset",
+        Iterable_frame_offset
+    },
+    {
+        "worker_frame_offset",
+        Iterable_worker_frame_offset
     }
 };
 
@@ -4559,6 +4605,18 @@ bake_test_case Query_testcases[] = {
     {
         "term_each_pair_object_wildcard",
         Query_term_each_pair_object_wildcard
+    },
+    {
+        "term_each_sparse_component",
+        Query_term_each_sparse_component
+    },
+    {
+        "term_each_dont_fragment_component",
+        Query_term_each_dont_fragment_component
+    },
+    {
+        "term_each_dont_fragment_pair_object_wildcard",
+        Query_term_each_dont_fragment_pair_object_wildcard
     },
     {
         "term_get_id",
@@ -5089,6 +5147,10 @@ bake_test_case Query_testcases[] = {
         Query_copy_operators
     },
     {
+        "move_assign",
+        Query_move_assign
+    },
+    {
         "optional_singleton",
         Query_optional_singleton
     },
@@ -5203,6 +5265,30 @@ bake_test_case Query_testcases[] = {
     {
         "world_each_sparse_w_entity",
         Query_world_each_sparse_w_entity
+    },
+    {
+        "component_inheritance_each",
+        Query_component_inheritance_each
+    },
+    {
+        "component_inheritance_each_multiple_derived",
+        Query_component_inheritance_each_multiple_derived
+    },
+    {
+        "component_inheritance_each_entity",
+        Query_component_inheritance_each_entity
+    },
+    {
+        "component_inheritance_base_field",
+        Query_component_inheritance_base_field
+    },
+    {
+        "component_inheritance_field_asserts",
+        Query_component_inheritance_field_asserts
+    },
+    {
+        "component_inheritance_virtual",
+        Query_component_inheritance_virtual
     }
 };
 
@@ -5966,6 +6052,10 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "value_pair_w_0_value",
         QueryBuilder_value_pair_w_0_value
+    },
+    {
+        "term_ref_flags_preserve_id",
+        QueryBuilder_term_ref_flags_preserve_id
     }
 };
 
@@ -6392,6 +6482,74 @@ bake_test_case Observer_testcases[] = {
     {
         "single_term_observer_w_var_get_var_pair_first",
         Observer_single_term_observer_w_var_get_var_pair_first
+    },
+    {
+        "component_inheritance_each_multi_entity",
+        Observer_component_inheritance_each_multi_entity
+    },
+    {
+        "delete_w_on_remove_removing_other_w_world",
+        Observer_delete_w_on_remove_removing_other_w_world
+    },
+    {
+        "delete_w_on_remove_removing_other_w_stage",
+        Observer_delete_w_on_remove_removing_other_w_stage
+    },
+    {
+        "clear_w_on_remove_removing_other_w_world",
+        Observer_clear_w_on_remove_removing_other_w_world
+    },
+    {
+        "clear_w_on_remove_removing_other_w_stage",
+        Observer_clear_w_on_remove_removing_other_w_stage
+    },
+    {
+        "delete_with_w_on_remove_removing_other_w_world",
+        Observer_delete_with_w_on_remove_removing_other_w_world
+    },
+    {
+        "delete_with_w_on_remove_removing_other_w_stage",
+        Observer_delete_with_w_on_remove_removing_other_w_stage
+    },
+    {
+        "remove_all_w_on_remove_removing_other_w_world",
+        Observer_remove_all_w_on_remove_removing_other_w_world
+    },
+    {
+        "remove_all_w_on_remove_removing_other_w_stage",
+        Observer_remove_all_w_on_remove_removing_other_w_stage
+    },
+    {
+        "delete_parent_w_on_remove_removing_other_from_child_w_world",
+        Observer_delete_parent_w_on_remove_removing_other_from_child_w_world
+    },
+    {
+        "delete_parent_w_on_remove_removing_other_from_child_w_stage",
+        Observer_delete_parent_w_on_remove_removing_other_from_child_w_stage
+    },
+    {
+        "remove_w_on_remove_removing_other_w_world",
+        Observer_remove_w_on_remove_removing_other_w_world
+    },
+    {
+        "remove_w_on_remove_removing_other_w_stage",
+        Observer_remove_w_on_remove_removing_other_w_stage
+    },
+    {
+        "set_w_on_add_adding_other_w_world",
+        Observer_set_w_on_add_adding_other_w_world
+    },
+    {
+        "set_w_on_add_adding_other_w_stage",
+        Observer_set_w_on_add_adding_other_w_stage
+    },
+    {
+        "no_terms_custom_event",
+        Observer_no_terms_custom_event
+    },
+    {
+        "no_terms_on_add",
+        Observer_no_terms_on_add
     }
 };
 
@@ -6827,6 +6985,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "on_validate_hook_blocks_observer",
         ComponentLifecycle_on_validate_hook_blocks_observer
+    },
+    {
+        "delete_w_on_remove_hook_removing_other_w_world",
+        ComponentLifecycle_delete_w_on_remove_hook_removing_other_w_world
+    },
+    {
+        "delete_w_on_remove_hook_removing_other_w_stage",
+        ComponentLifecycle_delete_w_on_remove_hook_removing_other_w_stage
     }
 };
 
@@ -8659,7 +8825,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        79,
+        80,
         System_testcases
     },
     {
@@ -8673,21 +8839,21 @@ static bake_test_suite suites[] = {
         "Iterable",
         NULL,
         NULL,
-        4,
+        6,
         Iterable_testcases
     },
     {
         "Query",
         NULL,
         NULL,
-        168,
+        178,
         Query_testcases
     },
     {
         "QueryBuilder",
         QueryBuilder_setup,
         NULL,
-        190,
+        191,
         QueryBuilder_testcases,
         1,
         QueryBuilder_params
@@ -8703,14 +8869,14 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        75,
+        92,
         Observer_testcases
     },
     {
         "ComponentLifecycle",
         NULL,
         NULL,
-        108,
+        110,
         ComponentLifecycle_testcases
     },
     {

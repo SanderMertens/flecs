@@ -198,6 +198,18 @@ void SystemMisc_register_run_after_callback_ctx(void);
 void SystemMisc_set_group(void);
 void SystemMisc_run_w_query_next(void);
 void SystemMisc_missing_callback(void);
+void SystemMisc_locked_storage_cached(void);
+void SystemMisc_locked_storage_mixed(void);
+void SystemMisc_locked_storage_cached_immediate(void);
+void SystemMisc_locked_storage_mixed_immediate(void);
+void SystemMisc_locked_storage_cached_immediate_w_stage(void);
+void SystemMisc_locked_storage_mixed_immediate_w_stage(void);
+void SystemMisc_locked_storage_cached_other(void);
+void SystemMisc_locked_storage_mixed_other(void);
+void SystemMisc_locked_storage_cached_immediate_other(void);
+void SystemMisc_locked_storage_mixed_immediate_other(void);
+void SystemMisc_locked_storage_cached_immediate_w_stage_other(void);
+void SystemMisc_locked_storage_mixed_immediate_w_stage_other(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -352,6 +364,11 @@ void Memory_commands_memory(void);
 void Memory_table_memory_histogram(void);
 void Memory_sparse_component_memory(void);
 void Memory_sparse_tag_memory(void);
+void Memory_root_table_memory(void);
+void Memory_toggle_bitset_memory(void);
+void Memory_wildcard_observer_memory(void);
+void Memory_entity_range_memory(void);
+void Memory_world_memory_collection_time(void);
 
 // Testsuite 'Run'
 void Run_setup(void);
@@ -360,9 +377,11 @@ void Run_run_w_param(void);
 void Run_run_no_match(void);
 void Run_run_w_interrupt(void);
 void Run_run_staging(void);
+void Run_run_with_stage(void);
 
 // Testsuite 'MultiThread'
 void MultiThread_setup(void);
+void MultiThread_create_query_from_stage(void);
 void MultiThread_2_thread_1_entity(void);
 void MultiThread_2_thread_2_entity(void);
 void MultiThread_2_thread_5_entity(void);
@@ -523,6 +542,17 @@ void Rest_world_builtin(void);
 void Rest_world_modules(void);
 void Rest_world_builtin_and_modules(void);
 void Rest_world_explicit_false(void);
+void Rest_app_enable_rest(void);
+void Rest_readonly(void);
+void Rest_command_new_session(void);
+void Rest_command_run(void);
+void Rest_command_run_error(void);
+void Rest_command_run_offset_limit(void);
+void Rest_command_run_string_lines(void);
+void Rest_command_history(void);
+void Rest_command_history_results(void);
+void Rest_command_delete_session(void);
+void Rest_command_invalid_session(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -1347,6 +1377,54 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "missing_callback",
         SystemMisc_missing_callback
+    },
+    {
+        "locked_storage_cached",
+        SystemMisc_locked_storage_cached
+    },
+    {
+        "locked_storage_mixed",
+        SystemMisc_locked_storage_mixed
+    },
+    {
+        "locked_storage_cached_immediate",
+        SystemMisc_locked_storage_cached_immediate
+    },
+    {
+        "locked_storage_mixed_immediate",
+        SystemMisc_locked_storage_mixed_immediate
+    },
+    {
+        "locked_storage_cached_immediate_w_stage",
+        SystemMisc_locked_storage_cached_immediate_w_stage
+    },
+    {
+        "locked_storage_mixed_immediate_w_stage",
+        SystemMisc_locked_storage_mixed_immediate_w_stage
+    },
+    {
+        "locked_storage_cached_other",
+        SystemMisc_locked_storage_cached_other
+    },
+    {
+        "locked_storage_mixed_other",
+        SystemMisc_locked_storage_mixed_other
+    },
+    {
+        "locked_storage_cached_immediate_other",
+        SystemMisc_locked_storage_cached_immediate_other
+    },
+    {
+        "locked_storage_mixed_immediate_other",
+        SystemMisc_locked_storage_mixed_immediate_other
+    },
+    {
+        "locked_storage_cached_immediate_w_stage_other",
+        SystemMisc_locked_storage_cached_immediate_w_stage_other
+    },
+    {
+        "locked_storage_mixed_immediate_w_stage_other",
+        SystemMisc_locked_storage_mixed_immediate_w_stage_other
     }
 };
 
@@ -1900,6 +1978,26 @@ bake_test_case Memory_testcases[] = {
     {
         "sparse_tag_memory",
         Memory_sparse_tag_memory
+    },
+    {
+        "root_table_memory",
+        Memory_root_table_memory
+    },
+    {
+        "toggle_bitset_memory",
+        Memory_toggle_bitset_memory
+    },
+    {
+        "wildcard_observer_memory",
+        Memory_wildcard_observer_memory
+    },
+    {
+        "entity_range_memory",
+        Memory_entity_range_memory
+    },
+    {
+        "world_memory_collection_time",
+        Memory_world_memory_collection_time
     }
 };
 
@@ -1923,10 +2021,18 @@ bake_test_case Run_testcases[] = {
     {
         "run_staging",
         Run_run_staging
+    },
+    {
+        "run_with_stage",
+        Run_run_with_stage
     }
 };
 
 bake_test_case MultiThread_testcases[] = {
+    {
+        "create_query_from_stage",
+        MultiThread_create_query_from_stage
+    },
     {
         "2_thread_1_entity",
         MultiThread_2_thread_1_entity
@@ -2533,6 +2639,50 @@ bake_test_case Rest_testcases[] = {
     {
         "world_explicit_false",
         Rest_world_explicit_false
+    },
+    {
+        "app_enable_rest",
+        Rest_app_enable_rest
+    },
+    {
+        "readonly",
+        Rest_readonly
+    },
+    {
+        "command_new_session",
+        Rest_command_new_session
+    },
+    {
+        "command_run",
+        Rest_command_run
+    },
+    {
+        "command_run_error",
+        Rest_command_run_error
+    },
+    {
+        "command_run_offset_limit",
+        Rest_command_run_offset_limit
+    },
+    {
+        "command_run_string_lines",
+        Rest_command_run_string_lines
+    },
+    {
+        "command_history",
+        Rest_command_history
+    },
+    {
+        "command_history_results",
+        Rest_command_history_results
+    },
+    {
+        "command_delete_session",
+        Rest_command_delete_session
+    },
+    {
+        "command_invalid_session",
+        Rest_command_invalid_session
     }
 };
 
@@ -2863,7 +3013,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        79,
+        91,
         SystemMisc_testcases
     },
     {
@@ -2940,21 +3090,21 @@ static bake_test_suite suites[] = {
         "Memory",
         NULL,
         NULL,
-        10,
+        15,
         Memory_testcases
     },
     {
         "Run",
         Run_setup,
         NULL,
-        5,
+        6,
         Run_testcases
     },
     {
         "MultiThread",
         MultiThread_setup,
         NULL,
-        50,
+        51,
         MultiThread_testcases,
         1,
         MultiThread_params
@@ -2993,7 +3143,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        49,
+        60,
         Rest_testcases
     },
     {

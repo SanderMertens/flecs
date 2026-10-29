@@ -571,14 +571,14 @@ static ECS_COMPONENT_DECLARE(Velocity);
 static void OnAdd(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_add(it->world, it->entities[i], Velocity);
+        ecs_add(it->stage, it->entities[i], Velocity);
     }
 }
 
 static void OnAddRemove(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_remove(it->world, it->entities[i], Position);
+        ecs_remove(it->stage, it->entities[i], Position);
     }
 }
 
@@ -626,7 +626,7 @@ static void OnAddRealloc(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < 1000; i ++) {
-        ecs_set(it->world, entities[i], Velocity, {i, i * 2});
+        ecs_set(it->stage, entities[i], Velocity, {i, i * 2});
     }
 }
 
@@ -744,7 +744,7 @@ void Set_emplace_w_move(void) {
 static void OnAddMove(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_set(it->world, it->entities[i], Velocity, {1, 2});
+        ecs_set(it->stage, it->entities[i], Velocity, {1, 2});
     }
 }
 
@@ -816,6 +816,67 @@ void Set_emplace_pair(void) {
     test_assert(p != NULL);
     test_assert(ecs_has_pair(world, e, ecs_id(Position), Tgt));
     test_assert(p == ecs_get_pair(world, e, Position, Tgt));
+
+    ecs_fini(world);
+}
+
+static void OnAddAddOther(ecs_iter_t *it) {
+    ecs_id_t id = *(ecs_id_t*)it->ctx;
+    for (int i = 0; i < it->count; i ++) {
+        ecs_add_id(it->world, it->entities[i], id);
+    }
+}
+
+static void OnAddAddOtherStage(ecs_iter_t *it) {
+    ecs_id_t id = *(ecs_id_t*)it->ctx;
+    for (int i = 0; i < it->count; i ++) {
+        ecs_add_id(it->stage, it->entities[i], id);
+    }
+}
+
+void Set_set_w_on_add_adding_other(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnAdd },
+        .callback = OnAddAddOther,
+        .ctx = &ecs_id(Velocity)
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    test_expect_abort_code(ECS_LOCKED_STORAGE);
+    ecs_set(world, e, Position, {10, 20});
+}
+
+void Set_set_w_on_add_adding_other_w_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnAdd },
+        .callback = OnAddAddOtherStage,
+        .ctx = &ecs_id(Velocity)
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_set(world, e, Position, {10, 20});
+
+    test_assert(ecs_has(world, e, Velocity));
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 
     ecs_fini(world);
 }

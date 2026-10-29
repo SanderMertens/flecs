@@ -131,11 +131,18 @@
 #include "../addons/script_platform.h"
 #endif
 
-#ifdef FLECS_SCRIPT_EVENT
-#ifdef FLECS_NO_SCRIPT_EVENT
-#error "FLECS_NO_SCRIPT_EVENT failed: SCRIPT_EVENT is required by other addons"
+#ifdef FLECS_SCRIPT_INPUT
+#ifdef FLECS_NO_SCRIPT_INPUT
+#error "FLECS_NO_SCRIPT_INPUT failed: SCRIPT_INPUT is required by other addons"
 #endif
-#include "../addons/script_event.h"
+#include "../addons/script_input.h"
+#endif
+
+#ifdef FLECS_SCRIPT_SHELL
+#ifdef FLECS_NO_SCRIPT_SHELL
+#error "FLECS_NO_SCRIPT_SHELL failed: SCRIPT_SHELL is required by other addons"
+#endif
+#include "../addons/script_shell.h"
 #endif
 
 #ifdef FLECS_PARSER

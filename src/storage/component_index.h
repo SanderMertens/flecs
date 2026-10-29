@@ -35,26 +35,12 @@ typedef struct ecs_pair_record_t {
     /* Vector with ordered children */
     ecs_vec_t ordered_children;
 
-    /* Tables with non-fragmenting children */
-    ecs_map_t children_tables; /* map<table_id, ecs_parent_record_t> */
-
-    /* Track how many of the tables in children_tables are disabled. Used by
-     * queries to determine whether logic is needed to skip Disabled entities
-     * when iterating the ordered_children vector. */
-    int32_t disabled_tables;
-
-    /* Same for prefab tables */
-    int32_t prefab_tables;
+    int32_t non_fragmenting_child_count;
+    int32_t disabled_children;
+    int32_t prefab_children;
 
     /* Hierarchy depth (set for ChildOf pair) */
     int32_t depth;
-
-    /* A child that switches between the ChildOf pair and Parent component
-     * representations is removed from ordered_children by the table move and
-     * added back by the hooks of the new representation. When the parent didn't
-     * change the child must keep its old position, so remember where it was. */
-    ecs_entity_t ordered_pending_entity;
-    int32_t ordered_pending_index;
 
     /* Lists for all id records that match a pair wildcard. The wildcard id
      * record is at the head of the list. */
@@ -91,8 +77,7 @@ struct ecs_component_record_t {
     /* Storage for sparse components */
     void *sparse;
 
-    /* Backref to tables with edges to non-fragmenting component ids */
-    ecs_vec_t dont_fragment_tables;
+    ecs_type_t dont_fragment_with;
 
     /* Pair data */
     ecs_pair_record_t *pair;
@@ -140,6 +125,16 @@ bool flecs_component_set_type_info(
     ecs_component_record_t *cr,
     const ecs_type_info_t *ti);
 
+/* Update the EcsIdHasBases flag for entities that got an IsA pair added or
+ * removed. Used to track which components have base components, so that tables
+ * can register records for the base ids of the components they store. */
+void flecs_components_on_isa_change(
+    ecs_world_t *world,
+    const ecs_table_t *table,
+    const ecs_entity_t *entities,
+    int32_t count,
+    bool has_bases);
+
 /* Return next (R, *) record */
 ecs_component_record_t* flecs_component_first_next(
     ecs_component_record_t *cr);
@@ -186,6 +181,9 @@ void flecs_component_record_init_dont_fragment(
     ecs_world_t *world,
     ecs_component_record_t *cr);
 
+void flecs_component_dont_fragment_with_invalidate(
+    ecs_world_t *world);
+
 void flecs_component_record_init_exclusive(
     ecs_world_t *world,
     ecs_component_record_t *cr);
@@ -203,9 +201,5 @@ void flecs_component_update_childof_w_depth(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     int32_t depth);
-
-void flecs_component_ordered_children_init(
-    ecs_world_t *world,
-    ecs_component_record_t *cr);
 
 #endif

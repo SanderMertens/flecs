@@ -21,6 +21,14 @@ void flecs_script_apply_tree_annot(
     ecs_script_annot_t *annot,
     ecs_script_entity_t *node);
 
+void flecs_script_apply_tree(
+    ecs_script_entity_t *node,
+    bool non_fragmenting_parent,
+    bool annotated);
+
+int flecs_script_compile(
+    ecs_script_eval_visitor_t *v);
+
 /* Include visitor (runs before script evaluation, see visit_include.c) */
 
 int flecs_script_visit_include(
@@ -31,7 +39,8 @@ int flecs_script_eval_include(
     ecs_script_eval_visitor_t *v,
     ecs_script_include_t *node);
 
-/* Type visitors (implement struct/enum/bitmask initializer syntax) */
+/* Type visitors (implement struct/enum/bitmask/vector/array/map/primitive
+ * initializer syntax) */
 
 int flecs_script_struct_visit(
     const ecs_script_visitor_ctx_t *ctx);
@@ -47,6 +56,24 @@ int flecs_script_enum_visit(
 int flecs_script_bitmask_visit(
     const ecs_script_visitor_ctx_t *ctx);
 
+int flecs_script_vector_visit(
+    const ecs_script_visitor_ctx_t *ctx);
+
+int flecs_script_array_visit(
+    const ecs_script_visitor_ctx_t *ctx);
+
+int flecs_script_map_visit(
+    const ecs_script_visitor_ctx_t *ctx);
+
+int flecs_script_primitive_visit(
+    const ecs_script_visitor_ctx_t *ctx);
+
+const ecs_member_t* flecs_script_meta_type_member(
+    const ecs_world_t *world,
+    ecs_entity_t kind,
+    const char *member,
+    int32_t index);
+
 /* User functions (functions defined in scripts) */
 
 typedef struct ecs_script_user_function_t {
@@ -55,6 +82,13 @@ typedef struct ecs_script_user_function_t {
     ecs_vec_t refs;
     ecs_vec_t using;
 } ecs_script_user_function_t;
+
+void flecs_script_user_function_bind(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_user_function_t *uf,
+    int32_t argc,
+    const ecs_value_t *argv,
+    bool named);
 
 void flecs_script_user_function_callback(
     const ecs_function_ctx_t *ctx,
@@ -67,6 +101,7 @@ void flecs_script_user_function_ctx_free(
 
 int flecs_script_eval_function(
     ecs_script_eval_visitor_t *v,
-    ecs_script_function_node_t *node);
+    ecs_script_function_node_t *node,
+    ecs_entity_t fn_entity);
 
 #endif

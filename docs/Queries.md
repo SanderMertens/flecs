@@ -539,30 +539,18 @@ q.each([](flecs::entity e, Position&) {
 });
 ```
 
-This can be addressed by deferring operations while the query is being iterated:
+This can be addressed by iterating the query with a stage, which enqueues the operations, and merging the stage after iteration:
 
 ```cpp
 auto q = world.query<Position>();
 
-world.defer([&]{
-    q.each([](flecs::entity e, Position&) {
-        e.add<Velocity>(); // OK
-    });
-}); // operations are executed here
-```
+auto stage = world.get_stage(0);
 
-An application can also use the `defer_begin` and `defer_end` functions which achieve the same goal:
-
-```cpp
-auto q = world.query<Position>();
-
-world.defer_begin();
-
-q.each([](flecs::entity e, Position&) {
+q.iter(stage).each([](flecs::entity e, Position&) {
     e.add<Velocity>(); // OK
 });
 
-world.defer_end(); // operations are executed here
+stage.merge();
 ```
 
 Code ran by a system is deferred by default.
@@ -661,32 +649,6 @@ let q = world.new_query::<&Position>();
 q.each_entity(|e, p| {
     e.add::<Velocity>(); // throws locked table assert
 });
-```
-
-This can be addressed by deferring operations while the query is being iterated:
-
-```rust
-let q = world.new_query::<&Position>();
-    
-world.defer(|| {
-    q.each_entity(|e, p| {
-        e.add::<Velocity>(); // OK
-    });
-}); // operations are executed here
-```
-
-An application can also use the `defer_begin` and `defer_end` functions which achieve the same goal:
-
-```rust
-let q = world.new_query::<&Position>();
-
-world.defer_begin();
-
-q.each_entity(|e, p| {
-    e.add::<Velocity>(); // OK
-});
-
-world.defer_end(); // operations are executed here
 ```
 
 Code ran by a system is deferred by default.

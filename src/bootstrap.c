@@ -157,6 +157,7 @@ static bool flecs_unset_id_flag(
         cr->flags &= ~flag;
         return true;
     }
+
     return false;
 }
 
@@ -233,6 +234,7 @@ void flecs_register_flag_for_trait(
             flecs_assert_relation_unused(world, e, trait);
         }
     }
+
 error:
     return;
 }
@@ -241,7 +243,7 @@ static void flecs_register_tag(ecs_iter_t *it) {
     flecs_register_flag_for_trait(it, EcsPairIsTag, EcsIdPairIsTag, EcsIdPairIsTag, 0);
 
     /* Ensure that all id records for tag have type info set to NULL */
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->world;
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
@@ -254,6 +256,7 @@ static void flecs_register_tag(ecs_iter_t *it) {
                     if (cr->type_info != NULL) {
                         flecs_assert_relation_unused(world, e, EcsPairIsTag);
                     }
+
                     cr->type_info = NULL;
                 } while ((cr = flecs_component_first_next(cr)));
             }
@@ -287,6 +290,65 @@ static void flecs_register_trait_pair(ecs_iter_t *it) {
     ecs_on_trait_ctx_t *ctx = it->ctx;
     flecs_register_flag_for_trait(
         it, ecs_pair_first(it->world, it->ids[0]), ctx->flag, ctx->not_flag, 0);
+}
+
+static void flecs_register_with(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        if (!ecs_owns_id(world, e, EcsDontFragment)) {
+            continue;
+        }
+
+        if (it->event == EcsOnAdd) {
+            ecs_entity_t tgt = ecs_pair_second(world, it->ids[0]);
+            ecs_check(ecs_owns_id(world, tgt, EcsDontFragment),
+                ECS_INVALID_OPERATION,
+                "cannot add (With, %s) to non-fragmenting component '%s': "
+                "target must also be non-fragmenting",
+                    flecs_errstr(ecs_get_path(world, tgt)),
+                    flecs_errstr_1(ecs_get_path(world, e)));
+            (void)tgt;
+        }
+
+        flecs_component_dont_fragment_with_invalidate(world);
+    }
+
+    flecs_register_trait_pair(it);
+error:
+    return;
+}
+
+static void flecs_register_dont_fragment(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        const ecs_type_t *type = ecs_get_type(world, e);
+        int32_t j;
+        for (j = 0; j < type->count; j ++) {
+            ecs_id_t id = type->array[j];
+            if (!ECS_HAS_RELATION(id, EcsWith)) {
+                continue;
+            }
+
+            ecs_entity_t tgt = ecs_pair_second(world, id);
+            ecs_check(ecs_owns_id(world, tgt, EcsDontFragment),
+                ECS_INVALID_OPERATION,
+                "cannot add DontFragment to component '%s' with "
+                "(With, %s): target must also be non-fragmenting",
+                    flecs_errstr(ecs_get_path(world, e)),
+                    flecs_errstr_1(ecs_get_path(world, tgt)));
+            (void)tgt;
+        }
+    }
+
+    flecs_register_trait(it);
+error:
+    return;
 }
 
 static void flecs_on_component(ecs_iter_t *it) {
@@ -339,56 +401,6 @@ static void flecs_ensure_module_tag(ecs_iter_t *it) {
     }
 }
 
-static void flecs_disable_module_observers(
-    ecs_world_t *world,
-    ecs_entity_t module,
-    bool should_disable)
-{
-    ecs_iter_t child_it = ecs_children(world, module);
-    while (ecs_children_next(&child_it)) {
-        ecs_table_t *table = child_it.table;
-        bool table_disabled = table->flags & EcsTableIsDisabled;
-        int32_t i;
-
-        /* Recursively walk modules, don't propagate to disabled modules */
-        if (ecs_table_has_id(world, table, EcsModule) && !table_disabled) {
-            for (i = 0; i < child_it.count; i ++) {
-                flecs_disable_module_observers(
-                    world, child_it.entities[i], should_disable);
-            }
-            continue;
-        }
-
-        /* Only disable observers */
-        if (!ecs_table_has_id(world, table, EcsObserver)) {
-            continue;
-        }
-
-        for (i = 0; i < child_it.count; i ++) {
-            flecs_observer_set_disable_bit(world, child_it.entities[i],
-                EcsObserverIsParentDisabled, should_disable);
-        }
-    }
-}
-
-static void flecs_disable_observer(
-    ecs_iter_t *it)
-{
-    ecs_world_t *world = it->real_world;
-    bool should_disable = it->event == EcsOnAdd;
-
-    int32_t i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        flecs_observer_set_disable_bit(
-            world, e, EcsObserverIsDisabled, should_disable);
-
-        if (ecs_owns_id(world, e, EcsModule)) {
-            flecs_disable_module_observers(world, e, should_disable);
-        }
-    }
-}
-
 static void flecs_register_ordered_children(ecs_iter_t *it) {
     int32_t i;
     if (it->event == EcsOnAdd) {
@@ -397,13 +409,10 @@ static void flecs_register_ordered_children(ecs_iter_t *it) {
             ecs_component_record_t *cr = flecs_components_ensure(
                 it->world, ecs_childof(parent));
             if (!(cr->flags & EcsIdOrderedChildren)) {
-                /* Also flags existing child tables so children added after the
-                 * trait are tracked in the ordered list. */
-                flecs_component_ordered_children_init(it->world, cr);
-                flecs_ordered_children_populate(it->world, cr);
+                flecs_ordered_children_init(it->world, cr);
             }
         }
-    } else if (!(it->real_world->flags & EcsWorldFini) && it->other_table) {
+    } else if (!(it->world->flags & EcsWorldFini) && it->other_table) {
         ecs_assert(it->event == EcsOnRemove, ECS_INTERNAL_ERROR, NULL);
         for (i = 0; i < it->count; i ++) {
             ecs_entity_t parent = it->entities[i];
@@ -411,7 +420,6 @@ static void flecs_register_ordered_children(ecs_iter_t *it) {
                 it->world, ecs_childof(parent));
             if (cr && (cr->flags & EcsIdOrderedChildren)) {
                 flecs_ordered_children_clear(cr);
-                cr->flags &= ~EcsIdOrderedChildren;
             }
         }
     }
@@ -595,6 +603,7 @@ static void flecs_bootstrap_sanity_check(
             table = flecs_sparse_get_dense_t(
                 &world->store.tables, ecs_table_t, i);
         }
+
         for (e = 0; e < table->data.count; e ++) {
             ecs_record_t *r = flecs_entities_get(
                 world, table->data.entities[e]);
@@ -862,8 +871,8 @@ void flecs_bootstrap(
     ecs_observer(world, {
         .query.terms = { { .id = ecs_pair(EcsWith, EcsWildcard) }, },
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
-        .events = {EcsOnAdd},
-        .callback = flecs_register_trait_pair,
+        .events = {EcsOnAdd, EcsOnRemove},
+        .callback = flecs_register_with,
         .ctx = &with_trait,
         .global_observer = true
     });
@@ -883,7 +892,7 @@ void flecs_bootstrap(
         .query.terms = {{ .id = EcsDontFragment }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
-        .callback = flecs_register_trait,
+        .callback = flecs_register_dont_fragment,
         .ctx = &dont_fragment_trait,
         .global_observer = true
     });
@@ -903,14 +912,6 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_ensure_module_tag,
-        .global_observer = true
-    });
-
-    /* Observer that tracks whether observers are disabled */
-    ecs_observer(world, {
-        .query.terms = {{ .id = EcsDisabled }},
-        .events = {EcsOnAdd, EcsOnRemove},
-        .callback = flecs_disable_observer,
         .global_observer = true
     });
 

@@ -54,8 +54,11 @@
 #ifdef FLECS_NO_SCRIPT_PLATFORM
 #undef FLECS_SCRIPT_PLATFORM
 #endif
-#ifdef FLECS_NO_SCRIPT_EVENT
-#undef FLECS_SCRIPT_EVENT
+#ifdef FLECS_NO_SCRIPT_INPUT
+#undef FLECS_SCRIPT_INPUT
+#endif
+#ifdef FLECS_NO_SCRIPT_SHELL
+#undef FLECS_SCRIPT_SHELL
 #endif
 #ifdef FLECS_NO_STATS
 #undef FLECS_STATS
@@ -109,14 +112,24 @@
 /* Resolve addon dependencies before addon-dependent API declarations. The
  * order of these blocks follows the addon dependency graph, from addons with
  * the most dependencies to addons with the least dependencies. */
-#ifdef FLECS_SCRIPT_EVENT
+#ifdef FLECS_SCRIPT_SHELL
+#ifndef FLECS_QUERY_DSL
+#define FLECS_QUERY_DSL
+#endif
+#ifndef FLECS_JSON
+#define FLECS_JSON
+#endif
+#endif
+
+#ifdef FLECS_SCRIPT_INPUT
 #ifndef FLECS_SCRIPT_ASYNC
 #define FLECS_SCRIPT_ASYNC
 #endif
 #endif
 
 #if defined(FLECS_SCRIPT_ASYNC) || defined(FLECS_SCRIPT_MATH) || \
-    defined(FLECS_SCRIPT_PLATFORM) || defined(FLECS_SCRIPT_EVENT)
+    defined(FLECS_SCRIPT_PLATFORM) || defined(FLECS_SCRIPT_INPUT) || \
+    defined(FLECS_SCRIPT_SHELL)
 #ifndef FLECS_SCRIPT
 #define FLECS_SCRIPT
 #endif
@@ -261,10 +274,19 @@
 #endif
 #endif
 
+/* With prefabs, the observers that meta creates (the units monitor and the
+ * struct base observer) match inherited components and transitive IsA pairs,
+ * which needs query plans. */
+#if defined(FLECS_META) && defined(FLECS_PREFAB)
+#ifndef FLECS_QUERY_PLANS
+#define FLECS_QUERY_PLANS
+#endif
+#endif
+
 #if defined(FLECS_ALERTS) || defined(FLECS_APP) || defined(FLECS_HTTP) || \
     defined(FLECS_JSON) || defined(FLECS_METRICS) || defined(FLECS_PIPELINE) || \
     defined(FLECS_REST) || defined(FLECS_STATS) || defined(FLECS_SYSTEM) || \
-    defined(FLECS_TIMER)
+    defined(FLECS_TIMER) || defined(FLECS_SCRIPT_SHELL)
 #ifndef FLECS_FRAME
 #define FLECS_FRAME
 #endif

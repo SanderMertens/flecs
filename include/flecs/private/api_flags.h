@@ -43,6 +43,7 @@ extern "C" {
 #define EcsEntityIsTarget             (1u << 30)
 #define EcsEntityIsTraversable        (1u << 29)
 #define EcsEntityHasDontFragment      (1u << 28)
+#define EcsEntityIsBase               (1u << 27)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -62,11 +63,11 @@ extern "C" {
     (EcsIdOnDeleteTargetPanic|EcsIdOnDeleteTargetRemove|\
         EcsIdOnDeleteTargetDelete)
 
-#define EcsIdOnInstantiateOverride     (1u << 6)
+#define EcsIdOnInstantiateCopy     (1u << 6)
 #define EcsIdOnInstantiateInherit      (1u << 7)
 #define EcsIdOnInstantiateDontInherit  (1u << 8)
 #define EcsIdOnInstantiateMask\
-    (EcsIdOnInstantiateOverride|EcsIdOnInstantiateInherit|\
+    (EcsIdOnInstantiateCopy|EcsIdOnInstantiateInherit|\
         EcsIdOnInstantiateDontInherit)
 
 #define EcsIdExclusive                 (1u << 9)
@@ -93,6 +94,8 @@ extern "C" {
         EcsIdHasOnTableCreate|EcsIdHasOnTableDelete|EcsIdSparse|\
         EcsIdOrderedChildren|EcsIdHasUpNotify)
 #define EcsIdPrefabChildren            (1u << 26)
+#define EcsIdHasBases                  (1u << 27) /* Component entity has IsA pairs. */
+#define EcsIdHasDerived                (1u << 28) /* Component is a base of other components. */
 
 #define EcsIdMarkedForDelete           (1u << 30)
 
@@ -107,7 +110,7 @@ extern "C" {
 /* Utilities for converting from flags to instantiate policies and vice versa. */
 #ifdef FLECS_PREFAB
 #define ECS_ID_ON_INSTANTIATE(flags) \
-    ((ecs_entity_t[]){EcsOverride, EcsOverride, EcsInherit, 0, EcsDontInherit}\
+    ((ecs_entity_t[]){EcsCopy, EcsCopy, EcsInherit, 0, EcsDontInherit}\
         [(((flags) & EcsIdOnInstantiateMask) >> 6)])
 #endif
 #define ECS_ID_ON_INSTANTIATE_FLAG(id) \
@@ -137,7 +140,10 @@ extern "C" {
 #define EcsIterProfile                 (1u << 7u)  /* Profile iterator performance. */
 #define EcsIterTrivialSearch           (1u << 8u)  /* Trivial iterator mode. */
 #define EcsIterTrivialSparse           (1u << 9u)  /* Trivial sparse iterator mode (batched entity list results). */
+#define EcsIterComponentInheritance    (1u << 10u) /* Query matches via component inheritance. */
 #define EcsIterTrivialTest             (1u << 11u) /* Trivial test mode (constrained $this). */
+#define EcsIterTreeCached              (1u << 12u) /* Cached search that only filters tables with Parent component. */
+#define EcsIterOpCtxFini               (1u << 13u) /* Query op contexts hold resources that must be released. */
 #define EcsIterTrivialCached           (1u << 14u) /* Trivial search for cached query. */
 #define EcsIterCached                  (1u << 15u) /* Cached query. */
 #define EcsIterFixedInChangeComputed   (1u << 16u) /* Change detection for fixed-in terms is done. */
@@ -145,6 +151,7 @@ extern "C" {
 #define EcsIterSkip                    (1u << 18u) /* Result was skipped for change detection. */
 #define EcsIterCppEach                 (1u << 19u) /* Uses C++ 'each' iterator. */
 #define EcsIterImmutableCacheData      (1u << 21u) /* Internally used by the engine to indicate immutable arrays from the cache. */
+#define EcsIterOpCtxSplit              (1u << 22u) /* Query op contexts were allocated separately from other iterator data. */
 
 
 /* Same as event flags. */
@@ -164,9 +171,9 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Flags that can only be set by the query implementation. */
+#define EcsQueryHasComponentInheritance (1u << 0u) /* Query matches via component inheritance. */
 #define EcsQueryTrivialSparse         (1u << 4u)  /* All terms are self, $this, And, sparse. */
 #define EcsQuerySelfTrivial           (1u << 5u)  /* All terms are trivial for tables that own their ids. */
-#define EcsQueryIsaTrivial            (1u << 6u)  /* All terms are And/Not on $this, resolved by self and/or a single IsA traversal. */
 #define EcsQueryMatchThis             (1u << 11u) /* Query has terms with $this source. */
 #define EcsQueryMatchOnlyThis         (1u << 12u) /* Query only has terms with $this source. */
 #define EcsQueryMatchOnlySelf         (1u << 13u) /* Query has no terms with up traversal. */
@@ -232,6 +239,7 @@ extern "C" {
 #define EcsTableHasBuiltins            (1u << 0u)  /* Does the table have built-in components. */
 #define EcsTableIsPrefab               (1u << 1u)  /* Does the table store prefabs. */
 #define EcsTableHasIsA                 (1u << 2u)  /* Does the table have IsA relationship. */
+#define EcsTableHasDerived             (1u << 3u)  /* Does the table have components that inherit from a base. */
 #define EcsTableHasChildOf             (1u << 4u)  /* Does the table type have ChildOf relationship. */
 #define EcsTableHasParent              (1u << 5u)  /* Does the table type have Parent component. */
 #define EcsTableHasName                (1u << 6u)  /* Does the table type have (Identifier, Name). */
@@ -251,7 +259,7 @@ extern "C" {
 #define EcsTableHasOnTableCreate       (1u << 19u)
 #define EcsTableHasOnTableDelete       (1u << 20u)
 #define EcsTableHasSparse              (1u << 21u)
-#define EcsTableHasDontFragment        (1u << 22u)
+#define EcsTableEdgeDontFragment       (1u << 22u)
 #define EcsTableOverrideDontFragment   (1u << 23u)
 #define EcsTableHasOrderedChildren     (1u << 24u)
 #define EcsTableHasOverrides           (1u << 25u)
@@ -271,6 +279,7 @@ extern "C" {
 #define EcsTableEdgeFlags        (EcsTableHasOnAdd | EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasUpNotify)
 #define EcsTableAddEdgeFlags     (EcsTableHasOnAdd | EcsTableHasSparse | EcsTableHasUpNotify)
 #define EcsTableRemoveEdgeFlags  (EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasOrderedChildren | EcsTableHasUpNotify)
+#define EcsTableRemoveActionFlags (EcsTableHasParent | EcsTableHasOrderedChildren | EcsTableHasTraversable | EcsTableHasBuiltins)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Aperiodic action flags (used by ecs_run_aperiodic())

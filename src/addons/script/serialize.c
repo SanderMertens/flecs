@@ -30,6 +30,21 @@ static int flecs_ptr_to_buf(
         format);
 }
 
+static char* flecs_ptr_to_str(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *ptr,
+    flecs_meta_format_t format)
+{
+    ecs_strbuf_t str = ECS_STRBUF_INIT;
+    if (flecs_ptr_to_buf(world, type, ptr, &str, format)) {
+        ecs_strbuf_reset(&str);
+        return NULL;
+    }
+
+    return ecs_strbuf_get(&str);
+}
+
 int ecs_ptr_to_expr_buf(
     const ecs_world_t *world,
     ecs_entity_t type,
@@ -45,15 +60,8 @@ char* flecs_script_ptr_to_expr_precise(
     const void *ptr,
     bool positional)
 {
-    ecs_strbuf_t str = ECS_STRBUF_INIT;
-    if (flecs_ptr_to_buf(world, type, ptr, &str,
-        positional ? EcsMetaExprPrecisePositional : EcsMetaExprPrecise))
-    {
-        ecs_strbuf_reset(&str);
-        return NULL;
-    }
-
-    return ecs_strbuf_get(&str);
+    return flecs_ptr_to_str(world, type, ptr,
+        positional ? EcsMetaExprPrecisePositional : EcsMetaExprPrecise);
 }
 
 char* ecs_ptr_to_expr(
@@ -61,14 +69,7 @@ char* ecs_ptr_to_expr(
     ecs_entity_t type, 
     const void* ptr)
 {
-    ecs_strbuf_t str = ECS_STRBUF_INIT;
-
-    if (ecs_ptr_to_expr_buf(world, type, ptr, &str) != 0) {
-        ecs_strbuf_reset(&str);
-        return NULL;
-    }
-
-    return ecs_strbuf_get(&str);
+    return flecs_ptr_to_str(world, type, ptr, EcsMetaExpr);
 }
 
 int ecs_ptr_to_str_buf(
@@ -85,14 +86,7 @@ char* ecs_ptr_to_str(
     ecs_entity_t type, 
     const void* ptr)
 {
-    ecs_strbuf_t str = ECS_STRBUF_INIT;
-
-    if (ecs_ptr_to_str_buf(world, type, ptr, &str) != 0) {
-        ecs_strbuf_reset(&str);
-        return NULL;
-    }
-
-    return ecs_strbuf_get(&str);
+    return flecs_ptr_to_str(world, type, ptr, EcsMetaStr);
 }
 
 #endif

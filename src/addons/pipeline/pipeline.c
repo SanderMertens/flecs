@@ -28,7 +28,11 @@ static void flecs_pipeline_free(
 {
     if (p) {
         ecs_world_t *world = p->query->world;
-        ecs_query_fini(p->query);
+        if (p->query->entity) {
+            ecs_delete(ecs_get_stage(world, 0), p->query->entity);
+        } else {
+            ecs_query_fini(p->query);
+        }
         flecs_pipeline_state_free(world, p);
     }
 }
@@ -249,7 +253,7 @@ static EcsPoly* flecs_pipeline_term_system(
     ecs_iter_t *it)
 {
     int32_t index = ecs_table_get_column_index(
-        it->real_world, it->table, flecs_poly_id(EcsSystem));
+        it->world, it->table, flecs_poly_id(EcsSystem));
     ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
     EcsPoly *poly = ecs_table_get_column(it->table, index, it->offset);
     ecs_assert(poly != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -312,6 +316,7 @@ static bool flecs_pipeline_build(
                     needs_merge = true;
                     multi_threaded = sys->multi_threaded;
                 }
+
                 if (sys->immediate != immediate) {
                     needs_merge = true;
                     immediate = sys->immediate;
@@ -367,6 +372,7 @@ static bool flecs_pipeline_build(
                     op->multi_threaded = multi_threaded;
                     op->immediate = immediate;
                 }
+
                 op->count ++;
             }
         }
@@ -417,6 +423,7 @@ static bool flecs_pipeline_build(
             } else {
                 ecs_dbg("#[green]system#[reset] %s", path);
             }
+
             ecs_os_free(path);
 #endif
 
@@ -436,6 +443,7 @@ static bool flecs_pipeline_build(
                         op[op_index].multi_threaded, 
                         !op[op_index].immediate);
                 }
+
                 ecs_log_push_1();
             }
 
@@ -547,11 +555,11 @@ int32_t flecs_run_pipeline_ops(
 
     ecs_assert(!stage_index || op->multi_threaded, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t count = ecs_vec_count(&pq->systems);
     ecs_system_t **systems = ecs_vec_first_t(&pq->systems, ecs_system_t*);
-    int32_t ran_since_merge = i - op->offset;
+    int32_t end = op->offset + op->count;
+    ecs_stage_t *s = op->immediate ? NULL : stage;
 
-    for (; i < count; i++) {
+    for (; i < end; i++) {
         ecs_system_t* sys = systems[i];
 
         /* Keep track of the last frame for which the system has run, so we
@@ -561,26 +569,13 @@ int32_t flecs_run_pipeline_ops(
             sys->last_frame = world->info.frame_count_total + 1;
         }
 
-        ecs_stage_t* s = NULL;
-        if (!op->immediate) {
-            /* If system is immediate it operates on the actual world, not
-             * the stage. Only pass stage to system if it is not immediate. */
-            s = stage;
-        }
-
         flecs_run_system(world, s, sys->query->entity, sys, stage_index,
             stage_count, delta_time, NULL);
 
         ecs_os_linc(&world->info.systems_ran_total);
-        ran_since_merge++;
-
-        if (ran_since_merge == op->count) {
-            /* Merge */
-            break;
-        }
     }
 
-    return i;
+    return i - 1;
 }
 
 void flecs_run_pipeline(
@@ -623,7 +618,7 @@ void flecs_run_pipeline(
         if (!immediate) {
             ecs_readonly_begin(world, multi_threaded);
         } else {
-            flecs_defer_begin(world, stage);
+            flecs_commands_begin(world, stage);
         }
 
         ECS_BIT_COND(world->flags, EcsWorldMultiThreaded, op_multi_threaded);
@@ -668,7 +663,7 @@ void flecs_run_pipeline(
                 pq->cur_op->time_spent += ecs_time_measure(&mt);
             }
         } else {
-            flecs_defer_end(world, stage);
+            flecs_commands_end(world, stage);
         }
 
         /* Store the current state of the schedule after we synchronized the
@@ -805,6 +800,7 @@ static ecs_entity_t flecs_pipeline_init(
     if (!qd.order_by_callback) {
         qd.order_by_callback = flecs_entity_compare;
     }
+
     qd.entity = entity;
 
     ecs_query_t *query = query_init(world, entity, &qd);
@@ -867,6 +863,7 @@ ecs_entity_t ecs_pipeline_init(
     if (!r && entity_created) {
         ecs_delete(world, result);
     }
+
     return r;
 error:
     return 0;

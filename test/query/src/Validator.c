@@ -71,7 +71,7 @@ static void query_flags_to_str(uint64_t value) {
 }
 
 #define test_query_flags(expect, value)\
-    if ((EcsQueryValid|expect) != ((value) & ~(ecs_flags32_t)(EcsQuerySelfTrivial|EcsQueryIsaTrivial))) {\
+    if ((EcsQueryValid|expect) != ((value) & ~(ecs_flags32_t)(EcsQuerySelfTrivial))) {\
         printf("expected: ");\
         query_flags_to_str(expect);\
         printf("got:      ");\
@@ -587,7 +587,7 @@ void Validator_validate_1_term_override_default_set(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
-    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsOverride);
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsCopy);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .id = Tag }}
@@ -612,7 +612,7 @@ void Validator_validate_1_term_override_pair_default_set(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
-    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsOverride);
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsCopy);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .id = ecs_pair(Rel, EcsWildcard) }}
@@ -687,7 +687,7 @@ void Validator_validate_1_term_up_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
-    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsOverride);
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsCopy);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .id = Tag, .src.id = EcsUp }}
@@ -713,7 +713,7 @@ void Validator_validate_1_term_up_override_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
-    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsOverride);
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsCopy);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .id = ecs_pair(Rel, EcsWildcard), .src.id = EcsUp }}
@@ -769,7 +769,7 @@ void Validator_validate_1_term_up_isa_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
-    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsOverride);
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsCopy);
 
     ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query(world, {
@@ -785,7 +785,7 @@ void Validator_validate_1_term_up_isa_override_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
-    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsOverride);
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsCopy);
 
     ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query(world, {
@@ -3610,12 +3610,14 @@ void Validator_validate_simple_w_inherited_component(void) {
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, Unit|EcsSelf|EcsIsEntity);
     test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
-    test_uint(q->terms[0].flags_, EcsTermIdInherited);
+    test_uint(q->terms[0].flags_, EcsTermIdInherited|EcsTermIsCacheable);
 
     test_assert(!(q->data_fields & (1 << 0)));
 
     test_query_flags(EcsQueryMatchOnlyThis|EcsQueryMatchThis|
-        EcsQueryMatchOnlySelf|EcsQueryHasTableThisVar,
+        EcsQueryMatchOnlySelf|EcsQueryHasTableThisVar|
+        EcsQueryHasComponentInheritance|EcsQueryHasCacheable|
+        EcsQueryIsCacheable,
         q->flags);
     
     ecs_query_fini(q);

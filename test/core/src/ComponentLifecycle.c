@@ -553,9 +553,9 @@ void ComponentLifecycle_merge_to_different_table(void) {
     copy_rotation = 0;
     move_rotation = 0;
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_remove(world, e, Position);
+    ecs_remove(stage_1, e, Position);
     test_int(ctor_position, 0);
     test_int(dtor_position, 0);
     test_int(copy_position, 0);
@@ -571,7 +571,7 @@ void ComponentLifecycle_merge_to_different_table(void) {
     test_int(copy_rotation, 0);
     test_int(move_rotation, 0);
 
-    ecs_add(world, e, Mass);
+    ecs_add(stage_1, e, Mass);
     test_int(ctor_mass, 0);
 
     test_int(ctor_velocity, 0);
@@ -584,7 +584,7 @@ void ComponentLifecycle_merge_to_different_table(void) {
     test_int(copy_rotation, 0);
     test_int(move_rotation, 0);
 
-    ecs_remove(world, e, Rotation);
+    ecs_remove(stage_1, e, Rotation);
     test_int(ctor_rotation, 0);
     test_int(dtor_rotation, 0);
     test_int(copy_rotation, 0);
@@ -595,7 +595,7 @@ void ComponentLifecycle_merge_to_different_table(void) {
     test_int(copy_velocity, 0);
     test_int(move_velocity, 0);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
@@ -639,11 +639,11 @@ void ComponentLifecycle_merge_to_new_table(void) {
         .move = ecs_move(Position)
     });
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_add(world, e, Position);
+    ecs_add(stage_1, e, Position);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(ctor_position, 1);
     test_int(move_position, 0);
@@ -699,16 +699,16 @@ void ComponentLifecycle_delete_in_stage(void) {
     copy_mass = 0;
     move_mass = 0;
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     /* None of the components should be destructed while in the stage as they
      * were never copied to the stage */
-    ecs_delete(world, e);
+    ecs_delete(stage_1, e);
     test_int(dtor_position, 0);
     test_int(dtor_velocity, 0);
     test_int(dtor_mass, 0);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_exists(world, e));
     test_assert(!ecs_is_alive(world, e));
@@ -1214,15 +1214,15 @@ void ComponentLifecycle_ctor_w_emplace_defer(void) {
     ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
-    ecs_defer_begin(world);
-    Position *ptr = ecs_emplace(world, e, Position, NULL);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
+    Position *ptr = ecs_emplace(stage_1, e, Position, NULL);
     test_assert(ptr != NULL);
     test_int(ctor_position, 0);
     ptr->x = 10;
     ptr->y = 20;
-    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(stage_1, e, Position));
     test_int(ctor_position, 0);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
     test_int(ctor_position, 0);
@@ -1290,12 +1290,12 @@ void ComponentLifecycle_on_add_w_emplace_defer(void) {
     ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     test_int(on_add_position, 0);
-    const Position *ptr = ecs_emplace(world, e, Position, NULL);
+    const Position *ptr = ecs_emplace(stage_1, e, Position, NULL);
     test_assert(ptr != NULL);
     test_int(on_add_position, 0);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(on_add_position, 1);
 
@@ -1338,16 +1338,16 @@ void ComponentLifecycle_ctor_w_emplace_defer_use_move_ctor(void) {
     ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     test_int(on_add_position, 0);
-    Position *ptr = ecs_emplace(world, e, Position, NULL);
+    Position *ptr = ecs_emplace(stage_1, e, Position, NULL);
     ptr->x = 10;
     ptr->y = 20;
     test_assert(ptr != NULL);
     test_int(ctor_position, 0);
     test_int(move_position, 0);
     test_int(move_ctor_position, 0);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(ctor_position, 0);
     test_int(move_position, 0);
@@ -1375,11 +1375,11 @@ void ComponentLifecycle_ctor_w_emplace_defer_twice(void) {
     ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     {
         bool is_new = false;
-        Position *ptr = ecs_emplace(world, e, Position, &is_new);
+        Position *ptr = ecs_emplace(stage_1, e, Position, &is_new);
         test_bool(is_new, true);
         test_assert(ptr != NULL);
         ptr->x = 10;
@@ -1387,7 +1387,7 @@ void ComponentLifecycle_ctor_w_emplace_defer_twice(void) {
     }
     {
         bool is_new = false;
-        Position *ptr = ecs_emplace(world, e, Position, &is_new);
+        Position *ptr = ecs_emplace(stage_1, e, Position, &is_new);
         test_bool(is_new, true);
         test_assert(ptr != NULL);
         ptr->x = 20;
@@ -1398,7 +1398,7 @@ void ComponentLifecycle_ctor_w_emplace_defer_twice(void) {
     test_int(move_position, 0);
     test_int(move_ctor_position, 0);
     test_int(move_dtor_position, 0);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(ctor_position, 0);
     test_int(move_position, 0);
@@ -1430,11 +1430,11 @@ void ComponentLifecycle_ctor_w_emplace_defer_existing(void) {
     test_int(ctor_position, 1);
     ctor_position = 0;
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     {
         bool is_new = false;
-        Position *ptr = ecs_emplace(world, e, Position, &is_new);
+        Position *ptr = ecs_emplace(stage_1, e, Position, &is_new);
         test_bool(is_new, false);
         test_assert(ptr != NULL);
         ptr->x = 10;
@@ -1442,7 +1442,7 @@ void ComponentLifecycle_ctor_w_emplace_defer_existing(void) {
     }
     {
         bool is_new = false;
-        Position *ptr = ecs_emplace(world, e, Position, &is_new);
+        Position *ptr = ecs_emplace(stage_1, e, Position, &is_new);
         test_bool(is_new, false);
         test_assert(ptr != NULL);
         ptr->x = 20;
@@ -1453,7 +1453,7 @@ void ComponentLifecycle_ctor_w_emplace_defer_existing(void) {
     test_int(move_position, 0);
     test_int(move_ctor_position, 0);
     test_int(move_dtor_position, 0);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(ctor_position, 0);
     test_int(move_position, 0);
@@ -1511,7 +1511,6 @@ void ComponentLifecycle_merge_async_stage_w_emplace(void) {
 }
 
 void ComponentLifecycle_merge_async_stage_w_emplace_to_deferred_world(void) {
-    install_test_abort();
 
     ecs_world_t *world = ecs_mini();
 
@@ -1532,9 +1531,14 @@ void ComponentLifecycle_merge_async_stage_w_emplace_to_deferred_world(void) {
     p->x = 10;
     p->y = 20;
 
-    ecs_defer_begin(world);
-    test_expect_abort();
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_merge(async);
+    test_assert(ecs_has(world, e, Position));
+    test_int(ecs_get(world, e, Position)->x, 10);
+    test_int(ecs_get(world, e, Position)->y, 20);
+    ecs_merge(stage_1);
+    ecs_stage_free(async);
+    ecs_fini(world);
 }
 
 static void invalid_ctor(void *ptr, int count, const ecs_type_info_t *ti) {
@@ -1650,12 +1654,12 @@ void ComponentLifecycle_ctor_w_emplace_w_with_defer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    Velocity *v = ecs_emplace(world, e, Velocity, NULL);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
+    Velocity *v = ecs_emplace(stage_1, e, Velocity, NULL);
     test_assert(v != NULL);
     v->x = 1;
     v->y = 2;
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Velocity));
     test_assert(ecs_has(world, e, Position));
@@ -1687,16 +1691,16 @@ void ComponentLifecycle_emplace_2_components_defer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    Position *p = ecs_emplace(world, e, Position, NULL);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
+    Position *p = ecs_emplace(stage_1, e, Position, NULL);
     test_assert(p != NULL);
     p->x = 10;
     p->y = 20;
-    Velocity *v = ecs_emplace(world, e, Velocity, NULL);
+    Velocity *v = ecs_emplace(stage_1, e, Velocity, NULL);
     test_assert(v != NULL);
     v->x = 1;
     v->y = 2;
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
@@ -1731,13 +1735,13 @@ void ComponentLifecycle_set_and_emplace_defer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {10, 20});
-    Velocity *v = ecs_emplace(world, e, Velocity, NULL);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {10, 20});
+    Velocity *v = ecs_emplace(stage_1, e, Velocity, NULL);
     test_assert(v != NULL);
     v->x = 1;
     v->y = 2;
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
@@ -1777,16 +1781,16 @@ void ComponentLifecycle_emplace_2_components_w_with_defer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    Position *p = ecs_emplace(world, e, Position, NULL);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
+    Position *p = ecs_emplace(stage_1, e, Position, NULL);
     test_assert(p != NULL);
     p->x = 10;
     p->y = 20;
-    Velocity *v = ecs_emplace(world, e, Velocity, NULL);
+    Velocity *v = ecs_emplace(stage_1, e, Velocity, NULL);
     test_assert(v != NULL);
     v->x = 1;
     v->y = 2;
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
@@ -1825,13 +1829,13 @@ void ComponentLifecycle_set_and_emplace_w_with_defer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {10, 20});
-    Velocity *v = ecs_emplace(world, e, Velocity, NULL);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {10, 20});
+    Velocity *v = ecs_emplace(stage_1, e, Velocity, NULL);
     test_assert(v != NULL);
     v->x = 1;
     v->y = 2;
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
@@ -2098,7 +2102,7 @@ static void other_delete_dtor(
     test_assert(comp->other != 0);
 
     if (ecs_is_valid(world, comp->other)) {
-        ecs_delete(world, comp->other);
+        ecs_delete(ecs_get_stage(world, 0), comp->other);
         other_dtor_valid_entity ++;
 
         test_assert(ecs_is_valid(world, e));
@@ -2124,7 +2128,7 @@ static void self_delete_dtor(
     test_assert(e != 0);
 
     if (ecs_is_valid(world, e)) {
-        ecs_delete(world, e);
+        ecs_delete(ecs_get_stage(world, 0), e);
 
         // Delete should be deferred
         test_assert(ecs_is_valid(world, e));
@@ -2537,23 +2541,23 @@ static int on_remove_tag_set_position_invoked = 0;
 
 static void on_remove_tag_set_position(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
-        ecs_set(it->world, it->entities[i], Position, {10, 20});
+        ecs_set(it->stage, it->entities[i], Position, {10, 20});
         on_remove_tag_set_position_invoked ++;
     }
 }
 
 static void on_remove_tag_set_position_pair(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
-        ecs_set_pair(it->world, it->entities[i], 
-            Position, ecs_new(it->world), {10, 20});
+        ecs_set_pair(it->stage, it->entities[i],
+            Position, ecs_new(it->stage), {10, 20});
         on_remove_tag_set_position_invoked ++;
     }
 }
 
 static void on_remove_tag_set_position_obj_pair(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
-        ecs_set_pair_second(it->world, it->entities[i], 
-            ecs_new(it->world), Position, {10, 20});
+        ecs_set_pair_second(it->stage, it->entities[i],
+            ecs_new(it->stage), Position, {10, 20});
         on_remove_tag_set_position_invoked ++;
     }
 }
@@ -3636,18 +3640,18 @@ void ComponentLifecycle_batched_set_new_component_w_lifecycle(void) {
         .dtor = ecs_dtor(Position)
     });
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_entity_t e = ecs_new(world);
-    ecs_set(world, e, Position, {10, 20});
-    ecs_add(world, e, Tag); // to hit command batching
+    ecs_entity_t e = ecs_new(stage_1);
+    ecs_set(stage_1, e, Position, {10, 20});
+    ecs_add(stage_1, e, Tag); // to hit command batching
 
     test_int(ctor_position, 1);
     test_int(move_position, 0);
     test_int(copy_position, 1);
     test_int(dtor_position, 0);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(ctor_position, 2);
     test_int(move_position, 1);
@@ -3677,18 +3681,18 @@ void ComponentLifecycle_batched_ensure_new_component_w_lifecycle(void) {
         .dtor = ecs_dtor(Position)
     });
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_entity_t e = ecs_new(world);
-    ecs_ensure(world, e, Position);
-    ecs_add(world, e, Tag); // to hit command batching
+    ecs_entity_t e = ecs_new(stage_1);
+    ecs_ensure(stage_1, e, Position);
+    ecs_add(stage_1, e, Tag); // to hit command batching
 
     test_int(ctor_position, 1);
     test_int(move_position, 0);
     test_int(copy_position, 0);
     test_int(dtor_position, 0);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(ctor_position, 2);
     test_int(move_position, 1);
@@ -3854,7 +3858,7 @@ void ComponentLifecycle_new_w_table_on_add_hook(void) {
 
 static int hook_count = 0;
 static void hook_w_count(ecs_iter_t *it) {
-    hook_count = ecs_count_id(it->world, ecs_field_id(it, 0));
+    hook_count = ecs_count_id(it->stage, ecs_field_id(it, 0));
     test_int(hook_count, 1);
 }
 
@@ -4806,7 +4810,7 @@ void ComponentLifecycle_dtor_after_add_exclusive_component_last(void) {
 static int has_hook_invoked = 0;
 
 static void HasHook(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
@@ -4818,7 +4822,7 @@ static void HasHook(ecs_iter_t *it) {
 static int get_hook_invoked = 0;
 
 static void GetHook(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
     Position *p = ecs_field(it, Position, 0);
 
     for (int i = 0; i < it->count; i ++) {
@@ -4908,7 +4912,7 @@ void ComponentLifecycle_get_in_on_add_hook_move(void) {
 static int get_name_hook_invoked = 0;
 
 static void GetNameHook(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
@@ -5440,11 +5444,11 @@ void ComponentLifecycle_on_validate_false_blocks_on_set_deferred(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {0, 0});
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {0, 0});
     test_int(on_validate_invoked, 0);
     test_int(on_validate_on_set_invoked, 0);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(on_validate_invoked, 1);
     test_int(on_validate_on_set_invoked, 0);
@@ -5465,9 +5469,9 @@ void ComponentLifecycle_on_validate_true_invokes_on_set_deferred(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {10, 20});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {10, 20});
+    ecs_merge(stage_1);
 
     test_int(on_validate_invoked, 1);
     test_int(on_validate_on_set_invoked, 1);
@@ -5658,4 +5662,865 @@ void ComponentLifecycle_delete_component_w_cached_query_in_component(void) {
     ecs_fini(world);
 
     test_int(query_holder_dtor_invoked, 1);
+}
+
+static ecs_world_t *locked_storage_world;
+static ecs_entity_t locked_storage_entity;
+static ecs_entity_t locked_storage_tag;
+
+static void locked_storage_abort(void) {
+    test_int(ecs_log_last_error(), ECS_LOCKED_STORAGE);
+    test_abort();
+}
+
+static void locked_storage_hook(ecs_iter_t *it) {
+    for (int i = 0; i < it->count; i ++) {
+        ecs_add_id(it->world, it->entities[i], locked_storage_tag);
+    }
+}
+
+static void locked_storage_xtor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    ecs_entity_t e = locked_storage_entity;
+    if (e) {
+        locked_storage_entity = 0;
+        ecs_add_id(locked_storage_world, e, locked_storage_tag);
+    }
+}
+
+static void locked_storage_noop_xtor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *ti) { }
+
+static void locked_storage_copy(
+    void *dst_ptr,
+    const void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    ecs_os_memcpy(dst_ptr, src_ptr, ti->size * count);
+    ecs_entity_t e = locked_storage_entity;
+    if (e) {
+        locked_storage_entity = 0;
+        ecs_add_id(locked_storage_world, e, locked_storage_tag);
+    }
+}
+
+static void locked_storage_move(
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    ecs_os_memcpy(dst_ptr, src_ptr, ti->size * count);
+    ecs_entity_t e = locked_storage_entity;
+    if (e) {
+        locked_storage_entity = 0;
+        ecs_add_id(locked_storage_world, e, locked_storage_tag);
+    }
+}
+
+void ComponentLifecycle_locked_storage_on_add(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = locked_storage_hook
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    test_expect_abort();
+    ecs_add(world, e, Position);
+}
+
+void ComponentLifecycle_locked_storage_on_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .on_set = locked_storage_hook
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_set(world, e, Position, {10, 20});
+
+    test_assert(ecs_has_id(world, e, locked_storage_tag));
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_locked_storage_on_remove(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .on_remove = locked_storage_hook
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+
+    test_expect_abort();
+    ecs_remove(world, e, Position);
+}
+
+void ComponentLifecycle_locked_storage_on_replace(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .on_replace = locked_storage_hook
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    test_expect_abort();
+    ecs_set(world, e, Position, {10, 20});
+}
+
+void ComponentLifecycle_locked_storage_ctor(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+    locked_storage_world = world;
+    locked_storage_entity = 0;
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = locked_storage_xtor
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    locked_storage_entity = e;
+
+    test_expect_abort();
+    ecs_add(world, e, Position);
+}
+
+void ComponentLifecycle_locked_storage_dtor(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+    locked_storage_world = world;
+    locked_storage_entity = 0;
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .dtor = locked_storage_xtor
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    locked_storage_entity = e;
+
+    test_expect_abort();
+    ecs_remove(world, e, Position);
+}
+
+void ComponentLifecycle_locked_storage_copy(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+    locked_storage_world = world;
+    locked_storage_entity = 0;
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .copy = locked_storage_copy
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+    locked_storage_entity = e;
+
+    test_expect_abort();
+    ecs_set(world, e, Position, {30, 40});
+}
+
+void ComponentLifecycle_locked_storage_move(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+    locked_storage_world = world;
+    locked_storage_entity = 0;
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .move = locked_storage_move
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_set(stage, e, Position, {10, 20});
+    locked_storage_entity = e;
+
+    test_expect_abort();
+    ecs_merge(stage);
+}
+
+void ComponentLifecycle_locked_storage_copy_ctor(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+    locked_storage_world = world;
+    locked_storage_entity = 0;
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsCopy);
+
+    ecs_set_hooks(world, Position, {
+        .copy_ctor = locked_storage_copy
+    });
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Position, {10, 20});
+
+    ecs_entity_t inst = ecs_new(world);
+    locked_storage_entity = inst;
+
+    test_expect_abort();
+    ecs_add_pair(world, inst, EcsIsA, base);
+}
+
+void ComponentLifecycle_locked_storage_move_ctor(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+    locked_storage_world = world;
+    locked_storage_entity = 0;
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, Foo);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .move_ctor = locked_storage_move
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    locked_storage_entity = e1;
+
+    test_expect_abort();
+    ecs_add(world, e1, Foo);
+}
+
+void ComponentLifecycle_locked_storage_ctor_move_dtor(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+    locked_storage_world = world;
+    locked_storage_entity = 0;
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, Foo);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .ctor_move_dtor = locked_storage_move
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    locked_storage_entity = e;
+
+    test_expect_abort();
+    ecs_add(world, e, Foo);
+}
+
+void ComponentLifecycle_locked_storage_move_dtor(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+    locked_storage_world = world;
+    locked_storage_entity = 0;
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .dtor = locked_storage_noop_xtor,
+        .move_dtor = locked_storage_move
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    locked_storage_entity = e2;
+
+    test_expect_abort();
+    ecs_delete(world, e1);
+}
+
+typedef struct Owned {
+    int32_t *value;
+} Owned;
+
+static int32_t owned_alive = 0;
+
+static void owned_dtor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *info)
+{
+    (void)info;
+    Owned *o = ptr;
+    int i;
+    for (i = 0; i < count; i ++) {
+        if (o[i].value) {
+            ecs_os_free(o[i].value);
+            owned_alive --;
+        }
+        o[i].value = NULL;
+    }
+}
+
+static void owned_move_dtor(
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *info)
+{
+    (void)info;
+    Owned *dst = dst_ptr, *src = src_ptr;
+    int i;
+    for (i = 0; i < count; i ++) {
+        if (dst[i].value) {
+            ecs_os_free(dst[i].value);
+            owned_alive --;
+        }
+        dst[i].value = src[i].value;
+        src[i].value = NULL;
+    }
+}
+
+static void owned_ctor_move_dtor(
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *info)
+{
+    (void)info;
+    Owned *dst = dst_ptr, *src = src_ptr;
+    int i;
+    for (i = 0; i < count; i ++) {
+        dst[i].value = src[i].value;
+        src[i].value = NULL;
+    }
+}
+
+void ComponentLifecycle_delete_nonlast_w_ctor_move_dtor_no_move_ctor(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Owned);
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor,
+        .move_dtor = owned_move_dtor,
+        .ctor_move_dtor = owned_ctor_move_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_delete(world, e1);
+    test_int(owned_alive, 2);
+    test_assert(!ecs_is_alive(world, e1));
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+    test_int(*ecs_get(world, e3, Owned)->value, 3);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_delete_last_w_ctor_move_dtor_no_move_ctor(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Owned);
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor,
+        .move_dtor = owned_move_dtor,
+        .ctor_move_dtor = owned_ctor_move_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_delete(world, e3);
+    test_int(owned_alive, 2);
+    test_assert(!ecs_is_alive(world, e3));
+    test_int(*ecs_get(world, e1, Owned)->value, 1);
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_delete_nonlast_w_ctor_move_dtor_no_move_ctor_deferred(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Owned);
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor,
+        .move_dtor = owned_move_dtor,
+        .ctor_move_dtor = owned_ctor_move_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
+    ecs_delete(stage_1, e1);
+    test_int(owned_alive, 3);
+    ecs_merge(stage_1);
+
+    test_int(owned_alive, 2);
+    test_assert(!ecs_is_alive(world, e1));
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+    test_int(*ecs_get(world, e3, Owned)->value, 3);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_remove_nonlast_w_ctor_move_dtor_no_move_ctor(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Owned);
+    test_assert(ecs_id(Position) < ecs_id(Owned));
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor,
+        .move_dtor = owned_move_dtor,
+        .ctor_move_dtor = owned_ctor_move_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add(world, e3, Position);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_remove(world, e1, Owned);
+    test_int(owned_alive, 2);
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(!ecs_has(world, e1, Owned));
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+    test_int(*ecs_get(world, e3, Owned)->value, 3);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_remove_nonlast_w_ctor_move_dtor_no_move_ctor_interleaved(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Owned);
+    ECS_COMPONENT(world, Position);
+    test_assert(ecs_id(Owned) < ecs_id(Position));
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor,
+        .move_dtor = owned_move_dtor,
+        .ctor_move_dtor = owned_ctor_move_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add(world, e3, Position);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_remove(world, e1, Owned);
+    test_int(owned_alive, 2);
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(!ecs_has(world, e1, Owned));
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+    test_int(*ecs_get(world, e3, Owned)->value, 3);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_remove_last_w_ctor_move_dtor_no_move_ctor(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Owned);
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor,
+        .move_dtor = owned_move_dtor,
+        .ctor_move_dtor = owned_ctor_move_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add(world, e3, Position);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_remove(world, e3, Owned);
+    test_int(owned_alive, 2);
+    test_assert(ecs_has(world, e3, Position));
+    test_assert(!ecs_has(world, e3, Owned));
+    test_int(*ecs_get(world, e1, Owned)->value, 1);
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_remove_nonlast_w_ctor_move_dtor_no_move_ctor_deferred(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Owned);
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor,
+        .move_dtor = owned_move_dtor,
+        .ctor_move_dtor = owned_ctor_move_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add(world, e3, Position);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove(stage_1, e1, Owned);
+    test_int(owned_alive, 3);
+    ecs_merge(stage_1);
+
+    test_int(owned_alive, 2);
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(!ecs_has(world, e1, Owned));
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+    test_int(*ecs_get(world, e3, Owned)->value, 3);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_add_nonlast_w_ctor_move_dtor_no_move_ctor(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Owned);
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor,
+        .move_dtor = owned_move_dtor,
+        .ctor_move_dtor = owned_ctor_move_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_add(world, e1, Position);
+    test_int(owned_alive, 3);
+    test_assert(ecs_has(world, e1, Position));
+    test_int(*ecs_get(world, e1, Owned)->value, 1);
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+    test_int(*ecs_get(world, e3, Owned)->value, 3);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_delete_nonlast_dtor_only(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Owned);
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_delete(world, e1);
+    test_int(owned_alive, 2);
+    test_assert(!ecs_is_alive(world, e1));
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+    test_int(*ecs_get(world, e3, Owned)->value, 3);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_remove_nonlast_dtor_only(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Owned);
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add(world, e3, Position);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_remove(world, e1, Owned);
+    test_int(owned_alive, 2);
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(!ecs_has(world, e1, Owned));
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+    test_int(*ecs_get(world, e3, Owned)->value, 3);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_remove_other_nonlast_dtor_only(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Owned);
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add(world, e3, Position);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_remove(world, e1, Position);
+    test_int(owned_alive, 3);
+    test_assert(!ecs_has(world, e1, Position));
+    test_int(*ecs_get(world, e1, Owned)->value, 1);
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+    test_int(*ecs_get(world, e3, Owned)->value, 3);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_add_nonlast_dtor_only(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Owned);
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_add(world, e1, Position);
+    test_int(owned_alive, 3);
+    test_assert(ecs_has(world, e1, Position));
+    test_int(*ecs_get(world, e1, Owned)->value, 1);
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+    test_int(*ecs_get(world, e3, Owned)->value, 3);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
 }

@@ -1,0 +1,9 @@
+{
+    "id": "async_block",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ]
+    }
+}

@@ -4,6 +4,31 @@ struct Pair {
     float value;
 };
 
+struct InheritUnit {
+    int32_t hp;
+};
+
+struct InheritWarrior : InheritUnit {
+    int32_t dmg;
+};
+
+struct InheritMage : InheritUnit {
+    int32_t mana;
+};
+
+struct VirtualBase {
+    int32_t x;
+    VirtualBase(int32_t x_ = 0) : x(x_) { }
+    virtual ~VirtualBase() { }
+    virtual int32_t value() const { return -1; }
+};
+
+struct VirtualDerived : VirtualBase {
+    int32_t y;
+    VirtualDerived(int32_t x_ = 0, int32_t y_ = 0) : VirtualBase(x_), y(y_) { }
+    int32_t value() const override { return x + y; }
+};
+
 struct Position_Df {
     static constexpr bool dont_fragment = true;
     float x, y;
@@ -201,6 +226,96 @@ void Query_term_each_pair_object_wildcard(void) {
     });
 
     test_int(count, 3);
+}
+
+void Query_term_each_sparse_component(void) {
+    flecs::world ecs;
+
+    ecs.component<Position>().add(flecs::Sparse);
+
+    auto e_1 = ecs.entity().set<Position>({1, 2});
+    auto e_2 = ecs.entity().set<Position>({3, 4});
+    auto e_3 = ecs.entity().set<Position>({5, 6});
+
+    e_3.add<Tag>();
+
+    int32_t count = 0;
+    ecs.each<Position>([&](flecs::entity e, Position& p) {
+        if (e == e_1) {
+            test_int(p.x, 1);
+            test_int(p.y, 2);
+            count ++;
+        }
+        if (e == e_2) {
+            test_int(p.x, 3);
+            test_int(p.y, 4);
+            count ++;
+        }
+        if (e == e_3) {
+            test_int(p.x, 5);
+            test_int(p.y, 6);
+            count ++;
+        }
+    });
+
+    test_int(count, 3);
+}
+
+void Query_term_each_dont_fragment_component(void) {
+    flecs::world ecs;
+
+    ecs.component<Position>().add(flecs::DontFragment);
+
+    auto e_1 = ecs.entity().set<Position>({1, 2});
+    auto e_2 = ecs.entity().set<Position>({3, 4});
+    auto e_3 = ecs.entity().set<Position>({5, 6});
+
+    e_3.add<Tag>();
+
+    int32_t count = 0;
+    ecs.each<Position>([&](flecs::entity e, Position& p) {
+        if (e == e_1) {
+            test_int(p.x, 1);
+            test_int(p.y, 2);
+            count ++;
+        }
+        if (e == e_2) {
+            test_int(p.x, 3);
+            test_int(p.y, 4);
+            count ++;
+        }
+        if (e == e_3) {
+            test_int(p.x, 5);
+            test_int(p.y, 6);
+            count ++;
+        }
+    });
+
+    test_int(count, 3);
+}
+
+void Query_term_each_dont_fragment_pair_object_wildcard(void) {
+    flecs::world ecs;
+
+    auto rel = ecs.entity().add(flecs::DontFragment);
+    auto obj_1 = ecs.entity();
+    auto obj_2 = ecs.entity();
+
+    auto e_1 = ecs.entity().add(rel, obj_1);
+    auto e_2 = ecs.entity().add(rel, obj_1);
+    e_2.remove(rel, obj_1);
+    e_2.add(rel, obj_2);
+    e_2.remove(rel, obj_2);
+    e_2.add(rel, obj_1);
+
+    int32_t count = 0;
+    ecs.each(ecs.pair(rel, flecs::Wildcard), [&](flecs::entity e) {
+        if (e == e_1 || e == e_2) {
+            count ++;
+        }
+    });
+
+    test_int(count, 2);
 }
 
 void Query_default_ctor_no_assign(void) {
@@ -1944,7 +2059,7 @@ void Query_compare_term_id(void) {
     
     q.run([&](flecs::iter& it) {
         while (it.next()) {
-            test_assert(it.id(0) == it.world().id<Tag>());
+            test_assert(it.id(0) == it.stage().id<Tag>());
             test_assert(it.entity(0) == e);
         }
         count ++;
@@ -3120,12 +3235,12 @@ void Query_not_w_write(void) {
     auto e = ecs.entity().add<A>();
 
     int32_t count = 0;
-    ecs.defer([&] {
-        q.each([&](flecs::entity e) {
-            e.add<B>();
-            count ++;
-        });
+    flecs::world stage_1 = ecs.get_stage(0);
+    q.each([&](flecs::entity e) {
+        e.mut(stage_1).add<B>();
+        count ++;
     });
+    stage_1.merge();
 
     test_int(1, count);
     test_assert(e.has<B>());
@@ -3945,11 +4060,33 @@ void Query_copy_operators(void) {
 
     test_assert(copyAssign.c_ptr() == q.c_ptr());
 
+    copyAssign = copyAssign;
+
+    test_assert(copyAssign.c_ptr() == q.c_ptr());
+
     flecs::query<> defaultInit{};
     flecs::query<> copyCtorDefault{defaultInit};
     copyAssign = defaultInit;
 
     test_assert(copyAssign.c_ptr() == defaultInit.c_ptr());
+}
+
+void Query_move_assign(void) {
+    flecs::world world;
+
+    flecs::query<> q = world.query_builder()
+        .with<Position>()
+        .build();
+    flecs::query<> copy = q;
+    flecs::query<> q2{};
+
+    q2 = FLECS_MOV(q);
+
+    test_assert(q.c_ptr() == nullptr);
+    test_assert(q2.c_ptr() == copy.c_ptr());
+
+    q2 = FLECS_MOV(q2);
+    test_assert(q2.c_ptr() == copy.c_ptr());
 }
 
 struct TestComponent {
@@ -4699,4 +4836,174 @@ void Query_sparse_query_dynamic_dont_inherit(void) {
 
     test_int(count, 2);
     test_int(q.count(), 2);
+}
+
+void Query_component_inheritance_each(void) {
+    flecs::world ecs;
+
+    ecs.component<InheritUnit>();
+    ecs.component<InheritWarrior>().is_a<InheritUnit>();
+
+    auto w1 = ecs.entity().set<InheritWarrior>({{10}, 1});
+    auto w2 = ecs.entity().set<InheritWarrior>({{20}, 2});
+    auto w3 = ecs.entity().set<InheritWarrior>({{30}, 3});
+
+    int32_t sum = 0, count = 0;
+    ecs.query<InheritUnit>().each([&](InheritUnit& u) {
+        sum += u.hp;
+        count ++;
+    });
+
+    test_int(count, 3);
+    test_int(sum, 60);
+
+    ecs.query<InheritUnit>().each([](InheritUnit& u) {
+        u.hp *= 2;
+    });
+
+    test_int(w1.try_get<InheritWarrior>()->hp, 20);
+    test_int(w2.try_get<InheritWarrior>()->hp, 40);
+    test_int(w3.try_get<InheritWarrior>()->hp, 60);
+    test_int(w1.try_get<InheritWarrior>()->dmg, 1);
+    test_int(w2.try_get<InheritWarrior>()->dmg, 2);
+    test_int(w3.try_get<InheritWarrior>()->dmg, 3);
+}
+
+void Query_component_inheritance_each_multiple_derived(void) {
+    flecs::world ecs;
+
+    ecs.component<InheritUnit>();
+    ecs.component<InheritWarrior>().is_a<InheritUnit>();
+    ecs.component<InheritMage>().is_a<InheritUnit>();
+
+    auto w = ecs.entity().set<InheritWarrior>({{10}, 5});
+    auto m = ecs.entity().set<InheritMage>({{20}, 7});
+
+    int32_t sum = 0, count = 0;
+    ecs.query<InheritUnit>().each([&](InheritUnit& u) {
+        sum += u.hp;
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_int(sum, 30);
+
+    test_int(w.try_get<InheritWarrior>()->dmg, 5);
+    test_int(m.try_get<InheritMage>()->mana, 7);
+}
+
+void Query_component_inheritance_each_entity(void) {
+    flecs::world ecs;
+
+    ecs.component<InheritUnit>();
+    ecs.component<InheritWarrior>().is_a<InheritUnit>();
+
+    auto w1 = ecs.entity().set<InheritWarrior>({{10}, 1});
+    auto w2 = ecs.entity().set<InheritWarrior>({{20}, 2});
+
+    int32_t found = 0;
+    ecs.query<InheritUnit>().each([&](flecs::entity e, InheritUnit& u) {
+        if (e == w1) { test_int(u.hp, 10); found ++; }
+        if (e == w2) { test_int(u.hp, 20); found ++; }
+    });
+
+    test_int(found, 2);
+}
+
+void Query_component_inheritance_base_field(void) {
+    flecs::world ecs;
+
+    ecs.component<InheritUnit>();
+    ecs.component<InheritWarrior>().is_a<InheritUnit>();
+
+    auto w1 = ecs.entity().set<InheritWarrior>({{10}, 1});
+    auto w2 = ecs.entity().set<InheritWarrior>({{20}, 2});
+    auto w3 = ecs.entity().set<InheritWarrior>({{30}, 3});
+
+    int32_t sum = 0, count = 0;
+    ecs.query<InheritUnit>().run([&](flecs::iter& it) {
+        while (it.next()) {
+            auto f = it.base_field<InheritUnit>(0);
+            for (auto i : it) {
+                sum += f[i].hp;
+                count ++;
+            }
+        }
+    });
+
+    test_int(count, 3);
+    test_int(sum, 60);
+
+    ecs.query<InheritUnit>().run([](flecs::iter& it) {
+        while (it.next()) {
+            auto f = it.base_field<InheritUnit>(0);
+            for (auto i : it) {
+                f[i].hp *= 2;
+            }
+        }
+    });
+
+    test_int(w1.try_get<InheritWarrior>()->hp, 20);
+    test_int(w2.try_get<InheritWarrior>()->hp, 40);
+    test_int(w3.try_get<InheritWarrior>()->hp, 60);
+    test_int(w1.try_get<InheritWarrior>()->dmg, 1);
+}
+
+void Query_component_inheritance_field_asserts(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.component<InheritUnit>();
+    ecs.component<InheritWarrior>().is_a<InheritUnit>();
+    ecs.entity().set<InheritWarrior>({{10}, 1});
+
+    ecs.query<InheritUnit>().run([](flecs::iter& it) {
+        while (it.next()) {
+            test_expect_abort();
+            it.field<InheritUnit>(0);
+        }
+    });
+}
+
+void Query_component_inheritance_virtual(void) {
+    flecs::world ecs;
+
+    ecs.component<VirtualBase>();
+    ecs.component<VirtualDerived>().is_a<VirtualBase>();
+
+    auto e1 = ecs.entity().set<VirtualDerived>(VirtualDerived(10, 1));
+    auto e2 = ecs.entity().set<VirtualDerived>(VirtualDerived(20, 2));
+    auto e3 = ecs.entity().set<VirtualDerived>(VirtualDerived(30, 3));
+
+    const VirtualBase *b1 = e1.try_get<VirtualBase>();
+    const VirtualBase *b2 = e2.try_get<VirtualBase>();
+    const VirtualBase *b3 = e3.try_get<VirtualBase>();
+    test_assert(b1 != nullptr);
+    test_assert(b2 != nullptr);
+    test_assert(b3 != nullptr);
+    test_int(b1->value(), 11);
+    test_int(b2->value(), 22);
+    test_int(b3->value(), 33);
+
+    int32_t sum = 0, count = 0;
+    ecs.query<VirtualBase>().each([&](VirtualBase& b) {
+        sum += b.value();
+        count ++;
+    });
+    test_int(count, 3);
+    test_int(sum, 66);
+
+    sum = 0; count = 0;
+    ecs.query<VirtualBase>().run([&](flecs::iter& it) {
+        while (it.next()) {
+            auto f = it.base_field<VirtualBase>(0);
+            for (auto i : it) {
+                sum += f[i].value();
+                count ++;
+            }
+        }
+    });
+    test_int(count, 3);
+    test_int(sum, 66);
 }

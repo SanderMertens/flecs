@@ -64,7 +64,8 @@ void ecs_os_fini(void) {
    This mainly fixes musl support, as musl doesn't define any preprocessor macro specifying its presence. */ 
 #if (defined(ECS_TARGET_LINUX) && !defined(__GLIBC__)) || defined(__COSMOCC__)
 #define HAVE_EXECINFO 0
-#elif !defined(ECS_TARGET_WINDOWS) && !defined(ECS_TARGET_EM) && !defined(ECS_TARGET_ANDROID)
+#elif !defined(ECS_TARGET_WINDOWS) && !defined(ECS_TARGET_EM) && \
+    !defined(ECS_TARGET_ANDROID) && !defined(ECS_TARGET_WASM)
 #define HAVE_EXECINFO 1
 #else
 #define HAVE_EXECINFO 0
@@ -164,15 +165,18 @@ static void flecs_log_msg(
         if (ecs_os_api.log_last_timestamp_) {
             delta = now - ecs_os_api.log_last_timestamp_;
         }
+
         ecs_os_api.log_last_timestamp_ = (int64_t)now;
 
         if (delta) {
             if (delta < 10) {
                 fputs(" ", stream);
             }
+
             if (delta < 100) {
                 fputs(" ", stream);
             }
+
             char time_buf[20];
             ecs_os_snprintf(time_buf, 20, "%u", (uint32_t)delta);
             fputs("+", stream);
@@ -187,6 +191,7 @@ static void flecs_log_msg(
         if (!now) {
             now = time(NULL);
         }
+
         char time_buf[20];
         ecs_os_snprintf(time_buf, 20, "%u", (uint32_t)now);
         fputs(time_buf, stream);
@@ -202,6 +207,7 @@ static void flecs_log_msg(
         } else {
             if (use_colors) fputs(ECS_GREY, stream);
         }
+
         fputs("info", stream);
     } else if (level == -2) {
         if (use_colors) fputs(ECS_YELLOW, stream);
@@ -379,6 +385,7 @@ static void ecs_os_api_free(void *ptr) {
         ecs_os_allocated_bytes -= size;
         ecs_os_linc(&ecs_os_api_free_count);
     }
+
     free(ptr);
 }
 #else
@@ -411,6 +418,7 @@ static void ecs_os_api_free(void *ptr) {
     if (ptr) {
         ecs_os_linc(&ecs_os_api_free_count);
     }
+
     free(ptr);
 }
 #endif
@@ -445,10 +453,20 @@ static size_t ecs_os_api_fread(void *ptr, size_t size, size_t count, FILE *file)
     return fread(ptr, size, count, file);
 }
 
+static size_t ecs_os_api_fwrite(
+    const void *ptr,
+    size_t size,
+    size_t count,
+    FILE *file)
+{
+    return fwrite(ptr, size, count, file);
+}
+
 char* ecs_os_strdup_(const char *str) {
     if (!str) {
         return NULL;
     }
+
     return ecs_os_api.strdup_(str);
 }
 
@@ -555,6 +573,7 @@ void ecs_os_set_api_defaults(void)
     ecs_os_api.fopen_ = ecs_os_api_fopen;
     ecs_os_api.fclose_ = ecs_os_api_fclose;
     ecs_os_api.fread_ = ecs_os_api_fread;
+    ecs_os_api.fwrite_ = ecs_os_api_fwrite;
 
     /* Time */
     ecs_os_api.get_time_ = ecs_os_gettime;

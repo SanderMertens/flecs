@@ -83,10 +83,12 @@ ecs_event_record_t* flecs_event_record_ensure(
     if (er) {
         return er;
     }
+
     er = flecs_sparse_get_t(&o->events, ecs_event_record_t, event);
     if (!er) {
         er = flecs_sparse_ensure_t(&o->events, ecs_event_record_t, event, NULL);
     }
+
     er->event = event;
     return er;
 }
@@ -102,12 +104,15 @@ static const ecs_event_record_t* flecs_event_record_get_if(
         if (ecs_map_is_init(&er->event_ids)) {
             return er;
         }
+
         if (er->any) {
             return er;
         }
+
         if (er->wildcard) {
             return er;
         }
+
         if (er->wildcard_pair) {
             return er;
         }
@@ -131,6 +136,7 @@ ecs_event_id_record_t* flecs_event_id_record_get(
         if (er->event_ids_filter & (1llu << (id % 64))) {
             return ecs_map_get_deref(&er->event_ids, ecs_event_id_record_t, id);
         }
+
         return NULL;
     }
 }
@@ -232,10 +238,12 @@ static int32_t flecs_event_observers_get(
                 iders[count] = flecs_event_id_record_get_if(er, id_fwc);
                 count += iders[count] != 0;
             }
+
             if (id_swc != id) {
                 iders[count] = flecs_event_id_record_get_if(er, id_swc);
                 count += iders[count] != 0;
             }
+
             if (id_pwc != id) {
                 iders[count] = flecs_event_id_record_get_if(er, id_pwc);
                 count += iders[count] != 0;
@@ -306,7 +314,8 @@ static void flecs_emit_propagate_id_for_range(
     ecs_entity_t trav,
     ecs_event_id_record_t **iders,
     int32_t ider_count,
-    ecs_table_range_t *range)
+    ecs_table_range_t *range,
+    bool notify)
 {
     ecs_table_t *table = range->table;
     int32_t count = range->count;
@@ -325,10 +334,12 @@ static void flecs_emit_propagate_id_for_range(
         it->entities = &ecs_table_entities(table)[offset];
     }
 
-    it->event_cur = ++world->event_id;
+    if (notify) {
+        it->event_cur = ++world->event_id;
+    }
 
     int32_t ider_i;
-    for (ider_i = 0; ider_i < ider_count; ider_i ++) {
+    for (ider_i = 0; notify && ider_i < ider_count; ider_i ++) {
         ecs_event_id_record_t *ider = iders[ider_i];
         if (count) {
             flecs_observers_invoke(world, &ider->up, it, table, trav);
@@ -373,57 +384,53 @@ static void flecs_emit_propagate_id(
     ecs_event_id_record_t **iders,
     int32_t ider_count)
 {
-    ecs_table_cache_iter_t idt;
+    int32_t event_cur = it->event_cur;
 
-    if ((trav == EcsChildOf) && (flecs_component_has_non_fragmenting_childof(cur))) {
-        ecs_assert(ECS_PAIR_FIRST(cur->id) == EcsChildOf, ECS_INTERNAL_ERROR, NULL);
+    if (flecs_component_has_non_fragmenting_childof(cur)) {
+        ecs_assert(trav == EcsChildOf, ECS_INTERNAL_ERROR, NULL);
 
-        if (!(cur->flags & EcsIdMarkedForDelete)) {
-            int32_t i, count = ecs_vec_count(&cur->pair->ordered_children);
-            ecs_entity_t *children = ecs_vec_first(&cur->pair->ordered_children);
-            int32_t event_cur = it->event_cur;
-            for (i = 0; i < count; i ++) {
-                ecs_record_t *r = flecs_entities_get(world, children[i]);
-                ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-
-                flecs_emit_propagate_id_for_range(
-                    world, it, cr, trav, iders, ider_count,
-                        &(ecs_table_range_t){
-                            .table = r->table,
-                            .offset = ECS_RECORD_TO_ROW(r->row),
-                            .count = 1
-                        });
-            }
-            it->event_cur = event_cur;
+        if (cur->flags & EcsIdMarkedForDelete) {
+            return;
         }
 
-        return;
-    }
+        bool notify = false;
+        for (int32_t i = 0; i < ider_count; i ++) {
+            ecs_event_id_record_t *ider = iders[i];
+            if (ider->observer_count > ider->up_notify_count) {
+                notify = true;
+                break;
+            }
+        }
 
-    if (!flecs_table_cache_iter(&cur->cache, &idt, EcsTableEmpty|EcsTableNotEmpty)) {
-        return;
-    }
+        int32_t count = ecs_vec_count(&cur->pair->ordered_children);
+        const ecs_entity_t *children = ecs_vec_first(&cur->pair->ordered_children);
+        for (int32_t i = 0; i < count; i ++) {
+            ecs_record_t *r = flecs_entities_get(world, children[i]);
+            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_table_t *table = r->table;
 
-    const ecs_table_cache_elem_t *elem;
-    int32_t event_cur = it->event_cur;
-    while ((elem = flecs_table_cache_next(&idt))) {
-        const ecs_table_record_t *tr = elem->tr;
-        ecs_table_t *table = tr->hdr.table;
-        if (!ecs_table_count(table)) {
             flecs_emit_propagate_id_for_range(
                 world, it, cr, trav, iders, ider_count,
                     &(ecs_table_range_t){
-                        .table = table
-                    });
-            continue;
+                        .table = table,
+                        .offset = ECS_RECORD_TO_ROW(r->row),
+                        .count = 1
+                    }, notify || !(table->flags & EcsTableHasParent));
         }
+    } else {
+        ecs_table_cache_iter_t idt;
+        flecs_table_cache_iter(&cur->cache, &idt, EcsTableEmpty|EcsTableNotEmpty);
 
-        flecs_emit_propagate_id_for_range(
-            world, it, cr, trav, iders, ider_count,
-                &(ecs_table_range_t){
-                    .table = table,
-                    .count = ecs_table_count(table),
-                });
+        const ecs_table_cache_elem_t *elem;
+        while ((elem = flecs_table_cache_next(&idt))) {
+            ecs_table_t *table = elem->table;
+            flecs_emit_propagate_id_for_range(
+                world, it, cr, trav, iders, ider_count,
+                    &(ecs_table_range_t){
+                        .table = table,
+                        .count = ecs_table_count(table)
+                    }, true);
+        }
     }
 
     it->event_cur = event_cur;
@@ -443,7 +450,7 @@ static void flecs_emit_propagate(
 
     if (ecs_should_log_3()) {
         char *idstr = ecs_id_str(world, tgt_cr->id);
-        ecs_dbg_3("propagate events/invalidate cache for %s", idstr);
+        ecs_dbg_3("propagate events for %s", idstr);
         ecs_os_free(idstr);
     }
 
@@ -452,8 +459,6 @@ static void flecs_emit_propagate(
     /* Propagate to records of traversable relationships */
     ecs_component_record_t *cur = tgt_cr;
     while ((cur = flecs_component_trav_next(cur))) {
-        cur->pair->reachable.generation ++; /* Invalidate cache */
-
         /* Get traversed relationship */
         ecs_entity_t trav = ECS_PAIR_FIRST(cur->id);
         if (propagate_trav && propagate_trav != trav) {
@@ -515,6 +520,7 @@ void flecs_emit_propagate_invalidate_tables(
                     flecs_emit_propagate_invalidate_tables(world, cr_t);
                 }
             }
+            continue;
         }
 
         ecs_table_cache_iter_t idt;
@@ -562,21 +568,6 @@ void flecs_emit_propagate_invalidate(
     }
 }
 
-static bool flecs_propagate_observers_exist(
-    ecs_event_id_record_t **iders,
-    int32_t ider_count)
-{
-    int32_t i;
-    for (i = 0; i < ider_count; i ++) {
-        ecs_event_id_record_t *ider = iders[i];
-        if (ecs_map_count(&ider->up) || ecs_map_count(&ider->self_up)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 static void flecs_propagate_entities(
     ecs_world_t *world,
     ecs_iter_t *it,
@@ -588,10 +579,6 @@ static void flecs_propagate_entities(
     int32_t ider_count)
 {
     if (!count) {
-        return;
-    }
-
-    if (!flecs_propagate_observers_exist(iders, ider_count)) {
         return;
     }
 
@@ -760,6 +747,7 @@ static void flecs_reachable_cache_ensure(
                     cur = flecs_components_get(world, ecs_childof(parent->value));
                     ecs_assert(cur != NULL, ECS_INTERNAL_ERROR, NULL);
                 }
+
                 flecs_reachable_cache_ensure(world, cur, depth + 1, true);
                 const ecs_vec_t *ids = &cur->pair->reachable.ids;
                 const ecs_reachable_elem_t *elems = ecs_vec_first(ids);
@@ -789,6 +777,23 @@ static void flecs_reachable_cache_ensure(
     if (validate) {
         rc->current = rc->generation;
     }
+}
+
+const ecs_vec_t* flecs_reachable_cache_get(
+    ecs_world_t *world,
+    ecs_component_record_t *cr)
+{
+    ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_reachable_cache_t *rc = &cr->pair->reachable;
+    if (rc->current != rc->generation) {
+        if (world->flags & EcsWorldMultiThreaded) {
+            return NULL;
+        }
+
+        flecs_reachable_cache_ensure(world, cr, 0, true);
+    }
+
+    return &rc->ids;
 }
 
 static void flecs_emit_forward(
@@ -1031,10 +1036,6 @@ void flecs_emit(
     ecs_flags32_t table_flags = table->flags;
 
     /* Deferring cannot be suspended for observers */
-    int32_t defer = world->stages[0]->defer;
-    if (defer < 0) {
-        world->stages[0]->defer *= -1;
-    }
 
     /* Table events are emitted for internal table operations only, and do not
      * provide component data and/or entity ids. */
@@ -1058,8 +1059,8 @@ void flecs_emit(
     int16_t columns_cache = -1;
 
     ecs_iter_t it = {
-        .world = stage,
-        .real_world = world,
+        .stage = (ecs_world_t*)world->stages[0],
+        .world = world,
         .event = event,
         .event_cur = evtx,
         .table = table,
@@ -1161,26 +1162,22 @@ repeat_event:
             (table->flags & EcsTableHasParent))
         {
             ecs_event_desc_t pdesc = *desc;
+            pdesc.event = event == EcsOnSet ? EcsOnAdd : event;
+            pdesc.set_ptr = NULL;
 
-            pdesc.event = event;
-            if (event ==  EcsOnSet) {
-                /* If the Parent component is set, forward it as an OnAdd event
-                 * for a ChildOf pair. */
-                pdesc.event = EcsOnAdd;
-            }
+            ecs_id_t pair;
+            ecs_type_t type = { .count = 1, .array = &pair };
+            pdesc.ids = &type;
 
-            /* Iterate over entities, forward for their specific parent. */
-            const EcsParent *parents = ecs_table_get_column(table, 
+            const EcsParent *parents = ecs_table_get_column(table,
                 table->component_map[ecs_id(EcsParent)] - 1, it.offset);
-            int32_t p, parent_count = pdesc.count;
-
-            for (p = 0; p < parent_count; p ++) {
+            int32_t pcount = desc->count;
+            pdesc.count = 1;
+            for (int32_t p = 0; p < pcount; p ++) {
                 ecs_entity_t parent = parents[p].value;
                 if (parent && flecs_entities_is_alive(world, parent)) {
-                    ecs_id_t pair = ecs_childof(parent);
-                    ecs_type_t type = { .count = 1, .array = &pair };
-                    pdesc.ids = &type;
-                    pdesc.set_ptr = NULL;
+                    pair = ecs_childof(parent);
+                    pdesc.offset = desc->offset + p;
                     flecs_emit(world, stage, &pdesc);
                 }
             }
@@ -1191,6 +1188,7 @@ repeat_event:
         if (!cr) {
             continue;
         }
+
         ecs_flags32_t cr_flags = cr->flags;
 
         /* Check if this id is a pair of a traversable relationship. If so, we
@@ -1198,6 +1196,13 @@ repeat_event:
         if (can_forward && ECS_IS_PAIR(id) && (cr_flags & EcsIdTraversable)) {
             const ecs_event_record_t *er_fwd = NULL;
             if (ECS_PAIR_FIRST(id) == EcsIsA) {
+                if ((event == EcsOnAdd) || (event == EcsOnRemove)) {
+                    flecs_components_on_isa_change(world, table, 
+                        &ecs_table_entities(table)[offset], count,
+                        (event == EcsOnAdd) || (it.other_table && 
+                            (it.other_table->flags & EcsTableHasIsA)));
+                }
+
                 if (event == EcsOnAdd) {
                     if (!world->stages[0]->base) {
                         /* Adding an IsA relationship can trigger prefab
@@ -1336,6 +1341,7 @@ repeat_event:
                 if (!cr) {
                     continue;
                 }
+
                 const ecs_type_info_t *ti = cr->type_info;;
                 ecs_flags32_t cr_flags = cr->flags;
 
@@ -1359,13 +1365,13 @@ repeat_event:
     }
 
 error:
-    world->stages[0]->defer = defer;
 
     ecs_os_perf_trace_pop("flecs.emit");
 
     if (measure_time) {
         world->info.emit_time_total += (ecs_ftime_t)ecs_time_measure(&t);
     }
+
     return;
 }
 
@@ -1374,6 +1380,7 @@ void ecs_emit(
     ecs_event_desc_t *desc)
 {
     ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage));
+    ecs_stage_t *main_stage = world->stages[0];
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!(desc->param && desc->const_param), ECS_INVALID_PARAMETER, 
         "cannot set param and const_param at the same time");
@@ -1406,13 +1413,14 @@ void ecs_emit(
         desc->const_param = NULL;
     }
 
-    ecs_defer_begin(world);
+    flecs_commands_begin(world, main_stage);
     flecs_emit(world, stage, desc);
-    ecs_defer_end(world);
+    flecs_commands_end(world, main_stage);
 
     if (desc->ids == &default_ids) {
         desc->ids = NULL;
     }
+
 error:
     return;
 }
@@ -1421,7 +1429,7 @@ void ecs_enqueue(
     ecs_world_t *world,
     ecs_event_desc_t *desc)
 {
-    if (!ecs_is_deferred(world)) {
+    if (!ecs_is_stage(world)) {
         ecs_emit(world, desc);
         return;
     }

@@ -7365,3 +7365,323 @@ void DontFragment_trivial_sparse_desc_terms(void) {
 
     ecs_fini(world);
 }
+
+void DontFragment_this_pair_tgt_var_w_dont_fragment_tag_on_var(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t Rel = ecs_new_w_id(world, EcsRelationship);
+    ecs_entity_t Tag = ecs_new_w_id(world, EcsDontFragment);
+
+    ecs_entity_t tgt = ecs_new_w_id(world, Tag);
+    ecs_entity_t e = ecs_new_w_pair(world, Rel, tgt);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .first.id = Rel, .second.name = "$x" },
+            { .id = Tag, .src.name = "$x" }
+        },
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    int x_var = ecs_query_find_var(q, "x");
+    test_assert(x_var != -1);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_pair(Rel, tgt), ecs_field_id(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(tgt, ecs_field_src(&it, 1));
+    test_uint(tgt, ecs_iter_get_var(&it, x_var));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_this_sparse_second_wildcard_w_empty_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(Rel, *)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+
+    ecs_add_pair(world, e1, Rel, TgtA);
+    ecs_add_pair(world, e2, Rel, TgtB);
+    ecs_remove_pair(world, e2, Rel, TgtB);
+    ecs_add_pair(world, e3, Rel, TgtC);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 0));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(e3, it.entities[0]);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(e1, it.entities[0]);
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_var_sparse_second_wildcard_w_empty_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Rel($x, *)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    int x_var = ecs_query_find_var(q, "x");
+    test_assert(x_var != -1);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+
+    ecs_add_pair(world, e1, Rel, TgtA);
+    ecs_add_pair(world, e2, Rel, TgtB);
+    ecs_remove_pair(world, e2, Rel, TgtB);
+    ecs_add_pair(world, e3, Rel, TgtC);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 0));
+    test_uint(e3, ecs_field_src(&it, 0));
+    test_uint(e3, ecs_iter_get_var(&it, x_var));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
+    test_uint(e1, ecs_field_src(&it, 0));
+    test_uint(e1, ecs_iter_get_var(&it, x_var));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_fixed_sparse_second_wildcard_w_empty_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_entity_t ent = ecs_entity(world, { .name = "ent" });
+    ecs_entity_t other = ecs_new(world);
+
+    ecs_add_pair(world, ent, Rel, TgtA);
+    ecs_add_pair(world, other, Rel, TgtB);
+    ecs_remove_pair(world, other, Rel, TgtB);
+    ecs_add_pair(world, ent, Rel, TgtC);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Rel(ent, *)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 0));
+    test_uint(ent, ecs_field_src(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
+    test_uint(ent, ecs_field_src(&it, 0));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_this_sparse_written_second_wildcard_w_empty_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Foo, (Rel, *)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
+    ecs_entity_t e3 = ecs_new_w(world, Foo);
+
+    ecs_add_pair(world, e1, Rel, TgtA);
+    ecs_add_pair(world, e2, Rel, TgtB);
+    ecs_remove_pair(world, e2, Rel, TgtB);
+    ecs_add_pair(world, e3, Rel, TgtC);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(Foo, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(e3, it.entities[0]);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(Foo, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(e1, it.entities[0]);
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_this_sparse_first_wildcard_w_empty_rel(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, RelC);
+    ECS_TAG(world, Tgt);
+
+    ecs_add_id(world, RelA, EcsDontFragment);
+    ecs_add_id(world, RelB, EcsDontFragment);
+    ecs_add_id(world, RelC, EcsDontFragment);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(*, Tgt)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+
+    ecs_add_pair(world, e1, RelA, Tgt);
+    ecs_add_pair(world, e2, RelB, Tgt);
+    ecs_remove_pair(world, e2, RelB, Tgt);
+    ecs_add_pair(world, e3, RelC, Tgt);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(ecs_pair(RelC, Tgt), ecs_field_id(&it, 0));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(e3, it.entities[0]);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 0));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(e1, it.entities[0]);
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_this_wildcard_wildcard_pair_w_empty_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelX);
+    ECS_TAG(world, RelY);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_add_id(world, RelX, EcsDontFragment);
+    ecs_add_id(world, RelY, EcsDontFragment);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, RelX, TgtA);
+    ecs_entity_t e2 = ecs_new_w_pair(world, RelY, TgtB);
+    ecs_remove_pair(world, e2, RelY, TgtB);
+    ecs_entity_t e3 = ecs_new_w_pair(world, RelY, TgtA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(*, *)",
+        .cache_kind = cache_kind
+    });
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    bool e1_found = false, e3_found = false;
+    while (ecs_query_next(&it)) {
+        for (int i = 0; i < it.count; i ++) {
+            if (it.entities[i] == e1) {
+                test_assert(!e1_found);
+                test_uint(0, ecs_field_src(&it, 0));
+                test_uint(ecs_pair(RelX, TgtA), ecs_field_id(&it, 0));
+                e1_found = true;
+            }
+
+            if (it.entities[i] == e3) {
+                test_assert(!e3_found);
+                test_uint(0, ecs_field_src(&it, 0));
+                test_uint(ecs_pair(RelY, TgtA), ecs_field_id(&it, 0));
+                e3_found = true;
+            }
+
+            test_assert(it.entities[i] != e2);
+        }
+    }
+
+    test_bool(e1_found, true);
+    test_bool(e3_found, true);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

@@ -222,7 +222,9 @@
                 "use_before_registering_reflection",
                 "use_before_registering_reflection_w_hooks",
                 "redefine_same_members_in_use",
-                "redefine_member_after_nested_type_changed"
+                "redefine_member_after_nested_type_changed",
+                "struct_wo_members",
+                "struct_wo_members_add_member"
             ]
         }, {
             "id": "NestedStructTypes",
@@ -1375,7 +1377,9 @@
                 "struct_w_overflow_array_size",
                 "struct_w_array_size_error_no_leak",
                 "struct_w_zero_array_size",
-                "struct_w_numeric_array_size"
+                "struct_w_numeric_array_size",
+                "struct_w_32_members",
+                "struct_w_64_members"
             ]
         }, {
             "id": "OpaqueTypes",
@@ -1463,7 +1467,10 @@
                 "cursor_set_value_derived",
                 "cursor_set_value_derived_member",
                 "cursor_set_value_base_to_derived_fails",
-                "cursor_set_value_unrelated_fails"
+                "cursor_set_value_unrelated_fails",
+                "empty_base",
+                "empty_base_empty_derived",
+                "empty_base_add_member"
             ]
         }, {
             "id": "Misc",

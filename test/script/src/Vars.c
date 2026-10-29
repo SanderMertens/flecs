@@ -450,3 +450,148 @@ void Vars_define_large_type_no_leak(void) {
 
     ecs_fini(world);
 }
+
+void Vars_from_iter_w_derived_component(void) {
+    typedef struct {
+        float x, y;
+    } Base;
+
+    typedef struct {
+        float x, y, z;
+    } Derived;
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Base);
+    ECS_COMPONENT(world, Derived);
+    ecs_add_pair(world, ecs_id(Derived), EcsIsA, ecs_id(Base));
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Derived, {10, 20, 30});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Derived, {40, 50, 60});
+
+    ecs_query_t *q = ecs_query(world, { .expr = "Base" });
+    test_assert(q != NULL);
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(2, it.count);
+
+    ecs_script_vars_from_iter(&it, vars, 1);
+
+    ecs_script_var_t *this_var = ecs_script_vars_lookup(vars, "this");
+    test_assert(this_var != NULL);
+    test_uint(e2, *(ecs_entity_t*)this_var->value.ptr);
+
+    ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
+    test_assert(v != NULL);
+    test_assert(v->value.ptr != NULL);
+    test_int(40, (int32_t)((Base*)v->value.ptr)->x);
+    test_int(50, (int32_t)((Base*)v->value.ptr)->y);
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_script_vars_fini(vars);
+    ecs_query_fini(q);
+    ecs_fini(world);
+}
+
+void Vars_from_iter_w_pair(void) {
+    typedef struct {
+        float x, y;
+    } Position;
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set_pair(world, e, Position, Tgt, {10, 20});
+
+    ecs_query_t *q = ecs_query(world, { .expr = "(Position, Tgt)" });
+    test_assert(q != NULL);
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+
+    ecs_script_vars_from_iter(&it, vars, 0);
+
+    ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
+    test_assert(v != NULL);
+    test_uint(v->value.type, ecs_id(Position));
+
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+    float x = 0;
+    ecs_value_t result = { .type = ecs_id(ecs_f32_t), .ptr = &x };
+    test_assert(ecs_expr_run(world, "$0.y", &result, &desc) != NULL);
+    test_flt(x, 20);
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_script_vars_fini(vars);
+    ecs_query_fini(q);
+    ecs_fini(world);
+}
+
+void Vars_from_iter_w_pair_wildcard(void) {
+    typedef struct {
+        float x, y;
+    } Position;
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set_pair(world, e1, Position, TgtA, {10, 20});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set_pair(world, e2, Position, TgtB, {30, 40});
+
+    ecs_query_t *q = ecs_query(world, { .expr = "(Position, *)" });
+    test_assert(q != NULL);
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+
+    float sum = 0;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(1, it.count);
+        ecs_script_vars_from_iter(&it, vars, 0);
+        float x = 0;
+        ecs_value_t result = { .type = ecs_id(ecs_f32_t), .ptr = &x };
+        test_assert(ecs_expr_run(world, "$0.x", &result, &desc) != NULL);
+        sum += x;
+    }
+
+    test_flt(sum, 40);
+
+    ecs_script_vars_fini(vars);
+    ecs_query_fini(q);
+    ecs_fini(world);
+}

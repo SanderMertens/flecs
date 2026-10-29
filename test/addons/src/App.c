@@ -19,7 +19,7 @@ void App_app_w_frame_action(void) {
 }
 
 static void Sys(ecs_iter_t *it) {
-    ecs_quit(it->world);
+    ecs_quit(it->stage);
 }
 
 void App_app_w_default_frame_action(void) {
@@ -34,7 +34,7 @@ void App_app_w_default_frame_action(void) {
 }
 
 static void Dummy(ecs_iter_t *it) {
-    ecs_quit(it->world);
+    ecs_quit(it->stage);
 }
 
 void App_app_w_set_threads(void) {

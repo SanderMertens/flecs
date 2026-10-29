@@ -43,12 +43,14 @@ typedef struct ecs_table__t {
 
     uint16_t generation;             /* Used for table cleanup */
     int16_t record_count;            /* Table record count including wildcards */
+    int16_t inherited_start;         /* First record registered for a base id */
 
     int16_t bs_count;
     int16_t bs_offset;
     ecs_bitset_t *bs_columns;        /* Bitset columns */
 
     struct ecs_table_record_t *records; /* Array with table records */
+    ecs_vec_t incoming[2];
 
 #ifdef FLECS_DEBUG_INFO
     /* Fields used for debug visualization */
@@ -109,6 +111,12 @@ struct ecs_table_t {
 };
 
 extern const int16_t flecs_table_empty_component_map[];
+
+/* Test whether a table record was registered for a base id (meaning the table
+ * stores a component that inherits from it) instead of for an id the table
+ * actually stores. */
+#define flecs_table_record_is_inherited(table, tr)\
+    (((tr) - (table)->_->records) >= (table)->_->inherited_start)
 
 /* Init table */
 void flecs_table_init(

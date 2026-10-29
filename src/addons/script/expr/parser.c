@@ -9,11 +9,11 @@
 
 #include "../script.h"
 #include "../../parser/grammar.h"
+#include <errno.h>
 
 /* From https://en.cppreference.com/w/c/language/operator_precedence */
 
-static int flecs_expr_precedence[] = {
-    [EcsTokParenOpen] = 1,
+static int flecs_expr_precedence[EcsTokLast] = {
     [EcsTokMember] = 1,
     [EcsTokBracketOpen] = 1,
     [EcsTokHasBracketOpen] = 1,
@@ -58,27 +58,8 @@ static bool flecs_has_precedence(
     if (!flecs_expr_precedence[first]) {
         return false;
     }
+
     return flecs_expr_precedence[first] <= flecs_expr_precedence[second];
-}
-
-static void flecs_expr_script_append_using(
-    ecs_script_scope_t *scope,
-    ecs_strbuf_t *buf)
-{
-    if (scope->parent) {
-        flecs_expr_script_append_using(scope->parent, buf);
-    }
-
-    int32_t i, count = ecs_vec_count(&scope->stmts);
-    ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
-    for (i = 0; i < count; i ++) {
-        if (stmts[i]->kind == EcsAstUsing) {
-            ecs_script_using_t *using_node = (ecs_script_using_t*)stmts[i];
-            ecs_strbuf_appendlit(buf, "using ");
-            ecs_strbuf_appendstr(buf, using_node->name);
-            ecs_strbuf_appendch(buf, '\n');
-        }
-    }
 }
 
 static ecs_entity_t flecs_script_default_lookup(
@@ -104,15 +85,11 @@ static const char* flecs_script_parse_match_elems(
     do {
         ParserBegin;
 
-        LookAhead(
-            case '\n': {
-                pos = lookahead;
-                continue;
-            }
+        pos = flecs_parser_skip_newlines(parser, pos);
 
+        LookAhead(
             case '}': {
-                /* Return last character of initializer */
-                pos = lookahead - 1;
+                Consume();
                 parser->significant_newline = old_significant_newline;
                 EndOfRule;
             }
@@ -133,22 +110,17 @@ static const char* flecs_script_parse_match_elems(
                 goto error;
             }
 
-            {
-                LookAhead_1('}', {
-                    pos = lookahead - 1;
-                    parser->significant_newline = old_significant_newline;
-                    EndOfRule;
-                })
-            }
+            LookAhead_1('}', {
+                Consume();
+                parser->significant_newline = old_significant_newline;
+                EndOfRule;
+            })
 
             Parse(
                 case ';':
-                case '\n': {
+                case '\n':
                     break;
-                }
             )
-
-            break;
         })
 
     } while (true);
@@ -162,8 +134,6 @@ const char* flecs_script_parse_initializer(
     char until,
     ecs_expr_node_t **node_out)
 {
-    bool first = true;
-
     ecs_expr_initializer_t *node = flecs_expr_initializer(parser);
     *node_out = (ecs_expr_node_t*)node;
     ecs_allocator_t *a = &parser->script->allocator;
@@ -176,43 +146,33 @@ const char* flecs_script_parse_initializer(
             case ']':
             case ')':
             case '}': {
+                Consume();
                 if ((char)lookahead_token.kind != until) {
-                    Error("expected '%c'", until);
+                    goto unexpected_end;
                 }
-                if (first) {
+
+                if (!ecs_vec_count(&node->elements)) {
                     node->node.kind = EcsExprEmptyInitializer;
                 }
-                pos = lookahead - 1;
+
                 EndOfRule;
             })
-
-        first = false;
 
         ecs_expr_initializer_element_t *elem = ecs_vec_append_t(
             a, &node->elements, ecs_expr_initializer_element_t);
         ecs_os_zeromem(elem);
 
         if (until != ']') {
-            LookAhead_1(EcsTokIdentifier,
-                const char *old_pos = pos;
-                pos = lookahead;
-                LookAhead(
-                    case ':':
-                    case EcsTokAddAssign:
-                    case EcsTokMulAssign:
-                        elem->member = Token(0);
-                        elem->operator = lookahead_token.kind == ':'
-                            ? 0 : lookahead_token.kind;
-                        LookAhead_Keep();
-                        break;
-                )
-                if (!elem->member) {
-                    pos = old_pos;
-                }
+            LookAheadAny_2(case EcsTokIdentifier: EcsTokKeyword:, case ':':,
+                elem->member = Token(0);
+                Consume();
             )
         }
 
+        int16_t old_elem_depth = parser->elem_depth;
+        parser->elem_depth = flecs_ito(int16_t, parser->expr_depth + 1);
         pos = flecs_script_parse_expr(parser, pos, 0, &elem->value);
+        parser->elem_depth = old_elem_depth;
         if (!pos) {
             goto error;
         }
@@ -221,16 +181,17 @@ const char* flecs_script_parse_initializer(
             bool is_key = false;
 
             LookAhead_1(':', {
-                pos = lookahead;
+                Consume();
                 is_key = true;
-                break;
             })
 
             if (is_key) {
                 elem->key = elem->value;
                 elem->value = NULL;
 
+                parser->elem_depth = flecs_ito(int16_t, parser->expr_depth + 1);
                 pos = flecs_script_parse_expr(parser, pos, 0, &elem->value);
+                parser->elem_depth = old_elem_depth;
                 if (!pos) {
                     goto error;
                 }
@@ -241,9 +202,8 @@ const char* flecs_script_parse_initializer(
             bool is_range = false;
 
             LookAhead_1(EcsTokRange, {
-                pos = lookahead;
+                Consume();
                 is_range = true;
-                break;
             })
 
             /* [expr .. expr] is a range expression */
@@ -260,51 +220,83 @@ const char* flecs_script_parse_initializer(
                     goto error;
                 }
 
-                EndOfRule;
+                Parse_1(']', {
+                    EndOfRule;
+                })
             }
         }
 
-        if (elem->member) {
-            node->is_partial = true;
-        }
-
-        if (elem->value && elem->value->kind == EcsExprInitializer &&
-            ((ecs_expr_initializer_t*)elem->value)->is_partial)
         {
-            node->is_partial = true;
-        }
+            bool separated = false;
 
-        {
             /* Parse next element or end of initializer */
             LookAhead(
                 case ',': {
-                    pos = lookahead;
+                    Consume();
+                    separated = true;
                     break;
                 }
 
                 case ']':
                 case ')':
                 case '}':
-                    pos = lookahead - 1;
-
-                case '\n': {
-                    if ((char)lookahead_token.kind != until) {
-                        Error("expected '%c'", until);
+                    if ((char)lookahead_token.kind == until) {
+                        Consume();
+                        EndOfRule;
                     }
-                    EndOfRule;
+
+                    if (until == '\n' && lookahead_token.kind == '}') {
+                        EndOfRule;
+                    }
+
+                    Consume();
+                    goto unexpected_end;
+
+                case ';':
+                case '\n':
+                case '\0':
+                    if (until == '\n') {
+                        EndOfRule;
+                    }
+
+                    if (lookahead_token.kind == '\0') {
+                        Consume();
+                        goto unexpected_end;
+                    }
+
+                    break;
+            )
+
+            if (!separated) {
+                bool newline = false;
+                const char *next = flecs_scan_whitespace_and_comment(
+                    parser, pos, &newline);
+                if (!next) {
+                    goto error;
                 }
 
-                case '\0':
-                    if (until == ']') {
-                        Error("expected ']'");
-                    }
-                    pos = lookahead;
-                    EndOfRule;
-            )
+                if (!newline) {
+                    ecs_parser_error(parser->name, parser->code,
+                        flecs_parser_errpos(parser, next),
+                        until == '\n'
+                            ? "expected ',' or newline"
+                            : "expected ',' or newline between elements");
+                    goto error;
+                }
+            }
         }
     } while (true);
 
-    ParserEnd;
+unexpected_end:
+    if (until == '\n') {
+        Error("expected newline");
+    }
+
+    Error("expected '%c'", until);
+error:
+    flecs_script_parser_expr_free(parser, *node_out);
+    *node_out = NULL;
+    return NULL;
 }
 
 static const char* flecs_script_parse_function(
@@ -324,19 +316,46 @@ static const char* flecs_script_parse_function(
 
     *out = (ecs_expr_node_t*)result;
 
-    if (pos[0] != ')') {
-        Error("expected end of argument list");
-    }
-
-    pos ++;
-
     return pos;
 error:
-    if (result->args) {
-        flecs_script_parser_expr_free(parser, (ecs_expr_node_t*)result->args);
-    }
     flecs_free_t(&parser->script->allocator, ecs_expr_function_t, result);
     return NULL;
+}
+
+static ecs_expr_node_t* flecs_script_parse_number(
+    ecs_parser_t *parser,
+    const char *expr,
+    bool is_negative)
+{
+    int base = 10;
+    if (expr[0] == '0' && (expr[1] == 'x' || expr[1] == 'X')) {
+        base = 16;
+    } else if (expr[0] == '0' && (expr[1] == 'b' || expr[1] == 'B')) {
+        base = 2;
+    }
+
+    if (base == 10 &&
+        (strchr(expr, '.') || strchr(expr, 'e') || strchr(expr, 'E')))
+    {
+        double v = atof(expr);
+        return (ecs_expr_node_t*)flecs_expr_float(parser, is_negative ? -v : v);
+    }
+
+    errno = 0;
+    uint64_t v = strtoull(base == 10 ? expr : expr + 2, NULL, base);
+    if (errno == ERANGE) {
+        return NULL;
+    }
+
+    if (!is_negative) {
+        return (ecs_expr_node_t*)flecs_expr_uint(parser, v);
+    }
+
+    if (v > (uint64_t)INT64_MAX + 1) {
+        return NULL;
+    }
+
+    return (ecs_expr_node_t*)flecs_expr_int(parser, (int64_t)(0 - v));
 }
 
 static const char* flecs_script_parse_rhs(
@@ -353,155 +372,128 @@ static const char* flecs_script_parse_rhs(
 
         last_pos = pos;
 
-        LookAhead(
-            case EcsTokNumber:
-                if (pos[0] == '-') {
-                    lookahead = &pos[1];
-                    lookahead_token.kind = EcsTokSub;
-                } else {
-                    Error("unexpected number");
-                }
-            case EcsTokAdd:
-            case EcsTokSub:
-            case EcsTokMul:
-            case EcsTokDiv:
-            case EcsTokMod:
-            case EcsTokBitwiseOr:
-            case EcsTokBitwiseAnd:
-            case EcsTokEq:
-            case EcsTokNeq:
-            case EcsTokGt:
-            case EcsTokGtEq:
-            case EcsTokLt:
-            case EcsTokLtEq:
-            case EcsTokAnd:
-            case EcsTokOr:
-            case EcsTokShiftLeft:
-            case EcsTokShiftRight:
-            case EcsTokBracketOpen:
-            case EcsTokHasBracketOpen:
-            case EcsTokMember:
-            {
-                ecs_token_kind_t oper = lookahead_token.kind;
+        bool elem_end = false;
+        if (!parser->significant_newline &&
+            parser->elem_depth == parser->expr_depth)
+        {
+            if (!flecs_scan_whitespace_and_comment(parser, pos, &elem_end)) {
+                goto error;
+            }
+        }
 
-                /* Only consume more tokens if operator has precedence */
-                if (flecs_has_precedence(left_oper, oper)) {
-                    break;
-                }
+        const char *old_token_cur = parser->token_cur;
+        ecs_token_t lookahead_token;
+        const char *lookahead = flecs_token(
+            parser, pos, &lookahead_token, true);
+        flecs_token_restore(parser, old_token_cur);
+        if (!lookahead) {
+            goto error;
+        }
 
-                /* Consume lookahead token */
-                pos = lookahead;
+        ecs_token_kind_t oper = lookahead_token.kind;
+        bool is_oper = oper != EcsTokNot && flecs_expr_precedence[oper];
 
-                switch(oper) {
-                case EcsTokBracketOpen: {
-                    ecs_expr_element_t *result = flecs_expr_element(parser);
-                    result->left = *out;
-                    
-                    *out = (ecs_expr_node_t*)result;
+        if (elem_end && (oper == EcsTokBracketOpen ||
+            (oper == EcsTokSub && isdigit((unsigned char)lookahead[0]))))
+        {
+            is_oper = false;
+        }
 
-                    pos = flecs_script_parse_lhs(
-                        parser, pos, tokenizer, 0, &result->index);
-                    if (!pos) {
-                        goto error;
-                    }
+        if (is_oper && !flecs_has_precedence(left_oper, oper)) {
+            pos = lookahead;
 
-                    Parse_1(']', {
-                        break;
-                    });
+            switch(oper) {
+            case EcsTokBracketOpen: {
+                ecs_expr_element_t *result = flecs_expr_element(parser);
+                result->left = *out;
+                
+                *out = (ecs_expr_node_t*)result;
 
-                    break;
+                pos = flecs_script_parse_expr(
+                    parser, pos, 0, &result->index);
+                if (!pos) {
+                    goto error;
                 }
 
-                case EcsTokHasBracketOpen: {
-                    ecs_expr_has_t *result = flecs_expr_has(parser);
-                    result->left = *out;
+                Parse_1(']', {});
 
-                    *out = (ecs_expr_node_t*)result;
-
-                    bool is_pair = false;
-
-                    {
-                        LookAhead_1('(', {
-                            pos = lookahead;
-                            is_pair = true;
-                            break;
-                        })
-                    }
-
-                    Parse_1(EcsTokIdentifier, {
-                        result->first = (ecs_expr_node_t*)
-                            flecs_expr_identifier(parser, t->value);
-                        break;
-                    });
-
-                    if (is_pair) {
-                        Parse_1(',', {
-                            break;
-                        });
-
-                        Parse_1(EcsTokIdentifier, {
-                            result->second = (ecs_expr_node_t*)
-                                flecs_expr_identifier(parser, t->value);
-                            break;
-                        });
-
-                        Parse_1(')', {
-                            break;
-                        });
-                    }
-
-                    Parse_1(']', {
-                        break;
-                    });
-
-                    break;
-                }
-
-                case EcsTokMember: {
-                    Parse(
-                        case EcsTokFunction:
-                        case EcsTokIdentifier: {
-                            ecs_expr_member_t *result = flecs_expr_member(parser);
-                            result->left = *out;
-                            result->member_name = Token(1);
-                            *out = (ecs_expr_node_t*)result;
-
-                            if(t->kind == EcsTokFunction) {
-                                pos = flecs_script_parse_function(parser, pos, out);
-                                if (!pos) {
-                                    goto error;
-                                }
-                            }
-
-                            break;
-                        }
-                    );
-
-                    break;
-                }
-
-                default: {
-                    ecs_expr_binary_t *result = flecs_expr_binary(parser);
-                    result->left = *out;
-                    result->operator = oper;
-
-                    *out = (ecs_expr_node_t*)result;
-
-                    pos = flecs_script_parse_lhs(parser, pos, tokenizer,
-                        result->operator, &result->right);
-                    if (!pos) {
-                        goto error;
-                    }
-
-                    break;
-                }
-                };
-
-                /* Ensures lookahead tokens in token buffer don't get overwritten */
-                parser->token_keep = parser->token_cur;
                 break;
             }
-        )
+
+            case EcsTokHasBracketOpen: {
+                ecs_expr_has_t *result = flecs_expr_has(parser);
+                result->left = *out;
+
+                *out = (ecs_expr_node_t*)result;
+
+                bool is_pair = false;
+
+                LookAhead_1('(', {
+                    Consume();
+                    is_pair = true;
+                })
+
+                Parse_1(EcsTokIdentifier, {
+                    result->first = (ecs_expr_node_t*)
+                        flecs_expr_identifier(parser, t->value);
+                });
+
+                if (is_pair) {
+                    Parse_1(',', {});
+
+                    Parse_1(EcsTokIdentifier, {
+                        result->second = (ecs_expr_node_t*)
+                            flecs_expr_identifier(parser, t->value);
+                    });
+
+                    Parse_1(')', {});
+                }
+
+                Parse_1(']', {});
+
+                break;
+            }
+
+            case EcsTokMember: {
+                Parse(
+                case EcsTokIdentifier:
+                EcsTokKeyword: {
+                    ecs_expr_member_t *result = flecs_expr_member(parser);
+                    result->left = *out;
+                    result->member_name = Token(0);
+                    *out = (ecs_expr_node_t*)result;
+
+                    if (pos[0] == '(') {
+                        pos = flecs_script_parse_function(
+                            parser, pos + 1, out);
+                        if (!pos) {
+                            goto error;
+                        }
+                    }
+
+                    break;
+                });
+
+                break;
+            }
+
+            default: {
+                ecs_expr_binary_t *result = flecs_expr_binary(parser);
+                result->left = *out;
+                result->operator = oper;
+
+                *out = (ecs_expr_node_t*)result;
+
+                pos = flecs_script_parse_lhs(parser, pos, tokenizer,
+                    result->operator, &result->right);
+                if (!pos) {
+                    goto error;
+                }
+
+                break;
+            }
+            };
+        }
 
         TokenFramePop();
     } while (pos != last_pos);
@@ -524,47 +516,11 @@ static const char* flecs_script_parse_lhs(
 
     Parse(
         case EcsTokNumber: {
-            const char *expr = Token(0);
-            int base = 10;
-            bool is_negative = false;
-            const char *base_expr = expr;
-            if (base_expr[0] == '-') {
-                is_negative = true;
-                base_expr ++;
+            *out = flecs_script_parse_number(parser, Token(0), false);
+            if (!*out) {
+                Error("integer literal '%s' is out of range", Token(0));
             }
 
-            if (base_expr[0] == '0' && (base_expr[1] == 'x' || base_expr[1] == 'X')) {
-                base = 16;
-            } else if (base_expr[0] == '0' && (base_expr[1] == 'b' || base_expr[1] == 'B')) {
-                base = 2;
-            }
-
-            if (base == 10 &&
-                (strchr(expr, '.') || strchr(expr, 'e') || strchr(expr, 'E')))
-            {
-                *out = (ecs_expr_node_t*)flecs_expr_float(parser, atof(expr));
-                break;
-            }
-
-            if (base == 2) {
-                const char *bin_expr = base_expr + 2;
-                char *end;
-                uint64_t v = strtoull(bin_expr, &end, base);
-
-                if (is_negative) {
-                    *out = (ecs_expr_node_t*)flecs_expr_int(parser, -(int64_t)v);
-                } else {
-                    *out = (ecs_expr_node_t*)flecs_expr_uint(parser, v);
-                }
-            } else if (is_negative) {
-                char *end;
-                *out = (ecs_expr_node_t*)flecs_expr_int(parser, 
-                    strtoll(expr, &end, base));
-            } else {
-                char *end;
-                *out = (ecs_expr_node_t*)flecs_expr_uint(parser, 
-                    strtoull(expr, &end, base));
-            }
             break;
         }
 
@@ -580,11 +536,11 @@ static const char* flecs_script_parse_lhs(
             } else {
                 *out = (ecs_expr_node_t*)flecs_expr_string(parser, Token(0));
             }
+
             break;
         }
 
-        case EcsTokIdentifier:
-        case EcsTokFunction: {
+        case EcsTokIdentifier: {
             const char *expr = Token(0);
             if (expr[0] == '$') {
                 *out = (ecs_expr_node_t*)flecs_expr_variable(parser, &expr[1]);
@@ -609,8 +565,8 @@ static const char* flecs_script_parse_lhs(
                 }
             }
 
-            if(t->kind == EcsTokFunction) {
-                pos = flecs_script_parse_function(parser, pos, out);
+            if (pos[0] == '(') {
+                pos = flecs_script_parse_function(parser, pos + 1, out);
                 if (!pos) {
                     goto error;
                 }
@@ -619,7 +575,20 @@ static const char* flecs_script_parse_lhs(
             break;
         }
 
-        case EcsTokNot: {
+        case EcsTokNot:
+        case EcsTokSub: {
+            ecs_token_kind_t oper = t->kind;
+            if (oper == EcsTokSub && isdigit((unsigned char)pos[0])) {
+                Parse_1(EcsTokNumber, {
+                    *out = flecs_script_parse_number(parser, Token(1), true);
+                    if (!*out) {
+                        Error("integer literal '-%s' is out of range",
+                            Token(1));
+                    }
+                })
+                break;
+            }
+
             ecs_expr_unary_t *node = flecs_expr_unary(parser);
             pos = flecs_script_parse_expr(parser, pos, EcsTokNot, &node->expr);
             if (!pos) {
@@ -627,49 +596,25 @@ static const char* flecs_script_parse_lhs(
                 goto error;
             }
 
-            node->operator = EcsTokNot;
-            *out = (ecs_expr_node_t*)node;
-            break;
-        }
-
-        case EcsTokSub: {
-            ecs_expr_binary_t *node = flecs_expr_binary(parser);
-            
-            /* Use EcsTokNot as it has the same precedence as a unary - */
-            pos = flecs_script_parse_expr(parser, pos, EcsTokNot, &node->right);
-            if (!pos) {
-                flecs_script_parser_expr_free(parser, (ecs_expr_node_t*)node);
-                goto error;
-            }
-
-            node->left = (ecs_expr_node_t*)flecs_expr_int(parser, -1);
-            node->operator = EcsTokMul;
+            node->operator = oper;
             *out = (ecs_expr_node_t*)node;
             break;
         }
 
         case EcsTokKeywordMatch: {
             ecs_expr_match_t *node = flecs_expr_match(parser);
+            *out = (ecs_expr_node_t*)node;
+
             pos = flecs_script_parse_expr(parser, pos, 0, &node->expr);
             if (!pos) {
-                flecs_script_parser_expr_free(parser, (ecs_expr_node_t*)node);
                 goto error;
             }
 
             Parse_1('{', {
                 pos = flecs_script_parse_match_elems(parser, pos, node);
                 if (!pos) {
-                    flecs_script_parser_expr_free(
-                        parser, (ecs_expr_node_t*)node);
                     goto error;
                 }
-
-                Parse_1('}', {
-                    *out = (ecs_expr_node_t*)node;
-                    break;
-                })
-
-                break;
             })
 
             can_have_rhs = false;
@@ -683,37 +628,27 @@ static const char* flecs_script_parse_lhs(
 
             int32_t stmt_count = ecs_vec_count(&parser->scope->stmts);
 
-            bool old_function_token = parser->function_token;
             bool old_significant_newline = parser->significant_newline;
-            parser->function_token = false;
+            const char *old_stmt_pos = parser->stmt_pos;
             parser->significant_newline = true;
             pos = flecs_script_stmt(parser, pos);
+            parser->significant_newline = old_significant_newline;
+            parser->stmt_pos = old_stmt_pos;
             if (!pos) {
-                parser->significant_newline = old_significant_newline;
                 goto error;
             }
-            parser->function_token = old_function_token;
-            parser->significant_newline = old_significant_newline;
-
-            pos = flecs_parse_ws_eol(pos);
 
             if ((ecs_vec_count(&parser->scope->stmts) - stmt_count) != 1) {
                 Error("expected entity statement after new");
             }
 
-            ecs_script_node_t **script_node_ptr = ecs_vec_last_t(
-                &parser->scope->stmts, ecs_script_node_t*);
-            if (script_node_ptr == NULL) {
-                Error("expected entity statement after new");
-            }
-
-            ecs_script_node_t *script_node = *script_node_ptr;
-            ecs_assert(script_node != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_vec_remove_last(&parser->scope->stmts);
-
+            ecs_script_node_t *script_node = ecs_vec_last_t(
+                &parser->scope->stmts, ecs_script_node_t*)[0];
             if (script_node->kind != EcsAstEntity) {
                 Error("expected entity statement after new");
             }
+
+            ecs_vec_remove_last(&parser->scope->stmts);
 
             node->entity = (ecs_script_entity_t*)script_node;
 
@@ -727,17 +662,10 @@ static const char* flecs_script_parse_lhs(
             *out = (ecs_expr_node_t*)node;
 
             Parse_1('{', {
-                ecs_strbuf_t buf = ECS_STRBUF_INIT;
-                flecs_expr_script_append_using(parser->scope, &buf);
-                char *using_code = ecs_strbuf_get(&buf);
-                node->script = flecs_script_parse_nested(
-                    parser->script->pub.world, parser->name,
-                    using_code, pos, &pos);
-                ecs_os_free(using_code);
+                node->script = flecs_script_parse_nested(parser, pos, &pos);
                 if (!node->script) {
                     goto error;
                 }
-                break;
             })
 
             can_have_rhs = false;
@@ -750,9 +678,7 @@ static const char* flecs_script_parse_lhs(
                 goto error;
             }
 
-            Parse_1(')', {
-                break;
-            })
+            Parse_1(')', {})
 
             break;
         }
@@ -763,7 +689,6 @@ static const char* flecs_script_parse_lhs(
             ecs_expr_node_t *node = NULL;
             pos = flecs_script_parse_initializer(parser, pos, until, &node);
             if (!pos) {
-                flecs_script_parser_expr_free(parser, node);
                 goto error;
             }
 
@@ -772,16 +697,8 @@ static const char* flecs_script_parse_lhs(
             {
                 ((ecs_expr_initializer_t*)node)->is_collection = true;
             }
-            *out = node;
 
-            Parse(
-                case '}':
-                case ']':
-                    if (t->kind != (ecs_token_kind_t)until) {
-                        Error("expected '%c'", until);
-                    }
-                    break;
-            )
+            *out = node;
             can_have_rhs = until == ']';
             break;
         }
@@ -816,21 +733,16 @@ const char* flecs_script_parse_expr(
 
     parser->expr_depth ++;
 
-    ecs_tokenizer_t _tokenizer;
-    ecs_os_zeromem(&_tokenizer);
-    _tokenizer.tokens = _tokenizer.stack.tokens;
-    ecs_tokenizer_t *tokenizer = &_tokenizer;
+    ParserBegin;
 
-    bool old_function_token = parser->function_token;
-    parser->function_token = true;
     pos = flecs_script_parse_lhs(parser, pos, tokenizer, left_oper, out);
-    parser->function_token = old_function_token;
     if (!pos) {
         parser->expr_depth --;
         if (out && *out) {
             flecs_script_parser_expr_free(parser, *out);
             *out = NULL;
         }
+
         return NULL;
     }
 
@@ -857,25 +769,10 @@ ecs_script_t* ecs_expr_parse(
         priv_desc.lookup_action = flecs_script_default_lookup;
     }
 
-    ecs_script_t *script = flecs_script_new(world);
+    ecs_parser_t parser;
+    ecs_script_t *script = flecs_script_parse_init(world, NULL, expr, &parser);
     ecs_script_impl_t *impl = flecs_script_impl(script);
-    script->code = ecs_os_strdup(expr);
-
-    ecs_parser_t parser = {
-        .name = script->name,
-        .code = script->code,
-        .pos = script->code,
-        .script = impl,
-        .scope = impl->root,
-        .significant_newline = false,
-        .function_token = true
-    };
-
-    impl->token_buffer_size = ecs_os_strlen(expr) * 2 + 1;
-    impl->token_buffer = flecs_alloc_w_dbg_info(
-        &impl->allocator, impl->token_buffer_size, "token buffer");
-    parser.token_cur = impl->token_buffer;
-    parser.token_end = &impl->token_buffer[impl->token_buffer_size];
+    parser.significant_newline = false;
 
     const char *ptr = flecs_script_parse_expr(
         &parser, script->code, 0, &impl->expr);
@@ -886,19 +783,21 @@ ecs_script_t* ecs_expr_parse(
     impl->next_token = &expr[ptr - script->code];
     impl->token_remaining = parser.token_cur;
 
+    if (priv_desc.partial && (impl->expr->kind == EcsExprInitializer ||
+        impl->expr->kind == EcsExprEmptyInitializer))
+    {
+        ((ecs_expr_initializer_t*)impl->expr)->is_partial = true;
+    }
+
     if (flecs_expr_visit_type(script, &impl->expr, &priv_desc)) {
         goto error;
     }
-
-    // printf("%s\n", ecs_script_ast_to_str(script, true));
 
     if (!desc || !desc->disable_folding) {
         if (flecs_expr_visit_fold(script, &impl->expr, &priv_desc)) {
             goto error;
         }
     }
-
-    // printf("%s\n", ecs_script_ast_to_str(script, true));
 
     return script;
 error:
@@ -986,6 +885,7 @@ char* ecs_script_string_interpolate(
             ecs_os_free(result);
             return NULL;
         }
+
         return result;
     }
 

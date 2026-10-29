@@ -230,14 +230,14 @@ void Delete_delete_3_of_3(void) {
 
 static void CreateEntity(ecs_iter_t *it) {
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
-    const ecs_entity_t *ids = ecs_bulk_new(it->world, Position, 10);
+    const ecs_entity_t *ids = ecs_bulk_new(it->stage, Position, 10);
     test_assert(ids != NULL);
 }
 
 static void DeleteEntity(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_delete(it->world, it->entities[i]);
+        ecs_delete(it->stage, it->entities[i]);
     }
 }
 
@@ -350,9 +350,9 @@ void Delete_alive_after_staged_delete(void) {
     test_assert(e != 0);
     test_assert(ecs_is_alive(world, e));
 
-    ecs_defer_begin(world);
-    ecs_delete(world, e);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
+    ecs_delete(stage_1, e);
+    ecs_merge(stage_1);
     
     test_assert(ecs_exists(world, e));
     test_assert(!ecs_is_alive(world, e));
@@ -369,9 +369,9 @@ void Delete_alive_while_staged(void) {
     test_assert(e != 0);
     test_assert(ecs_is_alive(world, e));
 
-    ecs_defer_begin(world);
-    test_assert(ecs_is_alive(world, e));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
+    test_assert(ecs_is_alive(stage_1, e));
+    ecs_merge(stage_1);
     
     ecs_fini(world);
 }
@@ -385,11 +385,11 @@ void Delete_alive_while_staged_w_delete(void) {
     test_assert(e != 0);
     test_assert(ecs_is_alive(world, e));
 
-    ecs_defer_begin(world);
-    test_assert(ecs_is_alive(world, e));
-    ecs_delete(world, e);
-    test_assert(ecs_is_alive(world, e));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
+    test_assert(ecs_is_alive(stage_1, e));
+    ecs_delete(stage_1, e);
+    test_assert(ecs_is_alive(stage_1, e));
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, e));
     test_assert(ecs_exists(world, e));
@@ -410,11 +410,11 @@ void Delete_alive_while_staged_w_delete_recycled_id(void) {
     e = ecs_new(world);
     test_assert(ecs_is_alive(world, e));
 
-    ecs_defer_begin(world);
-    test_assert(ecs_is_alive(world, e));
-    ecs_delete(world, e);
-    test_assert(ecs_is_alive(world, e));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
+    test_assert(ecs_is_alive(stage_1, e));
+    ecs_delete(stage_1, e);
+    test_assert(ecs_is_alive(stage_1, e));
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, e));
     test_assert(ecs_exists(world, e));
@@ -749,6 +749,153 @@ void Delete_wrap_generation_count(void) {
     ecs_delete(world, e);
     e = ecs_new(world);
     test_assert(e == start);
+
+    ecs_fini(world);
+}
+
+static void OnRemoveRemoveOther(ecs_iter_t *it) {
+    ecs_id_t id = *(ecs_id_t*)it->ctx;
+    for (int i = 0; i < it->count; i ++) {
+        ecs_remove_id(it->world, it->entities[i], id);
+    }
+}
+
+static void OnRemoveRemoveOtherStage(ecs_iter_t *it) {
+    ecs_id_t id = *(ecs_id_t*)it->ctx;
+    for (int i = 0; i < it->count; i ++) {
+        ecs_remove_id(it->stage, it->entities[i], id);
+    }
+}
+
+void Delete_delete_w_on_remove_removing_other(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnRemove },
+        .callback = OnRemoveRemoveOther,
+        .ctx = &ecs_id(Velocity)
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    ecs_add(world, e, Velocity);
+
+    test_expect_abort_code(ECS_LOCKED_STORAGE);
+    ecs_delete(world, e);
+}
+
+void Delete_delete_w_on_remove_removing_other_w_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnRemove },
+        .callback = OnRemoveRemoveOtherStage,
+        .ctx = &ecs_id(Velocity)
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_delete(world, e);
+
+    test_assert(!ecs_is_alive(world, e));
+
+    ecs_fini(world);
+}
+
+void Delete_clear_w_on_remove_removing_other(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnRemove },
+        .callback = OnRemoveRemoveOther,
+        .ctx = &ecs_id(Velocity)
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    ecs_add(world, e, Velocity);
+
+    test_expect_abort_code(ECS_LOCKED_STORAGE);
+    ecs_clear(world, e);
+}
+
+void Delete_clear_w_on_remove_removing_other_w_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnRemove },
+        .callback = OnRemoveRemoveOtherStage,
+        .ctx = &ecs_id(Velocity)
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_clear(world, e);
+
+    test_assert(ecs_is_alive(world, e));
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+
+    ecs_fini(world);
+}
+
+void Delete_delete_w_on_remove_hook_removing_other(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_set_hooks(world, Position, {
+        .on_remove = OnRemoveRemoveOther,
+        .ctx = &ecs_id(Velocity)
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    ecs_add(world, e, Velocity);
+
+    test_expect_abort_code(ECS_LOCKED_STORAGE);
+    ecs_delete(world, e);
+}
+
+void Delete_delete_w_on_remove_hook_removing_other_w_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_set_hooks(world, Position, {
+        .on_remove = OnRemoveRemoveOtherStage,
+        .ctx = &ecs_id(Velocity)
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_delete(world, e);
+
+    test_assert(!ecs_is_alive(world, e));
 
     ecs_fini(world);
 }

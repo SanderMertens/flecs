@@ -135,6 +135,8 @@ void Entity_init_w_name_staged(void);
 void Entity_record_find_for_empty(void);
 void Entity_record_find(void);
 void Entity_record_find_from_stage(void);
+void Entity_record_get_id(void);
+void Entity_record_get_id_for_empty(void);
 void Entity_make_alive_zero_gen(void);
 void Entity_make_alive_nonzero_gen(void);
 void Entity_make_alive_zero_gen_exists(void);
@@ -215,6 +217,17 @@ void Each_each_pair_rel_wildcard(void);
 void Each_each_pair_tgt_wildcard(void);
 void Each_each_root_entities(void);
 void Each_each_empty_root_entities(void);
+void Each_each_sparse_component(void);
+void Each_each_sparse_pair_rel_wildcard(void);
+void Each_each_dont_fragment_tag(void);
+void Each_each_dont_fragment_component(void);
+void Each_each_dont_fragment_pair(void);
+void Each_each_dont_fragment_pair_rel_wildcard(void);
+void Each_each_dont_fragment_pair_rel_wildcard_w_empty_tgt(void);
+void Each_each_dont_fragment_exclusive_pair_rel_wildcard(void);
+void Each_each_dont_fragment_pair_tgt_wildcard(void);
+void Each_each_dont_fragment_wildcard_wildcard(void);
+void Each_each_dont_fragment_empty(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -278,6 +291,92 @@ void Iter_worker_iter_w_fini(void);
 void Iter_rule_page_iter_w_fini(void);
 void Iter_rule_worker_iter_w_fini(void);
 void Iter_uncached_query_w_many_vars_no_leak(void);
+
+// Testsuite 'ComponentInheritance'
+void ComponentInheritance_has_2_lvl(void);
+void ComponentInheritance_has_3_lvl(void);
+void ComponentInheritance_has_not_derived(void);
+void ComponentInheritance_owns_2_lvl(void);
+void ComponentInheritance_owns_3_lvl(void);
+void ComponentInheritance_get_2_lvl(void);
+void ComponentInheritance_get_3_lvl(void);
+void ComponentInheritance_search_2_lvl(void);
+void ComponentInheritance_search_3_lvl(void);
+void ComponentInheritance_search_base_no_match(void);
+void ComponentInheritance_search_base_w_base_only(void);
+void ComponentInheritance_search_base_w_single_derived(void);
+void ComponentInheritance_search_base_w_two_derived(void);
+void ComponentInheritance_search_two_derived_for_base(void);
+void ComponentInheritance_search_base_and_derived_for_base(void);
+void ComponentInheritance_get_after_add_isa(void);
+void ComponentInheritance_has_after_add_isa(void);
+void ComponentInheritance_has_after_remove_isa(void);
+void ComponentInheritance_add_isa_3_lvl_after_populate(void);
+void ComponentInheritance_remove_isa_middle_3_lvl(void);
+void ComponentInheritance_add_isa_w_multiple_tables(void);
+void ComponentInheritance_base_and_derived_same_table(void);
+void ComponentInheritance_diamond_allowed(void);
+void ComponentInheritance_derived_w_multiple_isa_bases(void);
+void ComponentInheritance_delete_with_base_deletes_derived(void);
+void ComponentInheritance_delete_with_base_deletes_derived_3_lvl(void);
+void ComponentInheritance_delete_with_middle_keeps_base(void);
+void ComponentInheritance_remove_all_base_removes_derived(void);
+void ComponentInheritance_delete_with_after_remove_isa(void);
+void ComponentInheritance_get_mut_via_base(void);
+void ComponentInheritance_get_sparse_via_base(void);
+void ComponentInheritance_get_mut_sparse_via_base(void);
+void ComponentInheritance_get_sparse_derived_via_non_sparse_base(void);
+void ComponentInheritance_each_base_matches_derived(void);
+void ComponentInheritance_count_base_counts_derived(void);
+void ComponentInheritance_ensure_via_base(void);
+void ComponentInheritance_id_in_use_base(void);
+void ComponentInheritance_clone_derived(void);
+void ComponentInheritance_low_id_base(void);
+void ComponentInheritance_recycled_base(void);
+void ComponentInheritance_readd_isa_after_remove(void);
+void ComponentInheritance_change_grandparent_isa(void);
+void ComponentInheritance_reparent_isa(void);
+void ComponentInheritance_add_second_base_after_populate(void);
+void ComponentInheritance_remove_second_base_after_populate(void);
+void ComponentInheritance_add_isa_4_lvl_after_populate(void);
+void ComponentInheritance_wide_hierarchy(void);
+void ComponentInheritance_change_isa_deferred(void);
+void ComponentInheritance_cyclic_isa_not_allowed(void);
+void ComponentInheritance_has_tag_base(void);
+void ComponentInheritance_get_tag_base_asserts(void);
+void ComponentInheritance_get_tag_base_w_data_derived(void);
+void ComponentInheritance_delete_base_component_entity(void);
+void ComponentInheritance_delete_derived_component_entity(void);
+void ComponentInheritance_clear_with_derived(void);
+void ComponentInheritance_add_base_to_derived(void);
+void ComponentInheritance_multi_derived_has(void);
+void ComponentInheritance_multi_derived_search_first(void);
+void ComponentInheritance_multi_derived_count(void);
+void ComponentInheritance_multi_derived_each_once(void);
+void ComponentInheritance_multi_derived_get_returns_first(void);
+void ComponentInheritance_multi_derived_remove_one_keeps_base(void);
+void ComponentInheritance_multi_derived_remove_both_loses_base(void);
+void ComponentInheritance_multi_derived_3_lvl_mixed(void);
+void ComponentInheritance_multi_derived_add_isa_after_populate(void);
+void ComponentInheritance_multi_derived_delete_with(void);
+void ComponentInheritance_multi_derived_remove_all(void);
+void ComponentInheritance_multi_derived_clone(void);
+void ComponentInheritance_multi_derived_three_bases(void);
+void ComponentInheritance_multi_derived_component_diamond_plus_extra(void);
+void ComponentInheritance_multi_derived_id_in_use(void);
+void ComponentInheritance_multi_derived_deferred(void);
+void ComponentInheritance_pair_rel_has(void);
+void ComponentInheritance_pair_rel_3_lvl(void);
+void ComponentInheritance_pair_rel_search(void);
+void ComponentInheritance_pair_rel_unrelated(void);
+void ComponentInheritance_pair_rel_target_not_inherited(void);
+void ComponentInheritance_pair_rel_different_target(void);
+void ComponentInheritance_pair_rel_add_isa_after(void);
+void ComponentInheritance_pair_rel_remove_isa(void);
+void ComponentInheritance_pair_rel_multi(void);
+void ComponentInheritance_pair_rel_wildcard(void);
+void ComponentInheritance_pair_rel_wildcard_unrelated(void);
+void ComponentInheritance_depth_w_derived_pairs_non_contiguous(void);
 
 // Testsuite 'Search'
 void Search_search(void);
@@ -438,6 +537,8 @@ void Remove_remove_wildcard(void);
 void Remove_remove_some_wildcard_pair(void);
 void Remove_remove_all_tgt_wildcard_pair(void);
 void Remove_remove_all_rel_wildcard_pair(void);
+void Remove_remove_w_on_remove_removing_other(void);
+void Remove_remove_w_on_remove_removing_other_w_stage(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -678,6 +779,8 @@ void Sparse_defer_set_w_sparse_w_observer(void);
 void Sparse_defer_ensure_modified_w_sparse_w_observer(void);
 void Sparse_defer_remove_override(void);
 void Sparse_defer_remove_add_override(void);
+void Sparse_defer_remove_override_on_remove_value(void);
+void Sparse_defer_remove_set(void);
 void Sparse_fini_w_dont_fragment_pair_prefab_exclusive_delete_with(void);
 void Sparse_remove_childof_pair_w_dont_fragment_component(void);
 void Sparse_remove_zeroes_storage(void);
@@ -689,8 +792,34 @@ void Sparse_fini_w_dont_fragment_component_on_prefab_child_w_up_query(void);
 void Sparse_fini_w_dont_fragment_component_w_isa_in_module(void);
 void Sparse_fini_w_dont_fragment_inherit_component_w_isa_in_module(void);
 void Sparse_fini_w_dont_fragment_component_w_isa_prefab_in_module(void);
+void Sparse_add_dont_fragment_tag_w_with(void);
+void Sparse_add_dont_fragment_tag_w_with_deferred(void);
+void Sparse_add_dont_fragment_tag_w_with_dont_fragment(void);
+void Sparse_remove_before_add_remove(void);
+void Sparse_remove_before_add_remove_other_entity(void);
+void Sparse_dont_fragment_tag_w_with_dont_fragment_tag(void);
+void Sparse_dont_fragment_tag_w_with_dont_fragment_tag_deferred(void);
+void Sparse_dont_fragment_tag_w_with_dont_fragment_tag_chain(void);
+void Sparse_dont_fragment_tag_w_with_added_after_use(void);
+void Sparse_dont_fragment_pair_w_with_dont_fragment_pair(void);
+void Sparse_dont_fragment_tag_w_with_fragmenting_tag(void);
+void Sparse_dont_fragment_added_to_tag_w_with_fragmenting_tag(void);
 
 // Testsuite 'NonFragmentingChildOf'
+void NonFragmentingChildOf_convert_storage_childof_observer(void);
+void NonFragmentingChildOf_convert_storage_keeps_membership(void);
+void NonFragmentingChildOf_defer_convert_storage_keeps_membership(void);
+void NonFragmentingChildOf_convert_storage_reparents(void);
+void NonFragmentingChildOf_defer_convert_storage_reparents(void);
+void NonFragmentingChildOf_remove_all_childof_preserves_prefabs(void);
+void NonFragmentingChildOf_remove_all_target_preserves_prefabs(void);
+void NonFragmentingChildOf_delete_with_childof_preserves_prefabs(void);
+void NonFragmentingChildOf_delete_with_target_preserves_prefabs(void);
+void NonFragmentingChildOf_remove_all_childof_mixed(void);
+void NonFragmentingChildOf_remove_all_target_mixed(void);
+void NonFragmentingChildOf_delete_parent_w_child_used_as_tag(void);
+void NonFragmentingChildOf_remove_all_parent_w_childof_observer(void);
+void NonFragmentingChildOf_child_count_after_delete_parent(void);
 void NonFragmentingChildOf_set_parent_no_ordered_children(void);
 void NonFragmentingChildOf_add_ordered_children_before_set_parent(void);
 void NonFragmentingChildOf_add_ordered_children_after_set_parent(void);
@@ -700,6 +829,7 @@ void NonFragmentingChildOf_insert_parent(void);
 void NonFragmentingChildOf_remove_parent(void);
 void NonFragmentingChildOf_clear_child(void);
 void NonFragmentingChildOf_delete_child(void);
+void NonFragmentingChildOf_delete_named_child_recycle_id(void);
 void NonFragmentingChildOf_reparent(void);
 void NonFragmentingChildOf_set_parent_2_children(void);
 void NonFragmentingChildOf_remove_parent_2_children(void);
@@ -709,11 +839,12 @@ void NonFragmentingChildOf_reparent_2_children(void);
 void NonFragmentingChildOf_delete_parent(void);
 void NonFragmentingChildOf_delete_parent_2_children(void);
 void NonFragmentingChildOf_mixed_childof(void);
-void NonFragmentingChildOf_convert_childof_to_parent_keeps_order(void);
+void NonFragmentingChildOf_convert_childof_to_parent_appends(void);
+void NonFragmentingChildOf_convert_childof_to_parent_other_parent_and_back_appends(void);
 void NonFragmentingChildOf_set_same_parent_twice_keeps_order(void);
-void NonFragmentingChildOf_add_childof_to_parent_component_keeps_order(void);
+void NonFragmentingChildOf_add_childof_to_parent_component_appends(void);
 void NonFragmentingChildOf_deferred_set_same_parent_keeps_order(void);
-void NonFragmentingChildOf_deferred_convert_childof_to_parent_keeps_order(void);
+void NonFragmentingChildOf_deferred_convert_childof_to_parent_appends(void);
 void NonFragmentingChildOf_remove_parent_then_add_childof_appends_last(void);
 void NonFragmentingChildOf_reparent_to_other_parent_appends_last(void);
 void NonFragmentingChildOf_delete_parent_w_mixed_childof(void);
@@ -838,6 +969,7 @@ void NonFragmentingChildOf_instantiate_tree_at_depth_n_w_parent(void);
 void NonFragmentingChildOf_instantiate_tree_at_depth_1_w_childof(void);
 void NonFragmentingChildOf_instantiate_tree_at_depth_2_w_childof(void);
 void NonFragmentingChildOf_instantiate_tree_at_depth_n_w_childof(void);
+void NonFragmentingChildOf_delete_parent_of_instantiated_tree_w_childof(void);
 void NonFragmentingChildOf_reparent_instantiated_tree_w_parent(void);
 void NonFragmentingChildOf_reparent_instantiated_tree_w_childof(void);
 void NonFragmentingChildOf_instantiate_instance_after_remove_all_tag(void);
@@ -881,6 +1013,8 @@ void NonFragmentingChildOf_defer_new_w_parent_w_name(void);
 void NonFragmentingChildOf_defer_new_w_parent_w_same_name_twice(void);
 void NonFragmentingChildOf_new_w_parent_from_stage(void);
 void NonFragmentingChildOf_new_w_parent_w_name_from_stage(void);
+void NonFragmentingChildOf_new_w_parent_childof_on_add_observer(void);
+void NonFragmentingChildOf_new_w_parent_childof_up_observer(void);
 void NonFragmentingChildOf_new_w_parent_readonly_new_table(void);
 void NonFragmentingChildOf_new_w_parent_w_name_readonly_new_table(void);
 void NonFragmentingChildOf_delete_named_child_not_last_row(void);
@@ -936,6 +1070,9 @@ void NonFragmentingChildOf_defer_set_parent_to_deleted_w_on_remove(void);
 void NonFragmentingChildOf_defer_set_parent_to_deleted_batched_w_on_remove(void);
 void NonFragmentingChildOf_defer_set_existing_parent_to_deleted(void);
 void NonFragmentingChildOf_defer_set_existing_parent_to_deleted_batched(void);
+void NonFragmentingChildOf_defer_reparent_to_deleted_parent_two_stages(void);
+void NonFragmentingChildOf_defer_reparent_to_deleted_parent_two_stages_batched(void);
+void NonFragmentingChildOf_defer_reparent_named_child_to_deleted_parent_two_stages(void);
 void NonFragmentingChildOf_defer_remove_set_parent_different_stages(void);
 void NonFragmentingChildOf_defer_remove_set_parent_different_stages_batched(void);
 void NonFragmentingChildOf_defer_remove_set_parent_different_stages_w_observer(void);
@@ -967,6 +1104,10 @@ void NonFragmentingChildOf_prefab_get_target_after_delete_instance_child(void);
 void NonFragmentingChildOf_defer_remove_add_batched_w_sibling_in_table(void);
 void NonFragmentingChildOf_instantiate_tree_after_rename_child(void);
 void NonFragmentingChildOf_fini_w_instantiated_prefab_non_fragmenting_child(void);
+void NonFragmentingChildOf_delete_instantiated_prefab_non_fragmenting_child(void);
+void NonFragmentingChildOf_delete_instanced_prefab_non_fragmenting_child(void);
+void NonFragmentingChildOf_delete_instanced_nested_prefab_non_fragmenting_child(void);
+void NonFragmentingChildOf_delete_nested_prefab_after_delete_instance_and_shrink(void);
 void NonFragmentingChildOf_convert_childof_to_parent(void);
 void NonFragmentingChildOf_convert_childof_to_parent_3_children(void);
 void NonFragmentingChildOf_convert_childof_to_parent_3_children_remove_childof_first(void);
@@ -977,6 +1118,15 @@ void NonFragmentingChildOf_remove_childof_after_convert_sibling(void);
 void NonFragmentingChildOf_up_not_observer_defer_remove_add_batched(void);
 void NonFragmentingChildOf_multi_term_up_observer_visits_all_siblings(void);
 void NonFragmentingChildOf_multi_term_up_observer_propagates_to_subtree(void);
+void NonFragmentingChildOf_instantiate_prefab_child_w_nested_children(void);
+void NonFragmentingChildOf_delete_root_of_instantiated_prefab_child_w_nested_children(void);
+void NonFragmentingChildOf_delete_root_of_prefab_child_w_mixed_children_and_other_targets(void);
+void NonFragmentingChildOf_delete_root_of_child_w_mixed_children_and_other_targets_cleanup_order(void);
+void NonFragmentingChildOf_delete_target_of_children_w_different_parents_childof_observer(void);
+void NonFragmentingChildOf_delete_parent_w_observer_deleting_sibling(void);
+void NonFragmentingChildOf_delete_parent_w_observer_reparenting_sibling(void);
+void NonFragmentingChildOf_delete_parent_used_as_target_w_observer_deleting_sibling(void);
+void NonFragmentingChildOf_delete_parent_used_as_target_w_observer_reparenting_sibling(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -990,6 +1140,8 @@ void Hierarchies_tree_iter_empty(void);
 void Hierarchies_tree_iter_1_table(void);
 void Hierarchies_tree_iter_2_tables(void);
 void Hierarchies_tree_iter_parent_0(void);
+void Hierarchies_tree_iter_parent_wildcard(void);
+void Hierarchies_tree_iter_parent_any(void);
 void Hierarchies_path_depth_0(void);
 void Hierarchies_path_depth_1(void);
 void Hierarchies_path_depth_2(void);
@@ -1178,6 +1330,9 @@ void Count_count_w_entity_0(void);
 void Count_count_1_component(void);
 void Count_count_disabled(void);
 void Count_count_prefab(void);
+void Count_count_sparse_pair_rel_wildcard(void);
+void Count_count_dont_fragment_component(void);
+void Count_count_dont_fragment_pair_rel_wildcard(void);
 
 // Testsuite 'Get_component'
 void Get_component_setup(void);
@@ -1231,6 +1386,11 @@ void Reference_recycled_table_twice(void);
 void Reference_ref_after_shrink(void);
 void Reference_ref_after_shrink_2(void);
 void Reference_ref_after_shrink_w_freed_pages(void);
+void Reference_ref_from_ptr(void);
+void Reference_ref_from_ptr_after_add(void);
+void Reference_ref_from_ptr_after_delete(void);
+void Reference_ref_from_ptr_inherited(void);
+void Reference_ref_from_ptr_invalid_ptr(void);
 
 // Testsuite 'Delete'
 void Delete_setup(void);
@@ -1266,6 +1426,12 @@ void Delete_move_w_dtor_move(void);
 void Delete_move_w_dtor_no_move(void);
 void Delete_move_w_no_dtor_move(void);
 void Delete_wrap_generation_count(void);
+void Delete_delete_w_on_remove_removing_other(void);
+void Delete_delete_w_on_remove_removing_other_w_stage(void);
+void Delete_clear_w_on_remove_removing_other(void);
+void Delete_clear_w_on_remove_removing_other_w_stage(void);
+void Delete_delete_w_on_remove_hook_removing_other(void);
+void Delete_delete_w_on_remove_hook_removing_other_w_stage(void);
 
 // Testsuite 'OnDelete'
 void OnDelete_flags(void);
@@ -1397,6 +1563,13 @@ void OnDelete_delete_with_3(void);
 void OnDelete_empty_after_remove(void);
 void OnDelete_remove_target_no_intermediate_table(void);
 void OnDelete_remove_target_no_intermediate_table_3_pairs(void);
+void OnDelete_delete_parent_w_isa_base_that_inherits_from_disabled_child(void);
+void OnDelete_delete_with_w_on_remove_removing_other(void);
+void OnDelete_delete_with_w_on_remove_removing_other_w_stage(void);
+void OnDelete_remove_all_w_on_remove_removing_other(void);
+void OnDelete_remove_all_w_on_remove_removing_other_w_stage(void);
+void OnDelete_delete_parent_w_on_remove_removing_other_from_child(void);
+void OnDelete_delete_parent_w_on_remove_removing_other_from_child_w_stage(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -1437,6 +1610,8 @@ void Set_emplace_w_move(void);
 void Set_emplace_w_observer_w_add(void);
 void Set_emplace_existing_w_check(void);
 void Set_emplace_pair(void);
+void Set_set_w_on_add_adding_other(void);
+void Set_set_w_on_add_adding_other_w_stage(void);
 
 // Testsuite 'Lookup'
 void Lookup_setup(void);
@@ -1751,6 +1926,30 @@ void ComponentLifecycle_fini_w_cached_query_in_component_on_entity(void);
 void ComponentLifecycle_fini_w_cached_query_in_component_on_remove_observer(void);
 void ComponentLifecycle_fini_w_uncached_query_in_component(void);
 void ComponentLifecycle_delete_component_w_cached_query_in_component(void);
+void ComponentLifecycle_locked_storage_on_add(void);
+void ComponentLifecycle_locked_storage_on_set(void);
+void ComponentLifecycle_locked_storage_on_remove(void);
+void ComponentLifecycle_locked_storage_on_replace(void);
+void ComponentLifecycle_locked_storage_ctor(void);
+void ComponentLifecycle_locked_storage_dtor(void);
+void ComponentLifecycle_locked_storage_copy(void);
+void ComponentLifecycle_locked_storage_move(void);
+void ComponentLifecycle_locked_storage_copy_ctor(void);
+void ComponentLifecycle_locked_storage_move_ctor(void);
+void ComponentLifecycle_locked_storage_ctor_move_dtor(void);
+void ComponentLifecycle_locked_storage_move_dtor(void);
+void ComponentLifecycle_delete_nonlast_w_ctor_move_dtor_no_move_ctor(void);
+void ComponentLifecycle_delete_last_w_ctor_move_dtor_no_move_ctor(void);
+void ComponentLifecycle_delete_nonlast_w_ctor_move_dtor_no_move_ctor_deferred(void);
+void ComponentLifecycle_remove_nonlast_w_ctor_move_dtor_no_move_ctor(void);
+void ComponentLifecycle_remove_nonlast_w_ctor_move_dtor_no_move_ctor_interleaved(void);
+void ComponentLifecycle_remove_last_w_ctor_move_dtor_no_move_ctor(void);
+void ComponentLifecycle_remove_nonlast_w_ctor_move_dtor_no_move_ctor_deferred(void);
+void ComponentLifecycle_add_nonlast_w_ctor_move_dtor_no_move_ctor(void);
+void ComponentLifecycle_delete_nonlast_dtor_only(void);
+void ComponentLifecycle_remove_nonlast_dtor_only(void);
+void ComponentLifecycle_remove_other_nonlast_dtor_only(void);
+void ComponentLifecycle_add_nonlast_dtor_only(void);
 
 // Testsuite 'Pairs'
 void Pairs_disable_toggle_component_and_toggle_pair(void);
@@ -2017,16 +2216,6 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add_isa_after_set(void);
 void Trigger_on_set_superset_after_filter_observer_w_on_add_2(void);
 
 // Testsuite 'Observer'
-void Observer_on_set_no_propagate_w_self_only_observer_on_child(void);
-void Observer_on_set_propagate_w_up_observer_on_child(void);
-void Observer_on_set_propagate_isa_w_up_observer_on_instance(void);
-void Observer_on_set_propagate_w_up_observer_created_after_entities(void);
-void Observer_on_set_no_propagate_after_up_observer_deleted(void);
-void Observer_nomatch_table_memo_alternating_tables(void);
-void Observer_up_isa_term_no_match_then_base_gains_component(void);
-void Observer_up_isa_term_alternating_match_and_no_match(void);
-void Observer_up_isa_not_term_base_gains_component(void);
-void Observer_nomatch_table_memo_after_table_delete(void);
 void Observer_multi_term_inheritable_component_owned(void);
 void Observer_multi_term_inheritable_component_w_not_term(void);
 void Observer_multi_term_inheritable_component_w_prefab_term(void);
@@ -2219,6 +2408,10 @@ void Observer_disable_multi_observer(void);
 void Observer_disable_multi_observer_module(void);
 void Observer_disable_multi_observer_module_nested(void);
 void Observer_disable_multi_observer_and_module(void);
+void Observer_disable_observer_deferred(void);
+void Observer_disable_observer_module_deferred(void);
+void Observer_enable_observer_w_remove_all(void);
+void Observer_enable_observer_module_w_remove_all(void);
 void Observer_tag_w_on_set_and_on_add(void);
 void Observer_tag_w_on_set_and_on_add_reverse(void);
 void Observer_on_add_pair_w_rel_any(void);
@@ -2304,6 +2497,11 @@ void Observer_yield_existing_on_remove(void);
 void Observer_yield_existing_on_remove_singleton(void);
 void Observer_yield_existing_on_remove_static_source(void);
 void Observer_on_set_singleton_set_component_named_entity(void);
+void Observer_on_add_this_w_singleton_set_after_this(void);
+void Observer_on_add_this_w_singleton_set_before_this(void);
+void Observer_on_add_this_w_fixed_src_set_after_this(void);
+void Observer_on_set_this_w_singleton_set_after_2_entities(void);
+void Observer_on_remove_this_w_singleton_remove_singleton(void);
 void Observer_1_term_field_size(void);
 void Observer_2_terms_field_size(void);
 void Observer_1_up_term_field_size(void);
@@ -2426,6 +2624,16 @@ void Observer_single_term_observer_w_var_get_var_pair_second_w_generation(void);
 void Observer_single_term_observer_w_var_get_var_nested_invoke(void);
 void Observer_single_term_observer_w_var_get_var_pair_second_on_delete_target(void);
 void Observer_single_term_observer_wo_var_invoked_once_per_event(void);
+void Observer_on_set_up_then_parent_move_add_grandchild(void);
+void Observer_not_term_on_remove_add_negated_id_in_populated_table(void);
+void Observer_not_term_on_add_remove_negated_id_in_populated_table(void);
+void Observer_not_term_on_remove_add_negated_id_in_populated_table_w_data(void);
+void Observer_not_term_on_add_remove_negated_id_in_populated_table_w_data(void);
+void Observer_on_remove_delete_other_in_same_table_on_delete(void);
+void Observer_on_remove_delete_other_in_same_table_on_remove(void);
+void Observer_no_terms_custom_event(void);
+void Observer_no_terms_custom_event_w_src(void);
+void Observer_no_terms_on_add(void);
 
 // Testsuite 'ObserverOnSet'
 void ObserverOnSet_set_1_of_1(void);
@@ -2452,6 +2660,7 @@ void ObserverOnSet_remove_set_component_in_on_set(void);
 void ObserverOnSet_match_table_created_w_add_in_on_set(void);
 void ObserverOnSet_set_optional(void);
 void ObserverOnSet_set_optional_one_term(void);
+void ObserverOnSet_set_optional_one_term_16_bytes(void);
 void ObserverOnSet_set_from_nothing(void);
 void ObserverOnSet_add_0_entity_in_on_set(void);
 void ObserverOnSet_on_set_prefab(void);
@@ -2725,6 +2934,8 @@ void Prefab_remove_all(void);
 void Prefab_delete_with(void);
 void Prefab_prefab_children_after_adding_prefab(void);
 void Prefab_add_base_w_exclusive_override(void);
+void Prefab_add_base_w_exclusive_dont_fragment_override(void);
+void Prefab_add_base_w_exclusive_dont_fragment_override_w_value(void);
 void Prefab_fini_w_prefab_child_exclusive_pair_delete_with(void);
 void Prefab_delete_with_component_used_by_prefab(void);
 void Prefab_delete_component_used_by_prefab(void);
@@ -2748,6 +2959,14 @@ void Prefab_add_inherit_component_to_prefab_after_instantiate(void);
 void Prefab_remove_inherit_component_from_prefab_after_instantiate(void);
 void Prefab_add_dont_inherit_component_to_prefab_after_instantiate(void);
 void Prefab_add_override_trait_component_to_prefab_after_instantiate(void);
+void Prefab_add_component_to_prefab_after_instantiate_new_instance_same_table(void);
+void Prefab_add_component_to_prefab_after_instantiate_existing_dst_table(void);
+void Prefab_remove_component_from_prefab_after_instantiate_new_instance(void);
+void Prefab_add_component_to_nested_prefab_after_instantiate_new_instance(void);
+void Prefab_add_inherit_w_override_with_to_prefab_after_instantiate(void);
+void Prefab_add_component_to_prefab_during_instantiate(void);
+void Prefab_add_component_to_prefab_during_instantiate_w_parent(void);
+void Prefab_dont_inherit_dont_fragment_component(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -2786,6 +3005,16 @@ void World_range_delete_recycled_to_correct_range(void);
 void World_range_create_small_range_from_1(void);
 void World_range_create_large_range_from_1(void);
 void World_range_prefab_spawn_deferred_after_range_switch(void);
+void World_range_new_from_range(void);
+void World_range_new_from_range_active(void);
+void World_range_new_from_range_recycled(void);
+void World_range_new_from_range_recycled_after_switch(void);
+void World_range_new_from_range_delete(void);
+void World_range_new_from_range_then_set(void);
+void World_range_new_from_range_deferred(void);
+void World_range_new_from_range_exhausted(void);
+void World_range_new_from_range_unknown_range(void);
+void World_range_new_from_range_null(void);
 void World_phases(void);
 void World_phases_w_merging(void);
 void World_phases_match_in_create(void);
@@ -3083,9 +3312,11 @@ void Type_role_owned_str(void);
 void Type_role_disabled_str(void);
 
 // Testsuite 'Commands'
+void Commands_observer_commands_before_next_command(void);
+void Commands_nested_observer_command_queues(void);
 void Commands_defer_ensure_dont_fragment_w_set(void);
 void Commands_is_deferred(void);
-void Commands_is_defer_suspended(void);
+void Commands_stage_always_deferred(void);
 void Commands_defer_new(void);
 void Commands_defer_bulk_new(void);
 void Commands_defer_add(void);
@@ -3142,7 +3373,7 @@ void Commands_discard_add_two(void);
 void Commands_discard_remove_two(void);
 void Commands_discard_child(void);
 void Commands_discard_child_w_add(void);
-void Commands_defer_return_value(void);
+void Commands_world_operations_with_pending_stage(void);
 void Commands_defer_ensure_pair(void);
 void Commands_async_stage_add(void);
 void Commands_async_stage_add_twice(void);
@@ -3268,6 +3499,20 @@ void Commands_on_replace_w_set_batched_grow_table_in_hook(void);
 void Commands_defer_batched_add_after_delete(void);
 void Commands_defer_add_remove_childof_w_dont_fragment(void);
 void Commands_defer_remove_dont_fragment_on_cascade_deleted_child(void);
+void Commands_defer_remove_override_on_remove_value(void);
+void Commands_defer_remove_add_on_remove_on_add(void);
+void Commands_defer_remove_add_remove_on_remove_count(void);
+void Commands_defer_remove_set_other(void);
+void Commands_defer_remove_two_set_removed(void);
+void Commands_defer_remove_two_set_other(void);
+void Commands_defer_remove_ensure_other(void);
+void Commands_defer_remove_two_ensure_other(void);
+void Commands_defer_remove_two_ensure_removed_override(void);
+void Commands_defer_remove_ensure_removed_override(void);
+void Commands_defer_remove_wildcard_set_pair(void);
+void Commands_defer_set_interleaved_entities(void);
+void Commands_defer_ensure_remove_wildcard_ensure_pair(void);
+void Commands_defer_remove_two_set_other_get_before_merge(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -3468,6 +3713,10 @@ void Error_log_error(void);
 void Error_set_log_level_return(void);
 void Error_print_backtrace(void);
 void Error_log_capture_nested_recursion(void);
+void Error_log_collect_errors(void);
+void Error_log_collect_errors_nested_capture(void);
+void Error_log_collect_errors_nested(void);
+void Error_log_collect_errors_restores_level(void);
 
 // Testsuite 'StackAlloc'
 void StackAlloc_init_fini(void);
@@ -3974,6 +4223,14 @@ bake_test_case Entity_testcases[] = {
         Entity_record_find_from_stage
     },
     {
+        "record_get_id",
+        Entity_record_get_id
+    },
+    {
+        "record_get_id_for_empty",
+        Entity_record_get_id_for_empty
+    },
+    {
         "make_alive_zero_gen",
         Entity_make_alive_zero_gen
     },
@@ -4287,6 +4544,50 @@ bake_test_case Each_testcases[] = {
     {
         "each_empty_root_entities",
         Each_each_empty_root_entities
+    },
+    {
+        "each_sparse_component",
+        Each_each_sparse_component
+    },
+    {
+        "each_sparse_pair_rel_wildcard",
+        Each_each_sparse_pair_rel_wildcard
+    },
+    {
+        "each_dont_fragment_tag",
+        Each_each_dont_fragment_tag
+    },
+    {
+        "each_dont_fragment_component",
+        Each_each_dont_fragment_component
+    },
+    {
+        "each_dont_fragment_pair",
+        Each_each_dont_fragment_pair
+    },
+    {
+        "each_dont_fragment_pair_rel_wildcard",
+        Each_each_dont_fragment_pair_rel_wildcard
+    },
+    {
+        "each_dont_fragment_pair_rel_wildcard_w_empty_tgt",
+        Each_each_dont_fragment_pair_rel_wildcard_w_empty_tgt
+    },
+    {
+        "each_dont_fragment_exclusive_pair_rel_wildcard",
+        Each_each_dont_fragment_exclusive_pair_rel_wildcard
+    },
+    {
+        "each_dont_fragment_pair_tgt_wildcard",
+        Each_each_dont_fragment_pair_tgt_wildcard
+    },
+    {
+        "each_dont_fragment_wildcard_wildcard",
+        Each_each_dont_fragment_wildcard_wildcard
+    },
+    {
+        "each_dont_fragment_empty",
+        Each_each_dont_fragment_empty
     }
 };
 
@@ -4534,6 +4835,345 @@ bake_test_case Iter_testcases[] = {
     {
         "uncached_query_w_many_vars_no_leak",
         Iter_uncached_query_w_many_vars_no_leak
+    }
+};
+
+bake_test_case ComponentInheritance_testcases[] = {
+    {
+        "has_2_lvl",
+        ComponentInheritance_has_2_lvl
+    },
+    {
+        "has_3_lvl",
+        ComponentInheritance_has_3_lvl
+    },
+    {
+        "has_not_derived",
+        ComponentInheritance_has_not_derived
+    },
+    {
+        "owns_2_lvl",
+        ComponentInheritance_owns_2_lvl
+    },
+    {
+        "owns_3_lvl",
+        ComponentInheritance_owns_3_lvl
+    },
+    {
+        "get_2_lvl",
+        ComponentInheritance_get_2_lvl
+    },
+    {
+        "get_3_lvl",
+        ComponentInheritance_get_3_lvl
+    },
+    {
+        "search_2_lvl",
+        ComponentInheritance_search_2_lvl
+    },
+    {
+        "search_3_lvl",
+        ComponentInheritance_search_3_lvl
+    },
+    {
+        "search_base_no_match",
+        ComponentInheritance_search_base_no_match
+    },
+    {
+        "search_base_w_base_only",
+        ComponentInheritance_search_base_w_base_only
+    },
+    {
+        "search_base_w_single_derived",
+        ComponentInheritance_search_base_w_single_derived
+    },
+    {
+        "search_base_w_two_derived",
+        ComponentInheritance_search_base_w_two_derived
+    },
+    {
+        "search_two_derived_for_base",
+        ComponentInheritance_search_two_derived_for_base
+    },
+    {
+        "search_base_and_derived_for_base",
+        ComponentInheritance_search_base_and_derived_for_base
+    },
+    {
+        "get_after_add_isa",
+        ComponentInheritance_get_after_add_isa
+    },
+    {
+        "has_after_add_isa",
+        ComponentInheritance_has_after_add_isa
+    },
+    {
+        "has_after_remove_isa",
+        ComponentInheritance_has_after_remove_isa
+    },
+    {
+        "add_isa_3_lvl_after_populate",
+        ComponentInheritance_add_isa_3_lvl_after_populate
+    },
+    {
+        "remove_isa_middle_3_lvl",
+        ComponentInheritance_remove_isa_middle_3_lvl
+    },
+    {
+        "add_isa_w_multiple_tables",
+        ComponentInheritance_add_isa_w_multiple_tables
+    },
+    {
+        "base_and_derived_same_table",
+        ComponentInheritance_base_and_derived_same_table
+    },
+    {
+        "diamond_allowed",
+        ComponentInheritance_diamond_allowed
+    },
+    {
+        "derived_w_multiple_isa_bases",
+        ComponentInheritance_derived_w_multiple_isa_bases
+    },
+    {
+        "delete_with_base_deletes_derived",
+        ComponentInheritance_delete_with_base_deletes_derived
+    },
+    {
+        "delete_with_base_deletes_derived_3_lvl",
+        ComponentInheritance_delete_with_base_deletes_derived_3_lvl
+    },
+    {
+        "delete_with_middle_keeps_base",
+        ComponentInheritance_delete_with_middle_keeps_base
+    },
+    {
+        "remove_all_base_removes_derived",
+        ComponentInheritance_remove_all_base_removes_derived
+    },
+    {
+        "delete_with_after_remove_isa",
+        ComponentInheritance_delete_with_after_remove_isa
+    },
+    {
+        "get_mut_via_base",
+        ComponentInheritance_get_mut_via_base
+    },
+    {
+        "get_sparse_via_base",
+        ComponentInheritance_get_sparse_via_base
+    },
+    {
+        "get_mut_sparse_via_base",
+        ComponentInheritance_get_mut_sparse_via_base
+    },
+    {
+        "get_sparse_derived_via_non_sparse_base",
+        ComponentInheritance_get_sparse_derived_via_non_sparse_base
+    },
+    {
+        "each_base_matches_derived",
+        ComponentInheritance_each_base_matches_derived
+    },
+    {
+        "count_base_counts_derived",
+        ComponentInheritance_count_base_counts_derived
+    },
+    {
+        "ensure_via_base",
+        ComponentInheritance_ensure_via_base
+    },
+    {
+        "id_in_use_base",
+        ComponentInheritance_id_in_use_base
+    },
+    {
+        "clone_derived",
+        ComponentInheritance_clone_derived
+    },
+    {
+        "low_id_base",
+        ComponentInheritance_low_id_base
+    },
+    {
+        "recycled_base",
+        ComponentInheritance_recycled_base
+    },
+    {
+        "readd_isa_after_remove",
+        ComponentInheritance_readd_isa_after_remove
+    },
+    {
+        "change_grandparent_isa",
+        ComponentInheritance_change_grandparent_isa
+    },
+    {
+        "reparent_isa",
+        ComponentInheritance_reparent_isa
+    },
+    {
+        "add_second_base_after_populate",
+        ComponentInheritance_add_second_base_after_populate
+    },
+    {
+        "remove_second_base_after_populate",
+        ComponentInheritance_remove_second_base_after_populate
+    },
+    {
+        "add_isa_4_lvl_after_populate",
+        ComponentInheritance_add_isa_4_lvl_after_populate
+    },
+    {
+        "wide_hierarchy",
+        ComponentInheritance_wide_hierarchy
+    },
+    {
+        "change_isa_deferred",
+        ComponentInheritance_change_isa_deferred
+    },
+    {
+        "cyclic_isa_not_allowed",
+        ComponentInheritance_cyclic_isa_not_allowed
+    },
+    {
+        "has_tag_base",
+        ComponentInheritance_has_tag_base
+    },
+    {
+        "get_tag_base_asserts",
+        ComponentInheritance_get_tag_base_asserts
+    },
+    {
+        "get_tag_base_w_data_derived",
+        ComponentInheritance_get_tag_base_w_data_derived
+    },
+    {
+        "delete_base_component_entity",
+        ComponentInheritance_delete_base_component_entity
+    },
+    {
+        "delete_derived_component_entity",
+        ComponentInheritance_delete_derived_component_entity
+    },
+    {
+        "clear_with_derived",
+        ComponentInheritance_clear_with_derived
+    },
+    {
+        "add_base_to_derived",
+        ComponentInheritance_add_base_to_derived
+    },
+    {
+        "multi_derived_has",
+        ComponentInheritance_multi_derived_has
+    },
+    {
+        "multi_derived_search_first",
+        ComponentInheritance_multi_derived_search_first
+    },
+    {
+        "multi_derived_count",
+        ComponentInheritance_multi_derived_count
+    },
+    {
+        "multi_derived_each_once",
+        ComponentInheritance_multi_derived_each_once
+    },
+    {
+        "multi_derived_get_returns_first",
+        ComponentInheritance_multi_derived_get_returns_first
+    },
+    {
+        "multi_derived_remove_one_keeps_base",
+        ComponentInheritance_multi_derived_remove_one_keeps_base
+    },
+    {
+        "multi_derived_remove_both_loses_base",
+        ComponentInheritance_multi_derived_remove_both_loses_base
+    },
+    {
+        "multi_derived_3_lvl_mixed",
+        ComponentInheritance_multi_derived_3_lvl_mixed
+    },
+    {
+        "multi_derived_add_isa_after_populate",
+        ComponentInheritance_multi_derived_add_isa_after_populate
+    },
+    {
+        "multi_derived_delete_with",
+        ComponentInheritance_multi_derived_delete_with
+    },
+    {
+        "multi_derived_remove_all",
+        ComponentInheritance_multi_derived_remove_all
+    },
+    {
+        "multi_derived_clone",
+        ComponentInheritance_multi_derived_clone
+    },
+    {
+        "multi_derived_three_bases",
+        ComponentInheritance_multi_derived_three_bases
+    },
+    {
+        "multi_derived_component_diamond_plus_extra",
+        ComponentInheritance_multi_derived_component_diamond_plus_extra
+    },
+    {
+        "multi_derived_id_in_use",
+        ComponentInheritance_multi_derived_id_in_use
+    },
+    {
+        "multi_derived_deferred",
+        ComponentInheritance_multi_derived_deferred
+    },
+    {
+        "pair_rel_has",
+        ComponentInheritance_pair_rel_has
+    },
+    {
+        "pair_rel_3_lvl",
+        ComponentInheritance_pair_rel_3_lvl
+    },
+    {
+        "pair_rel_search",
+        ComponentInheritance_pair_rel_search
+    },
+    {
+        "pair_rel_unrelated",
+        ComponentInheritance_pair_rel_unrelated
+    },
+    {
+        "pair_rel_target_not_inherited",
+        ComponentInheritance_pair_rel_target_not_inherited
+    },
+    {
+        "pair_rel_different_target",
+        ComponentInheritance_pair_rel_different_target
+    },
+    {
+        "pair_rel_add_isa_after",
+        ComponentInheritance_pair_rel_add_isa_after
+    },
+    {
+        "pair_rel_remove_isa",
+        ComponentInheritance_pair_rel_remove_isa
+    },
+    {
+        "pair_rel_multi",
+        ComponentInheritance_pair_rel_multi
+    },
+    {
+        "pair_rel_wildcard",
+        ComponentInheritance_pair_rel_wildcard
+    },
+    {
+        "pair_rel_wildcard_unrelated",
+        ComponentInheritance_pair_rel_wildcard_unrelated
+    },
+    {
+        "depth_w_derived_pairs_non_contiguous",
+        ComponentInheritance_depth_w_derived_pairs_non_contiguous
     }
 };
 
@@ -5140,6 +5780,14 @@ bake_test_case Remove_testcases[] = {
     {
         "remove_all_rel_wildcard_pair",
         Remove_remove_all_rel_wildcard_pair
+    },
+    {
+        "remove_w_on_remove_removing_other",
+        Remove_remove_w_on_remove_removing_other
+    },
+    {
+        "remove_w_on_remove_removing_other_w_stage",
+        Remove_remove_w_on_remove_removing_other_w_stage
     }
 };
 
@@ -6088,6 +6736,14 @@ bake_test_case Sparse_testcases[] = {
         Sparse_defer_remove_add_override
     },
     {
+        "defer_remove_override_on_remove_value",
+        Sparse_defer_remove_override_on_remove_value
+    },
+    {
+        "defer_remove_set",
+        Sparse_defer_remove_set
+    },
+    {
         "fini_w_dont_fragment_pair_prefab_exclusive_delete_with",
         Sparse_fini_w_dont_fragment_pair_prefab_exclusive_delete_with
     },
@@ -6130,10 +6786,114 @@ bake_test_case Sparse_testcases[] = {
     {
         "fini_w_dont_fragment_component_w_isa_prefab_in_module",
         Sparse_fini_w_dont_fragment_component_w_isa_prefab_in_module
+    },
+    {
+        "add_dont_fragment_tag_w_with",
+        Sparse_add_dont_fragment_tag_w_with
+    },
+    {
+        "add_dont_fragment_tag_w_with_deferred",
+        Sparse_add_dont_fragment_tag_w_with_deferred
+    },
+    {
+        "add_dont_fragment_tag_w_with_dont_fragment",
+        Sparse_add_dont_fragment_tag_w_with_dont_fragment
+    },
+    {
+        "remove_before_add_remove",
+        Sparse_remove_before_add_remove
+    },
+    {
+        "remove_before_add_remove_other_entity",
+        Sparse_remove_before_add_remove_other_entity
+    },
+    {
+        "dont_fragment_tag_w_with_dont_fragment_tag",
+        Sparse_dont_fragment_tag_w_with_dont_fragment_tag
+    },
+    {
+        "dont_fragment_tag_w_with_dont_fragment_tag_deferred",
+        Sparse_dont_fragment_tag_w_with_dont_fragment_tag_deferred
+    },
+    {
+        "dont_fragment_tag_w_with_dont_fragment_tag_chain",
+        Sparse_dont_fragment_tag_w_with_dont_fragment_tag_chain
+    },
+    {
+        "dont_fragment_tag_w_with_added_after_use",
+        Sparse_dont_fragment_tag_w_with_added_after_use
+    },
+    {
+        "dont_fragment_pair_w_with_dont_fragment_pair",
+        Sparse_dont_fragment_pair_w_with_dont_fragment_pair
+    },
+    {
+        "dont_fragment_tag_w_with_fragmenting_tag",
+        Sparse_dont_fragment_tag_w_with_fragmenting_tag
+    },
+    {
+        "dont_fragment_added_to_tag_w_with_fragmenting_tag",
+        Sparse_dont_fragment_added_to_tag_w_with_fragmenting_tag
     }
 };
 
 bake_test_case NonFragmentingChildOf_testcases[] = {
+    {
+        "convert_storage_childof_observer",
+        NonFragmentingChildOf_convert_storage_childof_observer
+    },
+    {
+        "convert_storage_keeps_membership",
+        NonFragmentingChildOf_convert_storage_keeps_membership
+    },
+    {
+        "defer_convert_storage_keeps_membership",
+        NonFragmentingChildOf_defer_convert_storage_keeps_membership
+    },
+    {
+        "convert_storage_reparents",
+        NonFragmentingChildOf_convert_storage_reparents
+    },
+    {
+        "defer_convert_storage_reparents",
+        NonFragmentingChildOf_defer_convert_storage_reparents
+    },
+    {
+        "remove_all_childof_preserves_prefabs",
+        NonFragmentingChildOf_remove_all_childof_preserves_prefabs
+    },
+    {
+        "remove_all_target_preserves_prefabs",
+        NonFragmentingChildOf_remove_all_target_preserves_prefabs
+    },
+    {
+        "delete_with_childof_preserves_prefabs",
+        NonFragmentingChildOf_delete_with_childof_preserves_prefabs
+    },
+    {
+        "delete_with_target_preserves_prefabs",
+        NonFragmentingChildOf_delete_with_target_preserves_prefabs
+    },
+    {
+        "remove_all_childof_mixed",
+        NonFragmentingChildOf_remove_all_childof_mixed
+    },
+    {
+        "remove_all_target_mixed",
+        NonFragmentingChildOf_remove_all_target_mixed
+    },
+    {
+        "delete_parent_w_child_used_as_tag",
+        NonFragmentingChildOf_delete_parent_w_child_used_as_tag
+    },
+    {
+        "remove_all_parent_w_childof_observer",
+        NonFragmentingChildOf_remove_all_parent_w_childof_observer
+    },
+    {
+        "child_count_after_delete_parent",
+        NonFragmentingChildOf_child_count_after_delete_parent
+    },
     {
         "set_parent_no_ordered_children",
         NonFragmentingChildOf_set_parent_no_ordered_children
@@ -6169,6 +6929,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "delete_child",
         NonFragmentingChildOf_delete_child
+    },
+    {
+        "delete_named_child_recycle_id",
+        NonFragmentingChildOf_delete_named_child_recycle_id
     },
     {
         "reparent",
@@ -6207,24 +6971,28 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_mixed_childof
     },
     {
-        "convert_childof_to_parent_keeps_order",
-        NonFragmentingChildOf_convert_childof_to_parent_keeps_order
+        "convert_childof_to_parent_appends",
+        NonFragmentingChildOf_convert_childof_to_parent_appends
+    },
+    {
+        "convert_childof_to_parent_other_parent_and_back_appends",
+        NonFragmentingChildOf_convert_childof_to_parent_other_parent_and_back_appends
     },
     {
         "set_same_parent_twice_keeps_order",
         NonFragmentingChildOf_set_same_parent_twice_keeps_order
     },
     {
-        "add_childof_to_parent_component_keeps_order",
-        NonFragmentingChildOf_add_childof_to_parent_component_keeps_order
+        "add_childof_to_parent_component_appends",
+        NonFragmentingChildOf_add_childof_to_parent_component_appends
     },
     {
         "deferred_set_same_parent_keeps_order",
         NonFragmentingChildOf_deferred_set_same_parent_keeps_order
     },
     {
-        "deferred_convert_childof_to_parent_keeps_order",
-        NonFragmentingChildOf_deferred_convert_childof_to_parent_keeps_order
+        "deferred_convert_childof_to_parent_appends",
+        NonFragmentingChildOf_deferred_convert_childof_to_parent_appends
     },
     {
         "remove_parent_then_add_childof_appends_last",
@@ -6723,6 +7491,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_instantiate_tree_at_depth_n_w_childof
     },
     {
+        "delete_parent_of_instantiated_tree_w_childof",
+        NonFragmentingChildOf_delete_parent_of_instantiated_tree_w_childof
+    },
+    {
         "reparent_instantiated_tree_w_parent",
         NonFragmentingChildOf_reparent_instantiated_tree_w_parent
     },
@@ -6893,6 +7665,14 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "new_w_parent_w_name_from_stage",
         NonFragmentingChildOf_new_w_parent_w_name_from_stage
+    },
+    {
+        "new_w_parent_childof_on_add_observer",
+        NonFragmentingChildOf_new_w_parent_childof_on_add_observer
+    },
+    {
+        "new_w_parent_childof_up_observer",
+        NonFragmentingChildOf_new_w_parent_childof_up_observer
     },
     {
         "new_w_parent_readonly_new_table",
@@ -7115,6 +7895,18 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_defer_set_existing_parent_to_deleted_batched
     },
     {
+        "defer_reparent_to_deleted_parent_two_stages",
+        NonFragmentingChildOf_defer_reparent_to_deleted_parent_two_stages
+    },
+    {
+        "defer_reparent_to_deleted_parent_two_stages_batched",
+        NonFragmentingChildOf_defer_reparent_to_deleted_parent_two_stages_batched
+    },
+    {
+        "defer_reparent_named_child_to_deleted_parent_two_stages",
+        NonFragmentingChildOf_defer_reparent_named_child_to_deleted_parent_two_stages
+    },
+    {
         "defer_remove_set_parent_different_stages",
         NonFragmentingChildOf_defer_remove_set_parent_different_stages
     },
@@ -7239,6 +8031,22 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_fini_w_instantiated_prefab_non_fragmenting_child
     },
     {
+        "delete_instantiated_prefab_non_fragmenting_child",
+        NonFragmentingChildOf_delete_instantiated_prefab_non_fragmenting_child
+    },
+    {
+        "delete_instanced_prefab_non_fragmenting_child",
+        NonFragmentingChildOf_delete_instanced_prefab_non_fragmenting_child
+    },
+    {
+        "delete_instanced_nested_prefab_non_fragmenting_child",
+        NonFragmentingChildOf_delete_instanced_nested_prefab_non_fragmenting_child
+    },
+    {
+        "delete_nested_prefab_after_delete_instance_and_shrink",
+        NonFragmentingChildOf_delete_nested_prefab_after_delete_instance_and_shrink
+    },
+    {
         "convert_childof_to_parent",
         NonFragmentingChildOf_convert_childof_to_parent
     },
@@ -7277,6 +8085,42 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "multi_term_up_observer_propagates_to_subtree",
         NonFragmentingChildOf_multi_term_up_observer_propagates_to_subtree
+    },
+    {
+        "instantiate_prefab_child_w_nested_children",
+        NonFragmentingChildOf_instantiate_prefab_child_w_nested_children
+    },
+    {
+        "delete_root_of_instantiated_prefab_child_w_nested_children",
+        NonFragmentingChildOf_delete_root_of_instantiated_prefab_child_w_nested_children
+    },
+    {
+        "delete_root_of_prefab_child_w_mixed_children_and_other_targets",
+        NonFragmentingChildOf_delete_root_of_prefab_child_w_mixed_children_and_other_targets
+    },
+    {
+        "delete_root_of_child_w_mixed_children_and_other_targets_cleanup_order",
+        NonFragmentingChildOf_delete_root_of_child_w_mixed_children_and_other_targets_cleanup_order
+    },
+    {
+        "delete_target_of_children_w_different_parents_childof_observer",
+        NonFragmentingChildOf_delete_target_of_children_w_different_parents_childof_observer
+    },
+    {
+        "delete_parent_w_observer_deleting_sibling",
+        NonFragmentingChildOf_delete_parent_w_observer_deleting_sibling
+    },
+    {
+        "delete_parent_w_observer_reparenting_sibling",
+        NonFragmentingChildOf_delete_parent_w_observer_reparenting_sibling
+    },
+    {
+        "delete_parent_used_as_target_w_observer_deleting_sibling",
+        NonFragmentingChildOf_delete_parent_used_as_target_w_observer_deleting_sibling
+    },
+    {
+        "delete_parent_used_as_target_w_observer_reparenting_sibling",
+        NonFragmentingChildOf_delete_parent_used_as_target_w_observer_reparenting_sibling
     }
 };
 
@@ -7320,6 +8164,14 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "tree_iter_parent_0",
         Hierarchies_tree_iter_parent_0
+    },
+    {
+        "tree_iter_parent_wildcard",
+        Hierarchies_tree_iter_parent_wildcard
+    },
+    {
+        "tree_iter_parent_any",
+        Hierarchies_tree_iter_parent_any
     },
     {
         "path_depth_0",
@@ -8057,6 +8909,18 @@ bake_test_case Count_testcases[] = {
     {
         "count_prefab",
         Count_count_prefab
+    },
+    {
+        "count_sparse_pair_rel_wildcard",
+        Count_count_sparse_pair_rel_wildcard
+    },
+    {
+        "count_dont_fragment_component",
+        Count_count_dont_fragment_component
+    },
+    {
+        "count_dont_fragment_pair_rel_wildcard",
+        Count_count_dont_fragment_pair_rel_wildcard
     }
 };
 
@@ -8251,6 +9115,26 @@ bake_test_case Reference_testcases[] = {
     {
         "ref_after_shrink_w_freed_pages",
         Reference_ref_after_shrink_w_freed_pages
+    },
+    {
+        "ref_from_ptr",
+        Reference_ref_from_ptr
+    },
+    {
+        "ref_from_ptr_after_add",
+        Reference_ref_from_ptr_after_add
+    },
+    {
+        "ref_from_ptr_after_delete",
+        Reference_ref_from_ptr_after_delete
+    },
+    {
+        "ref_from_ptr_inherited",
+        Reference_ref_from_ptr_inherited
+    },
+    {
+        "ref_from_ptr_invalid_ptr",
+        Reference_ref_from_ptr_invalid_ptr
     }
 };
 
@@ -8382,6 +9266,30 @@ bake_test_case Delete_testcases[] = {
     {
         "wrap_generation_count",
         Delete_wrap_generation_count
+    },
+    {
+        "delete_w_on_remove_removing_other",
+        Delete_delete_w_on_remove_removing_other
+    },
+    {
+        "delete_w_on_remove_removing_other_w_stage",
+        Delete_delete_w_on_remove_removing_other_w_stage
+    },
+    {
+        "clear_w_on_remove_removing_other",
+        Delete_clear_w_on_remove_removing_other
+    },
+    {
+        "clear_w_on_remove_removing_other_w_stage",
+        Delete_clear_w_on_remove_removing_other_w_stage
+    },
+    {
+        "delete_w_on_remove_hook_removing_other",
+        Delete_delete_w_on_remove_hook_removing_other
+    },
+    {
+        "delete_w_on_remove_hook_removing_other_w_stage",
+        Delete_delete_w_on_remove_hook_removing_other_w_stage
     }
 };
 
@@ -8901,6 +9809,34 @@ bake_test_case OnDelete_testcases[] = {
     {
         "remove_target_no_intermediate_table_3_pairs",
         OnDelete_remove_target_no_intermediate_table_3_pairs
+    },
+    {
+        "delete_parent_w_isa_base_that_inherits_from_disabled_child",
+        OnDelete_delete_parent_w_isa_base_that_inherits_from_disabled_child
+    },
+    {
+        "delete_with_w_on_remove_removing_other",
+        OnDelete_delete_with_w_on_remove_removing_other
+    },
+    {
+        "delete_with_w_on_remove_removing_other_w_stage",
+        OnDelete_delete_with_w_on_remove_removing_other_w_stage
+    },
+    {
+        "remove_all_w_on_remove_removing_other",
+        OnDelete_remove_all_w_on_remove_removing_other
+    },
+    {
+        "remove_all_w_on_remove_removing_other_w_stage",
+        OnDelete_remove_all_w_on_remove_removing_other_w_stage
+    },
+    {
+        "delete_parent_w_on_remove_removing_other_from_child",
+        OnDelete_delete_parent_w_on_remove_removing_other_from_child
+    },
+    {
+        "delete_parent_w_on_remove_removing_other_from_child_w_stage",
+        OnDelete_delete_parent_w_on_remove_removing_other_from_child_w_stage
     }
 };
 
@@ -9056,6 +9992,14 @@ bake_test_case Set_testcases[] = {
     {
         "emplace_pair",
         Set_emplace_pair
+    },
+    {
+        "set_w_on_add_adding_other",
+        Set_set_w_on_add_adding_other
+    },
+    {
+        "set_w_on_add_adding_other_w_stage",
+        Set_set_w_on_add_adding_other_w_stage
     }
 };
 
@@ -10284,6 +11228,102 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "delete_component_w_cached_query_in_component",
         ComponentLifecycle_delete_component_w_cached_query_in_component
+    },
+    {
+        "locked_storage_on_add",
+        ComponentLifecycle_locked_storage_on_add
+    },
+    {
+        "locked_storage_on_set",
+        ComponentLifecycle_locked_storage_on_set
+    },
+    {
+        "locked_storage_on_remove",
+        ComponentLifecycle_locked_storage_on_remove
+    },
+    {
+        "locked_storage_on_replace",
+        ComponentLifecycle_locked_storage_on_replace
+    },
+    {
+        "locked_storage_ctor",
+        ComponentLifecycle_locked_storage_ctor
+    },
+    {
+        "locked_storage_dtor",
+        ComponentLifecycle_locked_storage_dtor
+    },
+    {
+        "locked_storage_copy",
+        ComponentLifecycle_locked_storage_copy
+    },
+    {
+        "locked_storage_move",
+        ComponentLifecycle_locked_storage_move
+    },
+    {
+        "locked_storage_copy_ctor",
+        ComponentLifecycle_locked_storage_copy_ctor
+    },
+    {
+        "locked_storage_move_ctor",
+        ComponentLifecycle_locked_storage_move_ctor
+    },
+    {
+        "locked_storage_ctor_move_dtor",
+        ComponentLifecycle_locked_storage_ctor_move_dtor
+    },
+    {
+        "locked_storage_move_dtor",
+        ComponentLifecycle_locked_storage_move_dtor
+    },
+    {
+        "delete_nonlast_w_ctor_move_dtor_no_move_ctor",
+        ComponentLifecycle_delete_nonlast_w_ctor_move_dtor_no_move_ctor
+    },
+    {
+        "delete_last_w_ctor_move_dtor_no_move_ctor",
+        ComponentLifecycle_delete_last_w_ctor_move_dtor_no_move_ctor
+    },
+    {
+        "delete_nonlast_w_ctor_move_dtor_no_move_ctor_deferred",
+        ComponentLifecycle_delete_nonlast_w_ctor_move_dtor_no_move_ctor_deferred
+    },
+    {
+        "remove_nonlast_w_ctor_move_dtor_no_move_ctor",
+        ComponentLifecycle_remove_nonlast_w_ctor_move_dtor_no_move_ctor
+    },
+    {
+        "remove_nonlast_w_ctor_move_dtor_no_move_ctor_interleaved",
+        ComponentLifecycle_remove_nonlast_w_ctor_move_dtor_no_move_ctor_interleaved
+    },
+    {
+        "remove_last_w_ctor_move_dtor_no_move_ctor",
+        ComponentLifecycle_remove_last_w_ctor_move_dtor_no_move_ctor
+    },
+    {
+        "remove_nonlast_w_ctor_move_dtor_no_move_ctor_deferred",
+        ComponentLifecycle_remove_nonlast_w_ctor_move_dtor_no_move_ctor_deferred
+    },
+    {
+        "add_nonlast_w_ctor_move_dtor_no_move_ctor",
+        ComponentLifecycle_add_nonlast_w_ctor_move_dtor_no_move_ctor
+    },
+    {
+        "delete_nonlast_dtor_only",
+        ComponentLifecycle_delete_nonlast_dtor_only
+    },
+    {
+        "remove_nonlast_dtor_only",
+        ComponentLifecycle_remove_nonlast_dtor_only
+    },
+    {
+        "remove_other_nonlast_dtor_only",
+        ComponentLifecycle_remove_other_nonlast_dtor_only
+    },
+    {
+        "add_nonlast_dtor_only",
+        ComponentLifecycle_add_nonlast_dtor_only
     }
 };
 
@@ -11335,46 +12375,6 @@ bake_test_case Trigger_testcases[] = {
 
 bake_test_case Observer_testcases[] = {
     {
-        "on_set_no_propagate_w_self_only_observer_on_child",
-        Observer_on_set_no_propagate_w_self_only_observer_on_child
-    },
-    {
-        "on_set_propagate_w_up_observer_on_child",
-        Observer_on_set_propagate_w_up_observer_on_child
-    },
-    {
-        "on_set_propagate_isa_w_up_observer_on_instance",
-        Observer_on_set_propagate_isa_w_up_observer_on_instance
-    },
-    {
-        "on_set_propagate_w_up_observer_created_after_entities",
-        Observer_on_set_propagate_w_up_observer_created_after_entities
-    },
-    {
-        "on_set_no_propagate_after_up_observer_deleted",
-        Observer_on_set_no_propagate_after_up_observer_deleted
-    },
-    {
-        "nomatch_table_memo_alternating_tables",
-        Observer_nomatch_table_memo_alternating_tables
-    },
-    {
-        "up_isa_term_no_match_then_base_gains_component",
-        Observer_up_isa_term_no_match_then_base_gains_component
-    },
-    {
-        "up_isa_term_alternating_match_and_no_match",
-        Observer_up_isa_term_alternating_match_and_no_match
-    },
-    {
-        "up_isa_not_term_base_gains_component",
-        Observer_up_isa_not_term_base_gains_component
-    },
-    {
-        "nomatch_table_memo_after_table_delete",
-        Observer_nomatch_table_memo_after_table_delete
-    },
-    {
         "multi_term_inheritable_component_owned",
         Observer_multi_term_inheritable_component_owned
     },
@@ -12143,6 +13143,22 @@ bake_test_case Observer_testcases[] = {
         Observer_disable_multi_observer_and_module
     },
     {
+        "disable_observer_deferred",
+        Observer_disable_observer_deferred
+    },
+    {
+        "disable_observer_module_deferred",
+        Observer_disable_observer_module_deferred
+    },
+    {
+        "enable_observer_w_remove_all",
+        Observer_enable_observer_w_remove_all
+    },
+    {
+        "enable_observer_module_w_remove_all",
+        Observer_enable_observer_module_w_remove_all
+    },
+    {
         "tag_w_on_set_and_on_add",
         Observer_tag_w_on_set_and_on_add
     },
@@ -12481,6 +13497,26 @@ bake_test_case Observer_testcases[] = {
     {
         "on_set_singleton_set_component_named_entity",
         Observer_on_set_singleton_set_component_named_entity
+    },
+    {
+        "on_add_this_w_singleton_set_after_this",
+        Observer_on_add_this_w_singleton_set_after_this
+    },
+    {
+        "on_add_this_w_singleton_set_before_this",
+        Observer_on_add_this_w_singleton_set_before_this
+    },
+    {
+        "on_add_this_w_fixed_src_set_after_this",
+        Observer_on_add_this_w_fixed_src_set_after_this
+    },
+    {
+        "on_set_this_w_singleton_set_after_2_entities",
+        Observer_on_set_this_w_singleton_set_after_2_entities
+    },
+    {
+        "on_remove_this_w_singleton_remove_singleton",
+        Observer_on_remove_this_w_singleton_remove_singleton
     },
     {
         "1_term_field_size",
@@ -12969,6 +14005,46 @@ bake_test_case Observer_testcases[] = {
     {
         "single_term_observer_wo_var_invoked_once_per_event",
         Observer_single_term_observer_wo_var_invoked_once_per_event
+    },
+    {
+        "on_set_up_then_parent_move_add_grandchild",
+        Observer_on_set_up_then_parent_move_add_grandchild
+    },
+    {
+        "not_term_on_remove_add_negated_id_in_populated_table",
+        Observer_not_term_on_remove_add_negated_id_in_populated_table
+    },
+    {
+        "not_term_on_add_remove_negated_id_in_populated_table",
+        Observer_not_term_on_add_remove_negated_id_in_populated_table
+    },
+    {
+        "not_term_on_remove_add_negated_id_in_populated_table_w_data",
+        Observer_not_term_on_remove_add_negated_id_in_populated_table_w_data
+    },
+    {
+        "not_term_on_add_remove_negated_id_in_populated_table_w_data",
+        Observer_not_term_on_add_remove_negated_id_in_populated_table_w_data
+    },
+    {
+        "on_remove_delete_other_in_same_table_on_delete",
+        Observer_on_remove_delete_other_in_same_table_on_delete
+    },
+    {
+        "on_remove_delete_other_in_same_table_on_remove",
+        Observer_on_remove_delete_other_in_same_table_on_remove
+    },
+    {
+        "no_terms_custom_event",
+        Observer_no_terms_custom_event
+    },
+    {
+        "no_terms_custom_event_w_src",
+        Observer_no_terms_custom_event_w_src
+    },
+    {
+        "no_terms_on_add",
+        Observer_no_terms_on_add
     }
 };
 
@@ -13068,6 +14144,10 @@ bake_test_case ObserverOnSet_testcases[] = {
     {
         "set_optional_one_term",
         ObserverOnSet_set_optional_one_term
+    },
+    {
+        "set_optional_one_term_16_bytes",
+        ObserverOnSet_set_optional_one_term_16_bytes
     },
     {
         "set_from_nothing",
@@ -14129,6 +15209,14 @@ bake_test_case Prefab_testcases[] = {
         Prefab_add_base_w_exclusive_override
     },
     {
+        "add_base_w_exclusive_dont_fragment_override",
+        Prefab_add_base_w_exclusive_dont_fragment_override
+    },
+    {
+        "add_base_w_exclusive_dont_fragment_override_w_value",
+        Prefab_add_base_w_exclusive_dont_fragment_override_w_value
+    },
+    {
         "fini_w_prefab_child_exclusive_pair_delete_with",
         Prefab_fini_w_prefab_child_exclusive_pair_delete_with
     },
@@ -14219,6 +15307,38 @@ bake_test_case Prefab_testcases[] = {
     {
         "add_override_trait_component_to_prefab_after_instantiate",
         Prefab_add_override_trait_component_to_prefab_after_instantiate
+    },
+    {
+        "add_component_to_prefab_after_instantiate_new_instance_same_table",
+        Prefab_add_component_to_prefab_after_instantiate_new_instance_same_table
+    },
+    {
+        "add_component_to_prefab_after_instantiate_existing_dst_table",
+        Prefab_add_component_to_prefab_after_instantiate_existing_dst_table
+    },
+    {
+        "remove_component_from_prefab_after_instantiate_new_instance",
+        Prefab_remove_component_from_prefab_after_instantiate_new_instance
+    },
+    {
+        "add_component_to_nested_prefab_after_instantiate_new_instance",
+        Prefab_add_component_to_nested_prefab_after_instantiate_new_instance
+    },
+    {
+        "add_inherit_w_override_with_to_prefab_after_instantiate",
+        Prefab_add_inherit_w_override_with_to_prefab_after_instantiate
+    },
+    {
+        "add_component_to_prefab_during_instantiate",
+        Prefab_add_component_to_prefab_during_instantiate
+    },
+    {
+        "add_component_to_prefab_during_instantiate_w_parent",
+        Prefab_add_component_to_prefab_during_instantiate_w_parent
+    },
+    {
+        "dont_inherit_dont_fragment_component",
+        Prefab_dont_inherit_dont_fragment_component
     }
 };
 
@@ -14362,6 +15482,46 @@ bake_test_case World_testcases[] = {
     {
         "range_prefab_spawn_deferred_after_range_switch",
         World_range_prefab_spawn_deferred_after_range_switch
+    },
+    {
+        "range_new_from_range",
+        World_range_new_from_range
+    },
+    {
+        "range_new_from_range_active",
+        World_range_new_from_range_active
+    },
+    {
+        "range_new_from_range_recycled",
+        World_range_new_from_range_recycled
+    },
+    {
+        "range_new_from_range_recycled_after_switch",
+        World_range_new_from_range_recycled_after_switch
+    },
+    {
+        "range_new_from_range_delete",
+        World_range_new_from_range_delete
+    },
+    {
+        "range_new_from_range_then_set",
+        World_range_new_from_range_then_set
+    },
+    {
+        "range_new_from_range_deferred",
+        World_range_new_from_range_deferred
+    },
+    {
+        "range_new_from_range_exhausted",
+        World_range_new_from_range_exhausted
+    },
+    {
+        "range_new_from_range_unknown_range",
+        World_range_new_from_range_unknown_range
+    },
+    {
+        "range_new_from_range_null",
+        World_range_new_from_range_null
     },
     {
         "phases",
@@ -15528,6 +16688,14 @@ bake_test_case Type_testcases[] = {
 
 bake_test_case Commands_testcases[] = {
     {
+        "observer_commands_before_next_command",
+        Commands_observer_commands_before_next_command
+    },
+    {
+        "nested_observer_command_queues",
+        Commands_nested_observer_command_queues
+    },
+    {
         "defer_ensure_dont_fragment_w_set",
         Commands_defer_ensure_dont_fragment_w_set
     },
@@ -15536,8 +16704,8 @@ bake_test_case Commands_testcases[] = {
         Commands_is_deferred
     },
     {
-        "is_defer_suspended",
-        Commands_is_defer_suspended
+        "stage_always_deferred",
+        Commands_stage_always_deferred
     },
     {
         "defer_new",
@@ -15764,8 +16932,8 @@ bake_test_case Commands_testcases[] = {
         Commands_discard_child_w_add
     },
     {
-        "defer_return_value",
-        Commands_defer_return_value
+        "world_operations_with_pending_stage",
+        Commands_world_operations_with_pending_stage
     },
     {
         "defer_ensure_pair",
@@ -16266,6 +17434,62 @@ bake_test_case Commands_testcases[] = {
     {
         "defer_remove_dont_fragment_on_cascade_deleted_child",
         Commands_defer_remove_dont_fragment_on_cascade_deleted_child
+    },
+    {
+        "defer_remove_override_on_remove_value",
+        Commands_defer_remove_override_on_remove_value
+    },
+    {
+        "defer_remove_add_on_remove_on_add",
+        Commands_defer_remove_add_on_remove_on_add
+    },
+    {
+        "defer_remove_add_remove_on_remove_count",
+        Commands_defer_remove_add_remove_on_remove_count
+    },
+    {
+        "defer_remove_set_other",
+        Commands_defer_remove_set_other
+    },
+    {
+        "defer_remove_two_set_removed",
+        Commands_defer_remove_two_set_removed
+    },
+    {
+        "defer_remove_two_set_other",
+        Commands_defer_remove_two_set_other
+    },
+    {
+        "defer_remove_ensure_other",
+        Commands_defer_remove_ensure_other
+    },
+    {
+        "defer_remove_two_ensure_other",
+        Commands_defer_remove_two_ensure_other
+    },
+    {
+        "defer_remove_two_ensure_removed_override",
+        Commands_defer_remove_two_ensure_removed_override
+    },
+    {
+        "defer_remove_ensure_removed_override",
+        Commands_defer_remove_ensure_removed_override
+    },
+    {
+        "defer_remove_wildcard_set_pair",
+        Commands_defer_remove_wildcard_set_pair
+    },
+    {
+        "defer_set_interleaved_entities",
+        Commands_defer_set_interleaved_entities
+    },
+    {
+        "defer_ensure_remove_wildcard_ensure_pair",
+        Commands_defer_ensure_remove_wildcard_ensure_pair
+    },
+    {
+        "defer_remove_two_set_other_get_before_merge",
+        Commands_defer_remove_two_set_other_get_before_merge
     }
 };
 
@@ -17020,6 +18244,22 @@ bake_test_case Error_testcases[] = {
     {
         "log_capture_nested_recursion",
         Error_log_capture_nested_recursion
+    },
+    {
+        "log_collect_errors",
+        Error_log_collect_errors
+    },
+    {
+        "log_collect_errors_nested_capture",
+        Error_log_collect_errors_nested_capture
+    },
+    {
+        "log_collect_errors_nested",
+        Error_log_collect_errors_nested
+    },
+    {
+        "log_collect_errors_restores_level",
+        Error_log_collect_errors_restores_level
     }
 };
 
@@ -17051,14 +18291,14 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        115,
+        117,
         Entity_testcases
     },
     {
         "Each",
         NULL,
         NULL,
-        7,
+        18,
         Each_testcases
     },
     {
@@ -17067,6 +18307,13 @@ static bake_test_suite suites[] = {
         NULL,
         61,
         Iter_testcases
+    },
+    {
+        "ComponentInheritance",
+        NULL,
+        NULL,
+        84,
+        ComponentInheritance_testcases
     },
     {
         "Search",
@@ -17107,7 +18354,7 @@ static bake_test_suite suites[] = {
         "Remove",
         NULL,
         NULL,
-        14,
+        16,
         Remove_testcases
     },
     {
@@ -17121,7 +18368,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        239,
+        253,
         Sparse_testcases,
         1,
         Sparse_params
@@ -17130,14 +18377,14 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        286,
+        321,
         NonFragmentingChildOf_testcases
     },
     {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        117,
+        119,
         Hierarchies_testcases
     },
     {
@@ -17158,7 +18405,7 @@ static bake_test_suite suites[] = {
         "Count",
         NULL,
         NULL,
-        5,
+        8,
         Count_testcases
     },
     {
@@ -17172,28 +18419,28 @@ static bake_test_suite suites[] = {
         "Reference",
         Reference_setup,
         NULL,
-        26,
+        31,
         Reference_testcases
     },
     {
         "Delete",
         Delete_setup,
         NULL,
-        32,
+        38,
         Delete_testcases
     },
     {
         "OnDelete",
         NULL,
         NULL,
-        129,
+        136,
         OnDelete_testcases
     },
     {
         "Set",
         NULL,
         NULL,
-        38,
+        40,
         Set_testcases
     },
     {
@@ -17221,7 +18468,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        171,
+        195,
         ComponentLifecycle_testcases
     },
     {
@@ -17242,14 +18489,14 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        409,
+        418,
         Observer_testcases
     },
     {
         "ObserverOnSet",
         NULL,
         NULL,
-        27,
+        28,
         ObserverOnSet_testcases
     },
     {
@@ -17284,14 +18531,14 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        207,
+        217,
         Prefab_testcases
     },
     {
         "World",
         World_setup,
         NULL,
-        183,
+        193,
         World_testcases
     },
     {
@@ -17319,7 +18566,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        185,
+        201,
         Commands_testcases
     },
     {
@@ -17361,7 +18608,7 @@ static bake_test_suite suites[] = {
         "Error",
         Error_setup,
         NULL,
-        14,
+        18,
         Error_testcases
     },
     {
@@ -17374,5 +18621,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("core", argc, argv, suites, 47);
+    return bake_test_run("core", argc, argv, suites, 48);
 }

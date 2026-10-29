@@ -1261,16 +1261,16 @@ By default, when an entity is instantiated, the components from the base entity 
 
 | Target      | C                | C++                  | C#                | Description |
 |-------------|------------------|----------------------|-------------------|-------------|
-| Override    | `EcsOverride`    | `flecs::Override`    | `Ecs.Override`    | Copy component from base to instance (default) |
+| Copy        | `EcsCopy`        | `flecs::Copy`        | `Ecs.Copy`        | Copy component from base to instance (default) |
 | Inherit     | `EcsInherit`     | `flecs::Inherit`     | `Ecs.Inherit`     | Inherit component from base |
 | DontInherit | `EcsDontInherit` | `flecs::DontInherit` | `Ecs.DontInherit` | Don't inherit (and don't copy) component from base |
 
-### Override
-The default behavior for `OnInstantiate` is `Override`, which means that the component is copied to the instance. This means that after instantiation, the instance has an owned copy for the component that masks the base component (the "override").
+### Copy
+The default behavior for `OnInstantiate` is `Copy`, which means that the component is copied to the instance. This means that after instantiation, the instance has an owned copy for the component that masks the base component (the "override").
 
 Note that for an override to work correctly, a component has to be copyable.
 
-The following example shows how to use the `Override` trait:
+The following example shows how to use the `Copy` trait:
 
 <div class="flecs-snippet-tabs">
 <ul>
@@ -1280,7 +1280,7 @@ The following example shows how to use the `Override` trait:
 ECS_COMPONENT(ecs, Mass);
 
 // Set trait on Mass. Optional, since this is the default behavior
-ecs_add_pair(ecs, ecs_id(Mass), EcsOnInstantiate, EcsOverride);
+ecs_add_pair(ecs, ecs_id(Mass), EcsOnInstantiate, EcsCopy);
 
 ecs_entity_t base = ecs_insert(ecs, ecs_value(Mass { 100 }));
 ecs_entity_t inst = ecs_insert(ecs, { ecs_isa(base) }); // Mass is copied to inst
@@ -1294,7 +1294,7 @@ assert(ecs_get(ecs, base, Mass) != ecs_get(ecs, inst, Mass));
 
 ```cpp
 // Register component with trait. Optional, since this is the default behavior.
-ecs.component<Mass>().add(flecs::OnInstantiate, flecs::Override);
+ecs.component<Mass>().add(flecs::OnInstantiate, flecs::Copy);
 
 flecs::entity base = ecs.entity().set(Mass { 100 });
 flecs::entity inst = ecs.entity().is_a(base); // Mass is copied to inst
@@ -1309,7 +1309,7 @@ assert(base.try_get<Mass>() != inst.try_get<Mass>());
 ```cs
 // Register component with trait. Optional, since this is the default behavior.
 ecs.Component<Mass>().Entity
-    .Add(Ecs.OnInstantiate, Ecs.Override);
+    .Add(Ecs.OnInstantiate, Ecs.Copy);
 
 Entity base = ecs.Entity()
     .Set<Mass>(new(100));
@@ -1327,7 +1327,7 @@ Debug.Assert(inst.Owns<Mass>());
 // Register component with trait. Optional, since this is the default behavior.
 world
 .component::<Mass>()
-.add_trait::<(flecs::OnInstantiate, flecs::Override)>();
+.add_trait::<(flecs::OnInstantiate, flecs::Copy)>();
 
 let base = world.entity().set(Mass { value: 100.0 });
 let inst = world.entity().is_a_id(base); // Mass is copied to inst
@@ -1358,7 +1358,7 @@ assert base.get(Mass.class) != inst.get(Mass.class);
 ### Inherit
 Components with the `Inherit` trait are inherited from a base entity (the `IsA` target) on instantiation. Inherited components are not copied to the instance, and are only stored once in memory. Operations such as `get` and `has`, and queries will automatically lookup inheritable components by following the `IsA` relationship.
 
-Inheritable components can be overridden manually by adding the component to the instance. This results in the same behavior as the `Override` trait, where the component is copied from the base entity.
+Inheritable components can be overridden manually by adding the component to the instance. This results in the same behavior as the `Copy` trait, where the component is copied from the base entity.
 
 The following example shows how to use the `Inherit` trait:
 

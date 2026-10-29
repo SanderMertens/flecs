@@ -46,13 +46,7 @@ typedef struct ecs_table_diff_t {
     ecs_flags32_t removed_flags;
 } ecs_table_diff_t;
 
-/* Tracks which and how many non-fragmenting children are stored in a table for a parent. */
-typedef struct ecs_parent_record_t {
-    uint32_t entity;                /* If the table only contains a single entity for the parent, this will contain the entity ID (without generation). */
-    int32_t count;                  /* The number of children for a parent in the table. */
-} ecs_parent_record_t;
-
-/** Find the record for an entity.
+/** Get the record for an entity.
  * An entity record contains the table and row for the entity.
  * 
  * To use ecs_record_t::row as the record in the table, use:
@@ -62,22 +56,12 @@ typedef struct ecs_parent_record_t {
  * 
  * @param world The world.
  * @param entity The entity.
- * @return The record, NULL if the entity does not exist.
+ * @return The record for the entity.
  */
 FLECS_API
-ecs_record_t* ecs_record_find(
+FLECS_ALWAYS_INLINE ecs_record_t* flecs_entities_get(
     const ecs_world_t *world,
     ecs_entity_t entity);
-
-/** Get the entity corresponding to a record.
- * This operation only works for entities that are not empty.
- *
- * @param record The record for which to obtain the entity ID.
- * @return The entity ID for the record.
- */
-FLECS_API
-ecs_entity_t ecs_record_get_entity(
-    const ecs_record_t *record);
 
 /** Add multiple IDs to an entity.
  * This operation adds multiple IDs with at most one table move.
@@ -94,6 +78,16 @@ void flecs_add_ids(
     const ecs_id_t *ids,
     int32_t count);
 
+/** Get the entity ID from an entity record.
+ * This operation only works for entities that are not empty.
+ *
+ * @param record The entity record.
+ * @return The entity ID.
+ */
+FLECS_API
+ecs_entity_t flecs_entity_get_id(
+    const ecs_record_t *record);
+
 /** Get a component from an entity record.
  * This operation returns a pointer to a component for the entity
  * associated with the provided record.
@@ -103,42 +97,14 @@ void flecs_add_ids(
  *
  * @param world The world.
  * @param record Record to the entity.
- * @param id The (component) ID.
+ * @param component The component to get.
  * @return Pointer to component, or NULL if entity does not have the component.
- *
- * @see ecs_record_ensure_id()
  */
 FLECS_API
-const void* ecs_record_get_id(
+const void* flecs_entity_get(
     const ecs_world_t *world,
     const ecs_record_t *record,
-    ecs_id_t id);
-
-/** Same as ecs_record_get_id(), but returns a mutable pointer.
- *
- * @param world The world.
- * @param record Record to the entity.
- * @param id The (component) ID.
- * @return Pointer to component, or NULL if entity does not have the component.
- */
-FLECS_API
-void* ecs_record_ensure_id(
-    ecs_world_t *world,
-    ecs_record_t *record,
-    ecs_id_t id);
-
-/** Test if the entity for a record has a (component) ID.
- *
- * @param world The world.
- * @param record Record to the entity.
- * @param id The (component) ID.
- * @return Whether the entity has the component.
- */
-FLECS_API
-bool ecs_record_has_id(
-    ecs_world_t *world,
-    const ecs_record_t *record,
-    ecs_id_t id);
+    ecs_id_t component);
 
 /** Get a component pointer from a column and record.
  * This returns a pointer to the component using a table column index. The
@@ -146,9 +112,9 @@ bool ecs_record_has_id(
  * 
  * Usage:
  * @code
- * ecs_record_t *r = ecs_record_find(world, entity);
+ * ecs_record_t *r = flecs_entities_get(world, entity);
  * int32_t column = ecs_table_get_column_index(world, table, ecs_id(Position));
- * Position *ptr = ecs_record_get_by_column(r, column, sizeof(Position));
+ * Position *ptr = flecs_entity_get_column(r, column, sizeof(Position));
  * @endcode
  * 
  * @param record The record.
@@ -157,7 +123,7 @@ bool ecs_record_has_id(
  * @return The component pointer.
  */
 FLECS_API
-void* ecs_record_get_by_column(
+void* flecs_entity_get_column(
     const ecs_record_t *record,
     int32_t column,
     size_t size);
@@ -256,29 +222,6 @@ ecs_component_record_t* flecs_component_dont_fragment_next(
  */
 FLECS_API
 FLECS_ALWAYS_INLINE const ecs_table_record_t* flecs_component_get_table(
-    const ecs_component_record_t *cr,
-    const ecs_table_t *table);
-
-/** Get the parent record for a component and table.
- * A parent record stores how many children for a parent are stored in the 
- * specified table. If the table only stores a single child, the parent record
- * will also store the entity ID of that child.
- * 
- * This information is used by queries to determine whether an O(n) search 
- * through the table is required to find all children for the parent. If the 
- * table only contains a single child, the query can use
- * ecs_parent_record_t::entity directly, otherwise it has to do a scan.
- * 
- * The component record specified to this function must be a ChildOf pair. Only
- * tables with children that use the non-fragmenting hierarchy storage will have
- * parent records.
- * 
- * @param cr The ChildOf component record.
- * @param table The table to check the number of children for.
- * @return The parent record if it exists, NULL if it does not.
-*/
-FLECS_API
-FLECS_ALWAYS_INLINE ecs_parent_record_t* flecs_component_get_parent_record(
     const ecs_component_record_t *cr,
     const ecs_table_t *table);
 

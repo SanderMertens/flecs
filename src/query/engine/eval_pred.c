@@ -16,30 +16,6 @@ static const char* flecs_query_name_arg(
     return term->second.name;
 }
 
-static bool flecs_query_match_substr_i(
-    const char *name,
-    const char *match)
-{
-    if (!match[0]) {
-        return true;
-    }
-
-    for (; *name; name ++) {
-        const char *n = name, *m = match;
-        while (*n && *m && (tolower((unsigned char)*n) ==
-            tolower((unsigned char)*m)))
-        {
-            n ++;
-            m ++;
-        }
-        if (!*m) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 static bool flecs_query_compare_range(
     const ecs_table_range_t *l,
     const ecs_table_range_t *r)
@@ -54,6 +30,7 @@ static bool flecs_query_compare_range(
         if (r->offset < l->offset) {
             return false;
         }
+
         if (r_end > l_end) {
             return false;
         }
@@ -83,6 +60,7 @@ static bool flecs_query_pred_eq_w_range(
         if (r.count == 1) {
             ctx->vars[l].entity = ecs_table_entities(r.table)[r.offset];
         }
+
         return true;
     } else {
         ecs_table_range_t l = flecs_query_get_range(
@@ -248,6 +226,7 @@ static bool flecs_query_pred_match(
         if (op_ctx->name_col == -1) {
             return is_neq;
         }
+
         op_ctx->name_col = flecs_ito(int16_t, 
             l.table->column_map[op_ctx->name_col]);
         ecs_assert(op_ctx->name_col != -1, ECS_INTERNAL_ERROR, NULL);
@@ -264,7 +243,7 @@ static bool flecs_query_pred_match(
     int32_t count = l.offset + l.count, offset = -1;
     for (; op_ctx->index < count; op_ctx->index ++) {
         const char *name = names[op_ctx->index].value;
-        bool result = flecs_query_match_substr_i(name, match);
+        bool result = flecs_strstr_i(name, match);
         if (is_neq) {
             result = !result;
         }

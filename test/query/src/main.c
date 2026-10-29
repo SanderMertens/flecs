@@ -1107,6 +1107,8 @@ void Variables_invalid_var_name_in_pair(void);
 void Variables_invalid_var_name_w_toggle_cascade(void);
 void Variables_invalid_var_name_w_neq(void);
 void Variables_first_var_w_fixed_tgt_id_matching_var_id(void);
+void Variables_same_src_tgt_var_w_fixed_first_id_matching_var_id(void);
+void Variables_same_this_src_tgt_w_fixed_first_id_matching_var_id(void);
 
 // Testsuite 'Operators'
 void Operators_setup(void);
@@ -1353,10 +1355,11 @@ void Transitive_isa_disabled_match_disabled_flag(void);
 void Transitive_isa_disabled_match_disabled_term(void);
 
 // Testsuite 'ComponentInheritance'
-void ComponentInheritance_1_ent_0_lvl(void);
-void ComponentInheritance_1_ent_1_lvl(void);
-void ComponentInheritance_1_ent_2_lvl(void);
-void ComponentInheritance_1_ent_3_lvl(void);
+void ComponentInheritance_setup(void);
+void ComponentInheritance_1_fixed_0_lvl(void);
+void ComponentInheritance_1_fixed_1_lvl(void);
+void ComponentInheritance_1_fixed_2_lvl(void);
+void ComponentInheritance_1_fixed_3_lvl(void);
 void ComponentInheritance_1_this_0_lvl(void);
 void ComponentInheritance_1_this_1_lvl(void);
 void ComponentInheritance_1_this_2_lvl(void);
@@ -1373,12 +1376,28 @@ void ComponentInheritance_1_var_0_lvl_written(void);
 void ComponentInheritance_1_var_1_lvl_written(void);
 void ComponentInheritance_1_var_2_lvl_written(void);
 void ComponentInheritance_1_var_3_lvl_written(void);
-void ComponentInheritance_1_ent_1_lvl_self(void);
+void ComponentInheritance_1_fixed_component(void);
+void ComponentInheritance_1_fixed_component_src_not_row_0(void);
+void ComponentInheritance_1_this_component(void);
+void ComponentInheritance_1_this_component_written(void);
+void ComponentInheritance_1_var_component(void);
+void ComponentInheritance_1_var_component_written(void);
+void ComponentInheritance_1_fixed_pair(void);
+void ComponentInheritance_1_this_pair(void);
+void ComponentInheritance_1_this_pair_written(void);
+void ComponentInheritance_1_var_pair(void);
+void ComponentInheritance_1_var_pair_written(void);
+void ComponentInheritance_1_fixed_component_pair(void);
+void ComponentInheritance_1_this_component_pair(void);
+void ComponentInheritance_1_this_component_pair_written(void);
+void ComponentInheritance_1_var_component_pair(void);
+void ComponentInheritance_1_var_component_pair_written(void);
+void ComponentInheritance_1_fixed_1_lvl_self(void);
 void ComponentInheritance_1_this_1_lvl_self(void);
 void ComponentInheritance_1_this_1_lvl_written_self(void);
 void ComponentInheritance_1_var_1_lvl_self(void);
 void ComponentInheritance_1_var_1_lvl_written_self(void);
-void ComponentInheritance_1_ent_src_not(void);
+void ComponentInheritance_1_fixed_src_not(void);
 void ComponentInheritance_1_this_src_not(void);
 void ComponentInheritance_1_var_src_not(void);
 void ComponentInheritance_1_this_src_not_written(void);
@@ -1389,6 +1408,30 @@ void ComponentInheritance_query_before_isa_relationship_1st_term(void);
 void ComponentInheritance_query_before_isa_relationship_2nd_term(void);
 void ComponentInheritance_query_before_isa_relationship_subtype(void);
 void ComponentInheritance_query_before_isa_relationship_0_src(void);
+void ComponentInheritance_populated_remove_isa_2_lvl(void);
+void ComponentInheritance_populated_remove_isa_3_lvl(void);
+void ComponentInheritance_populated_match_entities_added_after(void);
+void ComponentInheritance_populated_remove_isa_var(void);
+void ComponentInheritance_optional_inherited(void);
+void ComponentInheritance_or_inherited(void);
+void ComponentInheritance_multiple_inherited_terms(void);
+void ComponentInheritance_up_traversal_inherited(void);
+void ComponentInheritance_multi_derived_fixed(void);
+void ComponentInheritance_multi_derived_this(void);
+void ComponentInheritance_multi_derived_this_written(void);
+void ComponentInheritance_multi_derived_var(void);
+void ComponentInheritance_multi_derived_mid_level_once(void);
+void ComponentInheritance_multi_derived_count_results(void);
+void ComponentInheritance_pair_3_lvl(void);
+void ComponentInheritance_pair_multi(void);
+void ComponentInheritance_pair_different_target(void);
+void ComponentInheritance_pair_wildcard(void);
+void ComponentInheritance_pair_wildcard_multi_rel(void);
+void ComponentInheritance_pair_wildcard_w_owned_base_pair(void);
+void ComponentInheritance_cached_match_derived_table_added_after(void);
+void ComponentInheritance_cached_unmatch_derived_table_on_delete(void);
+void ComponentInheritance_inheritable_trait_terms_query_before_derived(void);
+void ComponentInheritance_query_base_and_derived_same_table(void);
 
 // Testsuite 'BuiltinPredicates'
 void BuiltinPredicates_setup(void);
@@ -1902,6 +1945,13 @@ void Cached_no_rematch_on_instantiate(void);
 void Cached_no_rematch_on_instantiate_multi_up(void);
 void Cached_no_rematch_on_instantiate_child(void);
 void Cached_self_term_w_inheritable_component(void);
+void Cached_rematch_after_reparent_parent_component_w_grandchild(void);
+void Cached_unmatch_after_reparent_parent_component_to_empty_parent(void);
+void Cached_spawn_despawn_parent_component_children_w_up_query(void);
+void Cached_on_add_childof_observer_w_parent_component_and_up_query(void);
+void Cached_fini_w_optional_cascade_query_and_nested_parent(void);
+void Cached_delete_disabled_child_table_after_rematch(void);
+void Cached_delete_table_w_on_table_delete_observer_creating_tables(void);
 
 // Testsuite 'ChangeDetection'
 void ChangeDetection_query_changed_after_new(void);
@@ -2433,9 +2483,26 @@ void DontFragment_1_sparse_written_up_w_non_fragmenting_childof(void);
 void DontFragment_1_sparse_written_self_up_w_non_fragmenting_childof(void);
 void DontFragment_src_var_w_trait_on_dont_fragment_tag(void);
 void DontFragment_src_var_w_trait_on_dont_fragment_tag_anonymous(void);
+void DontFragment_this_pair_tgt_var_w_dont_fragment_tag_on_var(void);
+void DontFragment_1_this_sparse_second_wildcard_w_empty_tgt(void);
+void DontFragment_1_var_sparse_second_wildcard_w_empty_tgt(void);
+void DontFragment_1_fixed_sparse_second_wildcard_w_empty_tgt(void);
+void DontFragment_1_this_sparse_written_second_wildcard_w_empty_tgt(void);
+void DontFragment_1_this_sparse_first_wildcard_w_empty_rel(void);
+void DontFragment_this_wildcard_wildcard_pair_w_empty_pair(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_setup(void);
+void NonFragmentingChildOf_wildcard_children_w_disabled_parent_child(void);
+void NonFragmentingChildOf_wildcard_children_w_prefab_parent_child(void);
+void NonFragmentingChildOf_wildcard_children_w_disabled_mixed_child(void);
+void NonFragmentingChildOf_wildcard_children_w_prefab_mixed_child(void);
+void NonFragmentingChildOf_wildcard_children_w_disabled_pair_child(void);
+void NonFragmentingChildOf_wildcard_children_w_prefab_pair_child(void);
+void NonFragmentingChildOf_sparse_parent_across_tables(void);
+void NonFragmentingChildOf_sparse_parent_order_by(void);
+void NonFragmentingChildOf_mixed_children_w_disabled_childof_child(void);
+void NonFragmentingChildOf_mixed_children_w_prefab_childof_child(void);
 void NonFragmentingChildOf_optional_up_set_var_2nd_child(void);
 void NonFragmentingChildOf_self_up_never_populated_table(void);
 void NonFragmentingChildOf_0_src_childof_parent(void);
@@ -2782,6 +2849,12 @@ void NonFragmentingChildOf_fixed_src_self_up_childof_any_expr(void);
 void NonFragmentingChildOf_var_src_childof_parent_ordered_children(void);
 void NonFragmentingChildOf_var_src_childof_wildcard_ordered_children(void);
 void NonFragmentingChildOf_this_src_not_childof_self_up_w_not_self_up(void);
+void NonFragmentingChildOf_this_2_up_parents_in_same_table(void);
+void NonFragmentingChildOf_this_2_self_up_parents_in_same_table(void);
+void NonFragmentingChildOf_this_up_optional_up_parents_in_same_table(void);
+void NonFragmentingChildOf_this_up_not_up_parents_in_same_table(void);
+void NonFragmentingChildOf_or_up_terms_no_match(void);
+void NonFragmentingChildOf_or_up_terms_match_parent(void);
 
 // Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
@@ -7277,6 +7350,14 @@ bake_test_case Variables_testcases[] = {
     {
         "first_var_w_fixed_tgt_id_matching_var_id",
         Variables_first_var_w_fixed_tgt_id_matching_var_id
+    },
+    {
+        "same_src_tgt_var_w_fixed_first_id_matching_var_id",
+        Variables_same_src_tgt_var_w_fixed_first_id_matching_var_id
+    },
+    {
+        "same_this_src_tgt_w_fixed_first_id_matching_var_id",
+        Variables_same_this_src_tgt_w_fixed_first_id_matching_var_id
     }
 };
 
@@ -8244,20 +8325,20 @@ bake_test_case Transitive_testcases[] = {
 
 bake_test_case ComponentInheritance_testcases[] = {
     {
-        "1_ent_0_lvl",
-        ComponentInheritance_1_ent_0_lvl
+        "1_fixed_0_lvl",
+        ComponentInheritance_1_fixed_0_lvl
     },
     {
-        "1_ent_1_lvl",
-        ComponentInheritance_1_ent_1_lvl
+        "1_fixed_1_lvl",
+        ComponentInheritance_1_fixed_1_lvl
     },
     {
-        "1_ent_2_lvl",
-        ComponentInheritance_1_ent_2_lvl
+        "1_fixed_2_lvl",
+        ComponentInheritance_1_fixed_2_lvl
     },
     {
-        "1_ent_3_lvl",
-        ComponentInheritance_1_ent_3_lvl
+        "1_fixed_3_lvl",
+        ComponentInheritance_1_fixed_3_lvl
     },
     {
         "1_this_0_lvl",
@@ -8324,8 +8405,72 @@ bake_test_case ComponentInheritance_testcases[] = {
         ComponentInheritance_1_var_3_lvl_written
     },
     {
-        "1_ent_1_lvl_self",
-        ComponentInheritance_1_ent_1_lvl_self
+        "1_fixed_component",
+        ComponentInheritance_1_fixed_component
+    },
+    {
+        "1_fixed_component_src_not_row_0",
+        ComponentInheritance_1_fixed_component_src_not_row_0
+    },
+    {
+        "1_this_component",
+        ComponentInheritance_1_this_component
+    },
+    {
+        "1_this_component_written",
+        ComponentInheritance_1_this_component_written
+    },
+    {
+        "1_var_component",
+        ComponentInheritance_1_var_component
+    },
+    {
+        "1_var_component_written",
+        ComponentInheritance_1_var_component_written
+    },
+    {
+        "1_fixed_pair",
+        ComponentInheritance_1_fixed_pair
+    },
+    {
+        "1_this_pair",
+        ComponentInheritance_1_this_pair
+    },
+    {
+        "1_this_pair_written",
+        ComponentInheritance_1_this_pair_written
+    },
+    {
+        "1_var_pair",
+        ComponentInheritance_1_var_pair
+    },
+    {
+        "1_var_pair_written",
+        ComponentInheritance_1_var_pair_written
+    },
+    {
+        "1_fixed_component_pair",
+        ComponentInheritance_1_fixed_component_pair
+    },
+    {
+        "1_this_component_pair",
+        ComponentInheritance_1_this_component_pair
+    },
+    {
+        "1_this_component_pair_written",
+        ComponentInheritance_1_this_component_pair_written
+    },
+    {
+        "1_var_component_pair",
+        ComponentInheritance_1_var_component_pair
+    },
+    {
+        "1_var_component_pair_written",
+        ComponentInheritance_1_var_component_pair_written
+    },
+    {
+        "1_fixed_1_lvl_self",
+        ComponentInheritance_1_fixed_1_lvl_self
     },
     {
         "1_this_1_lvl_self",
@@ -8344,8 +8489,8 @@ bake_test_case ComponentInheritance_testcases[] = {
         ComponentInheritance_1_var_1_lvl_written_self
     },
     {
-        "1_ent_src_not",
-        ComponentInheritance_1_ent_src_not
+        "1_fixed_src_not",
+        ComponentInheritance_1_fixed_src_not
     },
     {
         "1_this_src_not",
@@ -8386,6 +8531,102 @@ bake_test_case ComponentInheritance_testcases[] = {
     {
         "query_before_isa_relationship_0_src",
         ComponentInheritance_query_before_isa_relationship_0_src
+    },
+    {
+        "populated_remove_isa_2_lvl",
+        ComponentInheritance_populated_remove_isa_2_lvl
+    },
+    {
+        "populated_remove_isa_3_lvl",
+        ComponentInheritance_populated_remove_isa_3_lvl
+    },
+    {
+        "populated_match_entities_added_after",
+        ComponentInheritance_populated_match_entities_added_after
+    },
+    {
+        "populated_remove_isa_var",
+        ComponentInheritance_populated_remove_isa_var
+    },
+    {
+        "optional_inherited",
+        ComponentInheritance_optional_inherited
+    },
+    {
+        "or_inherited",
+        ComponentInheritance_or_inherited
+    },
+    {
+        "multiple_inherited_terms",
+        ComponentInheritance_multiple_inherited_terms
+    },
+    {
+        "up_traversal_inherited",
+        ComponentInheritance_up_traversal_inherited
+    },
+    {
+        "multi_derived_fixed",
+        ComponentInheritance_multi_derived_fixed
+    },
+    {
+        "multi_derived_this",
+        ComponentInheritance_multi_derived_this
+    },
+    {
+        "multi_derived_this_written",
+        ComponentInheritance_multi_derived_this_written
+    },
+    {
+        "multi_derived_var",
+        ComponentInheritance_multi_derived_var
+    },
+    {
+        "multi_derived_mid_level_once",
+        ComponentInheritance_multi_derived_mid_level_once
+    },
+    {
+        "multi_derived_count_results",
+        ComponentInheritance_multi_derived_count_results
+    },
+    {
+        "pair_3_lvl",
+        ComponentInheritance_pair_3_lvl
+    },
+    {
+        "pair_multi",
+        ComponentInheritance_pair_multi
+    },
+    {
+        "pair_different_target",
+        ComponentInheritance_pair_different_target
+    },
+    {
+        "pair_wildcard",
+        ComponentInheritance_pair_wildcard
+    },
+    {
+        "pair_wildcard_multi_rel",
+        ComponentInheritance_pair_wildcard_multi_rel
+    },
+    {
+        "pair_wildcard_w_owned_base_pair",
+        ComponentInheritance_pair_wildcard_w_owned_base_pair
+    },
+    {
+        "cached_match_derived_table_added_after",
+        ComponentInheritance_cached_match_derived_table_added_after
+    },
+    {
+        "cached_unmatch_derived_table_on_delete",
+        ComponentInheritance_cached_unmatch_derived_table_on_delete
+    },
+    {
+        "inheritable_trait_terms_query_before_derived",
+        ComponentInheritance_inheritable_trait_terms_query_before_derived
+    },
+    {
+        "query_base_and_derived_same_table",
+        ComponentInheritance_query_base_and_derived_same_table
     }
 };
 
@@ -10401,6 +10642,34 @@ bake_test_case Cached_testcases[] = {
     {
         "self_term_w_inheritable_component",
         Cached_self_term_w_inheritable_component
+    },
+    {
+        "rematch_after_reparent_parent_component_w_grandchild",
+        Cached_rematch_after_reparent_parent_component_w_grandchild
+    },
+    {
+        "unmatch_after_reparent_parent_component_to_empty_parent",
+        Cached_unmatch_after_reparent_parent_component_to_empty_parent
+    },
+    {
+        "spawn_despawn_parent_component_children_w_up_query",
+        Cached_spawn_despawn_parent_component_children_w_up_query
+    },
+    {
+        "on_add_childof_observer_w_parent_component_and_up_query",
+        Cached_on_add_childof_observer_w_parent_component_and_up_query
+    },
+    {
+        "fini_w_optional_cascade_query_and_nested_parent",
+        Cached_fini_w_optional_cascade_query_and_nested_parent
+    },
+    {
+        "delete_disabled_child_table_after_rematch",
+        Cached_delete_disabled_child_table_after_rematch
+    },
+    {
+        "delete_table_w_on_table_delete_observer_creating_tables",
+        Cached_delete_table_w_on_table_delete_observer_creating_tables
     }
 };
 
@@ -12479,10 +12748,78 @@ bake_test_case DontFragment_testcases[] = {
     {
         "src_var_w_trait_on_dont_fragment_tag_anonymous",
         DontFragment_src_var_w_trait_on_dont_fragment_tag_anonymous
+    },
+    {
+        "this_pair_tgt_var_w_dont_fragment_tag_on_var",
+        DontFragment_this_pair_tgt_var_w_dont_fragment_tag_on_var
+    },
+    {
+        "1_this_sparse_second_wildcard_w_empty_tgt",
+        DontFragment_1_this_sparse_second_wildcard_w_empty_tgt
+    },
+    {
+        "1_var_sparse_second_wildcard_w_empty_tgt",
+        DontFragment_1_var_sparse_second_wildcard_w_empty_tgt
+    },
+    {
+        "1_fixed_sparse_second_wildcard_w_empty_tgt",
+        DontFragment_1_fixed_sparse_second_wildcard_w_empty_tgt
+    },
+    {
+        "1_this_sparse_written_second_wildcard_w_empty_tgt",
+        DontFragment_1_this_sparse_written_second_wildcard_w_empty_tgt
+    },
+    {
+        "1_this_sparse_first_wildcard_w_empty_rel",
+        DontFragment_1_this_sparse_first_wildcard_w_empty_rel
+    },
+    {
+        "this_wildcard_wildcard_pair_w_empty_pair",
+        DontFragment_this_wildcard_wildcard_pair_w_empty_pair
     }
 };
 
 bake_test_case NonFragmentingChildOf_testcases[] = {
+    {
+        "wildcard_children_w_disabled_parent_child",
+        NonFragmentingChildOf_wildcard_children_w_disabled_parent_child
+    },
+    {
+        "wildcard_children_w_prefab_parent_child",
+        NonFragmentingChildOf_wildcard_children_w_prefab_parent_child
+    },
+    {
+        "wildcard_children_w_disabled_mixed_child",
+        NonFragmentingChildOf_wildcard_children_w_disabled_mixed_child
+    },
+    {
+        "wildcard_children_w_prefab_mixed_child",
+        NonFragmentingChildOf_wildcard_children_w_prefab_mixed_child
+    },
+    {
+        "wildcard_children_w_disabled_pair_child",
+        NonFragmentingChildOf_wildcard_children_w_disabled_pair_child
+    },
+    {
+        "wildcard_children_w_prefab_pair_child",
+        NonFragmentingChildOf_wildcard_children_w_prefab_pair_child
+    },
+    {
+        "sparse_parent_across_tables",
+        NonFragmentingChildOf_sparse_parent_across_tables
+    },
+    {
+        "sparse_parent_order_by",
+        NonFragmentingChildOf_sparse_parent_order_by
+    },
+    {
+        "mixed_children_w_disabled_childof_child",
+        NonFragmentingChildOf_mixed_children_w_disabled_childof_child
+    },
+    {
+        "mixed_children_w_prefab_childof_child",
+        NonFragmentingChildOf_mixed_children_w_prefab_childof_child
+    },
     {
         "optional_up_set_var_2nd_child",
         NonFragmentingChildOf_optional_up_set_var_2nd_child
@@ -13866,6 +14203,30 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "this_src_not_childof_self_up_w_not_self_up",
         NonFragmentingChildOf_this_src_not_childof_self_up_w_not_self_up
+    },
+    {
+        "this_2_up_parents_in_same_table",
+        NonFragmentingChildOf_this_2_up_parents_in_same_table
+    },
+    {
+        "this_2_self_up_parents_in_same_table",
+        NonFragmentingChildOf_this_2_self_up_parents_in_same_table
+    },
+    {
+        "this_up_optional_up_parents_in_same_table",
+        NonFragmentingChildOf_this_up_optional_up_parents_in_same_table
+    },
+    {
+        "this_up_not_up_parents_in_same_table",
+        NonFragmentingChildOf_this_up_not_up_parents_in_same_table
+    },
+    {
+        "or_up_terms_no_match",
+        NonFragmentingChildOf_or_up_terms_no_match
+    },
+    {
+        "or_up_terms_match_parent",
+        NonFragmentingChildOf_or_up_terms_match_parent
     }
 };
 
@@ -14468,6 +14829,11 @@ bake_test_param Operators_params[] = {
     {"cache_kind", (char**)Operators_cache_kind_param, 2}
 };
 
+const char* ComponentInheritance_cache_kind_param[] = {"default", "auto"};
+bake_test_param ComponentInheritance_params[] = {
+    {"cache_kind", (char**)ComponentInheritance_cache_kind_param, 2}
+};
+
 const char* BuiltinPredicates_cache_kind_param[] = {"default", "auto"};
 bake_test_param BuiltinPredicates_params[] = {
     {"cache_kind", (char**)BuiltinPredicates_cache_kind_param, 2}
@@ -14563,7 +14929,7 @@ static bake_test_suite suites[] = {
         "Variables",
         Variables_setup,
         NULL,
-        228,
+        230,
         Variables_testcases,
         1,
         Variables_params
@@ -14586,10 +14952,12 @@ static bake_test_suite suites[] = {
     },
     {
         "ComponentInheritance",
+        ComponentInheritance_setup,
         NULL,
-        NULL,
-        36,
-        ComponentInheritance_testcases
+        76,
+        ComponentInheritance_testcases,
+        1,
+        ComponentInheritance_params
     },
     {
         "BuiltinPredicates",
@@ -14629,7 +14997,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        165,
+        172,
         Cached_testcases
     },
     {
@@ -14677,7 +15045,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        141,
+        148,
         DontFragment_testcases,
         1,
         DontFragment_params
@@ -14686,7 +15054,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        346,
+        362,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params

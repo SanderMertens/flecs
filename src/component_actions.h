@@ -80,8 +80,7 @@ void flecs_actions_move_add(
     const ecs_table_diff_t *diff,
     ecs_flags32_t flags,
     bool sparse,
-    ecs_id_t emplace_id,
-    bool update_parent_records);
+    ecs_id_t emplace_id);
 
 /* Run actions for removed components in table move. */
 void flecs_actions_move_remove(

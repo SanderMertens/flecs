@@ -141,6 +141,22 @@ FLECS_DBG_API
 ecs_stack_cursor_t* flecs_stack_get_cursor(
     ecs_stack_t *stack);
 
+/** Get a cursor and allocate memory in a single stack operation.
+ * The allocation must fit in a page together with the cursor.
+ *
+ * @param stack The stack allocator.
+ * @param size Number of bytes to allocate.
+ * @param align Alignment of the allocation (at least cursor alignment).
+ * @param data_out Receives the allocated memory.
+ * @return The cursor.
+ */
+FLECS_DBG_API
+ecs_stack_cursor_t* flecs_stack_get_cursor_w_alloc(
+    ecs_stack_t *stack,
+    ecs_size_t size,
+    ecs_size_t align,
+    void **data_out);
+
 /** Restore the stack to a previously saved cursor position.
  *
  * @param stack The stack allocator.

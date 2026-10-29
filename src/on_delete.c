@@ -31,6 +31,23 @@ static void flecs_component_mark_for_delete(
     bool delete_id,
     bool force_delete);
 
+static void flecs_id_mark_for_delete(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    bool force_delete)
+{
+    ecs_component_record_t *cr;
+    if ((cr = flecs_components_get(world, e))) {
+        flecs_component_mark_for_delete(world, cr,
+            ECS_ID_ON_DELETE(cr->flags), true, force_delete);
+    }
+
+    if ((cr = flecs_components_get(world, ecs_pair(e, EcsWildcard)))) {
+        flecs_component_mark_for_delete(world, cr,
+            ECS_ID_ON_DELETE(cr->flags), true, force_delete);
+    }
+}
+
 static void flecs_target_mark_for_delete(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -48,20 +65,15 @@ static void flecs_target_mark_for_delete(
     }
 
     if (flags & EcsEntityIsId) {
-        if ((cr = flecs_components_get(world, e))) {
-            flecs_component_mark_for_delete(world, cr,
-                ECS_ID_ON_DELETE(cr->flags), true, force_delete);
-        }
-        if ((cr = flecs_components_get(world, ecs_pair(e, EcsWildcard)))) {
-            flecs_component_mark_for_delete(world, cr,
-                ECS_ID_ON_DELETE(cr->flags), true, force_delete);
-        }
+        flecs_id_mark_for_delete(world, e, force_delete);
     }
+
     if (flags & EcsEntityIsTarget) {
         if ((cr = flecs_components_get(world, ecs_pair(EcsWildcard, e)))) {
             flecs_component_mark_for_delete(world, cr,
                 ECS_ID_ON_DELETE_TARGET(cr->flags), true, force_delete);
         }
+
         if (world->cr_flag_count) {
             if ((cr = flecs_components_get(world, ecs_pair(EcsFlag, e)))) {
                 flecs_component_mark_for_delete(world, cr,
@@ -92,6 +104,7 @@ static bool flecs_id_is_delete_target(
          * has the form (*, Target), use OnDeleteTarget action */
         return true;
     }
+
     return false;
 }
 
@@ -169,10 +182,9 @@ static void flecs_simple_delete(
         .removed_flags = table->flags & EcsTableRemoveEdgeFlags
     };
 
-    int32_t row = ECS_RECORD_TO_ROW(r->row);
-    flecs_actions_delete_tree(world, table, row, 1, &diff);
+    flecs_actions_delete_tree(world, table, ECS_RECORD_TO_ROW(r->row), 1, &diff);
     flecs_entity_remove_non_fragmenting(world, entity, r);
-    flecs_table_delete(world, table, row, true);
+    flecs_table_delete(world, table, ECS_RECORD_TO_ROW(r->row), true);
 
     flecs_entities_remove(world, entity);
 
@@ -203,47 +215,51 @@ static bool flecs_is_childof_tgt_only(
 static void flecs_component_delete_non_fragmenting_childof(
     ecs_world_t *world,
     ecs_component_record_t *cr,
-    bool force_delete)
+    bool force_delete,
+    bool release_tgt)
 {
+    if (force_delete) {
+        flecs_tree_spawner_fini(world, ECS_PAIR_SECOND(cr->id));
+    }
+
     cr->flags |= EcsIdMarkedForDelete;
 
     ecs_pair_record_t *pr = cr->pair;
 
-    /* Detach ordered_children so observers fired during cleanup don't see
-     * entries for siblings that have already been deleted in the loop. */
-    ecs_vec_t children_vec = pr->ordered_children;
-    pr->ordered_children = (ecs_vec_t){0};
+    /* Remove each child from ordered_children before deleting it, so that
+     * observers fired during cleanup only see children that are still alive,
+     * and can delete or reparent them. */
+    ecs_vec_t *children = &pr->ordered_children;
+    int32_t count;
+    while ((count = ecs_vec_count(children))) {
+        ecs_entity_t e = ecs_vec_get_t(children, ecs_entity_t, count - 1)[0];
+        ecs_vec_remove_last(children);
+        if (cr->flags & EcsIdPrefabChildren) {
+            ecs_map_remove(&world->prefab_child_indices, e);
+        }
 
-    int32_t i, count = ecs_vec_count(&children_vec);
-    ecs_entity_t *children = ecs_vec_first_t(&children_vec, ecs_entity_t);
-
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = children[i];
         ecs_assert(ecs_is_alive(world, e), ECS_INTERNAL_ERROR, NULL);
 
         ecs_record_t *r = flecs_entities_get_any(world, e);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if ((r->row & EcsEntityIsTarget)) {
-            ecs_component_record_t *tgt_cr = flecs_components_get(
-                world, ecs_pair(EcsWildcard, e));
-            if (tgt_cr) {
-                flecs_emit_propagate_invalidate_tables(world, tgt_cr);
-            }
+        bool is_target = (r->row & EcsEntityIsTarget) != 0;
+        if (r->row & EcsEntityIsId) {
+            flecs_id_mark_for_delete(world, e, force_delete);
+        }
 
+        if (is_target) {
             ecs_component_record_t *child_cr = flecs_components_get(
                 world, ecs_childof(e));
             if (child_cr &&
                 !(child_cr->flags & EcsIdMarkedForDelete) &&
                 flecs_component_has_non_fragmenting_childof(child_cr))
             {
-                if (!flecs_is_childof_tgt_only(child_cr)) {
-                    /* Entity is used as target with other relationships, go
-                     * through regular cleanup path. */
+                bool tgt_only = flecs_is_childof_tgt_only(child_cr);
+                flecs_component_delete_non_fragmenting_childof(
+                    world, child_cr, force_delete, tgt_only);
+                if (!tgt_only) {
                     flecs_target_mark_for_delete(world, e, force_delete);
-                } else {
-                    flecs_component_delete_non_fragmenting_childof(
-                        world, child_cr, force_delete);
                 }
             } else {
                 /* Entity is a target but is not a (non-fragmenting) ChildOf
@@ -252,14 +268,26 @@ static void flecs_component_delete_non_fragmenting_childof(
             }
         }
 
+        if (r->table->flags & EcsTableHasParent) {
+            flecs_non_fragmenting_childof_count(world, cr, r->table, -1);
+        }
+
         flecs_simple_delete(world, e, r);
+
+        if (is_target) {
+            ecs_component_record_t *tgt_cr = flecs_components_get(
+                world, ecs_pair(EcsWildcard, e));
+            if (tgt_cr) {
+                flecs_emit_propagate_invalidate_tables(world, tgt_cr);
+            }
+        }
     }
 
-    ecs_vec_fini_t(&world->allocator, &children_vec, ecs_entity_t);
-
-    ecs_component_record_t *tgt_wc = pr->second.prev;
-    ecs_assert(ECS_PAIR_FIRST(tgt_wc->id) == EcsWildcard, ECS_INTERNAL_ERROR, NULL);
-    flecs_component_release(world, tgt_wc);
+    if (release_tgt) {
+        ecs_component_record_t *tgt_wc = pr->second.prev;
+        ecs_assert(ECS_PAIR_FIRST(tgt_wc->id) == EcsWildcard, ECS_INTERNAL_ERROR, NULL);
+        flecs_component_release(world, tgt_wc);
+    }
 }
 
 static bool flecs_component_mark_non_fragmenting_childof(
@@ -275,32 +303,28 @@ static bool flecs_component_mark_non_fragmenting_childof(
 
     ecs_component_record_t *childof_cr = flecs_components_get(
         world, ecs_childof(tgt));
-    if (!childof_cr) {
+    if (!childof_cr || (childof_cr->flags & EcsIdMarkedForDelete) ||
+        !flecs_component_has_non_fragmenting_childof(childof_cr))
+    {
         return false;
     }
-
-    ecs_flags32_t flags = childof_cr->flags;
-
-    if (flags & EcsIdMarkedForDelete) {
-        return false;
-    }
-
-    if (!flecs_component_has_non_fragmenting_childof(childof_cr)) {
-        return false;
-    }
-
-    childof_cr->flags |= EcsIdMarkedForDelete;
-
-    ecs_pair_record_t *pr = childof_cr->pair;
 
     if (flecs_is_childof_tgt_only(childof_cr)) {
         /* Entity is only used as ChildOf target */
         flecs_component_delete_non_fragmenting_childof(
-            world, childof_cr, force_delete);
+            world, childof_cr, force_delete, true);
         return true;
     }
 
+    childof_cr->flags |= EcsIdMarkedForDelete;
+
+    if (force_delete) {
+        flecs_tree_spawner_fini(world, tgt);
+    }
+
     flecs_marked_id_push(world, childof_cr, EcsDelete, true);
+
+    ecs_pair_record_t *pr = childof_cr->pair;
 
     int32_t i, count = ecs_vec_count(&pr->ordered_children);
     ecs_entity_t *children = ecs_vec_first(&pr->ordered_children);
@@ -335,9 +359,7 @@ static void flecs_component_mark_for_delete(
     ecs_id_t id = cr->id;
 
     bool delete_target = flecs_id_is_delete_target(id, action);
-    if (delete_target ||
-        (ecs_id_is_pair(id) && ECS_PAIR_FIRST(id) == EcsWildcard))
-    {
+    if (delete_target) {
         if (flecs_component_mark_non_fragmenting_childof(world, cr, force_delete)) {
             return;
         }
@@ -400,6 +422,7 @@ static void flecs_component_mark_for_delete(
                 if (cur->flags & EcsIdOrderedChildren) {
                     continue;
                 }
+
                 cur->flags |= EcsIdMarkedForDelete;
             }
         }
@@ -479,12 +502,18 @@ static void flecs_remove_from_table(
         ecs_id_t *removed = flecs_walloc_n(world, ecs_id_t, remove_count);
         ecs_flags32_t removed_flags = table->flags & EcsTableRemoveEdgeFlags;
         int32_t d = 0, r = 0;
+        bool removed_isa = false;
         for (t = 0; t < type_count; t ++) {
             ecs_id_t id = type->array[t];
             if (remove[t]) {
                 removed[r ++] = id;
-                if (ECS_IS_PAIR(id) && (ECS_PAIR_FIRST(id) == EcsChildOf)) {
-                    removed_flags |= EcsTableEdgeReparent;
+                if (ECS_IS_PAIR(id)) {
+                    ecs_entity_t first = ECS_PAIR_FIRST(id);
+                    if (first == EcsChildOf) {
+                        removed_flags |= EcsTableEdgeReparent;
+                    } else if (first == EcsIsA) {
+                        removed_isa = true;
+                    }
                 }
             } else {
                 dst_array[d ++] = id;
@@ -496,6 +525,15 @@ static void flecs_remove_from_table(
         ecs_assert(dst_table != table, ECS_INTERNAL_ERROR, NULL);
 
         int32_t table_count = ecs_table_count(table);
+
+        if (removed_isa && table_count) {
+            /* Ids aren't removed from tables with an OnRemove event here, so
+             * notify the component index of the removed IsA pairs directly. */
+            flecs_components_on_isa_change(world, table, 
+                ecs_table_entities(table), table_count,
+                (dst_table->flags & EcsTableHasIsA) != 0);
+        }
+
         if (table_count) {
             ecs_log_push_3();
 
@@ -565,20 +603,47 @@ static bool flecs_on_delete_clear_entities(
             }
 
             /* If component record contains children with Parent components, 
-             * delete them. */
+             * delete or unparent them. */
+            ecs_component_record_t *childof_cr = NULL;
             if (flecs_component_has_non_fragmenting_childof(cr)) {
-                int32_t c, count = ecs_vec_count(&cr->pair->ordered_children);
-                ecs_entity_t *children = ecs_vec_first(&cr->pair->ordered_children);
-                
-                bool is_deferred = ecs_is_deferred(world);
-                if (is_deferred) {
-                    ecs_defer_suspend(world);
+                childof_cr = cr;
+            } else if (!ids[i].delete_id && action && ECS_IS_PAIR(cr->id) &&
+                ECS_PAIR_FIRST(cr->id) == EcsWildcard &&
+                ECS_PAIR_SECOND(cr->id) != EcsWildcard)
+            {
+                childof_cr = flecs_components_get(
+                    world, ecs_childof(ECS_PAIR_SECOND(cr->id)));
+                if (childof_cr && 
+                    !flecs_component_has_non_fragmenting_childof(childof_cr))
+                {
+                    childof_cr = NULL;
                 }
-                for (c = count - 1; c >= 0; c --) {
-                    ecs_delete(world, children[c]);
-                }
-                if (is_deferred) {
-                    ecs_defer_resume(world);
+            }
+
+            if (childof_cr) {
+                bool keep_prefabs = !ids[i].delete_id && !force_delete;
+                int32_t c = ecs_vec_count(&childof_cr->pair->ordered_children);
+                for (c --; c >= 0; c --) {
+                    if (c >= ecs_vec_count(&childof_cr->pair->ordered_children)) {
+                        continue;
+                    }
+
+                    ecs_entity_t child = ecs_vec_get_t(
+                        &childof_cr->pair->ordered_children, ecs_entity_t, c)[0];
+                    if (keep_prefabs) {
+                        ecs_table_t *child_table = ecs_get_table(world, child);
+                        if (child_table && 
+                            (child_table->flags & EcsTableIsPrefab)) 
+                        {
+                            continue;
+                        }
+                    }
+
+                    if (action == EcsRemove) {
+                        ecs_remove_id(world, child, ecs_id(EcsParent));
+                    } else {
+                        ecs_delete(world, child);
+                    }
                 }
             }
 
@@ -663,7 +728,9 @@ static bool flecs_on_delete_clear_ids(
             }
 
             if (flecs_component_release_tables(world, cr)) {
-                ecs_assert(!force_delete, ECS_INVALID_OPERATION, 
+                ecs_assert(!force_delete || 
+                    (world->flags & (EcsWorldFini|EcsWorldQuit)),
+                    ECS_INVALID_OPERATION, 
                     "cannot delete component '%s': tables are keeping it alive (likely because of used prefab)",
                     flecs_errstr(ecs_id_str(world, cr->id)));
 
@@ -711,6 +778,7 @@ void flecs_throw_invalid_delete(
             "(OnDelete, Panic) constraint violated while deleting entities with %s", 
             flecs_errstr(ecs_id_str(world, id)));
     }
+
 error:
     return;
 }
@@ -765,13 +833,14 @@ void flecs_delete_with(
 {
     flecs_journal_begin(world, EcsJournalDeleteWith, id, NULL, NULL);
 
+    bool deferred = ecs_is_stage(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    if (flecs_defer_on_delete_action(stage, id, EcsDelete, force_delete)) {
+    if (flecs_defer_on_delete_action(stage, deferred, id, EcsDelete, force_delete)) {
         return;
     }
 
     flecs_on_delete(world, id, EcsDelete, false, force_delete);
-    flecs_defer_end(world, stage);
+    flecs_commands_end(world, stage);
 
     flecs_journal_end();
 }
@@ -789,13 +858,14 @@ void ecs_remove_all(
 {
     flecs_journal_begin(world, EcsJournalRemoveAll, id, NULL, NULL);
 
+    bool deferred = ecs_is_stage(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    if (flecs_defer_on_delete_action(stage, id, EcsRemove, false)) {
+    if (flecs_defer_on_delete_action(stage, deferred, id, EcsRemove, false)) {
         return;
     }
 
     flecs_on_delete(world, id, EcsRemove, false, false);
-    flecs_defer_end(world, stage);
+    flecs_commands_end(world, stage);
 
     flecs_journal_end();
 }

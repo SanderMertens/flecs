@@ -84,8 +84,9 @@
         desc.type.size = ECS_SIZEOF(id_); \
         desc.type.alignment = ECS_ALIGNOF(id_); \
         ecs_id(id_) = ecs_component_init(world, &desc);\
+        ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, "failed to create component %s", #id_);\
     }\
-    ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, "failed to create component %s", #id_)
+    (void)ecs_id(id_)
 
 /** Declare and define a component.
  *
@@ -123,7 +124,8 @@
         desc.events[0] = kind;\
         ecs_id(id_) = ecs_observer_init(world, &desc);\
         ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, "failed to create observer %s", #id_);\
-    }
+    }\
+    (void)ecs_id(id_)
 
 /** Declare and define an observer.
  *
@@ -160,7 +162,8 @@
         desc.expr = #__VA_ARGS__;\
         name_ = ecs_query_init(world, &desc);\
         ecs_assert(name_ != NULL, ECS_INVALID_PARAMETER, "failed to create query %s", #name_);\
-    }
+    }\
+    (void)name_
 
 /** Declare and define a query.
  *
@@ -388,38 +391,6 @@
 /** Signal that a pair has been modified. */
 #define ecs_modified_pair(world, subject, first, second)\
     ecs_modified_id(world, subject, ecs_pair(first, second))
-
-/** Get a component from a record. */
-#define ecs_record_get(world, record, T)\
-    (ECS_CAST(const T*, ecs_record_get_id(world, record, ecs_id(T))))
-
-/** Test if a record has a component. */
-#define ecs_record_has(world, record, T)\
-    (ecs_record_has_id(world, record, ecs_id(T)))
-
-/** Get the first element of a pair from a record. */
-#define ecs_record_get_pair(world, record, First, second)\
-    (ECS_CAST(const First*, ecs_record_get_id(world, record, \
-        ecs_pair(ecs_id(First), second))))
-
-/** Get the second element of a pair from a record. */
-#define ecs_record_get_pair_second(world, record, first, Second)\
-    (ECS_CAST(const Second*, ecs_record_get_id(world, record,\
-        ecs_pair(first, ecs_id(Second)))))
-
-/** Ensure a component on a record, return mutable pointer. */
-#define ecs_record_ensure(world, record, T)\
-    (ECS_CAST(T*, ecs_record_ensure_id(world, record, ecs_id(T))))
-
-/** Ensure the first element of a pair on a record, return mutable pointer. */
-#define ecs_record_ensure_pair(world, record, First, second)\
-    (ECS_CAST(First*, ecs_record_ensure_id(world, record, \
-        ecs_pair(ecs_id(First), second))))
-
-/** Ensure the second element of a pair on a record, return mutable pointer. */
-#define ecs_record_ensure_pair_second(world, record, first, Second)\
-    (ECS_CAST(Second*, ecs_record_ensure_id(world, record,\
-        ecs_pair(first, ecs_id(Second)))))
 
 /** Initialize a ref for a component. */
 #define ecs_ref_init(world, entity, T)\
@@ -719,6 +690,13 @@
 /** Get field data for a component. */
 #define ecs_field(it, T, index)\
     (ECS_CAST(T*, ecs_field_w_size(it, sizeof(T), index)))
+
+/** Get field data for a component matched through component inheritance.
+ * Use this instead of ecs_field() when a field is matched on a component that
+ * is derived from the queried (base) type. The data must be iterated with the
+ * stride returned by ecs_field_stride(). */
+#define ecs_base_field(it, T, index)\
+    (ECS_CAST(T*, ecs_base_field_w_size(it, sizeof(T), index)))
 
 /** Get field data for a self-owned component. */
 #define ecs_field_self(it, T, index)\

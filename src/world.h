@@ -14,8 +14,6 @@
 
 /* World-level allocators are for operations that are not multithreaded */
 typedef struct ecs_world_allocators_t {
-    ecs_block_allocator_t graph_edge_lo;
-    ecs_block_allocator_t graph_edge;
     ecs_block_allocator_t component_record;
     ecs_block_allocator_t pair_record;
     ecs_block_allocator_t sparse_chunk;
@@ -100,6 +98,9 @@ struct ecs_world_t {
     int32_t cr_flag_count;
 
     int32_t non_fragmenting_child_count;
+
+    /* Set once any table has dirty state allocated for change detection */
+    bool has_dirty_state;
 
     /* -- Mixins -- */
     ecs_world_t *self;

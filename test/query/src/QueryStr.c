@@ -387,7 +387,7 @@ void QueryStr_one_term_w_final_override(void) {
 
     ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
     ecs_add_id(world, Foo, EcsFinal);
-    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsOverride);
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsCopy);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .first.id = Foo }}

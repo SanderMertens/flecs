@@ -76,9 +76,9 @@ inline flecs::entity entity_view::mut(const flecs::world& stage) const {
 }
 
 inline flecs::entity entity_view::mut(const flecs::iter& it) const {
-    ecs_assert(!it.world().is_readonly(), ECS_INVALID_PARAMETER, 
+    ecs_assert(!it.stage().is_readonly(), ECS_INVALID_PARAMETER,
         "cannot use iterator created for read-only world/stage to create mutable handle");
-    return flecs::entity(id_).set_stage(it.world().c_ptr());
+    return flecs::entity(id_).set_stage(it.stage().c_ptr());
 }
 
 inline flecs::entity entity_view::mut(const flecs::entity_view& e) const {
@@ -100,7 +100,7 @@ inline flecs::table entity_view::table() const {
 }
 
 inline flecs::table_range entity_view::range() const {
-    ecs_record_t *r = ecs_record_find(world_, id_);
+    ecs_record_t *r = flecs_entities_get(ecs_get_world(world_), id_);
     if (r) {
         return flecs::table_range(world_, r->table, 
             ECS_RECORD_TO_ROW(r->row), 1);
@@ -131,7 +131,7 @@ void each_id(flecs::world_t *world, flecs::entity_t entity,
             func(id);
         }
     }
-    const ecs_record_t *r = ecs_record_find(real_world, entity);
+    const ecs_record_t *r = flecs_entities_get(real_world, entity);
     if (r && (r->row & EcsEntityHasDontFragment)) {
         for (auto cr = flecs_component_dont_fragment_first(real_world); cr;
             cr = flecs_component_dont_fragment_next(cr))

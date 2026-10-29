@@ -159,6 +159,7 @@ static bool flecs_tree_spawner_is_empty(
             return false;
         }
     }
+
     return true;
 }
 
@@ -352,11 +353,35 @@ void flecs_fini_prefab(
 {
     ecs_iter_t it = ecs_each(world, EcsTreeSpawner);
     while (ecs_each_next(&it)) {
-        EcsTreeSpawner *t = ecs_field(&it, EcsTreeSpawner, 0);
         int32_t i;
         for (i = 0; i < it.count; i ++) {
-            EcsTreeSpawner_free(&t[i]);
+            EcsTreeSpawner_free(ecs_field_at(&it, EcsTreeSpawner, 0, i));
         }
+    }
+}
+
+void flecs_tree_spawner_fini(
+    ecs_world_t *world,
+    ecs_entity_t parent)
+{
+    ecs_record_t *r = flecs_entities_get_any(world, parent);
+    if (!r->table) {
+        return;
+    }
+
+    ecs_entity_t id = ecs_id(EcsTreeSpawner);
+    if (!world->non_trivial_lookup[id] &&
+        r->table->component_map[id] <= 0) {
+        return;
+    }
+
+    EcsTreeSpawner* ts = flecs_get_mut(
+        world, parent, ecs_id(EcsTreeSpawner), r,
+        sizeof(EcsTreeSpawner)).ptr;
+
+    if (ts) {
+        EcsTreeSpawner_free(ts);
+        ecs_os_zeromem(ts);
     }
 }
 
@@ -372,55 +397,4 @@ void flecs_tree_spawner_assert_not_instantiated(
 }
 #endif
 
-#endif
-
-#ifdef FLECS_DEBUG
-static bool flecs_prefab_diff_has_override(
-    ecs_world_t *world,
-    const ecs_type_t *type)
-{
-    int32_t i;
-    for (i = 0; i < type->count; i ++) {
-        ecs_id_t id = type->array[i];
-        if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
-            return true;
-        }
-
-        ecs_component_record_t *cr = flecs_components_get(world, id);
-        if (cr && !(cr->flags &
-            (EcsIdOnInstantiateInherit|EcsIdOnInstantiateDontInherit)))
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-void flecs_prefab_assert_not_instantiated(
-    ecs_world_t *world,
-    ecs_entity_t prefab,
-    const ecs_table_diff_t *diff)
-{
-    if (world->flags & EcsWorldQuit) {
-        return;
-    }
-
-    ecs_component_record_t *cr = flecs_components_get(
-        world, ecs_pair(EcsIsA, prefab));
-    if (!cr || !flecs_table_cache_count(&cr->cache)) {
-        return;
-    }
-
-    if (!flecs_prefab_diff_has_override(world, &diff->added) &&
-        !flecs_prefab_diff_has_override(world, &diff->removed))
-    {
-        return;
-    }
-
-    char *path = ecs_get_path(world, prefab);
-    ecs_abort(ECS_ALREADY_IN_USE,
-        "cannot add or remove auto-overridden components of prefab '%s' "
-        "after it has been instantiated", path);
-    ecs_os_free(path);
-}
 #endif

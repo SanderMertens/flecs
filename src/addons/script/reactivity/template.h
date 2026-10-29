@@ -12,7 +12,6 @@
 #define FLECS_SCRIPT_TEMPLATE_DEPTH_MAX (64)
 #endif
 
-extern ECS_COMPONENT_DECLARE(EcsScriptTemplateInstanceUpdateEvent);
 extern ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);
 
 typedef struct ecs_script_template_member_t {
@@ -20,15 +19,8 @@ typedef struct ecs_script_template_member_t {
     int32_t sp;
     uint64_t input;
     bool is_mut;
-    bool is_template;
+    bool is_vector;
     ecs_entity_t interface;
-
-    /* Cached member layout for diffing new against old prop values */
-    const ecs_type_info_t *diff_ti;
-    int32_t diff_offset;
-    int32_t diff_size;
-    int32_t diff_count;
-    bool diff_pod;
 } ecs_script_template_member_t;
 
 typedef struct {
@@ -43,6 +35,7 @@ typedef struct ecs_script_template_capture_t {
 } ecs_script_template_capture_t;
 
 struct ecs_script_template_t {
+    ecs_script_impl_t *script;
     ecs_script_template_vars_t props;
     ecs_script_template_vars_t muts;
 
@@ -69,11 +62,6 @@ struct ecs_script_template_t {
     /* Statically known component references used in the template body */
     ecs_vec_t refs;
 
-    /* Observers monitoring the refs, shared by all template instances */
-    ecs_vec_t observers;
-
-    ecs_vec_t dynamic_refs;
-
     uint64_t async_input;
     int32_t symbol_offset;
     int32_t symbol_count;
@@ -84,10 +72,13 @@ struct ecs_script_template_t {
     int32_t component_count;
     int32_t for_count;
     int32_t inherited_count;
+    int32_t inherited_mut_count;
+    ecs_entity_t base;
     ecs_entity_t parent_type;
     int32_t parent_sp;
 
     int32_t refcount;
+    int32_t generation;
 
     /* Use non-fragmenting hierarchy */
     bool non_fragmenting_parent;
@@ -95,24 +86,6 @@ struct ecs_script_template_t {
     /* Template has interface-typed members that need input validation */
     bool has_interface_members;
 };
-
-#define ECS_TEMPLATE_SMALL_SIZE (36)
-
-/* Deferred template instance update, queued by the template on_set hook */
-typedef struct ecs_script_template_pending_t {
-    ecs_entity_t entity;
-    ecs_entity_t template_entity;
-    ecs_entity_t component;
-    uint64_t input;
-    int32_t depth;
-    void *data;
-    bool inline_data;
-    int64_t _align;
-    char data_storage[ECS_TEMPLATE_SMALL_SIZE];
-} ecs_script_template_pending_t;
-
-void flecs_script_template_pending_fini(
-    ecs_vec_t *pending);
 
 typedef struct ecs_script_async_block_t {
     ecs_entity_t entity;
@@ -126,13 +99,9 @@ typedef struct EcsScriptTemplateRoot {
     ecs_vec_t tasks; /* vec<ecs_script_task_t*>, owned. Created by async blocks */
     ecs_vec_t async_blocks;
     uint64_t changed;
+    int32_t generation;
+    bool evaluating;
 } EcsScriptTemplateRoot;
-
-typedef struct EcsScriptTemplateInstanceUpdateEvent {
-    ecs_entity_t template_entity;
-    ecs_entity_t instance;
-    uint64_t input;
-} EcsScriptTemplateInstanceUpdateEvent;
 
 const ecs_member_t* flecs_script_template_parent_member(
     ecs_world_t *world,
@@ -153,14 +122,50 @@ ecs_entity_t flecs_script_template_member_interface(
     const ecs_script_template_t *template,
     int32_t sp);
 
+ecs_entity_t flecs_script_template_prop_interface(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const char *member);
+
+bool flecs_script_template_member_is_vector(
+    const ecs_script_template_t *template,
+    int32_t sp);
+
 bool flecs_script_template_interface_accepts(
     const ecs_world_t *world,
     ecs_entity_t value,
     ecs_entity_t interface);
 
-bool flecs_script_template_member_is_template(
-    const ecs_script_template_t *template,
-    int32_t sp);
+bool flecs_script_template_is_mut_type(
+    const ecs_world_t *world,
+    ecs_id_t component);
+
+char* flecs_script_template_expected_str(
+    const ecs_world_t *world,
+    ecs_entity_t interface);
+
+const char* flecs_script_template_interface_error(
+    const ecs_world_t *world,
+    ecs_entity_t value,
+    ecs_entity_t interface);
+
+void flecs_script_template_ref_set(
+    ecs_world_t *world,
+    ecs_script_template_ref_t *ref,
+    ecs_entity_t type,
+    void *value);
+
+int flecs_script_template_ref_apply(
+    ecs_world_t *world,
+    const ecs_script_template_ref_t *ref,
+    const ecs_type_info_t *ti,
+    void *dst);
+
+void flecs_script_template_reeval(
+    ecs_world_t *world,
+    ecs_entity_t template_entity,
+    ecs_entity_t instance,
+    uint64_t input);
 
 int flecs_script_template_update_vars(
     ecs_script_eval_visitor_t *v,

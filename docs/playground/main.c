@@ -2,17 +2,72 @@
 #include <emscripten.h>
 
 /* Host application for the Flecs playground wasm image. Mouse and keyboard
- * events from the page are forwarded to the flecs.script.event module, which
+ * events from the page are forwarded to the flecs.script.input module, which
  * delivers them to the async blocks of scripts. */
 
 static ecs_world_t *playground_world;
 
-/* Called by the page for pointer events on the 2D/3D views. The target is the
- * path of the entity the event is delivered to (empty when there is none), x
- * and y the pointer position relative to that entity. Returns whether the
- * page should propagate the event to the parent of the target. */
+typedef struct {
+    ecs_entity_t entity;
+    float x;
+    float y;
+} playground_local_t;
+
+#define PLAYGROUND_MAX_LOCALS (64)
+
+static playground_local_t playground_locals[PLAYGROUND_MAX_LOCALS];
+static int32_t playground_local_count;
+
 EMSCRIPTEN_KEEPALIVE
-int flecs_playground_mouse(
+void flecs_playground_local(
+    const char *path,
+    float x,
+    float y)
+{
+    if (!playground_world || !path ||
+        playground_local_count == PLAYGROUND_MAX_LOCALS)
+    {
+        return;
+    }
+
+    ecs_entity_t e = ecs_lookup(playground_world, path);
+    if (!e) {
+        return;
+    }
+
+    playground_locals[playground_local_count ++] =
+        (playground_local_t){ e, x, y };
+}
+
+static void playground_to_local(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    float screen_x,
+    float screen_y,
+    float *local_x,
+    float *local_y,
+    void *ctx)
+{
+    (void)world;
+    (void)screen_x;
+    (void)screen_y;
+    (void)ctx;
+    for (int32_t i = 0; i < playground_local_count; i ++) {
+        if (playground_locals[i].entity == entity) {
+            *local_x = playground_locals[i].x;
+            *local_y = playground_locals[i].y;
+            return;
+        }
+    }
+}
+
+/* Called by the page for pointer events on the 2D/3D views. The target is the
+ * path of the entity under the pointer (empty when there is none), x and y the
+ * pointer position relative to that entity. The module propagates the event to
+ * the parents of the target, with the positions passed to
+ * flecs_playground_local. */
+EMSCRIPTEN_KEEPALIVE
+void flecs_playground_mouse(
     const char *target,
     float screen_x,
     float screen_y,
@@ -27,10 +82,11 @@ int flecs_playground_mouse(
 {
     ecs_world_t *world = playground_world;
     if (!world) {
-        return 0;
+        playground_local_count = 0;
+        return;
     }
 
-    return ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
         .target = target && target[0] ? ecs_lookup(world, target) : 0,
         .screen_x = screen_x,
         .screen_y = screen_y,
@@ -43,6 +99,8 @@ int flecs_playground_mouse(
         .alt = alt != 0,
         .meta = meta != 0
     });
+
+    playground_local_count = 0;
 }
 
 /* Called by the page for keyboard events while a view has focus. */
@@ -71,6 +129,45 @@ void flecs_playground_key(
     });
 }
 
+/* Called by the page to set a component on an entity from a script
+ * expression, for example Position: {0, 0, 0} on a template preview. The
+ * component is looked up by name and the value deserialized through
+ * reflection, so the image does not depend on the type of the component. If
+ * the expression does not fit the type, the component keeps its default
+ * value. Returns 0 on success and -1 if the entity or component is missing. */
+EMSCRIPTEN_KEEPALIVE
+int flecs_playground_set(
+    const char *path,
+    const char *component,
+    const char *expr)
+{
+    ecs_world_t *world = playground_world;
+    if (!world || !path || !component) {
+        return -1;
+    }
+
+    ecs_entity_t e = ecs_lookup(world, path);
+    ecs_entity_t c = ecs_lookup(world, component);
+    if (!e || !c) {
+        return -1;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, c);
+    if (!ti || !ti->size) {
+        return -1;
+    }
+
+    void *ptr = ecs_ensure_id(world, e, c, (size_t)ti->size);
+    if (expr && expr[0]) {
+        int prev_log = ecs_log_set_level(-4);
+        ecs_expr_run(world, expr, &(ecs_value_t){ .type = c, .ptr = ptr }, NULL);
+        ecs_log_set_level(prev_log);
+    }
+
+    ecs_modified_id(world, e, c);
+    return 0;
+}
+
 static void playground_frame(void *world) {
     ecs_progress(world, 0);
 }
@@ -88,13 +185,17 @@ int main(void) {
     ECS_IMPORT(world, FlecsUnits);
     ECS_IMPORT(world, FlecsScriptMath);
     ECS_IMPORT(world, FlecsScriptPlatform);
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
     ECS_IMPORT(world, FlecsAlerts);
     ECS_IMPORT(world, FlecsMetrics);
 
     ecs_script(world, {
         .entity = ecs_entity(world, { .name = "playground" }),
         .code = ""
+    });
+
+    ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
+        .to_local = playground_to_local
     });
 
     ecs_app_set_run_action(playground_run);
@@ -104,11 +205,15 @@ int main(void) {
      * functions on the window object. */
     EM_ASM({
         var bridge = {};
-        bridge.mouse = Module.cwrap("flecs_playground_mouse", "number",
+        bridge.mouse = Module.cwrap("flecs_playground_mouse", null,
             "string number number number number number number number number number number".split(" "));
+        bridge.local = Module.cwrap("flecs_playground_local", null,
+            "string number number".split(" "));
         bridge.key = Module.cwrap("flecs_playground_key", null,
             "string number number number number number number".split(" "));
         bridge.request = Module.cwrap("flecs_explorer_request", "string",
+            "string string string".split(" "));
+        bridge.set = Module.cwrap("flecs_playground_set", "number",
             "string string string".split(" "));
         window.flecsPlayground = bridge;
     });

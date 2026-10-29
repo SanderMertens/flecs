@@ -97,6 +97,22 @@ my_parent {
 }
 ```
 
+Children of prefabs and templates are created using the `Parent` hierarchy storage by default. To select the `ChildOf` hierarchy storage for a prefab or template, add the `tree` annotation:
+
+```cpp
+@tree ChildOf
+prefab my_prefab {
+  my_child {}
+}
+
+@tree ChildOf
+template my_template {
+  my_child {}
+}
+```
+
+Note that when a prefab with a `Parent` hierarchy is instantiated, the names of the prefab children are not copied to the instance children.
+
 ### Tags
 A tag can be added to an entity by simply specifying the tag's identifier in an entity scope. Example:
 
@@ -167,6 +183,22 @@ my_entity {
   (Stop,  Position): {x: 10, y: 20}
 }
 ```
+
+#### Partial assignments
+A component assignment with `:` assigns the entire component value. Members that are not specified by the initializer are reset to their default value, so `Position: {x: 10}` and `Position: {10}` are equivalent and both set `y` to `0`.
+
+To only assign some members of a component, use `=` instead of `:`. Members that are not specified by the initializer keep their current value:
+
+```cpp
+my_entity {
+  Position: {10, 20}
+  Position = {y: 30}
+}
+
+// my_entity will have Position{10, 30}
+```
+
+A partial assignment requires the entity to already have the component. If the entity does not have the component, script evaluation fails.
 
 ### Namespacing
 When referring to child entities or components, identifiers need to include the parent path as well as the entity name. Paths are provided as lists of identifiers separated by a dot (`.`):
@@ -373,7 +405,6 @@ Initializers are values that are used to initialize composite and collection mem
 {start: {x: 10, y: 20}, stop: {x: 10, y: 20}}
 [10, 20, 30]
 [{10, 20}, {30, 40}, {50, 60}]
-{x += 10, y *= 2}
 ```
 
 Composite initializers must always be assigned to an lvalue of a well defined type. This can either be a typed variable, component assignment, function parameter or in the case of nested initializers, an element of another initializer. For example, this is a valid usage of an initializer:
@@ -416,35 +447,6 @@ Tree: {color: color, height: height}
 
 // Shorthand notation
 Tree: {color: $, height: $}
-```
-
-Initializer expressions may contain add assignment (`+=`) or multiply assignment (`*=`) operators. These operators allow an initializer to modify an existing value. An example:
-
-```cpp
-e {
-  Position: {10, 20}
-  Position: {x += 1, y += 2}
-}
-
-// e will have Position{11, 22}
-```
-
-This can be especially useful when used in combination with templates (see below):
-
-```cpp
-template Tree {
-  prop height: f32 = 4
-
-  // Make sure tree doesn't sink through the ground
-  Position: {y += height} 
-}
-
-e {
-  Position: {10, 0}
-  Tree: {height: 3}
-}
-
-// e will have Position{10, 3}
 ```
 
 ### Match expressions
@@ -1524,6 +1526,16 @@ world.set_mut_var("difficulty", 2.0f);
 </ul>
 </div>
 
+Mut variables can also be assigned from async blocks. This notifies reactive scripts in the same way:
+
+```cpp
+export mut score = 0
+
+async {
+  score = await fetch_score()
+}
+```
+
 ## Control flow
 
 ### If statement
@@ -1914,11 +1926,11 @@ light {
   Emissive: {0} // scope that owns the component
 
   if game?[Lights] {
-    Emissive: {daylight: game[Lights].value} // partial assignment
+    Emissive = {daylight: game[Lights].value} // partial assignment
   }
 
   if game[TimeOfDay].daylight < 0.5 {
-    Emissive: {daylight: 1} // partial assignment
+    Emissive = {daylight: 1} // partial assignment
   }
 }
 ```
@@ -2014,6 +2026,51 @@ Templates are commonly used in combination with the kind syntax:
 ```cpp
 Square my_entity
 ```
+
+#### Templates in entity scopes
+A template without a name can be declared in the scope of an entity. This creates a template with the same name as the entity:
+
+```cpp
+Square {
+  Position: {10, 20}
+
+  template {
+    Color: {255, 0, 0}
+    Rectangle: {width: 100, height: 100}
+  }
+}
+
+// is equivalent to
+
+Square {
+  Position: {10, 20}
+}
+
+template Square {
+  Color: {255, 0, 0}
+  Rectangle: {width: 100, height: 100}
+}
+```
+
+If the entity has a base, the template inherits from the same base (see [inheritance](#inheritance)):
+
+```cpp
+VictorianFacade : Facade {
+  template {
+    // ...
+  }
+}
+
+// is equivalent to
+
+VictorianFacade : Facade { }
+
+template VictorianFacade : Facade {
+  // ...
+}
+```
+
+The entity must have a name that is not anonymous or interpolated, and the template must be declared directly in the scope of the entity.
 
 #### Prop variables
 Templates can be parameterized with prop variables. To create a prop variable, use the `prop` keyword. Example:
@@ -2131,6 +2188,108 @@ template Building {
 
 This makes it possible to use templates as primitive for procedural generation templates, where a generic template specifies the "grammar" of an object (for example a building), with a set of derived templates that implement the style and/or content.
 
+##### Inheriting from templates
+When a template inherits from another template, the body of the base template is instantiated before the body of the derived template. The base body is evaluated with the prop values of the derived instance, which means that it sees default values overridden by the derived template, as well as values provided by the instance:
+
+```cpp
+template Shape {
+  prop size: f32 = 1
+
+  Box: {size, size, size}
+}
+
+template BigShape : Shape {
+  prop size: f32 = 10 // override default of base prop
+  prop color: Rgb = {255, 0, 0}
+
+  Rgb: color
+}
+
+BigShape a()         // Box: {10, 10, 10}
+BigShape b(size: 20) // Box: {20, 20, 20}
+```
+
+Because the body of the derived template is evaluated last, components it assigns overwrite components assigned by the base template. Inheritance can be chained, in which case bodies are evaluated starting from the root base template.
+
+A derived template inherits the `mut` variables of its base template, and can read and assign them like its own. Async blocks of a base template run for instances of a derived template. This makes it possible to split up behavior and visuals:
+
+```cpp
+template HeadlessButton {
+  mut hover = false
+
+  async {
+    while true {
+      await on.enter(this)
+      hover = true
+      await on.leave(this)
+      hover = false
+    }
+  }
+}
+
+template Button : HeadlessButton {
+  if hover {
+    Rgb: {60, 65, 75}
+  } else {
+    Rgb: {46, 50, 58}
+  }
+}
+```
+
+A derived template cannot redeclare a `mut` variable of its base template.
+
+##### Vectors of templates
+A prop can also accept a *list* of templates by adding `[]` to the type. The prop value is a vector of entities, where each element must be a template that derives from the interface type:
+
+```cpp
+template Building {
+  prop facade: template Facade[] = [VictorianFacade, ModernFacade]
+  prop floors: i32 = 3
+
+  for i in 0..floors {
+    "floor_{i}" {
+      facade[i % facade.count()]: {height: 3}
+    }
+  }
+}
+```
+
+An element is selected with `[]`, and the result can be used anywhere a single `template Facade` prop can be used, both as a component with an initializer and as a tag:
+
+```cpp
+template Building {
+  prop facade: template Facade[] = [VictorianFacade]
+
+  front { facade[0]: {height: 3} } // instantiate with initializer
+  back  { facade[0] }              // instantiate with default props
+}
+```
+
+The vector can also be used in expressions. It supports `count()`, iteration with `for`, and passing individual elements to other templates:
+
+```cpp
+template Building {
+  prop facade: template Facade[] = [VictorianFacade, ModernFacade]
+
+  for f in facade {
+    side { f: {height: 3} }
+  }
+
+  annex { Wing: {facade: facade[0]} }
+}
+```
+
+The default value may be omitted, in which case the vector is empty. Indexing an empty or out of range vector is an error.
+
+Instances override the vector like any other prop, both from script and from C:
+
+```cpp
+Building tower(facade: [ModernFacade])
+e { Building: {facade: [VictorianFacade, ModernFacade]} }
+```
+
+Vector props require an *interface struct* type (like `Facade` above). `prop x: template SomeTemplate[]`, where `SomeTemplate` is itself a template, is not supported.
+
 #### Parent constraints
 A template can require its immediate parent to be an instance of another template:
 
@@ -2180,7 +2339,7 @@ template RadioButton : parent RadioGroup {
 
   async {
     while true {
-      await on.click(this)
+      await on.activate(this)
       active = label
     }
   }
@@ -2191,6 +2350,8 @@ RadioGroup() {
   RadioButton("b")
 }
 ```
+
+`on.activate` is provided by the `flecs.script.input` module. It resolves when the entity is clicked (like `on.click`), when Enter goes down while the entity has the focus, or when Space comes up after it went down while the entity had the focus. This makes widgets work with both a mouse and a keyboard without handling keys in each widget. The event has the activated `target`, a `keyboard` flag that is `false` for a click, the `local_x` and `local_y` position of a click (`0` for keys), and the `ctrl`, `shift`, `alt` and `meta` modifiers. Like other events, activation propagates to the parents of the activated entity until an async block calls `stop_propagation()`.
 
 Use `parent.active = label` if a local variable masks `active`. Changes to parent muts update reactive output without restarting the child's async blocks; subsequent reads in those blocks use the current parent state.
 

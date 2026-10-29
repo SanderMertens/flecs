@@ -701,7 +701,8 @@
                 "lookup_and_update_run",
                 "lookup_and_update_ctx",
                 "set_group",
-                "run_w_0_src_query"
+                "run_w_0_src_query",
+                "multithread_system_frame_offset"
             ]
         }, {
             "id": "Event",
@@ -744,7 +745,9 @@
                 "page_each",
                 "page_iter",
                 "worker_each",
-                "worker_iter"
+                "worker_iter",
+                "frame_offset",
+                "worker_frame_offset"
             ]
         }, {
             "id": "Query",
@@ -756,6 +759,9 @@
                 "term_each_pair_id",
                 "term_each_pair_relation_wildcard",
                 "term_each_pair_object_wildcard",
+                "term_each_sparse_component",
+                "term_each_dont_fragment_component",
+                "term_each_dont_fragment_pair_object_wildcard",
                 "term_get_id",
                 "term_get_subj",
                 "term_get_pred",
@@ -888,6 +894,7 @@
                 "iter_targets_field_not_a_pair",
                 "iter_targets_field_not_set",
                 "copy_operators",
+                "move_assign",
                 "optional_singleton",
                 "optional_module",
                 "has_entity",
@@ -916,7 +923,13 @@
                 "sparse_query_convert_to_query_1_term",
                 "sparse_query_convert_to_query_3_terms",
                 "world_each_sparse",
-                "world_each_sparse_w_entity"
+                "world_each_sparse_w_entity",
+                "component_inheritance_each",
+                "component_inheritance_each_multiple_derived",
+                "component_inheritance_each_entity",
+                "component_inheritance_base_field",
+                "component_inheritance_field_asserts",
+                "component_inheritance_virtual"
             ]
         }, {
             "id": "QueryBuilder",
@@ -1114,7 +1127,8 @@
                 "pred_eq",
                 "pred_eq_name",
                 "pred_match",
-                "value_pair_w_0_value"
+                "value_pair_w_0_value",
+                "term_ref_flags_preserve_id"
             ]
         }, {
             "id": "SystemBuilder",
@@ -1227,7 +1241,24 @@
                 "untyped_field",
                 "reuse_observer_builder",
                 "single_term_observer_w_var_get_var_pair_second",
-                "single_term_observer_w_var_get_var_pair_first"
+                "single_term_observer_w_var_get_var_pair_first",
+                "component_inheritance_each_multi_entity",
+                "delete_w_on_remove_removing_other_w_world",
+                "delete_w_on_remove_removing_other_w_stage",
+                "clear_w_on_remove_removing_other_w_world",
+                "clear_w_on_remove_removing_other_w_stage",
+                "delete_with_w_on_remove_removing_other_w_world",
+                "delete_with_w_on_remove_removing_other_w_stage",
+                "remove_all_w_on_remove_removing_other_w_world",
+                "remove_all_w_on_remove_removing_other_w_stage",
+                "delete_parent_w_on_remove_removing_other_from_child_w_world",
+                "delete_parent_w_on_remove_removing_other_from_child_w_stage",
+                "remove_w_on_remove_removing_other_w_world",
+                "remove_w_on_remove_removing_other_w_stage",
+                "set_w_on_add_adding_other_w_world",
+                "set_w_on_add_adding_other_w_stage",
+                "no_terms_custom_event",
+                "no_terms_on_add"
             ]
         }, {
             "id": "ComponentLifecycle",
@@ -1339,7 +1370,9 @@
                 "move_ctor_no_default_ctor",
                 "on_validate_hook",
                 "on_validate_hook_blocks_on_set",
-                "on_validate_hook_blocks_observer"
+                "on_validate_hook_blocks_observer",
+                "delete_w_on_remove_hook_removing_other_w_world",
+                "delete_w_on_remove_hook_removing_other_w_stage"
             ]
         }, {
             "id": "Refs",

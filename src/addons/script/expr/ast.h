@@ -20,6 +20,7 @@ typedef enum ecs_expr_node_kind_t {
     EcsExprGlobalVariable,
     EcsExprFunction,
     EcsExprMethod,
+    EcsExprTemplate,
     EcsExprMember,
     EcsExprSwizzle,
     EcsExprElement,
@@ -79,7 +80,6 @@ typedef struct ecs_expr_initializer_element_t {
     ecs_expr_node_t *key;
     ecs_expr_node_t *value;
     uintptr_t offset;
-    ecs_token_kind_t operator;
 } ecs_expr_initializer_element_t;
 
 typedef struct ecs_expr_initializer_t {
@@ -169,9 +169,12 @@ typedef struct ecs_expr_has_t {
     uint64_t dyn_input;
 } ecs_expr_has_t;
 
+typedef void (*flecs_expr_cast_t)(void *dst, const void *src);
+
 typedef struct ecs_expr_cast_t {
     ecs_expr_node_t node;
     ecs_expr_node_t *expr;
+    flecs_expr_cast_t cast;
 } ecs_expr_cast_t;
 
 typedef struct ecs_expr_match_element_t {

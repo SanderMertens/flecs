@@ -76,6 +76,7 @@ void flecs_ballocator_init(
         ba->outstanding = ecs_os_malloc_t(ecs_map_t);
         ecs_map_init(ba->outstanding, NULL);
     }
+
     size += ECS_SIZEOF(int64_t) * 2; /* 16 byte aligned */
 #endif
     ba->chunk_size = ECS_ALIGN(size, 16);
@@ -109,8 +110,10 @@ void flecs_ballocator_fini(
                 }
             }
         }
+
         ecs_abort(ECS_LEAK_DETECTED, NULL);
     }
+
     if (ba->outstanding) {
         ecs_map_fini(ba->outstanding);
         ecs_os_free(ba->outstanding);
@@ -170,6 +173,7 @@ void* flecs_balloc_w_dbg_info(
         uint64_t *v = ecs_map_ensure(ba->outstanding, (uintptr_t)result);
         *(const char**)v = type_name;
     }
+
     ba->alloc_count ++;
     *(int64_t*)result = (uintptr_t)ba;
     result = ECS_OFFSET(result, ECS_SIZEOF(int64_t) * 2);
@@ -253,6 +257,7 @@ void flecs_bfree_w_dbg_info(
                 "(chunk = %ub, allocator = %ub)",
                     memory, actual->data_size, ba->chunk_size);
         }
+
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
 
@@ -302,8 +307,10 @@ void* flecs_brealloc_w_dbg_info(
         if (dst->data_size < size) {
             size = dst->data_size;
         }
+
         ecs_os_memcpy(result, memory, size);
     }
+
     flecs_bfree_w_dbg_info(src, memory, type_name);
 #endif
 #ifdef FLECS_MEMSET_UNINITIALIZED

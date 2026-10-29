@@ -23,37 +23,28 @@ typedef struct ecs_script_ref_ctx_t {
     uint64_t input;
 } ecs_script_ref_ctx_t;
 
-typedef struct EcsScriptUpdateEvent {
+typedef struct ecs_script_pending_t {
     ecs_entity_t script;
+    ecs_entity_t instance;
     uint64_t input;
-} EcsScriptUpdateEvent;
-
-extern ECS_COMPONENT_DECLARE(EcsScriptUpdateEvent);
+    int32_t depth;
+} ecs_script_pending_t;
 
 ecs_script_ref_t* flecs_script_ref_ensure(
     ecs_vec_t *refs,
     const ecs_script_ref_t *value);
 
-ecs_entity_t flecs_script_create_ref_observer(
-    ecs_world_t *world,
-    ecs_entity_t script,
-    ecs_entity_t instance,
-    ecs_entity_t entity,
-    ecs_id_t component,
-    uint64_t input,
-    bool is_has,
-    ecs_iter_action_t callback);
+const char* flecs_script_name_leaf(
+    const char *name);
 
-void flecs_script_update_ref_observers(
+void flecs_script_observe_refs(
     ecs_world_t *world,
     ecs_entity_t script,
-    ecs_entity_t instance,
     ecs_vec_t *refs,
-    ecs_vec_t *observers,
-    ecs_iter_action_t callback);
+    ecs_vec_t *observers);
 
 void flecs_script_record_dyn_ref(
-    ecs_script_impl_t *impl,
+    ecs_vec_t *run_refs,
     ecs_entity_t entity,
     ecs_id_t component,
     uint64_t input,
@@ -62,7 +53,8 @@ void flecs_script_record_dyn_ref(
 void flecs_script_update_dyn_observers(
     ecs_world_t *world,
     ecs_entity_t script,
-    ecs_script_impl_t *impl,
+    ecs_entity_t instance,
+    ecs_vec_t *run_refs,
     ecs_vec_t *observers,
     uint64_t input);
 
@@ -79,11 +71,19 @@ void flecs_script_ref_observers_clear(
     ecs_world_t *world,
     ecs_vec_t *observers);
 
-void flecs_script_ref_on_set(
-    ecs_iter_t *it);
+void flecs_script_ref_enqueue(
+    ecs_world_t *world,
+    ecs_world_t *stage,
+    ecs_entity_t script,
+    ecs_entity_t instance,
+    uint64_t input);
 
 void flecs_script_run_pending_resolves(
     ecs_world_t *world);
+
+void flecs_script_pending_resolve_remove(
+    ecs_world_t *world,
+    ecs_entity_t script);
 
 void flecs_script_refs_import(
     ecs_world_t *world);

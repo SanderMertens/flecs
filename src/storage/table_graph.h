@@ -19,26 +19,24 @@ typedef struct ecs_table_diff_builder_t {
     ecs_flags32_t removed_flags;
 } ecs_table_diff_builder_t;
 
-typedef struct ecs_graph_edges_t ecs_graph_edges_t;
-
 typedef struct ecs_graph_edge_t {
-    struct ecs_graph_edge_t *next;
-    struct ecs_graph_edge_t **prev;
-    ecs_graph_edges_t *from;
+    ecs_id_t id;
     ecs_table_t *to;
     ecs_table_diff_t *diff;
-    ecs_id_t id;
+    ecs_flags32_t flags;
+    int32_t incoming;
 } ecs_graph_edge_t;
 
-struct ecs_graph_edges_t {
-    ecs_graph_edge_t *lo;
-    ecs_map_t *hi;
-};
+FLECS_FLATMAP_DECLARE(ecs_graph_edges_t, ecs_graph_edge_t);
+
+typedef struct ecs_graph_incoming_t {
+    ecs_table_t *from;
+    ecs_id_t id;
+} ecs_graph_incoming_t;
 
 typedef struct ecs_graph_node_t {
     ecs_graph_edges_t add;
     ecs_graph_edges_t remove;
-    ecs_graph_edge_t *incoming[2];
 } ecs_graph_node_t;
 
 /** Add to existing type */
@@ -93,7 +91,6 @@ void flecs_table_diff_build_noalloc(
     ecs_table_diff_t *diff);
 
 void flecs_table_edges_add_flags(
-    ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
     ecs_flags32_t flags);
@@ -108,9 +105,8 @@ void flecs_table_hashmap_init(
     ecs_world_t *world,
     ecs_hashmap_t *hm);
 
-void flecs_table_clear_edges_for_id(
+void flecs_table_clear_edges_for_base(
     ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t component);
+    ecs_entity_t base);
 
 #endif

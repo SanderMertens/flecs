@@ -13,7 +13,7 @@ static uint64_t flecs_query_cache_get_group_id(
     ecs_table_t *table)
 {
     if (cache->group_by_callback) {
-        return cache->group_by_callback(cache->query->world, table, 
+        return cache->group_by_callback(cache->query->stage, table, 
             cache->group_by, cache->group_by_ctx);
     } else {
         return 0;
@@ -48,6 +48,7 @@ static void flecs_query_cache_group_insert(
             link = &(*link)->next;
         }
     }
+
     group->next = *link;
     *link = group;
 }
@@ -60,20 +61,23 @@ static ecs_query_cache_group_t* flecs_query_cache_ensure_group(
     if (group && group->info.table_count) {
         return group;
     }
+
     if (group_id) {
         group = ecs_map_insert_alloc_t(&cache->groups,
             ecs_query_cache_group_t, group_id);
     } else if (ecs_map_is_init(&cache->groups)) {
         ecs_map_insert_ptr(&cache->groups, 0, group);
     }
-    ecs_allocator_t *a = &cache->query->real_world->allocator;
+
+    ecs_allocator_t *a = &cache->query->world->allocator;
     ecs_vec_init(a, &group->tables, flecs_query_cache_elem_size(cache), 0);
     group->info.id = group_id;
     flecs_query_cache_group_insert(cache, group);
     if (cache->on_group_create) {
         group->info.ctx = cache->on_group_create(
-            cache->query->world, group_id, cache->group_by_ctx);
+            cache->query->stage, group_id, cache->group_by_ctx);
     }
+
     return group;
 }
 
@@ -83,18 +87,19 @@ static void flecs_query_cache_group_fini(
     ecs_query_cache_group_t *group)
 {
     if (cache->on_group_delete && group->info.table_count) {
-        cache->on_group_delete(cache->query->world, group->info.id,
+        cache->on_group_delete(cache->query->stage, group->info.id,
             group->info.ctx, cache->group_by_ctx);
     }
 
     ecs_size_t elem_size = flecs_query_cache_elem_size(cache);
 
-    ecs_allocator_t *a = &cache->query->real_world->allocator;
+    ecs_allocator_t *a = &cache->query->world->allocator;
     int32_t count = ecs_vec_count(&group->tables);
     for (int32_t i = 0; i < count; i ++) {
         flecs_query_cache_match_fini(cache,
             ecs_vec_get(&group->tables, elem_size, i));
     }
+
     ecs_vec_fini(a, &group->tables, elem_size);
     group->info.table_count = 0;
     group->info.match_count = 0;
@@ -149,7 +154,7 @@ static ecs_query_cache_match_t* flecs_query_cache_add_table_to_group(
     ecs_table_t *table)
 {
     ecs_size_t elem_size = flecs_query_cache_elem_size(cache);
-    ecs_allocator_t *a = &cache->query->real_world->allocator;
+    ecs_allocator_t *a = &cache->query->world->allocator;
 
     ecs_query_cache_match_t *result = ecs_vec_append(
         a, &group->tables, elem_size);
@@ -162,6 +167,7 @@ static ecs_query_cache_match_t* flecs_query_cache_add_table_to_group(
     group->info.table_count ++;
     group->info.match_count ++;
     cache->match_count ++;
+    cache->parent_table_count += (table->flags & EcsTableHasParent) != 0;
 
     return result;
 }
@@ -175,6 +181,12 @@ static void flecs_query_cache_remove_table_from_group(
     cache->match_count ++;
 
     ecs_size_t elem_size = flecs_query_cache_elem_size(cache);
+    ecs_query_cache_match_t *removed = ecs_vec_get(
+        &group->tables, elem_size, index);
+    cache->parent_table_count -= 
+        (removed->base.table->flags & EcsTableHasParent) != 0;
+    ecs_assert(cache->parent_table_count >= 0, ECS_INTERNAL_ERROR, NULL);
+
     ecs_vec_remove(&group->tables, elem_size, index);
     int32_t count = ecs_vec_count(&group->tables);
 
@@ -208,9 +220,7 @@ ecs_query_cache_match_t* flecs_query_cache_add_table(
     ecs_assert(ecs_map_get(&cache->tables, table->id) == NULL, 
         ECS_INTERNAL_ERROR, NULL);
 
-    if (!ecs_map_count(&cache->tables) && cache->entity) {
-        ecs_remove_id(cache->query->world, cache->entity, EcsEmpty);
-    }
+    bool was_empty = !ecs_map_count(&cache->tables);
 
     uint64_t group_id = flecs_query_cache_get_group_id(cache, table);
 
@@ -218,14 +228,20 @@ ecs_query_cache_match_t* flecs_query_cache_add_table(
         cache, group_id);
     ecs_assert(group != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_allocator_t *a = &cache->query->real_world->allocator;
+    ecs_allocator_t *a = &cache->query->world->allocator;
 
     ecs_query_cache_table_t *qt = flecs_alloc_t(a, ecs_query_cache_table_t);
     qt->group = group;
     qt->index = ecs_vec_count(&group->tables);
     ecs_map_insert_ptr(&cache->tables, table->id, qt);
 
-    return flecs_query_cache_add_table_to_group(cache, group, qt, table);
+    ecs_query_cache_match_t *result = flecs_query_cache_add_table_to_group(
+        cache, group, qt, table);
+    if (was_empty && cache->entity) {
+        ecs_remove_id(ecs_get_stage(cache->query->world, 0),
+            cache->entity, EcsEmpty);
+    }
+    return result;
 }
 
 /* Move table to a different group. This can happen if the value returned by 
@@ -306,7 +322,7 @@ void flecs_query_cache_remove_table(
 
     flecs_query_cache_remove_table_from_group(cache, group, qt->index);
 
-    ecs_allocator_t *a = &cache->query->real_world->allocator;
+    ecs_allocator_t *a = &cache->query->world->allocator;
     flecs_free_t(a, ecs_query_cache_table_t, qt);
 
     ecs_map_remove(&cache->tables, table->id);
@@ -315,7 +331,7 @@ void flecs_query_cache_remove_table(
 void flecs_query_cache_remove_all_tables(
     ecs_query_cache_t *cache)
 {
-    ecs_allocator_t *a = &cache->query->real_world->allocator;
+    ecs_allocator_t *a = &cache->query->world->allocator;
     ecs_query_cache_group_t *group = cache->first_group;
     while (group) {
         ecs_query_cache_group_t *next = group->next;
@@ -330,6 +346,7 @@ void flecs_query_cache_remove_all_tables(
         flecs_free_t(a, ecs_query_cache_table_t, ecs_map_ptr(&it));
     }
     ecs_map_clear(&cache->tables);
+    cache->parent_table_count = 0;
     ecs_assert(ecs_map_count(&cache->groups) == 0, ECS_INTERNAL_ERROR, NULL);
 }
 

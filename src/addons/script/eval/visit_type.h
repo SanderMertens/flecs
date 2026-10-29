@@ -18,22 +18,33 @@ typedef struct ecs_script_type_entity_t {
     int32_t child_table;
     int32_t slot;
     bool in_template;
+    bool in_for;
 } ecs_script_type_entity_t;
+
+typedef struct ecs_script_type_interface_var_t {
+    int32_t sp;
+    ecs_entity_t interface;
+} ecs_script_type_interface_var_t;
 
 typedef struct ecs_script_type_visitor_t {
     ecs_script_eval_visitor_t *v;
     ecs_vec_t tables;
     ecs_vec_t entities;
     ecs_vec_t skipped_vars;
+    ecs_vec_t interface_vars;
     ecs_hashmap_t names;
 
-    ecs_script_node_t *stmt_node;
     int32_t table;
     int32_t control_depth;
     int32_t for_depth;
+    int32_t skip_count;
+    int32_t annot_start;
     bool template_scope;
     bool function_scope;
     bool async_scope;
+    ecs_script_entity_t *reopened;
+    bool for_static;
+    bool for_entity;
 } ecs_script_type_visitor_t;
 
 int flecs_script_type_scope(

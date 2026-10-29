@@ -34,6 +34,18 @@ typedef struct flecs_log_capture_frame_t {
 
 static flecs_log_capture_frame_t *flecs_log_capture_frames = NULL;
 
+typedef struct flecs_log_collect_frame_t {
+    ecs_vec_t *errors;
+    ecs_os_api_log_t prev_log;
+    int prev_level;
+    bool prev_color;
+    int32_t capture_depth;
+    struct flecs_log_collect_frame_t *prev;
+} flecs_log_collect_frame_t;
+
+static flecs_log_collect_frame_t *flecs_log_collect_frames = NULL;
+static bool flecs_log_uncaptured_active = false;
+
 static void flecs_set_prev_log(
     ecs_os_api_log_t prev_log,
     bool try)
@@ -80,6 +92,7 @@ static void flecs_log_capture_log(
         } else {
             ecs_strbuf_appendch(flecs_log_last_err, '\n');
         }
+
         ecs_strbuf_appendstr(flecs_log_last_err, msg);
     }
 
@@ -93,6 +106,7 @@ static char* flecs_log_get_captured_log(void) {
     if (!flecs_log_last_err) {
         return NULL;
     }
+
     char *result = ecs_strbuf_get(flecs_log_last_err);
     ecs_os_free(flecs_log_last_err);
     flecs_log_last_err = NULL;
@@ -109,6 +123,7 @@ void ecs_log_start_capture(bool try) {
     if (flecs_log_capture_depth ++) {
         return;
     }
+
     flecs_log_last_err_line = 0;
     flecs_log_last_err_column = 0;
     flecs_parser_err_line = 0;
@@ -127,12 +142,77 @@ char* ecs_log_stop_capture(void) {
     if (-- flecs_log_capture_depth) {
         return NULL;
     }
+
     flecs_log_stopped_err_line = flecs_log_last_err_line;
     flecs_log_stopped_err_column = flecs_log_last_err_column;
     ecs_os_api.log_ = flecs_log_prev_fatal_log;
     ecs_os_api.log_level_ = flecs_log_prev_level;
     ecs_log_enable_colors(flecs_log_prev_color);
     return flecs_log_get_captured_log();
+}
+
+static void flecs_log_collect_log(
+    int32_t level,
+    const char *file,
+    int32_t line,
+    const char *msg)
+{
+    flecs_log_collect_frame_t *frame = flecs_log_collect_frames;
+    if (!frame) {
+        return;
+    }
+
+    if (level <= -4 && frame->prev_log) {
+        frame->prev_log(level, file, line, msg);
+    }
+
+    if (level <= -3) {
+        if (flecs_log_capture_depth > frame->capture_depth &&
+            !flecs_log_uncaptured_active)
+        {
+            return;
+        }
+
+        ecs_vec_append_t(NULL, frame->errors, char*)[0] = ecs_os_strdup(msg);
+        return;
+    }
+
+    if (frame->prev_log && level <= frame->prev_level) {
+        frame->prev_log(level, file, line, msg);
+    }
+}
+
+void ecs_log_start_collect_errors(
+    ecs_vec_t *errors)
+{
+    ecs_assert(errors != NULL, ECS_INVALID_PARAMETER, NULL);
+    flecs_log_collect_frame_t *frame =
+        ecs_os_calloc_t(flecs_log_collect_frame_t);
+    frame->errors = errors;
+    frame->prev_log = ecs_os_api.log_;
+    frame->prev_level = ecs_os_api.log_level_;
+    frame->prev_color = ecs_log_enable_colors(false);
+    frame->capture_depth = flecs_log_capture_depth;
+    frame->prev = flecs_log_collect_frames;
+    flecs_log_collect_frames = frame;
+
+    ecs_os_api.log_ = flecs_log_collect_log;
+    if (ecs_os_api.log_level_ < -1) {
+        ecs_os_api.log_level_ = -1;
+    }
+}
+
+void ecs_log_stop_collect_errors(void) {
+    flecs_log_collect_frame_t *frame = flecs_log_collect_frames;
+    ecs_assert(frame != NULL, ECS_INVALID_OPERATION,
+        "error collection not active");
+    ecs_assert(frame->capture_depth == flecs_log_capture_depth,
+        ECS_INVALID_OPERATION, "mismatching log capture calls");
+    ecs_os_api.log_ = frame->prev_log;
+    ecs_os_api.log_level_ = frame->prev_level;
+    ecs_log_enable_colors(frame->prev_color);
+    flecs_log_collect_frames = frame->prev;
+    ecs_os_free(frame);
 }
 
 void flecs_log_capture_push(bool try) {
@@ -183,6 +263,28 @@ char* flecs_log_capture_pop(void) {
     return result;
 }
 
+void flecs_log_uncaptured(
+    int32_t level,
+    const char *fmt,
+    ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    bool prev_active = flecs_log_uncaptured_active;
+    flecs_log_uncaptured_active = true;
+    if (!flecs_log_capture_depth) {
+        if (level <= ecs_os_api.log_level_) {
+            ecs_printv_(level, NULL, 0, fmt, args);
+        }
+    } else if (flecs_log_prev_fatal_log && level <= flecs_log_prev_level) {
+        char *msg = flecs_vasprintf(fmt, args);
+        flecs_log_prev_fatal_log(level, NULL, 0, msg);
+        ecs_os_free(msg);
+    }
+    flecs_log_uncaptured_active = prev_active;
+    va_end(args);
+}
+
 void flecs_log_get_captured_error_pos(
     int32_t *line,
     int32_t *column)
@@ -190,6 +292,7 @@ void flecs_log_get_captured_error_pos(
     if (line) {
         *line = flecs_log_stopped_err_line;
     }
+
     if (column) {
         *column = flecs_log_stopped_err_column;
     }
@@ -219,6 +322,7 @@ void flecs_colorize_buf(
                 if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
                 isNum = false;
             }
+
             if (isStr && (isStr == ch) && prev != '\\') {
                 isStr = '\0';
             } else if (((ch == '\'') || (ch == '"')) && !isStr &&
@@ -288,6 +392,7 @@ void flecs_colorize_buf(
                 while ((ch = *ptr) != ']') ptr ++;
                 dontAppend = true;
             }
+
             if (!autoColor) {
                 overrideColor = true;
             }
@@ -508,6 +613,7 @@ static void flecs_parser_errorv(
                 for (c = 0; c < column; c ++) {
                     ecs_strbuf_appendch(&msg_buf, ' ');
                 }
+
                 ecs_strbuf_appendch(&msg_buf, '^');
             }
         }
@@ -518,6 +624,7 @@ static void flecs_parser_errorv(
         } else {
             ecs_os_err(name, 0, msg);
         }
+
         ecs_os_free(msg);
     }
 }
@@ -591,6 +698,7 @@ void ecs_abort_(
         ecs_fatal_(file, line, "#[red]abort()#[reset]: #[blue]%s#[reset]", 
             ecs_strerror(err));
     }
+
     ecs_os_api.log_last_error_ = err;
 }
 
@@ -614,6 +722,7 @@ void ecs_assert_log_(
         ecs_fatal_(file, line, "#[red]assert(%s)#[reset] (#[blue]%s#[reset])",
             cond_str, ecs_strerror(err));
     }
+
     ecs_os_api.log_last_error_ = err;
 }
 
@@ -767,10 +876,10 @@ void ecs_abort_(
     const char *fmt,
     ...)
 {
-    (void)error_code;
     (void)file;
     (void)line;
     (void)fmt;
+    ecs_os_api.log_last_error_ = error_code;
 }
 
 void ecs_assert_log_(
@@ -781,11 +890,11 @@ void ecs_assert_log_(
     const char *fmt,
     ...)
 {
-    (void)error_code;
     (void)condition_str;
     (void)file;
     (void)line;
     (void)fmt;
+    ecs_os_api.log_last_error_ = error_code;
 }
 
 bool flecs_log_capture_set_append(bool append) {
@@ -801,12 +910,29 @@ char* ecs_log_stop_capture(void) {
     return NULL;
 }
 
+void ecs_log_start_collect_errors(
+    ecs_vec_t *errors)
+{
+    (void)errors;
+}
+
+void ecs_log_stop_collect_errors(void) { }
+
 void flecs_log_capture_push(bool try) {
     (void)try;
 }
 
 char* flecs_log_capture_pop(void) {
     return NULL;
+}
+
+void flecs_log_uncaptured(
+    int32_t level,
+    const char *fmt,
+    ...)
+{
+    (void)level;
+    (void)fmt;
 }
 
 void flecs_log_get_captured_error_pos(
@@ -816,6 +942,7 @@ void flecs_log_get_captured_error_pos(
     if (line) {
         *line = 0;
     }
+
     if (column) {
         *column = 0;
     }

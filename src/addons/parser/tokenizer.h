@@ -6,6 +6,10 @@
 #ifndef FLECS_PARSER_TOKENIZER_H
 #define FLECS_PARSER_TOKENIZER_H
 
+#ifndef ECS_PARSER_MAX_TOKENS
+#define ECS_PARSER_MAX_TOKENS (32)
+#endif
+
 /* Tokenizer */
 typedef enum ecs_token_kind_t {
     EcsTokEnd = '\0',
@@ -45,12 +49,9 @@ typedef enum ecs_token_kind_t {
     EcsTokRange,
     EcsTokShiftLeft,
     EcsTokShiftRight,
-    EcsTokAddAssign,
-    EcsTokMulAssign,
     EcsTokHasBracketOpen,
     EcsTokArrow,
     EcsTokIdentifier,
-    EcsTokFunction,
     EcsTokString,
     EcsTokNumber,
     EcsTokKeywordWith,
@@ -84,21 +85,17 @@ typedef struct ecs_token_t {
     ecs_token_kind_t kind;
 } ecs_token_t;
 
-typedef struct ecs_tokens_t {
-    int32_t count;
-    ecs_token_t tokens[256];
-} ecs_tokens_t;
-
 typedef struct ecs_tokenizer_t {
-    ecs_tokens_t stack;
+    int32_t count;
+    ecs_token_t stack[ECS_PARSER_MAX_TOKENS];
     ecs_token_t *tokens;
 } ecs_tokenizer_t;
 
-const char* flecs_tokenizer_until(
+const char* flecs_tokenizer_line(
     ecs_parser_t *parser,
     const char *ptr,
     ecs_token_t *out,
-    char until);
+    bool stmt_end);
 
 const char* flecs_token_kind_str(
     ecs_token_kind_t kind);
@@ -112,7 +109,20 @@ const char* flecs_token(
     ecs_token_t *out,
     bool is_lookahead);
 
+void flecs_token_restore(
+    ecs_parser_t *parser,
+    const char *token_cur);
+
 const char* flecs_scan_whitespace(
+    ecs_parser_t *parser,
+    const char *pos);
+
+const char* flecs_scan_whitespace_and_comment(
+    ecs_parser_t *parser,
+    const char *pos,
+    bool *newline);
+
+const char* flecs_parser_skip_newlines(
     ecs_parser_t *parser,
     const char *pos);
 

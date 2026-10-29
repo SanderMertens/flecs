@@ -1,5 +1,13 @@
 #include <cpp.h>
 
+struct ObserverUnit {
+    int32_t hp;
+};
+
+struct ObserverWarrior : ObserverUnit {
+    int32_t dmg;
+};
+
 void Observer_2_terms_on_add(void) {
     flecs::world ecs;
 
@@ -857,11 +865,11 @@ void Observer_on_set_w_defer_set(void) {
     flecs::entity e = world.entity();
     test_int(count, 0);
 
-    world.defer_begin();
-    e.set<Position>({10, 20});
+    flecs::world stage_1 = world.get_stage(0);
+    e.mut(stage_1).set<Position>({10, 20});
 
     test_int(count, 0);
-    world.defer_end();
+    stage_1.merge();
 
     test_int(count, 1);
 }
@@ -993,7 +1001,7 @@ void Observer_on_set_singleton_set_component_named_entity(void) {
         .write<MySingletonComponent>()
         .event(flecs::OnSet)
         .each([](flecs::iter &it, size_t, const MySingletonComponent &c1) {
-            it.world().entity("A").set<MyComponent>({c1.v});
+            it.stage().entity("A").set<MyComponent>({c1.v});
         });
 
     world.set<MySingletonComponent>({1});
@@ -1135,9 +1143,9 @@ void Observer_implicit_register_in_emit_for_named_entity_w_defer(void) {
         e2.set<Position>({10, 20});
     });
 
-    world.defer_begin();
+    flecs::world stage_1 = world.get_stage(0);
     e1.emit<MyEvent>({ 10 });
-    world.defer_end();
+    stage_1.merge();
 }
 
 void Observer_add_to_named_in_emit_for_named_entity_w_defer(void) {
@@ -1155,9 +1163,9 @@ void Observer_add_to_named_in_emit_for_named_entity_w_defer(void) {
         e2.set<Position>({10, 20});
     });
 
-    world.defer_begin();
+    flecs::world stage_1 = world.get_stage(0);
     e1.emit<MyEvent>({ 10 });
-    world.defer_end();
+    stage_1.merge();
 }
 
 void Observer_register_twice_w_each(void) {
@@ -1915,4 +1923,344 @@ void Observer_single_term_observer_w_var_get_var_pair_first(void) {
     test_int(invoked, 0);
     instance.remove(rel, tgt);
     test_int(invoked, 1);
+}
+
+void Observer_component_inheritance_each_multi_entity(void) {
+    flecs::world ecs;
+
+    ecs.component<ObserverUnit>();
+    ecs.component<ObserverWarrior>().is_a<ObserverUnit>();
+
+    flecs::entity tag = ecs.entity();
+
+    int32_t count = 0, sum = 0;
+    ecs.observer<ObserverUnit>()
+        .with(tag)
+        .event(flecs::OnRemove)
+        .each([&](ObserverUnit& u) {
+            sum += u.hp;
+            count ++;
+        });
+
+    ecs.entity().set<ObserverWarrior>({{10}, 1}).add(tag);
+    ecs.entity().set<ObserverWarrior>({{20}, 2}).add(tag);
+    ecs.entity().set<ObserverWarrior>({{30}, 3}).add(tag);
+
+    test_int(count, 0);
+
+    ecs.remove_all(tag);
+
+    test_int(count, 3);
+    test_int(sum, 60);
+}
+
+void Observer_delete_w_on_remove_removing_other_w_world(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.observer<Position>()
+        .event(flecs::OnRemove)
+        .each([](flecs::iter& it, size_t i, Position&) {
+            it.entity(i).mut(it.world()).remove<Velocity>();
+        });
+
+    flecs::entity e = ecs.entity().add<Position>().add<Velocity>();
+
+    test_expect_abort_code(ECS_LOCKED_STORAGE);
+    e.destruct();
+}
+
+void Observer_delete_w_on_remove_removing_other_w_stage(void) {
+    flecs::world ecs;
+
+    ecs.observer<Position>()
+        .event(flecs::OnRemove)
+        .each([](flecs::entity e, Position&) {
+            e.remove<Velocity>();
+        });
+
+    flecs::entity e = ecs.entity().add<Position>().add<Velocity>();
+
+    e.destruct();
+
+    test_assert(!e.is_alive());
+}
+
+void Observer_clear_w_on_remove_removing_other_w_world(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.observer<Position>()
+        .event(flecs::OnRemove)
+        .each([](flecs::iter& it, size_t i, Position&) {
+            it.entity(i).mut(it.world()).remove<Velocity>();
+        });
+
+    flecs::entity e = ecs.entity().add<Position>().add<Velocity>();
+
+    test_expect_abort_code(ECS_LOCKED_STORAGE);
+    e.clear();
+}
+
+void Observer_clear_w_on_remove_removing_other_w_stage(void) {
+    flecs::world ecs;
+
+    ecs.observer<Position>()
+        .event(flecs::OnRemove)
+        .each([](flecs::entity e, Position&) {
+            e.remove<Velocity>();
+        });
+
+    flecs::entity e = ecs.entity().add<Position>().add<Velocity>();
+
+    e.clear();
+
+    test_assert(e.is_alive());
+    test_assert(!e.has<Position>());
+    test_assert(!e.has<Velocity>());
+}
+
+void Observer_delete_with_w_on_remove_removing_other_w_world(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.observer<Position>()
+        .event(flecs::OnRemove)
+        .each([](flecs::iter& it, size_t i, Position&) {
+            it.entity(i).mut(it.world()).remove<Velocity>();
+        });
+
+    ecs.entity().add<Tag>().add<Position>().add<Velocity>();
+    ecs.entity().add<Tag>().add<Position>().add<Velocity>();
+    ecs.entity().add<Tag>().add<Position>().add<Velocity>();
+
+    test_expect_abort_code(ECS_LOCKED_STORAGE);
+    ecs.delete_with<Tag>();
+}
+
+void Observer_delete_with_w_on_remove_removing_other_w_stage(void) {
+    flecs::world ecs;
+
+    ecs.observer<Position>()
+        .event(flecs::OnRemove)
+        .each([](flecs::entity e, Position&) {
+            e.remove<Velocity>();
+        });
+
+    flecs::entity e1 = ecs.entity().add<Tag>().add<Position>().add<Velocity>();
+    flecs::entity e2 = ecs.entity().add<Tag>().add<Position>().add<Velocity>();
+    flecs::entity e3 = ecs.entity().add<Tag>().add<Position>().add<Velocity>();
+    flecs::entity e4 = ecs.entity().add<Position>().add<Velocity>();
+
+    ecs.delete_with<Tag>();
+
+    test_assert(!e1.is_alive());
+    test_assert(!e2.is_alive());
+    test_assert(!e3.is_alive());
+    test_assert(e4.is_alive());
+    test_assert(e4.has<Position>());
+    test_assert(e4.has<Velocity>());
+}
+
+void Observer_remove_all_w_on_remove_removing_other_w_world(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.observer<Position>()
+        .event(flecs::OnRemove)
+        .each([](flecs::iter& it, size_t i, Position&) {
+            it.entity(i).mut(it.world()).remove<Velocity>();
+        });
+
+    ecs.entity().add<Position>().add<Velocity>();
+    ecs.entity().add<Position>().add<Velocity>();
+    ecs.entity().add<Position>().add<Velocity>();
+
+    test_expect_abort_code(ECS_LOCKED_STORAGE);
+    ecs.remove_all<Position>();
+}
+
+void Observer_remove_all_w_on_remove_removing_other_w_stage(void) {
+    flecs::world ecs;
+
+    ecs.observer<Position>()
+        .event(flecs::OnRemove)
+        .each([](flecs::entity e, Position&) {
+            e.remove<Velocity>();
+        });
+
+    flecs::entity e1 = ecs.entity().add<Position>().add<Velocity>();
+    flecs::entity e2 = ecs.entity().add<Position>().add<Velocity>();
+    flecs::entity e3 = ecs.entity().add<Position>().add<Velocity>();
+
+    ecs.remove_all<Position>();
+
+    test_assert(e1.is_alive());
+    test_assert(!e1.has<Position>());
+    test_assert(!e1.has<Velocity>());
+    test_assert(e2.is_alive());
+    test_assert(!e2.has<Position>());
+    test_assert(!e2.has<Velocity>());
+    test_assert(e3.is_alive());
+    test_assert(!e3.has<Position>());
+    test_assert(!e3.has<Velocity>());
+}
+
+void Observer_delete_parent_w_on_remove_removing_other_from_child_w_world(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.observer<Position>()
+        .event(flecs::OnRemove)
+        .each([](flecs::iter& it, size_t i, Position&) {
+            it.entity(i).mut(it.world()).remove<Velocity>();
+        });
+
+    flecs::entity parent = ecs.entity();
+    ecs.entity().child_of(parent).add<Position>().add<Velocity>();
+
+    test_expect_abort_code(ECS_LOCKED_STORAGE);
+    parent.destruct();
+}
+
+void Observer_delete_parent_w_on_remove_removing_other_from_child_w_stage(void) {
+    flecs::world ecs;
+
+    ecs.observer<Position>()
+        .event(flecs::OnRemove)
+        .each([](flecs::entity e, Position&) {
+            e.remove<Velocity>();
+        });
+
+    flecs::entity parent = ecs.entity();
+    flecs::entity child = ecs.entity().child_of(parent)
+        .add<Position>().add<Velocity>();
+
+    parent.destruct();
+
+    test_assert(!parent.is_alive());
+    test_assert(!child.is_alive());
+}
+
+void Observer_remove_w_on_remove_removing_other_w_world(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.observer<Position>()
+        .event(flecs::OnRemove)
+        .each([](flecs::iter& it, size_t i, Position&) {
+            it.entity(i).mut(it.world()).remove<Velocity>();
+        });
+
+    flecs::entity e = ecs.entity().add<Position>().add<Velocity>();
+
+    test_expect_abort_code(ECS_LOCKED_STORAGE);
+    e.remove<Position>();
+}
+
+void Observer_remove_w_on_remove_removing_other_w_stage(void) {
+    flecs::world ecs;
+
+    ecs.observer<Position>()
+        .event(flecs::OnRemove)
+        .each([](flecs::entity e, Position&) {
+            e.remove<Velocity>();
+        });
+
+    flecs::entity e = ecs.entity().add<Position>().add<Velocity>();
+
+    e.remove<Position>();
+
+    test_assert(e.is_alive());
+    test_assert(!e.has<Position>());
+    test_assert(!e.has<Velocity>());
+}
+
+void Observer_set_w_on_add_adding_other_w_world(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.observer<Position>()
+        .event(flecs::OnAdd)
+        .each([](flecs::iter& it, size_t i, Position&) {
+            it.entity(i).mut(it.world()).add<Velocity>();
+        });
+
+    flecs::entity e = ecs.entity();
+
+    test_expect_abort_code(ECS_LOCKED_STORAGE);
+    e.set(Position{10, 20});
+}
+
+void Observer_set_w_on_add_adding_other_w_stage(void) {
+    flecs::world ecs;
+
+    ecs.observer<Position>()
+        .event(flecs::OnAdd)
+        .each([](flecs::entity e, Position&) {
+            e.add<Velocity>();
+        });
+
+    flecs::entity e = ecs.entity();
+
+    e.set(Position{10, 20});
+
+    test_assert(e.has<Velocity>());
+    const Position& p = e.get<Position>();
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Observer_no_terms_custom_event(void) {
+    flecs::world ecs;
+
+    struct Evt { };
+
+    flecs::entity e = ecs.entity();
+
+    int32_t count = 0;
+    flecs::entity last;
+
+    ecs.observer()
+        .event<Evt>()
+        .each([&](flecs::entity src) {
+            last = src;
+            count ++;
+        });
+
+    test_int(count, 0);
+
+    ecs.event<Evt>().entity(e).emit();
+
+    test_int(count, 1);
+    test_assert(last == e);
+}
+
+void Observer_no_terms_on_add(void) {
+    flecs::world ecs;
+
+    ecs.component<Position>();
+
+    int32_t count = 0;
+    flecs::entity last;
+
+    ecs.observer()
+        .event(flecs::OnAdd)
+        .each([&](flecs::entity src) {
+            last = src;
+            count ++;
+        });
+
+    flecs::entity e = ecs.entity();
+    e.add<Position>();
+
+    test_int(count, 1);
+    test_assert(last == e);
 }

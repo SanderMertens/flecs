@@ -203,6 +203,7 @@ static void flecs_instantiate_children(
             {
                 childof_base_index ++;
             }
+
             continue;
         }
 
@@ -311,9 +312,21 @@ void flecs_instantiate_dont_fragment(
         ecs_assert(cur->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
         bool inherit = (cur->flags & EcsIdOnInstantiateInherit) != 0;
         if (cur->sparse && (!has_isa || !inherit) && 
+            !(cur->flags & EcsIdOnInstantiateDontInherit) &&
             !ecs_id_is_wildcard(cur->id)) 
         {
             if (flecs_component_sparse_has(cur, base)) {
+                if (cur->flags & EcsIdExclusive) {
+                    ecs_component_record_t *cr_wc = flecs_components_get(
+                        world, ecs_pair(ECS_PAIR_FIRST(cur->id), EcsWildcard));
+                    if (cr_wc && cr_wc->sparse &&
+                        flecs_sparse_has(cr_wc->sparse, instance))
+                    {
+                        cur = cur->non_fragmenting.next;
+                        continue;
+                    }
+                }
+
                 void *base_ptr = flecs_component_sparse_get(
                     world, cur, NULL, base);
                 const ecs_type_info_t *ti = cur->type_info;
@@ -406,6 +419,8 @@ void flecs_instantiate(
         return;
     }
 
+    ECS_TABLE_LOCK(world, base_table);
+
     ecs_component_record_t *cr = flecs_components_get(world, ecs_childof(base));
     if (cr) {
         ecs_os_perf_trace_push("flecs.instantiate");
@@ -424,6 +439,7 @@ void flecs_instantiate(
                 }
 
                 ecs_os_perf_trace_pop("flecs.instantiate");
+                ECS_TABLE_UNLOCK(world, base_table);
                 return;
             }
 
@@ -460,6 +476,8 @@ void flecs_instantiate(
 
         ecs_os_perf_trace_pop("flecs.instantiate");
     }
+
+    ECS_TABLE_UNLOCK(world, base_table);
 error:
     return;
 }
