@@ -1,4 +1,4 @@
-#include <script_command.h>
+#include <script_shell.h>
 #include <stdio.h>
 
 int main(int argc, char *argv[]) {

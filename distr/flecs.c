@@ -28632,7 +28632,7 @@ done:
 #endif
 }
 
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
 static void flecs_rest_command_import(
     ecs_world_t *world)
 {
@@ -30378,7 +30378,7 @@ static bool flecs_rest_reply(
         } else if (!ecs_os_strncmp(req->path, "commands/frame/", 15)) {
             return flecs_rest_get_commands_request(world, impl, req, reply);
 
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
         } else if (!ecs_os_strncmp(req->path, "command/session/", 16)) {
             return flecs_rest_command_history(
                 world, req, reply, &req->path[16]);
@@ -30406,7 +30406,7 @@ static bool flecs_rest_reply(
         } else if (!ecs_os_strncmp(req->path, "action/", 7)) {
             return flecs_rest_action(world, req, reply, &req->path[7]);
 
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
         } else if (!ecs_os_strcmp(req->path, "command/session")) {
             return flecs_rest_command_new_session(world, reply);
         } else if (!ecs_os_strncmp(req->path, "command/session/", 16)) {
@@ -30422,7 +30422,7 @@ static bool flecs_rest_reply(
         } else if (!ecs_os_strncmp(req->path, "component/", 10)) {
             return flecs_rest_delete_component(world, req, reply, &req->path[10]);
 
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
         } else if (!ecs_os_strncmp(req->path, "command/session/", 16)) {
             return flecs_rest_command_delete_session(
                 world, reply, &req->path[16]);
@@ -114422,10 +114422,10 @@ char* ecs_script_ir_profile_str(void)
 }
 #endif
 
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
 
-#ifndef FLECS_SCRIPT_COMMAND_PRIVATE_H
-#define FLECS_SCRIPT_COMMAND_PRIVATE_H
+#ifndef FLECS_SCRIPT_SHELL_PRIVATE_H
+#define FLECS_SCRIPT_SHELL_PRIVATE_H
 
 #ifdef __clang__
 #pragma clang diagnostic ignored "-Wmissing-field-initializers"
@@ -115410,7 +115410,7 @@ ecs_entity_t ecs_command_session_init(
     EcsCommandSession *s = ecs_ensure(world, session, EcsCommandSession);
     s->scope = desc->scope;
     s->history_size = desc->history_size ?
-        desc->history_size : FLECS_SCRIPT_COMMAND_HISTORY_SIZE;
+        desc->history_size : FLECS_SCRIPT_SHELL_HISTORY_SIZE;
     ecs_modified(world, session, EcsCommandSession);
     return session;
 error:
@@ -115613,7 +115613,7 @@ void FlecsScriptCommandImport(
 
 #endif
 
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
 
 typedef struct {
     const char *name;
@@ -116454,7 +116454,7 @@ void flecs_command_core_import(
 
 #endif
 
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
 
 #define FLECS_COMMAND_DIFF_CONTEXT (3)
 #define FLECS_COMMAND_DIFF_MAX_CELLS (16 * 1024 * 1024)
@@ -117055,7 +117055,7 @@ done:
 
 #endif
 
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
 #ifdef FLECS_SCRIPT_INPUT
 
 static const char* flecs_command_parse_modifiers(
@@ -117590,7 +117590,7 @@ void flecs_command_input_import(
 #endif
 #endif
 
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
 
 typedef struct {
     char *path;

@@ -1,9 +1,9 @@
 /**
- * @file addons/script_command.h
+ * @file addons/script_shell.h
  * @brief Command line interface for interacting with a world.
  */
 
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
 
 #ifndef FLECS_SCRIPT
 #define FLECS_SCRIPT
@@ -22,7 +22,7 @@
 #endif
 
 /**
- * @defgroup c_addons_script_command Script Command
+ * @defgroup c_addons_script_shell Script Shell
  * @ingroup c_addons
  * Command line interface for interacting with a world.
  *
@@ -48,16 +48,16 @@
  * @{
  */
 
-#ifndef FLECS_SCRIPT_COMMAND_H
-#define FLECS_SCRIPT_COMMAND_H
+#ifndef FLECS_SCRIPT_SHELL_H
+#define FLECS_SCRIPT_SHELL_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /** Default number of commands kept in the history of a session. */
-#ifndef FLECS_SCRIPT_COMMAND_HISTORY_SIZE
-#define FLECS_SCRIPT_COMMAND_HISTORY_SIZE (256)
+#ifndef FLECS_SCRIPT_SHELL_HISTORY_SIZE
+#define FLECS_SCRIPT_SHELL_HISTORY_SIZE (256)
 #endif
 
 /** Result of running a command. */
@@ -98,7 +98,7 @@ typedef struct EcsCommandSession {
 typedef struct ecs_command_session_desc_t {
     ecs_entity_t entity;     /**< Entity to use for the session (optional). */
     ecs_entity_t scope;      /**< Initial scope (optional, default is root). */
-    int32_t history_size;    /**< History size (optional, default is FLECS_SCRIPT_COMMAND_HISTORY_SIZE). */
+    int32_t history_size;    /**< History size (optional, default is FLECS_SCRIPT_SHELL_HISTORY_SIZE). */
 } ecs_command_session_desc_t;
 
 /** Parameter of a command, returned by help. */

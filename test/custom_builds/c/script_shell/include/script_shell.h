@@ -1,8 +1,8 @@
-#ifndef SCRIPT_COMMAND_H
-#define SCRIPT_COMMAND_H
+#ifndef SCRIPT_SHELL_H
+#define SCRIPT_SHELL_H
 
 /* This generated file contains includes for project dependencies */
-#include "script_command/bake_config.h"
+#include "script_shell/bake_config.h"
 
 #ifdef __cplusplus
 extern "C" {

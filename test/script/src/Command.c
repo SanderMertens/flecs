@@ -159,7 +159,7 @@ void Command_session_init(void) {
     const EcsCommandSession *s = ecs_get(world, session, EcsCommandSession);
     test_assert(s != NULL);
     test_uint(s->scope, 0);
-    test_int(s->history_size, FLECS_SCRIPT_COMMAND_HISTORY_SIZE);
+    test_int(s->history_size, FLECS_SCRIPT_SHELL_HISTORY_SIZE);
     test_int(ecs_vec_count(&s->history), 0);
 
     ecs_fini(world);

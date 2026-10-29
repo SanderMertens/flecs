@@ -5,7 +5,7 @@
 
 #include "flecs.h"
 
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
 #ifdef FLECS_SCRIPT_INPUT
 #include "command.h"
 

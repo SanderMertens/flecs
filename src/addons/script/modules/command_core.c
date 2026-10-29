@@ -5,7 +5,7 @@
 
 #include "flecs.h"
 
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
 #include "command.h"
 
 typedef struct {
