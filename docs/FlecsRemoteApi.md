@@ -2049,7 +2049,7 @@ ecs_script_update(world, s, 0, "SpaceShip{}");
 </div>
 
 ### Command sessions
-Run commands of the script shell addon (`FLECS_SCRIPT_SHELL`). A session stores the scope relative to which commands resolve identifiers, and a bounded command history. Use the `help` command to list the available commands.
+Run commands of the script shell addon (`FLECS_SCRIPT_SHELL`). A session stores the scope relative to which commands resolve identifiers, and a bounded command history. Use the `help` command to list the available commands. See the [Flecs Shell manual](FlecsShell.md) for the command syntax and the builtin commands.
 
 | Method | Path | Description |
 |--------|------|-------------|

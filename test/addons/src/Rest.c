@@ -1909,7 +1909,9 @@ static size_t Rest_fs_fread(void *ptr, size_t size, size_t count, FILE *file) {
         requested = f->size - f->pos;
     }
 
-    memcpy(ptr, &f->data[f->pos], requested);
+    if (requested) {
+        memcpy(ptr, &f->data[f->pos], requested);
+    }
     f->pos += requested;
     return size ? requested / size : 0;
 }
@@ -1922,6 +1924,9 @@ static size_t Rest_fs_fwrite(
 {
     Rest_fs_file_t *f = (Rest_fs_file_t*)file;
     size_t len = size * count;
+    if (!len) {
+        return count;
+    }
     f->data = realloc(f->data, f->pos + len);
     memcpy(&f->data[f->pos], ptr, len);
     f->pos += len;

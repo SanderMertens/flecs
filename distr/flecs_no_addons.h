@@ -329,6 +329,9 @@
     defined(FLECS_SCRIPT_SHELL)
 #endif
 
+#if defined(FLECS_ALERTS) || defined(FLECS_APP) || defined(FLECS_TIMER)
+#endif
+
 #if defined(FLECS_DOC) || defined(FLECS_META) || defined(FLECS_SYSTEM) || \
     defined(FLECS_TIMER)
 #endif
@@ -336,11 +339,19 @@
 /* With prefabs, the observers that meta creates (the units monitor and the
  * struct base observer) match inherited components and transitive IsA pairs,
  * which needs query plans. */
+#if defined(FLECS_META) && defined(FLECS_PREFAB)
+#endif
 
 #if defined(FLECS_ALERTS) || defined(FLECS_APP) || defined(FLECS_HTTP) || \
     defined(FLECS_JSON) || defined(FLECS_METRICS) || defined(FLECS_PIPELINE) || \
     defined(FLECS_REST) || defined(FLECS_STATS) || defined(FLECS_SYSTEM) || \
     defined(FLECS_TIMER) || defined(FLECS_SCRIPT_SHELL)
+#endif
+
+#if defined(FLECS_FRAME) || defined(FLECS_HTTP)
+#if !defined(FLECS_OS_API_IMPL) && !defined(FLECS_NO_OS_API_IMPL)
+#define FLECS_OS_API_IMPL
+#endif
 #endif
 
 #endif

@@ -4,9 +4,9 @@
 int main(int argc, char *argv[]) {
     ecs_world_t *world = ecs_init_w_args(argc, argv);
 
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
-    assert(ecs_lookup(world, "flecs.script.command.ls") != 0);
+    assert(ecs_lookup(world, "flecs.script.shell.commands.core.ls") != 0);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     (void)e;

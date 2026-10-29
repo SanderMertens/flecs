@@ -72,6 +72,10 @@ static void flecs_command_resources_fini(
     }
 }
 
+static ECS_CTOR(EcsScriptShell, ptr, {
+    ecs_vec_init_t(NULL, &ptr->command_paths, ecs_entity_t, 0);
+})
+
 static ECS_COPY(EcsScriptShell, dst, src, {
     ecs_vec_fini_t(NULL, &dst->command_paths, ecs_entity_t);
     dst->command_paths = ecs_vec_copy_t(
@@ -1328,7 +1332,7 @@ void FlecsScriptShellImport(
     ECS_COMPONENT_DEFINE(world, EcsScriptShell);
 
     ecs_set_hooks(world, EcsScriptShell, {
-        .ctor = flecs_default_ctor,
+        .ctor = ecs_ctor(EcsScriptShell),
         .copy = ecs_copy(EcsScriptShell),
         .move = ecs_move(EcsScriptShell),
         .dtor = ecs_dtor(EcsScriptShell)

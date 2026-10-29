@@ -53,6 +53,7 @@ INPUT                  = include/flecs.h \
                          docs/ComponentTraits.md \
                          docs/Relationships.md \
                          docs/FlecsScript.md \
+                         docs/FlecsShell.md \
                          docs/FlecsRemoteApi.md \
                          docs/Manual.md \
                          docs/MigrationGuide.md \
