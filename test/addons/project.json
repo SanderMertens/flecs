@@ -600,6 +600,7 @@
                 "command_run_offset_limit",
                 "command_run_string_lines",
                 "command_history",
+                "command_history_results",
                 "command_delete_session",
                 "command_invalid_session"
             ]

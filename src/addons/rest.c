@@ -905,12 +905,37 @@ static bool flecs_rest_command_history(
         offset = 0;
     }
 
+    bool results = false;
+    flecs_rest_bool_param(req, "results", &results);
+
     const EcsCommandSession *s = ecs_get(world, session, EcsCommandSession);
     bool more = false;
     ecs_strbuf_appendlit(&reply->body, "{\"history\":");
     flecs_rest_command_elems_to_json(world, ecs_id(ecs_string_t),
         s->history.array, ecs_vec_count(&s->history), offset, limit,
         &reply->body, &more);
+
+    if (results) {
+        char **array = ecs_vec_first(&s->results);
+        int32_t i, end = ecs_vec_count(&s->results);
+        if (limit >= 0 && (offset + limit) < end) {
+            end = offset + limit;
+        }
+
+        ecs_strbuf_appendlit(&reply->body, ", \"results\":[");
+        for (i = offset; i < end; i ++) {
+            if (i != offset) {
+                ecs_strbuf_appendlit(&reply->body, ", ");
+            }
+            if (array[i]) {
+                ecs_strbuf_appendstr(&reply->body, array[i]);
+            } else {
+                ecs_strbuf_appendlit(&reply->body, "null");
+            }
+        }
+        ecs_strbuf_appendch(&reply->body, ']');
+    }
+
     ecs_strbuf_append(&reply->body, ", \"more\":%s}",
         more ? "true" : "false");
     return true;

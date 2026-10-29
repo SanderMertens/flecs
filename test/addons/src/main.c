@@ -550,6 +550,7 @@ void Rest_command_run_error(void);
 void Rest_command_run_offset_limit(void);
 void Rest_command_run_string_lines(void);
 void Rest_command_history(void);
+void Rest_command_history_results(void);
 void Rest_command_delete_session(void);
 void Rest_command_invalid_session(void);
 
@@ -2672,6 +2673,10 @@ bake_test_case Rest_testcases[] = {
         Rest_command_history
     },
     {
+        "command_history_results",
+        Rest_command_history_results
+    },
+    {
         "command_delete_session",
         Rest_command_delete_session
     },
@@ -3138,7 +3143,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        59,
+        60,
         Rest_testcases
     },
     {

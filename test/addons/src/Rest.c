@@ -1705,6 +1705,62 @@ void Rest_command_history(void) {
     ecs_fini(world);
 }
 
+void Rest_command_history_results(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/command/session", NULL, &reply));
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    unsigned long long session = 0;
+    test_int(sscanf(reply_str, "{\"session\":%llu}", &session), 1);
+    ecs_os_free(reply_str);
+
+    char path[128];
+    ecs_os_snprintf(path, 128, "/command/session/%llu", session);
+
+    const char *cmds[] = { "pwd", "unknown" };
+    int i;
+    for (i = 0; i < 2; i ++) {
+        reply = ECS_HTTP_REPLY_INIT;
+        ecs_http_server_request(srv, "PUT", path, cmds[i], &reply);
+        ecs_strbuf_reset(&reply.body);
+    }
+
+    ecs_os_snprintf(path, 128,
+        "/command/session/%llu/history?results=true", session);
+    reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET", path, NULL, &reply));
+    test_int(reply.code, 200);
+    reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str,
+        "{\"history\":[\"pwd\", \"unknown\"], \"results\":["
+        "{\"scope\":\"#0\", \"type\":\"flecs.meta.entity\", "
+        "\"result\":\"#0\", \"errors\":[]}, "
+        "{\"scope\":\"#0\", \"errors\":[\"unknown command 'unknown'\"]}], "
+        "\"more\":false}");
+    ecs_os_free(reply_str);
+
+    ecs_os_snprintf(path, 128,
+        "/command/session/%llu/history?results=true&offset=1&limit=1",
+        session);
+    reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET", path, NULL, &reply));
+    test_int(reply.code, 200);
+    reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str,
+        "{\"history\":[\"unknown\"], \"results\":["
+        "{\"scope\":\"#0\", \"errors\":[\"unknown command 'unknown'\"]}], "
+        "\"more\":false}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
 void Rest_command_delete_session(void) {
     ecs_world_t *world = ecs_init();
 

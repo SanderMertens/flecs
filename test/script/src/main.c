@@ -4043,7 +4043,11 @@ void Command_custom_command_optional_args(void);
 void Command_custom_command_error(void);
 void Command_history(void);
 void Command_history_bounded(void);
+void Command_history_results(void);
+void Command_history_results_bounded(void);
+void Command_history_results_deleted_scope(void);
 void Command_clear(void);
+void Command_clear_results(void);
 void Command_invalid_session(void);
 void Command_unknown_command(void);
 void Command_empty_command(void);
@@ -20028,8 +20032,24 @@ bake_test_case Command_testcases[] = {
         Command_history_bounded
     },
     {
+        "history_results",
+        Command_history_results
+    },
+    {
+        "history_results_bounded",
+        Command_history_results_bounded
+    },
+    {
+        "history_results_deleted_scope",
+        Command_history_results_deleted_scope
+    },
+    {
         "clear",
         Command_clear
+    },
+    {
+        "clear_results",
+        Command_clear_results
     },
     {
         "invalid_session",
@@ -20928,7 +20948,7 @@ static bake_test_suite suites[] = {
         "Command",
         Command_setup,
         NULL,
-        109,
+        113,
         Command_testcases
     },
     {

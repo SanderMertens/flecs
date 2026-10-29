@@ -320,6 +320,85 @@ void Command_history_bounded(void) {
     ecs_fini(world);
 }
 
+void Command_history_results(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptCommand);
+
+    ecs_entity(world, { .name = "Parent" });
+
+    ecs_entity_t session = ecs_command_session_init(world, NULL);
+
+    ecs_command_result_t r = ecs_command_run(world, session, "cd Parent");
+    ecs_command_result_fini(world, &r);
+    r = ecs_command_run(world, session, "pwd");
+    ecs_command_result_fini(world, &r);
+    r = ecs_command_run(world, session, "unknown");
+    ecs_command_result_fini(world, &r);
+
+    const EcsCommandSession *s = ecs_get(world, session, EcsCommandSession);
+    test_int(ecs_vec_count(&s->history), 3);
+    test_int(ecs_vec_count(&s->results), 3);
+    test_str(ecs_vec_get_t(&s->results, char*, 0)[0],
+        "{\"scope\":\"#0\", \"type\":\"flecs.meta.entity\", "
+        "\"result\":\"Parent\", \"errors\":[]}");
+    test_str(ecs_vec_get_t(&s->results, char*, 1)[0],
+        "{\"scope\":\"Parent\", \"type\":\"flecs.meta.entity\", "
+        "\"result\":\"Parent\", \"errors\":[]}");
+    test_str(ecs_vec_get_t(&s->results, char*, 2)[0],
+        "{\"scope\":\"Parent\", \"errors\":[\"unknown command 'unknown'\"]}");
+
+    ecs_fini(world);
+}
+
+void Command_history_results_bounded(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptCommand);
+
+    ecs_entity_t session = ecs_command_session_init(world,
+        &(ecs_command_session_desc_t){ .history_size = 2 });
+
+    ecs_command_result_t r = ecs_command_run(world, session, "unknown_a");
+    ecs_command_result_fini(world, &r);
+    r = ecs_command_run(world, session, "unknown_b");
+    ecs_command_result_fini(world, &r);
+    r = ecs_command_run(world, session, "unknown_c");
+    ecs_command_result_fini(world, &r);
+
+    const EcsCommandSession *s = ecs_get(world, session, EcsCommandSession);
+    test_int(ecs_vec_count(&s->history), 2);
+    test_int(ecs_vec_count(&s->results), 2);
+    test_str(ecs_vec_get_t(&s->results, char*, 0)[0],
+        "{\"scope\":\"#0\", \"errors\":[\"unknown command 'unknown_b'\"]}");
+    test_str(ecs_vec_get_t(&s->results, char*, 1)[0],
+        "{\"scope\":\"#0\", \"errors\":[\"unknown command 'unknown_c'\"]}");
+
+    ecs_fini(world);
+}
+
+void Command_history_results_deleted_scope(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptCommand);
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "Parent" });
+
+    ecs_entity_t session = ecs_command_session_init(world, NULL);
+
+    ecs_command_result_t r = ecs_command_run(world, session, "cd Parent");
+    ecs_command_result_fini(world, &r);
+
+    ecs_delete(world, parent);
+
+    r = ecs_command_run(world, session, "unknown");
+    ecs_command_result_fini(world, &r);
+
+    const EcsCommandSession *s = ecs_get(world, session, EcsCommandSession);
+    test_int(ecs_vec_count(&s->results), 2);
+    test_str(ecs_vec_get_t(&s->results, char*, 1)[0],
+        "{\"scope\":\"#0\", \"errors\":[\"unknown command 'unknown'\"]}");
+
+    ecs_fini(world);
+}
+
 void Command_clear(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptCommand);
@@ -348,6 +427,33 @@ void Command_clear(void) {
     s = ecs_get(world, session, EcsCommandSession);
     test_int(ecs_vec_count(&s->history), 1);
     test_str(ecs_vec_get_t(&s->history, char*, 0)[0], "pwd");
+
+    ecs_fini(world);
+}
+
+void Command_clear_results(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptCommand);
+
+    ecs_entity_t session = ecs_command_session_init(world, NULL);
+
+    ecs_command_result_t r = ecs_command_run(world, session, "pwd");
+    ecs_command_result_fini(world, &r);
+    r = ecs_command_run(world, session, "clear");
+    ecs_command_result_fini(world, &r);
+
+    const EcsCommandSession *s = ecs_get(world, session, EcsCommandSession);
+    test_int(ecs_vec_count(&s->history), 0);
+    test_int(ecs_vec_count(&s->results), 0);
+
+    r = ecs_command_run(world, session, "unknown");
+    ecs_command_result_fini(world, &r);
+
+    s = ecs_get(world, session, EcsCommandSession);
+    test_int(ecs_vec_count(&s->history), 1);
+    test_int(ecs_vec_count(&s->results), 1);
+    test_str(ecs_vec_get_t(&s->results, char*, 0)[0],
+        "{\"scope\":\"#0\", \"errors\":[\"unknown command 'unknown'\"]}");
 
     ecs_fini(world);
 }
