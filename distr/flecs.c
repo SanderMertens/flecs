@@ -55207,6 +55207,7 @@ static int flecs_meta_c_struct(
     ecs_struct_desc_t desc = {.entity = component};
     int32_t count = 0;
     int result = -1;
+    bool flushed = false;
     if (!flecs_meta_c_expect(p, '{')) {
         return -1;
     }
@@ -55243,8 +55244,15 @@ static int flecs_meta_c_struct(
         }
 
         if (count == ECS_MEMBER_DESC_CACHE_SIZE - 1) {
-            flecs_meta_c_error(p, "too many struct members");
-            goto done;
+            if (!ecs_struct_init(p->world, &desc)) {
+                goto done;
+            }
+            for (int32_t i = 0; i < count; i ++) {
+                ecs_os_free(ECS_CONST_CAST(char*, desc.members[i].name));
+            }
+            ecs_os_memset_n(desc.members, 0, ecs_member_t, ECS_MEMBER_DESC_CACHE_SIZE);
+            count = 0;
+            flushed = true;
         }
 
         desc.members[count ++] = (ecs_member_t){
@@ -55256,7 +55264,11 @@ static int flecs_meta_c_struct(
         goto done;
     }
 
-    result = ecs_struct_init(p->world, &desc) ? 0 : -1;
+    if (count || !flushed) {
+        result = ecs_struct_init(p->world, &desc) ? 0 : -1;
+    } else {
+        result = 0;
+    }
 done:
     for (int32_t i = 0; i < count; i ++) {
         ecs_os_free(ECS_CONST_CAST(char*, desc.members[i].name));

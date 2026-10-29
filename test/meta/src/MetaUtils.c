@@ -78,6 +78,108 @@ ECS_STRUCT(Struct_w_value, {
     ecs_value_t value;
 });
 
+ECS_STRUCT(Struct_w_32_members, {
+    int32_t m0;
+    int32_t m1;
+    int32_t m2;
+    int32_t m3;
+    int32_t m4;
+    int32_t m5;
+    int32_t m6;
+    int32_t m7;
+    int32_t m8;
+    int32_t m9;
+    int32_t m10;
+    int32_t m11;
+    int32_t m12;
+    int32_t m13;
+    int32_t m14;
+    int32_t m15;
+    int32_t m16;
+    int32_t m17;
+    int32_t m18;
+    int32_t m19;
+    int32_t m20;
+    int32_t m21;
+    int32_t m22;
+    int32_t m23;
+    int32_t m24;
+    int32_t m25;
+    int32_t m26;
+    int32_t m27;
+    int32_t m28;
+    int32_t m29;
+    int32_t m30;
+    int32_t m31;
+});
+
+ECS_STRUCT(Struct_w_64_members, {
+    int32_t m0;
+    int32_t m1;
+    int32_t m2;
+    int32_t m3;
+    int32_t m4;
+    int32_t m5;
+    int32_t m6;
+    int32_t m7;
+    int32_t m8;
+    int32_t m9;
+    int32_t m10;
+    int32_t m11;
+    int32_t m12;
+    int32_t m13;
+    int32_t m14;
+    int32_t m15;
+    int32_t m16;
+    int32_t m17;
+    int32_t m18;
+    int32_t m19;
+    int32_t m20;
+    int32_t m21;
+    int32_t m22;
+    int32_t m23;
+    int32_t m24;
+    int32_t m25;
+    int32_t m26;
+    int32_t m27;
+    int32_t m28;
+    int32_t m29;
+    int32_t m30;
+    int32_t m31;
+    int32_t m32;
+    int32_t m33;
+    int32_t m34;
+    int32_t m35;
+    int32_t m36;
+    int32_t m37;
+    int32_t m38;
+    int32_t m39;
+    int32_t m40;
+    int32_t m41;
+    int32_t m42;
+    int32_t m43;
+    int32_t m44;
+    int32_t m45;
+    int32_t m46;
+    int32_t m47;
+    int32_t m48;
+    int32_t m49;
+    int32_t m50;
+    int32_t m51;
+    int32_t m52;
+    int32_t m53;
+    int32_t m54;
+    int32_t m55;
+    int32_t m56;
+    int32_t m57;
+    int32_t m58;
+    int32_t m59;
+    int32_t m60;
+    int32_t m61;
+    int32_t m62;
+    int32_t m63;
+});
+
 ECS_ENUM(Enum_Default, {
     Red, Green, Blue
 });
@@ -774,6 +876,46 @@ void MetaUtils_struct_w_numeric_array_size(void) {
     ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
     test_str(m->name, "values");
     test_int(m->count, 3);
+
+    ecs_fini(world);
+}
+
+void MetaUtils_struct_w_32_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Struct_w_32_members);
+
+    test_int(ecs_meta_from_desc(world, ecs_id(Struct_w_32_members),
+        FLECS__Struct_w_32_members_kind,
+        FLECS__Struct_w_32_members_desc), 0);
+
+    const EcsStruct *st = ecs_get(world, ecs_id(Struct_w_32_members), EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 32);
+
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 31);
+    test_str(m->name, "m31");
+    test_int(m->offset, offsetof(Struct_w_32_members, m31));
+
+    ecs_fini(world);
+}
+
+void MetaUtils_struct_w_64_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Struct_w_64_members);
+
+    test_int(ecs_meta_from_desc(world, ecs_id(Struct_w_64_members),
+        FLECS__Struct_w_64_members_kind,
+        FLECS__Struct_w_64_members_desc), 0);
+
+    const EcsStruct *st = ecs_get(world, ecs_id(Struct_w_64_members), EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 64);
+
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 63);
+    test_str(m->name, "m63");
+    test_int(m->offset, offsetof(Struct_w_64_members, m63));
 
     ecs_fini(world);
 }
