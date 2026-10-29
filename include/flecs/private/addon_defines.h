@@ -57,8 +57,8 @@
 #ifdef FLECS_NO_SCRIPT_INPUT
 #undef FLECS_SCRIPT_INPUT
 #endif
-#ifdef FLECS_NO_SCRIPT_COMMAND
-#undef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_NO_SCRIPT_SHELL
+#undef FLECS_SCRIPT_SHELL
 #endif
 #ifdef FLECS_NO_STATS
 #undef FLECS_STATS
@@ -112,7 +112,7 @@
 /* Resolve addon dependencies before addon-dependent API declarations. The
  * order of these blocks follows the addon dependency graph, from addons with
  * the most dependencies to addons with the least dependencies. */
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
 #ifndef FLECS_QUERY_DSL
 #define FLECS_QUERY_DSL
 #endif
@@ -129,7 +129,7 @@
 
 #if defined(FLECS_SCRIPT_ASYNC) || defined(FLECS_SCRIPT_MATH) || \
     defined(FLECS_SCRIPT_PLATFORM) || defined(FLECS_SCRIPT_INPUT) || \
-    defined(FLECS_SCRIPT_COMMAND)
+    defined(FLECS_SCRIPT_SHELL)
 #ifndef FLECS_SCRIPT
 #define FLECS_SCRIPT
 #endif
@@ -286,7 +286,7 @@
 #if defined(FLECS_ALERTS) || defined(FLECS_APP) || defined(FLECS_HTTP) || \
     defined(FLECS_JSON) || defined(FLECS_METRICS) || defined(FLECS_PIPELINE) || \
     defined(FLECS_REST) || defined(FLECS_STATS) || defined(FLECS_SYSTEM) || \
-    defined(FLECS_TIMER) || defined(FLECS_SCRIPT_COMMAND)
+    defined(FLECS_TIMER) || defined(FLECS_SCRIPT_SHELL)
 #ifndef FLECS_FRAME
 #define FLECS_FRAME
 #endif

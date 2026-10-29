@@ -5,7 +5,7 @@
 
 #include "flecs.h"
 
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
 #include "command.h"
 
 ECS_COMPONENT_DECLARE(EcsCommandSession);
@@ -867,7 +867,7 @@ ecs_entity_t ecs_command_session_init(
     EcsCommandSession *s = ecs_ensure(world, session, EcsCommandSession);
     s->scope = desc->scope;
     s->history_size = desc->history_size ?
-        desc->history_size : FLECS_SCRIPT_COMMAND_HISTORY_SIZE;
+        desc->history_size : FLECS_SCRIPT_SHELL_HISTORY_SIZE;
     ecs_modified(world, session, EcsCommandSession);
     return session;
 error:

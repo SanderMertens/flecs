@@ -5,7 +5,7 @@
 
 #include "flecs.h"
 
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
 #include "command.h"
 
 #define FLECS_COMMAND_DIFF_CONTEXT (3)

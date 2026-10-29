@@ -711,7 +711,7 @@ done:
 #endif
 }
 
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
 static void flecs_rest_command_import(
     ecs_world_t *world)
 {
@@ -2457,7 +2457,7 @@ static bool flecs_rest_reply(
         } else if (!ecs_os_strncmp(req->path, "commands/frame/", 15)) {
             return flecs_rest_get_commands_request(world, impl, req, reply);
 
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
         } else if (!ecs_os_strncmp(req->path, "command/session/", 16)) {
             return flecs_rest_command_history(
                 world, req, reply, &req->path[16]);
@@ -2485,7 +2485,7 @@ static bool flecs_rest_reply(
         } else if (!ecs_os_strncmp(req->path, "action/", 7)) {
             return flecs_rest_action(world, req, reply, &req->path[7]);
 
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
         } else if (!ecs_os_strcmp(req->path, "command/session")) {
             return flecs_rest_command_new_session(world, reply);
         } else if (!ecs_os_strncmp(req->path, "command/session/", 16)) {
@@ -2501,7 +2501,7 @@ static bool flecs_rest_reply(
         } else if (!ecs_os_strncmp(req->path, "component/", 10)) {
             return flecs_rest_delete_component(world, req, reply, &req->path[10]);
 
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
         } else if (!ecs_os_strncmp(req->path, "command/session/", 16)) {
             return flecs_rest_command_delete_session(
                 world, reply, &req->path[16]);

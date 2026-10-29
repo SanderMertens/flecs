@@ -1,5 +1,5 @@
 {
-    "id": "script_command",
+    "id": "script_shell",
     "type": "application",
     "value": {
         "public": false,
@@ -9,6 +9,6 @@
         "standalone": true
     },
     "lang.c": {
-        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_SCRIPT_COMMAND"]
+        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_SCRIPT_SHELL"]
     }
 }

@@ -138,11 +138,11 @@
 #include "../addons/script_input.h"
 #endif
 
-#ifdef FLECS_SCRIPT_COMMAND
-#ifdef FLECS_NO_SCRIPT_COMMAND
-#error "FLECS_NO_SCRIPT_COMMAND failed: SCRIPT_COMMAND is required by other addons"
+#ifdef FLECS_SCRIPT_SHELL
+#ifdef FLECS_NO_SCRIPT_SHELL
+#error "FLECS_NO_SCRIPT_SHELL failed: SCRIPT_SHELL is required by other addons"
 #endif
-#include "../addons/script_command.h"
+#include "../addons/script_shell.h"
 #endif
 
 #ifdef FLECS_PARSER

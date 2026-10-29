@@ -156,7 +156,7 @@ typedef void (*ecs_script_to_local_t)(
 /** Converts a position relative to an entity to a screen position.
  * This is the inverse of ecs_script_to_local_t. It is used by code that
  * emits events for a position relative to an entity, such as the move command
- * of the script command addon. screen_x and screen_y are initialized to the
+ * of the script shell addon. screen_x and screen_y are initialized to the
  * local position.
  *
  * @param world The world.

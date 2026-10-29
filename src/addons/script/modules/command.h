@@ -3,8 +3,8 @@
  * @brief Script command addon internals.
  */
 
-#ifndef FLECS_SCRIPT_COMMAND_PRIVATE_H
-#define FLECS_SCRIPT_COMMAND_PRIVATE_H
+#ifndef FLECS_SCRIPT_SHELL_PRIVATE_H
+#define FLECS_SCRIPT_SHELL_PRIVATE_H
 
 #include "../script.h"
 

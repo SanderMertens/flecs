@@ -246,7 +246,7 @@
 // #define FLECS_SCRIPT_MATH /**< Math functions for Flecs script (may require linking with libm). */
 // #define FLECS_SCRIPT_PLATFORM /**< Platform constants for Flecs script. */
 #define FLECS_SCRIPT_INPUT   /**< Mouse and keyboard events for Flecs script. */
-#define FLECS_SCRIPT_COMMAND /**< Command line interface for interacting with a world. */
+#define FLECS_SCRIPT_SHELL /**< Command line interface for interacting with a world. */
 #define FLECS_SYSTEM         /**< System support. */
 #define FLECS_STATS          /**< Track runtime statistics. */
 #define FLECS_TIMER          /**< Timer support. */
@@ -305,8 +305,8 @@
 #ifdef FLECS_NO_SCRIPT_INPUT
 #undef FLECS_SCRIPT_INPUT
 #endif
-#ifdef FLECS_NO_SCRIPT_COMMAND
-#undef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_NO_SCRIPT_SHELL
+#undef FLECS_SCRIPT_SHELL
 #endif
 #ifdef FLECS_NO_STATS
 #undef FLECS_STATS
@@ -360,7 +360,7 @@
 /* Resolve addon dependencies before addon-dependent API declarations. The
  * order of these blocks follows the addon dependency graph, from addons with
  * the most dependencies to addons with the least dependencies. */
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
 #ifndef FLECS_QUERY_DSL
 #define FLECS_QUERY_DSL
 #endif
@@ -377,7 +377,7 @@
 
 #if defined(FLECS_SCRIPT_ASYNC) || defined(FLECS_SCRIPT_MATH) || \
     defined(FLECS_SCRIPT_PLATFORM) || defined(FLECS_SCRIPT_INPUT) || \
-    defined(FLECS_SCRIPT_COMMAND)
+    defined(FLECS_SCRIPT_SHELL)
 #ifndef FLECS_SCRIPT
 #define FLECS_SCRIPT
 #endif
@@ -534,7 +534,7 @@
 #if defined(FLECS_ALERTS) || defined(FLECS_APP) || defined(FLECS_HTTP) || \
     defined(FLECS_JSON) || defined(FLECS_METRICS) || defined(FLECS_PIPELINE) || \
     defined(FLECS_REST) || defined(FLECS_STATS) || defined(FLECS_SYSTEM) || \
-    defined(FLECS_TIMER) || defined(FLECS_SCRIPT_COMMAND)
+    defined(FLECS_TIMER) || defined(FLECS_SCRIPT_SHELL)
 #ifndef FLECS_FRAME
 #define FLECS_FRAME
 #endif
@@ -16761,7 +16761,7 @@ typedef void (*ecs_script_to_local_t)(
 /** Converts a position relative to an entity to a screen position.
  * This is the inverse of ecs_script_to_local_t. It is used by code that
  * emits events for a position relative to an entity, such as the move command
- * of the script command addon. screen_x and screen_y are initialized to the
+ * of the script shell addon. screen_x and screen_y are initialized to the
  * local position.
  *
  * @param world The world.
@@ -16951,12 +16951,12 @@ void FlecsScriptInputImport(
 
 #endif
 
-#ifdef FLECS_SCRIPT_COMMAND
-#ifdef FLECS_NO_SCRIPT_COMMAND
-#error "FLECS_NO_SCRIPT_COMMAND failed: SCRIPT_COMMAND is required by other addons"
+#ifdef FLECS_SCRIPT_SHELL
+#ifdef FLECS_NO_SCRIPT_SHELL
+#error "FLECS_NO_SCRIPT_SHELL failed: SCRIPT_SHELL is required by other addons"
 #endif
 
-#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_SHELL
 
 #ifndef FLECS_SCRIPT
 #define FLECS_SCRIPT
@@ -16975,7 +16975,7 @@ void FlecsScriptInputImport(
 #endif
 
 /**
- * @defgroup c_addons_script_command Script Command
+ * @defgroup c_addons_script_shell Script Shell
  * @ingroup c_addons
  * Command line interface for interacting with a world.
  *
@@ -17001,16 +17001,16 @@ void FlecsScriptInputImport(
  * @{
  */
 
-#ifndef FLECS_SCRIPT_COMMAND_H
-#define FLECS_SCRIPT_COMMAND_H
+#ifndef FLECS_SCRIPT_SHELL_H
+#define FLECS_SCRIPT_SHELL_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /** Default number of commands kept in the history of a session. */
-#ifndef FLECS_SCRIPT_COMMAND_HISTORY_SIZE
-#define FLECS_SCRIPT_COMMAND_HISTORY_SIZE (256)
+#ifndef FLECS_SCRIPT_SHELL_HISTORY_SIZE
+#define FLECS_SCRIPT_SHELL_HISTORY_SIZE (256)
 #endif
 
 /** Result of running a command. */
@@ -17051,7 +17051,7 @@ typedef struct EcsCommandSession {
 typedef struct ecs_command_session_desc_t {
     ecs_entity_t entity;     /**< Entity to use for the session (optional). */
     ecs_entity_t scope;      /**< Initial scope (optional, default is root). */
-    int32_t history_size;    /**< History size (optional, default is FLECS_SCRIPT_COMMAND_HISTORY_SIZE). */
+    int32_t history_size;    /**< History size (optional, default is FLECS_SCRIPT_SHELL_HISTORY_SIZE). */
 } ecs_command_session_desc_t;
 
 /** Parameter of a command, returned by help. */
