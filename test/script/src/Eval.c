@@ -21370,6 +21370,157 @@ void Eval_struct_w_inline_array_member_of_own_type(void) {
     ecs_fini(world);
 }
 
+void Eval_struct_w_32_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "struct T {"
+    LINE "  m0 { member: {i32} }"
+    LINE "  m1 { member: {i32} }"
+    LINE "  m2 { member: {i32} }"
+    LINE "  m3 { member: {i32} }"
+    LINE "  m4 { member: {i32} }"
+    LINE "  m5 { member: {i32} }"
+    LINE "  m6 { member: {i32} }"
+    LINE "  m7 { member: {i32} }"
+    LINE "  m8 { member: {i32} }"
+    LINE "  m9 { member: {i32} }"
+    LINE "  m10 { member: {i32} }"
+    LINE "  m11 { member: {i32} }"
+    LINE "  m12 { member: {i32} }"
+    LINE "  m13 { member: {i32} }"
+    LINE "  m14 { member: {i32} }"
+    LINE "  m15 { member: {i32} }"
+    LINE "  m16 { member: {i32} }"
+    LINE "  m17 { member: {i32} }"
+    LINE "  m18 { member: {i32} }"
+    LINE "  m19 { member: {i32} }"
+    LINE "  m20 { member: {i32} }"
+    LINE "  m21 { member: {i32} }"
+    LINE "  m22 { member: {i32} }"
+    LINE "  m23 { member: {i32} }"
+    LINE "  m24 { member: {i32} }"
+    LINE "  m25 { member: {i32} }"
+    LINE "  m26 { member: {i32} }"
+    LINE "  m27 { member: {i32} }"
+    LINE "  m28 { member: {i32} }"
+    LINE "  m29 { member: {i32} }"
+    LINE "  m30 { member: {i32} }"
+    LINE "  m31 { member: {i32} }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+
+    const EcsStruct *st = ecs_get(world, t, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 32);
+
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 31);
+    test_str(m->name, "m31");
+    test_int(m->offset, 124);
+
+    const EcsComponent *c = ecs_get(world, t, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 128);
+
+    ecs_fini(world);
+}
+
+void Eval_struct_w_64_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "struct T {"
+    LINE "  m0 { member: {i32} }"
+    LINE "  m1 { member: {i32} }"
+    LINE "  m2 { member: {i32} }"
+    LINE "  m3 { member: {i32} }"
+    LINE "  m4 { member: {i32} }"
+    LINE "  m5 { member: {i32} }"
+    LINE "  m6 { member: {i32} }"
+    LINE "  m7 { member: {i32} }"
+    LINE "  m8 { member: {i32} }"
+    LINE "  m9 { member: {i32} }"
+    LINE "  m10 { member: {i32} }"
+    LINE "  m11 { member: {i32} }"
+    LINE "  m12 { member: {i32} }"
+    LINE "  m13 { member: {i32} }"
+    LINE "  m14 { member: {i32} }"
+    LINE "  m15 { member: {i32} }"
+    LINE "  m16 { member: {i32} }"
+    LINE "  m17 { member: {i32} }"
+    LINE "  m18 { member: {i32} }"
+    LINE "  m19 { member: {i32} }"
+    LINE "  m20 { member: {i32} }"
+    LINE "  m21 { member: {i32} }"
+    LINE "  m22 { member: {i32} }"
+    LINE "  m23 { member: {i32} }"
+    LINE "  m24 { member: {i32} }"
+    LINE "  m25 { member: {i32} }"
+    LINE "  m26 { member: {i32} }"
+    LINE "  m27 { member: {i32} }"
+    LINE "  m28 { member: {i32} }"
+    LINE "  m29 { member: {i32} }"
+    LINE "  m30 { member: {i32} }"
+    LINE "  m31 { member: {i32} }"
+    LINE "  m32 { member: {i32} }"
+    LINE "  m33 { member: {i32} }"
+    LINE "  m34 { member: {i32} }"
+    LINE "  m35 { member: {i32} }"
+    LINE "  m36 { member: {i32} }"
+    LINE "  m37 { member: {i32} }"
+    LINE "  m38 { member: {i32} }"
+    LINE "  m39 { member: {i32} }"
+    LINE "  m40 { member: {i32} }"
+    LINE "  m41 { member: {i32} }"
+    LINE "  m42 { member: {i32} }"
+    LINE "  m43 { member: {i32} }"
+    LINE "  m44 { member: {i32} }"
+    LINE "  m45 { member: {i32} }"
+    LINE "  m46 { member: {i32} }"
+    LINE "  m47 { member: {i32} }"
+    LINE "  m48 { member: {i32} }"
+    LINE "  m49 { member: {i32} }"
+    LINE "  m50 { member: {i32} }"
+    LINE "  m51 { member: {i32} }"
+    LINE "  m52 { member: {i32} }"
+    LINE "  m53 { member: {i32} }"
+    LINE "  m54 { member: {i32} }"
+    LINE "  m55 { member: {i32} }"
+    LINE "  m56 { member: {i32} }"
+    LINE "  m57 { member: {i32} }"
+    LINE "  m58 { member: {i32} }"
+    LINE "  m59 { member: {i32} }"
+    LINE "  m60 { member: {i32} }"
+    LINE "  m61 { member: {i32} }"
+    LINE "  m62 { member: {i32} }"
+    LINE "  m63 { member: {i32} }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+
+    const EcsStruct *st = ecs_get(world, t, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 64);
+
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 63);
+    test_str(m->name, "m63");
+    test_int(m->offset, 252);
+
+    const EcsComponent *c = ecs_get(world, t, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 256);
+
+    ecs_fini(world);
+}
 void Eval_enum_w_duplicate_constant_values(void) {
     ecs_world_t *world = ecs_init();
 

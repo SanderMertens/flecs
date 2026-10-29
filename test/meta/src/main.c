@@ -1335,6 +1335,8 @@ void MetaUtils_struct_w_overflow_array_size(void);
 void MetaUtils_struct_w_array_size_error_no_leak(void);
 void MetaUtils_struct_w_zero_array_size(void);
 void MetaUtils_struct_w_numeric_array_size(void);
+void MetaUtils_struct_w_32_members(void);
+void MetaUtils_struct_w_64_members(void);
 
 // Testsuite 'OpaqueTypes'
 void OpaqueTypes_ser_i32_type_to_json(void);
@@ -6753,6 +6755,14 @@ bake_test_case MetaUtils_testcases[] = {
     {
         "struct_w_numeric_array_size",
         MetaUtils_struct_w_numeric_array_size
+    },
+    {
+        "struct_w_32_members",
+        MetaUtils_struct_w_32_members
+    },
+    {
+        "struct_w_64_members",
+        MetaUtils_struct_w_64_members
     }
 };
 
@@ -7696,7 +7706,7 @@ static bake_test_suite suites[] = {
         "MetaUtils",
         NULL,
         NULL,
-        33,
+        35,
         MetaUtils_testcases
     },
     {
