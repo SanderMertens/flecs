@@ -28826,12 +28826,37 @@ static bool flecs_rest_command_history(
         offset = 0;
     }
 
+    bool results = false;
+    flecs_rest_bool_param(req, "results", &results);
+
     const EcsCommandSession *s = ecs_get(world, session, EcsCommandSession);
     bool more = false;
     ecs_strbuf_appendlit(&reply->body, "{\"history\":");
     flecs_rest_command_elems_to_json(world, ecs_id(ecs_string_t),
         s->history.array, ecs_vec_count(&s->history), offset, limit,
         &reply->body, &more);
+
+    if (results) {
+        char **array = ecs_vec_first(&s->results);
+        int32_t i, end = ecs_vec_count(&s->results);
+        if (limit >= 0 && (offset + limit) < end) {
+            end = offset + limit;
+        }
+
+        ecs_strbuf_appendlit(&reply->body, ", \"results\":[");
+        for (i = offset; i < end; i ++) {
+            if (i != offset) {
+                ecs_strbuf_appendlit(&reply->body, ", ");
+            }
+            if (array[i]) {
+                ecs_strbuf_appendstr(&reply->body, array[i]);
+            } else {
+                ecs_strbuf_appendlit(&reply->body, "null");
+            }
+        }
+        ecs_strbuf_appendch(&reply->body, ']');
+    }
+
     ecs_strbuf_append(&reply->body, ", \"more\":%s}",
         more ? "true" : "false");
     return true;
@@ -114565,12 +114590,14 @@ static void flecs_command_strings_fini(
 
 static ECS_MOVE(EcsCommandSession, dst, src, {
     flecs_command_strings_fini(&dst->history);
+    flecs_command_strings_fini(&dst->results);
     *dst = *src;
     ecs_os_zeromem(src);
 })
 
 static ECS_DTOR(EcsCommandSession, ptr, {
     flecs_command_strings_fini(&ptr->history);
+    flecs_command_strings_fini(&ptr->results);
 })
 
 ecs_entity_t ecs_command_get_session(
@@ -115122,23 +115149,82 @@ static int flecs_command_parse_args(
     return 0;
 }
 
-static void flecs_command_history_push(
+static char* flecs_command_history_push(
     EcsCommandSession *s,
     const char *cmd)
 {
     int32_t size = s->history_size;
     if (size <= 0) {
-        return;
+        return NULL;
     }
 
     ecs_vec_init_if_t(&s->history, char*);
+    ecs_vec_init_if_t(&s->results, char*);
 
     while (ecs_vec_count(&s->history) >= size) {
         ecs_os_free(ecs_vec_first_t(&s->history, char*)[0]);
         ecs_vec_remove_ordered_t(&s->history, char*, 0);
+        ecs_os_free(ecs_vec_first_t(&s->results, char*)[0]);
+        ecs_vec_remove_ordered_t(&s->results, char*, 0);
     }
 
-    ecs_vec_append_t(NULL, &s->history, char*)[0] = ecs_os_strdup(cmd);
+    char *result = ecs_os_strdup(cmd);
+    ecs_vec_append_t(NULL, &s->history, char*)[0] = result;
+    ecs_vec_append_t(NULL, &s->results, char*)[0] = NULL;
+    return result;
+}
+
+static void flecs_command_history_set_result(
+    ecs_world_t *world,
+    ecs_entity_t session,
+    const char *cmd,
+    const char *scope,
+    const ecs_command_result_t *result)
+{
+    EcsCommandSession *s = ecs_get_mut(world, session, EcsCommandSession);
+    if (!s) {
+        return;
+    }
+
+    int32_t count = ecs_vec_count(&s->history);
+    if (!count || ecs_vec_last_t(&s->history, char*)[0] != cmd) {
+        return;
+    }
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_strbuf_appendlit(&buf, "{\"scope\":");
+    ecs_strbuf_appendstr(&buf, scope);
+
+    if (result->result.type) {
+        ecs_strbuf_appendlit(&buf, ", \"type\":");
+        char *type = ecs_get_path(world, result->result.type);
+        ecs_ptr_to_json_buf(world, ecs_id(ecs_string_t), &type, &buf);
+        ecs_os_free(type);
+        ecs_strbuf_appendlit(&buf, ", \"result\":");
+        char *json = ecs_ptr_to_json(
+            world, result->result.type, result->result.ptr);
+        if (json) {
+            ecs_strbuf_appendstr(&buf, json);
+            ecs_os_free(json);
+        } else {
+            ecs_strbuf_appendlit(&buf, "null");
+        }
+    }
+
+    ecs_strbuf_appendlit(&buf, ", \"errors\":[");
+    char **errors = ecs_vec_first(&result->errors);
+    int32_t i, error_count = ecs_vec_count(&result->errors);
+    for (i = 0; i < error_count; i ++) {
+        if (i) {
+            ecs_strbuf_appendlit(&buf, ", ");
+        }
+        ecs_ptr_to_json_buf(world, ecs_id(ecs_string_t), &errors[i], &buf);
+    }
+    ecs_strbuf_appendlit(&buf, "]}");
+
+    char **ptr = ecs_vec_last_t(&s->results, char*);
+    ecs_os_free(ptr[0]);
+    ptr[0] = ecs_strbuf_get(&buf);
 }
 
 void flecs_command_history_clear(
@@ -115150,7 +115236,14 @@ void flecs_command_history_clear(
         ecs_os_free(array[i]);
     }
 
+    array = ecs_vec_first(&s->results);
+    count = ecs_vec_count(&s->results);
+    for (i = 0; i < count; i ++) {
+        ecs_os_free(array[i]);
+    }
+
     ecs_vec_clear(&s->history);
+    ecs_vec_clear(&s->results);
 }
 
 static int flecs_command_invoke(
@@ -115247,7 +115340,14 @@ ecs_command_result_t ecs_command_run(
         goto done;
     }
 
-    flecs_command_history_push(s, cmd);
+    char *entry = flecs_command_history_push(s, cmd);
+    ecs_entity_t cur_scope = s->scope;
+    if (cur_scope && !ecs_is_alive(world, cur_scope)) {
+        cur_scope = 0;
+    }
+
+    char *scope = entry ? ecs_ptr_to_json(
+        world, ecs_id(ecs_entity_t), &cur_scope) : NULL;
 
     EcsCommandState *state = ecs_singleton_ensure(world, EcsCommandState);
     ecs_entity_t prev_session = state->session;
@@ -115261,6 +115361,14 @@ ecs_command_result_t ecs_command_run(
     }
 
     ecs_singleton_ensure(world, EcsCommandState)->session = prev_session;
+    ecs_log_stop_collect_errors();
+
+    if (scope && ecs_is_alive(world, session)) {
+        flecs_command_history_set_result(world, session, entry, scope, &result);
+    }
+
+    ecs_os_free(scope);
+    return result;
 done:
     ecs_log_stop_collect_errors();
 error:

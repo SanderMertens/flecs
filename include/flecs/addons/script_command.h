@@ -17,6 +17,10 @@
 #define FLECS_FRAME
 #endif
 
+#ifndef FLECS_JSON
+#define FLECS_JSON
+#endif
+
 /**
  * @defgroup c_addons_script_command Script Command
  * @ingroup c_addons
@@ -70,12 +74,24 @@ typedef struct ecs_command_result_t {
 
 /** Command session.
  * A session stores the scope relative to which commands resolve identifiers,
- * and a bounded history of the commands that ran in the session.
+ * and a bounded history of the commands that ran in the session together with
+ * their results.
+ *
+ * The results are stored as JSON objects with the scope in which the command
+ * ran, and the type, result and errors of the command:
+ *
+ * @code
+ * {"scope":"parent", "type":"flecs.meta.string", "result":"...", "errors":[]}
+ * @endcode
+ *
+ * The type and result members are omitted when the command did not return a
+ * value. The results member is not reflected, as it can be large.
  */
 typedef struct EcsCommandSession {
     ecs_entity_t scope;      /**< Current scope, 0 for the root. */
     ecs_vec_t history;       /**< Commands that ran, oldest first (vec<char*>). */
     int32_t history_size;    /**< Maximum number of commands in the history. */
+    ecs_vec_t results;       /**< JSON results of the commands in the history (vec<char*>). */
 } EcsCommandSession;
 
 /** Used with ecs_command_session_init(). */
@@ -208,8 +224,8 @@ ecs_entity_t ecs_command_session_init(
 
 /** Run a command.
  * Parses the command line, runs the command and returns its result and the
- * errors that were logged while it ran. The command is added to the history
- * of the session. The result must be freed with ecs_command_result_fini().
+ * errors that were logged while it ran. The command and a JSON snapshot of its
+ * result are added to the history of the session. The result must be freed with ecs_command_result_fini().
  *
  * @param world The world.
  * @param session The session.

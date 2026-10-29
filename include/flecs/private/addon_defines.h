@@ -116,6 +116,9 @@
 #ifndef FLECS_QUERY_DSL
 #define FLECS_QUERY_DSL
 #endif
+#ifndef FLECS_JSON
+#define FLECS_JSON
+#endif
 #endif
 
 #ifdef FLECS_SCRIPT_INPUT
