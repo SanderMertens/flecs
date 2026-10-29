@@ -715,8 +715,8 @@ done:
 static void flecs_rest_command_import(
     ecs_world_t *world)
 {
-    if (!ecs_lookup(world, "flecs.script.command")) {
-        ecs_import_c(world, FlecsScriptCommandImport, "FlecsScriptCommand");
+    if (!ecs_lookup(world, "flecs.script.shell")) {
+        ecs_import_c(world, FlecsScriptShellImport, "FlecsScriptShell");
     }
 }
 

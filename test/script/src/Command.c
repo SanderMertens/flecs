@@ -125,6 +125,17 @@ static void Command_fail_callback(
     ecs_err("custom error");
 }
 
+static void Command_function_callback(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)argc;
+    (void)argv;
+    *(ecs_entity_t*)result->ptr = ctx->function;
+}
+
 static void Command_to_screen(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -143,17 +154,17 @@ static void Command_to_screen(
 
 void Command_session_init(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
     test_assert(session != 0);
 
-    ecs_entity_t sessions = ecs_lookup(world, "script.command.sessions");
+    ecs_entity_t sessions = ecs_lookup(world, "script.shell.sessions");
     test_assert(sessions != 0);
     test_uint(ecs_get_parent(world, ecs_get_parent(world,
         ecs_get_parent(world, sessions))), 0);
     test_assert(!ecs_has_id(world, sessions, EcsModule));
-    test_assert(ecs_lookup(world, "flecs.script.command.sessions") == 0);
+    test_assert(ecs_lookup(world, "flecs.script.shell.sessions") == 0);
     test_uint(ecs_get_parent(world, session), sessions);
 
     const EcsCommandSession *s = ecs_get(world, session, EcsCommandSession);
@@ -167,7 +178,7 @@ void Command_session_init(void) {
 
 void Command_session_init_w_desc(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t e = ecs_new(world);
     ecs_entity_t scope = ecs_entity(world, { .name = "scope" });
@@ -187,7 +198,7 @@ void Command_session_init_w_desc(void) {
 
 void Command_get_session_outside_command(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_command_session_init(world, NULL);
     test_uint(ecs_command_get_session(world), 0);
@@ -197,11 +208,11 @@ void Command_get_session_outside_command(void) {
 
 void Command_get_session_in_command(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_function(world, {
         .name = "session",
-        .parent = ecs_lookup(world, "flecs.script.command"),
+        .parent = ecs_lookup(world, "flecs.script.shell.commands.core"),
         .return_type = ecs_id(ecs_entity_t),
         .callback = Command_session_callback
     });
@@ -221,11 +232,11 @@ void Command_get_session_in_command(void) {
 
 void Command_custom_command_optional_args(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_function(world, {
         .name = "custom",
-        .parent = ecs_lookup(world, "flecs.script.command"),
+        .parent = ecs_lookup(world, "flecs.script.shell.commands.core"),
         .params = {
             { "a", ecs_id(ecs_i32_t) },
             { "b", ecs_id(ecs_i32_t), true },
@@ -257,11 +268,11 @@ void Command_custom_command_optional_args(void) {
 
 void Command_custom_command_error(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_function(world, {
         .name = "custom",
-        .parent = ecs_lookup(world, "flecs.script.command"),
+        .parent = ecs_lookup(world, "flecs.script.shell.commands.core"),
         .callback = Command_fail_callback
     });
 
@@ -278,7 +289,7 @@ void Command_custom_command_error(void) {
 
 void Command_history(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
 
@@ -300,7 +311,7 @@ void Command_history(void) {
 
 void Command_history_bounded(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world,
         &(ecs_command_session_desc_t){ .history_size = 2 });
@@ -322,7 +333,7 @@ void Command_history_bounded(void) {
 
 void Command_history_results(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity(world, { .name = "Parent" });
 
@@ -352,7 +363,7 @@ void Command_history_results(void) {
 
 void Command_history_results_bounded(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world,
         &(ecs_command_session_desc_t){ .history_size = 2 });
@@ -377,7 +388,7 @@ void Command_history_results_bounded(void) {
 
 void Command_history_results_deleted_scope(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t parent = ecs_entity(world, { .name = "Parent" });
 
@@ -401,7 +412,7 @@ void Command_history_results_deleted_scope(void) {
 
 void Command_clear(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
 
@@ -433,7 +444,7 @@ void Command_clear(void) {
 
 void Command_clear_results(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
 
@@ -460,7 +471,7 @@ void Command_clear_results(void) {
 
 void Command_invalid_session(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t e = ecs_new(world);
     ecs_command_result_t r = ecs_command_run(world, e, "pwd");
@@ -473,7 +484,7 @@ void Command_invalid_session(void) {
 
 void Command_unknown_command(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
     ecs_command_result_t r = ecs_command_run(world, session, "foo 10");
@@ -487,7 +498,7 @@ void Command_unknown_command(void) {
 
 void Command_empty_command(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
     ecs_command_result_t r = ecs_command_run(world, session, "   ");
@@ -501,7 +512,7 @@ void Command_empty_command(void) {
 
 void Command_too_many_args(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
     ecs_command_result_t r = ecs_command_run(world, session, "pwd foo");
@@ -516,7 +527,7 @@ void Command_too_many_args(void) {
 
 void Command_missing_arg(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
     ecs_command_result_t r = ecs_command_run(world, session, "get foo");
@@ -532,7 +543,7 @@ void Command_missing_arg(void) {
 
 void Command_invalid_arg(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
     ecs_command_result_t r = ecs_command_run(world, session, "ls foo");
@@ -547,7 +558,7 @@ void Command_invalid_arg(void) {
 
 void Command_quoted_arg(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
     ecs_command_result_t r = ecs_command_run(world, session,
@@ -563,7 +574,7 @@ void Command_quoted_arg(void) {
 
 void Command_quoted_arg_w_escape(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
     ecs_command_result_t r = ecs_command_run(world, session,
@@ -583,7 +594,7 @@ void Command_quoted_arg_w_escape(void) {
 
 void Command_backtick_arg(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
     ecs_command_result_t r = ecs_command_run(world, session,
@@ -602,7 +613,7 @@ void Command_backtick_arg(void) {
 
 void Command_unterminated_quote(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
     ecs_command_result_t r = ecs_command_run(world, session, "new \"foo");
@@ -624,7 +635,7 @@ void Command_unterminated_quote(void) {
 
 void Command_grouped_arg(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
 
@@ -651,7 +662,7 @@ void Command_grouped_arg(void) {
 
 void Command_unbalanced_group(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
 
@@ -674,7 +685,7 @@ void Command_unbalanced_group(void) {
 
 void Command_lookup_relative_to_scope(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
     ecs_entity_t child = ecs_entity(world, { .name = "parent.child" });
@@ -703,7 +714,7 @@ void Command_lookup_relative_to_scope(void) {
 
 void Command_command_does_not_set_scope(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
     ecs_entity_t session = ecs_command_session_init(world, NULL);
@@ -727,7 +738,7 @@ void Command_command_does_not_set_scope(void) {
 
 void Command_singleton_arg(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script_run(world, NULL, "struct Position(x: f32, y: f32)", NULL);
     ecs_entity_t position = ecs_lookup(world, "Position");
@@ -757,7 +768,7 @@ void Command_singleton_arg(void) {
 
 void Command_singleton_arg_no_component(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
 
@@ -773,7 +784,7 @@ void Command_singleton_arg_no_component(void) {
 
 void Command_pair_arg(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
@@ -804,7 +815,7 @@ void Command_pair_arg(void) {
 
 void Command_help(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
 
@@ -812,7 +823,7 @@ void Command_help(void) {
     test_int(ecs_vec_count(&r.errors), 0);
     const EcsVector *v = ecs_get(world, r.result.type, EcsVector);
     test_assert(v != NULL);
-    test_uint(v->type, ecs_lookup(world, "flecs.script.command.CommandInfo"));
+    test_uint(v->type, ecs_lookup(world, "flecs.script.shell.CommandInfo"));
 
     ecs_vec_t *commands = r.result.ptr;
     test_assert(ecs_vec_count(commands) > 50);
@@ -831,7 +842,7 @@ void Command_help(void) {
 
 void Command_help_command(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
 
@@ -858,7 +869,7 @@ void Command_help_command(void) {
 
 void Command_help_unknown(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
 
@@ -873,7 +884,7 @@ void Command_help_unknown(void) {
 
 void Command_ls(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity(world, { .name = "parent.a" });
     ecs_entity(world, { .name = "parent.b" });
@@ -893,7 +904,7 @@ void Command_ls(void) {
 
 void Command_ls_root(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
     ecs_entity_t child = ecs_entity(world, { .name = "parent.child" });
@@ -920,7 +931,7 @@ void Command_ls_root(void) {
 
 void Command_ls_session_scope(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
     ecs_entity(world, { .name = "parent.a" });
@@ -940,7 +951,7 @@ void Command_ls_session_scope(void) {
 
 void Command_invalid_entity(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
 
@@ -955,7 +966,7 @@ void Command_invalid_entity(void) {
 
 void Command_tree(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity(world, { .name = "parent.a" });
     ecs_entity(world, { .name = "parent.a.b" });
@@ -976,7 +987,7 @@ void Command_tree(void) {
 
 void Command_tree_root_skips_flecs(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
     ecs_entity_t child = ecs_entity(world, { .name = "parent.child" });
@@ -1007,7 +1018,7 @@ void Command_tree_root_skips_flecs(void) {
 
 void Command_cat(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script_run(world, NULL,
         HEAD "struct Position(x: f32, y: f32)"
@@ -1020,7 +1031,7 @@ void Command_cat(void) {
 
     ecs_command_result_t r = ecs_command_run(world, session, "cat e");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(r.result.type, ecs_lookup(world, "flecs.script.command.EntityInfo"));
+    test_uint(r.result.type, ecs_lookup(world, "flecs.script.shell.EntityInfo"));
     ecs_command_entity_info_t *info = r.result.ptr;
     test_uint(info->entity, e);
     test_uint(info->id, e);
@@ -1053,7 +1064,7 @@ void Command_cat(void) {
 
 void Command_schema(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script_run(world, NULL,
         HEAD "struct Position(x: f32, y: f32)"
@@ -1075,7 +1086,7 @@ void Command_schema(void) {
 
 void Command_schema_not_a_type(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity(world, { .name = "Tag" });
     ecs_entity_t session = ecs_command_session_init(world, NULL);
@@ -1091,7 +1102,7 @@ void Command_schema_not_a_type(void) {
 
 void Command_schema_value(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script_run(world, NULL, "struct Position(x: f32, y: f32)", NULL);
 
@@ -1111,7 +1122,7 @@ void Command_schema_value(void) {
 
 void Command_cd_pwd(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
     ecs_entity_t child = ecs_entity(world, { .name = "parent.child" });
@@ -1152,7 +1163,7 @@ void Command_cd_pwd(void) {
 
 void Command_cd_parent(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
     ecs_entity_t child = ecs_entity(world, { .name = "parent.child" });
@@ -1179,7 +1190,7 @@ void Command_cd_parent(void) {
 
 void Command_cd_parent_parent(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
     ecs_entity_t grandchild = ecs_entity(world, {
@@ -1205,7 +1216,7 @@ void Command_cd_parent_parent(void) {
 
 void Command_cd_parent_sibling(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t a = ecs_entity(world, { .name = "parent.a" });
     ecs_entity_t b = ecs_entity(world, { .name = "parent.b" });
@@ -1225,7 +1236,7 @@ void Command_cd_parent_sibling(void) {
 
 void Command_cd_parent_sibling_child(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t a = ecs_entity(world, { .name = "parent.a" });
     ecs_entity_t c = ecs_entity(world, { .name = "parent.b.c" });
@@ -1245,7 +1256,7 @@ void Command_cd_parent_sibling_child(void) {
 
 void Command_cd_parent_at_root(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
 
@@ -1266,7 +1277,7 @@ void Command_cd_parent_at_root(void) {
 
 void Command_cd_current(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
     ecs_entity_t child = ecs_entity(world, { .name = "parent.child" });
@@ -1289,7 +1300,7 @@ void Command_cd_current(void) {
 
 void Command_cd_relative_not_found(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t a = ecs_entity(world, { .name = "parent.a" });
 
@@ -1310,7 +1321,7 @@ void Command_cd_relative_not_found(void) {
 
 void Command_ls_parent(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t a = ecs_entity(world, { .name = "parent.a" });
     ecs_entity(world, { .name = "parent.b" });
@@ -1330,7 +1341,7 @@ void Command_ls_parent(void) {
 
 void Command_get(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script_run(world, NULL,
         HEAD "struct Position(x: f32, y: f32)"
@@ -1352,7 +1363,7 @@ void Command_get(void) {
 
 void Command_get_not_present(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script_run(world, NULL,
         HEAD "struct Position(x: f32, y: f32)"
@@ -1380,7 +1391,7 @@ void Command_get_not_present(void) {
 
 void Command_set(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script_run(world, NULL, "struct Position(x: f32, y: f32)", NULL);
     ecs_entity_t position = ecs_lookup(world, "Position");
@@ -1406,7 +1417,7 @@ void Command_set(void) {
 
 void Command_set_partial(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script_run(world, NULL,
         HEAD "struct Position(x: f32, y: f32)"
@@ -1438,7 +1449,7 @@ void Command_set_partial(void) {
 
 void Command_set_nested_partial(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script_run(world, NULL,
         HEAD "struct Position(x: f32, y: f32)"
@@ -1460,7 +1471,7 @@ void Command_set_nested_partial(void) {
 
 void Command_set_invalid_value(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script_run(world, NULL,
         HEAD "struct Position(x: f32, y: f32)"
@@ -1485,7 +1496,7 @@ void Command_set_invalid_value(void) {
 
 void Command_add_remove(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
@@ -1509,7 +1520,7 @@ void Command_add_remove(void) {
 
 void Command_new(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
 
@@ -1531,7 +1542,7 @@ void Command_new(void) {
 
 void Command_new_in_scope(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
     ecs_entity_t session = ecs_command_session_init(world,
@@ -1552,7 +1563,7 @@ void Command_new_in_scope(void) {
 
 void Command_new_existing(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity(world, { .name = "foo" });
     ecs_entity_t session = ecs_command_session_init(world, NULL);
@@ -1569,7 +1580,7 @@ void Command_new_existing(void) {
 
 void Command_delete(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_entity_t session = ecs_command_session_init(world, NULL);
@@ -1585,7 +1596,7 @@ void Command_delete(void) {
 
 void Command_mv(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
@@ -1616,7 +1627,7 @@ void Command_mv(void) {
 
 void Command_mv_errors(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_entity(world, { .name = "e.child" });
@@ -1651,7 +1662,7 @@ void Command_mv_errors(void) {
 
 void Command_man(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_doc_set_name(world, e, "Entity");
@@ -1675,7 +1686,7 @@ void Command_man(void) {
 
 void Command_eval(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
 
@@ -1700,7 +1711,7 @@ void Command_eval(void) {
 
 void Command_eval_error(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
 
@@ -1714,7 +1725,7 @@ void Command_eval_error(void) {
 
 void Command_query(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script_run(world, NULL,
         HEAD "struct Position(x: f32, y: f32)"
@@ -1743,7 +1754,7 @@ void Command_query(void) {
 
 void Command_query_error(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
 
@@ -1757,7 +1768,7 @@ void Command_query_error(void) {
 
 void Command_quit(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
     test_bool(ecs_should_quit(world), false);
@@ -1774,7 +1785,7 @@ void Command_quit(void) {
 
 void Command_find(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity(world, { .name = "parent.player_one" });
     ecs_entity(world, { .name = "parent.enemy" });
@@ -1804,7 +1815,7 @@ void Command_find(void) {
 
 void Command_find_root_skips_flecs(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
 
@@ -1818,7 +1829,7 @@ void Command_find_root_skips_flecs(void) {
 
 void Command_grep(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script_run(world, NULL,
         HEAD "struct Position(x: f32, y: f32)"
@@ -1857,7 +1868,7 @@ void Command_grep(void) {
 
 void Command_grep_i(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script_run(world, NULL,
         HEAD "TagFoo {}"
@@ -1882,7 +1893,7 @@ void Command_grep_i(void) {
 
 void Command_scripts(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_log_set_level(-4);
 
@@ -1917,7 +1928,7 @@ void Command_scripts(void) {
 
 void Command_scripts_unsaved(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -1940,7 +1951,7 @@ void Command_scripts_unsaved(void) {
 
 void Command_script_read(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -1962,7 +1973,7 @@ void Command_script_read(void) {
 
 void Command_script_read_not_a_script(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity(world, { .name = "e" });
     ecs_entity_t session = ecs_command_session_init(world, NULL);
@@ -1978,7 +1989,7 @@ void Command_script_read_not_a_script(void) {
 
 void Command_script_grep(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script(world, {
         .entity = ecs_entity(world, { .name = "a" }),
@@ -2014,7 +2025,7 @@ void Command_script_grep(void) {
 
 void Command_script_where(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2044,7 +2055,7 @@ void Command_script_where(void) {
 
 void Command_script_where_not_declared(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity(world, { .name = "e" });
     ecs_entity_t session = ecs_command_session_init(world, NULL);
@@ -2061,7 +2072,7 @@ void Command_script_where_not_declared(void) {
 
 void Command_script_errors(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_log_set_level(-4);
 
@@ -2090,7 +2101,7 @@ void Command_script_errors(void) {
 
 void Command_script_replace(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2117,7 +2128,7 @@ void Command_script_replace(void) {
 
 void Command_script_replace_not_found(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2141,7 +2152,7 @@ void Command_script_replace_not_found(void) {
 
 void Command_script_replace_multiple(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2166,7 +2177,7 @@ void Command_script_replace_multiple(void) {
 
 void Command_script_replace_all(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2191,7 +2202,7 @@ void Command_script_replace_all(void) {
 
 void Command_script_write(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t session = ecs_command_session_init(world, NULL);
 
@@ -2216,7 +2227,7 @@ void Command_script_write(void) {
 
 void Command_script_write_in_scope(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
     ecs_entity_t session = ecs_command_session_init(world,
@@ -2233,7 +2244,7 @@ void Command_script_write_in_scope(void) {
 
 void Command_script_patch(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2276,7 +2287,7 @@ void Command_script_patch(void) {
 
 void Command_script_patch_anchor(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2321,7 +2332,7 @@ void Command_script_patch_anchor(void) {
 
 void Command_script_patch_insert_after_anchor(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2353,7 +2364,7 @@ void Command_script_patch_insert_after_anchor(void) {
 
 void Command_script_patch_multiple_hunks(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2394,7 +2405,7 @@ void Command_script_patch_multiple_hunks(void) {
 
 void Command_script_patch_no_match(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2432,7 +2443,7 @@ void Command_script_patch_no_match(void) {
 
 void Command_script_patch_ambiguous(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2466,7 +2477,7 @@ void Command_script_patch_ambiguous(void) {
 
 void Command_script_patch_all_or_nothing(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2500,7 +2511,7 @@ void Command_script_patch_all_or_nothing(void) {
 
 void Command_script_patch_anchor_not_found(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2525,7 +2536,7 @@ void Command_script_patch_anchor_not_found(void) {
 
 void Command_script_edit_reload_error(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2552,7 +2563,7 @@ void Command_script_edit_reload_error(void) {
 
 void Command_script_set(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2592,7 +2603,7 @@ void Command_script_set(void) {
 
 void Command_script_set_not_declared(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script_run(world, NULL, "struct Position(x: f32, y: f32)", NULL);
     ecs_entity(world, { .name = "e" });
@@ -2611,7 +2622,7 @@ void Command_script_set_not_declared(void) {
 
 void Command_script_remove(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2644,7 +2655,7 @@ void Command_script_remove(void) {
 
 void Command_script_delete(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2671,7 +2682,7 @@ void Command_script_delete(void) {
 
 void Command_script_sync(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2711,7 +2722,7 @@ void Command_script_sync(void) {
 
 void Command_script_diff(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2773,7 +2784,7 @@ void Command_script_diff(void) {
 
 void Command_script_diff_patch_roundtrip(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     const char *original =
         HEAD "a {}"
@@ -2821,7 +2832,7 @@ void Command_script_diff_patch_roundtrip(void) {
 
 void Command_script_save(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     command_files[0].name = "s.flecs";
     strcpy(command_files[0].content, "a {}\n");
@@ -2862,7 +2873,7 @@ void Command_script_save(void) {
 
 void Command_script_save_conflict(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     command_files[0].name = "s.flecs";
     strcpy(command_files[0].content, "a {}\n");
@@ -2896,7 +2907,7 @@ void Command_script_save_conflict(void) {
 
 void Command_script_save_as(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2924,7 +2935,7 @@ void Command_script_save_as(void) {
 
 void Command_script_reload(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     command_files[0].name = "s.flecs";
     strcpy(command_files[0].content, "a {}\n");
@@ -2953,7 +2964,7 @@ void Command_script_reload(void) {
 
 void Command_script_undo(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "s" }),
@@ -2993,7 +3004,7 @@ void Command_script_undo(void) {
 
 void Command_focus_blur(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_entity_t session = ecs_command_session_init(world, NULL);
@@ -3020,7 +3031,7 @@ void Command_focus_blur(void) {
 
 void Command_click(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script(world, {
         .code =
@@ -3071,7 +3082,7 @@ void Command_click(void) {
 
 void Command_press_release(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script(world, {
         .code =
@@ -3130,7 +3141,7 @@ void Command_press_release(void) {
 
 void Command_move_drag(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script(world, {
         .code =
@@ -3213,7 +3224,7 @@ void Command_move_drag(void) {
 
 void Command_move_to_screen(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
@@ -3239,7 +3250,7 @@ void Command_move_to_screen(void) {
 
 void Command_key(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script(world, {
         .code =
@@ -3309,7 +3320,7 @@ void Command_key(void) {
 
 void Command_key_plus(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script(world, {
         .code =
@@ -3348,7 +3359,7 @@ void Command_key_plus(void) {
 
 void Command_invalid_button(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity(world, { .name = "e" });
     ecs_entity_t session = ecs_command_session_init(world, NULL);
@@ -3373,7 +3384,7 @@ void Command_invalid_button(void) {
 
 void Command_mouse_keyboard_event(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script(world, {
         .code =
@@ -3419,7 +3430,7 @@ void Command_mouse_keyboard_event(void) {
 
 void Command_listeners(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_script(world, {
         .code =
@@ -3453,7 +3464,7 @@ void Command_listeners(void) {
 
 void Command_call_from_script(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptCommand);
+    ECS_IMPORT(world, FlecsScriptShell);
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
     ecs_entity(world, { .name = "parent.a" });
@@ -3464,10 +3475,251 @@ void Command_call_from_script(void) {
     int32_t count = 0;
     ecs_expr_eval_desc_t desc = {0};
     test_assert(ecs_expr_run(world,
-        "flecs.script.command.ls(parent).count()",
+        "flecs.script.shell.commands.core.ls(parent).count()",
         &ecs_value_ptr(ecs_i32_t, &count), &desc) != NULL);
     test_int(count, 1);
     (void)parent;
+
+    ecs_fini(world);
+}
+
+void Command_shell_singleton(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    test_uint(ecs_lookup(world, "flecs.script.shell.Shell"),
+        ecs_id(EcsScriptShell));
+
+    const EcsScriptShell *shell = ecs_singleton_get(world, EcsScriptShell);
+    test_assert(shell != NULL);
+    test_int(ecs_vec_count(&shell->command_paths), 3);
+
+    ecs_entity_t *paths = ecs_vec_first(&shell->command_paths);
+    test_uint(paths[0], ecs_lookup(world, "flecs.script.shell.commands.core"));
+    test_uint(paths[1], ecs_lookup(world, "flecs.script.shell.commands.input"));
+    test_uint(paths[2], ecs_lookup(world, "flecs.script.shell.commands.script"));
+    test_assert(paths[0] != 0);
+    test_assert(paths[1] != 0);
+    test_assert(paths[2] != 0);
+
+    test_assert(ecs_lookup(world, "flecs.script.shell.commands.core.ls") != 0);
+    test_assert(ecs_lookup(world, "flecs.script.shell.commands.input.click") != 0);
+    test_assert(ecs_lookup(world, "flecs.script.shell.commands.script.scripts") != 0);
+    test_assert(ecs_lookup(world, "flecs.script.shell.commands.core.click") == 0);
+    test_assert(ecs_lookup(world, "flecs.script.shell.commands.core.scripts") == 0);
+
+    ecs_fini(world);
+}
+
+void Command_custom_command_path(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t commands = ecs_entity(world, { .name = "commands" });
+    ecs_entity_t custom = ecs_function(world, {
+        .name = "custom",
+        .parent = commands,
+        .return_type = ecs_id(ecs_entity_t),
+        .callback = Command_function_callback
+    });
+
+    ecs_entity_t session = ecs_command_session_init(world, NULL);
+
+    ecs_command_result_t r = ecs_command_run(world, session, "custom");
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0], "unknown command 'custom'");
+    ecs_command_result_fini(world, &r);
+
+    EcsScriptShell *shell = ecs_singleton_ensure(world, EcsScriptShell);
+    ecs_vec_append_t(NULL, &shell->command_paths, ecs_entity_t)[0] = commands;
+    ecs_singleton_modified(world, EcsScriptShell);
+
+    r = ecs_command_run(world, session, "custom");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_uint(r.result.type, ecs_id(ecs_entity_t));
+    test_uint(*(ecs_entity_t*)r.result.ptr, custom);
+    ecs_command_result_fini(world, &r);
+
+    r = ecs_command_run(world, session, "ls");
+    test_int(ecs_vec_count(&r.errors), 0);
+    ecs_command_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
+void Command_command_path_order(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+
+    ecs_entity_t a_custom = ecs_function(world, {
+        .name = "custom",
+        .parent = a,
+        .return_type = ecs_id(ecs_entity_t),
+        .callback = Command_function_callback
+    });
+
+    ecs_entity_t b_custom = ecs_function(world, {
+        .name = "custom",
+        .parent = b,
+        .return_type = ecs_id(ecs_entity_t),
+        .callback = Command_function_callback
+    });
+
+    ecs_entity_t b_ls = ecs_function(world, {
+        .name = "ls",
+        .parent = b,
+        .return_type = ecs_id(ecs_entity_t),
+        .callback = Command_function_callback
+    });
+
+    EcsScriptShell *shell = ecs_singleton_ensure(world, EcsScriptShell);
+    ecs_vec_append_t(NULL, &shell->command_paths, ecs_entity_t)[0] = a;
+    ecs_vec_append_t(NULL, &shell->command_paths, ecs_entity_t)[0] = b;
+    ecs_singleton_modified(world, EcsScriptShell);
+
+    ecs_entity_t session = ecs_command_session_init(world, NULL);
+
+    ecs_command_result_t r = ecs_command_run(world, session, "custom");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_uint(*(ecs_entity_t*)r.result.ptr, a_custom);
+    ecs_command_result_fini(world, &r);
+
+    r = ecs_command_run(world, session, "ls");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_assert(r.result.type != ecs_id(ecs_entity_t));
+    ecs_command_result_fini(world, &r);
+
+    shell = ecs_singleton_ensure(world, EcsScriptShell);
+    ecs_vec_clear(&shell->command_paths);
+    ecs_vec_append_t(NULL, &shell->command_paths, ecs_entity_t)[0] = b;
+    ecs_vec_append_t(NULL, &shell->command_paths, ecs_entity_t)[0] = a;
+    ecs_singleton_modified(world, EcsScriptShell);
+
+    r = ecs_command_run(world, session, "custom");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_uint(*(ecs_entity_t*)r.result.ptr, b_custom);
+    ecs_command_result_fini(world, &r);
+
+    r = ecs_command_run(world, session, "ls");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_uint(*(ecs_entity_t*)r.result.ptr, b_ls);
+    ecs_command_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
+void Command_help_custom_command_path(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t commands = ecs_entity(world, { .name = "commands" });
+    ecs_function(world, {
+        .name = "custom",
+        .parent = commands,
+        .return_type = ecs_id(ecs_entity_t),
+        .callback = Command_function_callback
+    });
+
+    ecs_function(world, {
+        .name = "ls",
+        .parent = commands,
+        .return_type = ecs_id(ecs_entity_t),
+        .callback = Command_function_callback
+    });
+
+    EcsScriptShell *shell = ecs_singleton_ensure(world, EcsScriptShell);
+    ecs_vec_append_t(NULL, &shell->command_paths, ecs_entity_t)[0] = commands;
+    ecs_singleton_modified(world, EcsScriptShell);
+
+    ecs_entity_t session = ecs_command_session_init(world, NULL);
+
+    ecs_command_result_t r = ecs_command_run(world, session, "help");
+    test_int(ecs_vec_count(&r.errors), 0);
+
+    ecs_vec_t *infos = r.result.ptr;
+    ecs_command_info_t *info = ecs_vec_first(infos);
+    int32_t i, count = ecs_vec_count(infos);
+    int32_t custom_count = 0, ls_count = 0, click_count = 0, scripts_count = 0;
+    for (i = 0; i < count; i ++) {
+        if (i) {
+            test_assert(strcmp(info[i - 1].name, info[i].name) < 0);
+        }
+        if (!strcmp(info[i].name, "custom")) {
+            custom_count ++;
+        } else if (!strcmp(info[i].name, "ls")) {
+            ls_count ++;
+            test_assert(info[i].return_type != ecs_id(ecs_entity_t));
+        } else if (!strcmp(info[i].name, "click")) {
+            click_count ++;
+        } else if (!strcmp(info[i].name, "scripts")) {
+            scripts_count ++;
+        }
+    }
+
+    test_int(custom_count, 1);
+    test_int(ls_count, 1);
+    test_int(click_count, 1);
+    test_int(scripts_count, 1);
+    ecs_command_result_fini(world, &r);
+
+    r = ecs_command_run(world, session, "help custom");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_int(ecs_vec_count(r.result.ptr), 1);
+    ecs_command_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
+void Command_no_command_paths(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t session = ecs_command_session_init(world, NULL);
+
+    EcsScriptShell *shell = ecs_singleton_ensure(world, EcsScriptShell);
+    ecs_vec_clear(&shell->command_paths);
+    ecs_singleton_modified(world, EcsScriptShell);
+
+    ecs_command_result_t r = ecs_command_run(world, session, "ls");
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0], "unknown command 'ls'");
+    ecs_command_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
+void Command_command_path_from_script(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t commands = ecs_entity(world, { .name = "commands" });
+    ecs_entity_t custom = ecs_function(world, {
+        .name = "custom",
+        .parent = commands,
+        .return_type = ecs_id(ecs_entity_t),
+        .callback = Command_function_callback
+    });
+
+    test_assert(ecs_script_run(world, "test",
+        "$ { flecs.script.shell.Shell: {command_paths: ["
+            "flecs.script.shell.commands.core, commands]} }", NULL) == 0);
+
+    const EcsScriptShell *shell = ecs_singleton_get(world, EcsScriptShell);
+    test_int(ecs_vec_count(&shell->command_paths), 2);
+
+    ecs_entity_t session = ecs_command_session_init(world, NULL);
+
+    ecs_command_result_t r = ecs_command_run(world, session, "custom");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_uint(*(ecs_entity_t*)r.result.ptr, custom);
+    ecs_command_result_fini(world, &r);
+
+    r = ecs_command_run(world, session, "scripts");
+    test_int(ecs_vec_count(&r.errors), 1);
+    ecs_command_result_fini(world, &r);
 
     ecs_fini(world);
 }

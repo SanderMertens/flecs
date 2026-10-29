@@ -469,7 +469,8 @@ static void flecs_command_listeners(
 }
 
 void flecs_command_input_import(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    ecs_entity_t scope)
 {
     ecs_entity_t string_t = ecs_id(ecs_string_t);
     ecs_entity_t entity_t = ecs_id(ecs_entity_t);
@@ -534,7 +535,7 @@ void flecs_command_input_import(
             { "entity", entity_t, false, "Entity" }}},
     };
 
-    flecs_command_register(world, commands,
+    flecs_command_register(world, scope, commands,
         ECS_SIZEOF(commands) / ECS_SIZEOF(flecs_command_desc_t));
 }
 

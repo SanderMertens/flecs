@@ -16979,10 +16979,21 @@ void FlecsScriptInputImport(
  * @ingroup c_addons
  * Command line interface for interacting with a world.
  *
- * Commands are script functions in the flecs.script.command scope. Each
- * command has typed parameters and a typed return value. A command line is
- * parsed into a command name and arguments, where arguments are separated by
- * whitespace:
+ * Commands are script functions. The command_paths member of the
+ * EcsScriptShell singleton lists the scopes that contain commands. When
+ * running a command, the scopes are searched in order and the first function
+ * with a matching name is used. The builtin commands are stored in:
+ *
+ * - flecs.script.shell.commands.core
+ * - flecs.script.shell.commands.input
+ * - flecs.script.shell.commands.script
+ *
+ * Applications can add commands by appending their own scopes to
+ * command_paths.
+ *
+ * Each command has typed parameters and a typed return value. A command line
+ * is parsed into a command name and arguments, where arguments are separated
+ * by whitespace:
  *
  * - A token that starts with `"` ends at the next unescaped `"`. The quotes are
  *   removed and escape sequences (`\n`, `\t`, ...) are processed.
@@ -17046,6 +17057,11 @@ typedef struct EcsCommandSession {
     int32_t history_size;    /**< Maximum number of commands in the history. */
     ecs_vec_t results;       /**< JSON results of the commands in the history (vec<char*>). */
 } EcsCommandSession;
+
+/** Shell singleton. */
+typedef struct EcsScriptShell {
+    ecs_vec_t command_paths; /**< Scopes that contain commands, searched in order (vec<ecs_entity_t>). */
+} EcsScriptShell;
 
 /** Used with ecs_command_session_init(). */
 typedef struct ecs_command_session_desc_t {
@@ -17158,13 +17174,17 @@ typedef struct ecs_command_pointer_state_t {
 } ecs_command_pointer_state_t;
 #endif
 
+/** Shell component. */
+FLECS_API
+extern ECS_COMPONENT_DECLARE(EcsScriptShell);
+
 /** Session component. */
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsCommandSession);
 
 /** Create a command session.
  * When no entity is provided, the session is created in the
- * script.command.sessions scope.
+ * script.shell.sessions scope.
  *
  * @param world The world.
  * @param desc Session parameters (optional).
@@ -17211,16 +17231,16 @@ FLECS_API
 ecs_entity_t ecs_command_get_session(
     const ecs_world_t *world);
 
-/** Script command import function.
+/** Script shell import function.
  * Usage:
  * @code
- * ECS_IMPORT(world, FlecsScriptCommand)
+ * ECS_IMPORT(world, FlecsScriptShell)
  * @endcode
  *
  * @param world The world.
  */
 FLECS_API
-void FlecsScriptCommandImport(
+void FlecsScriptShellImport(
     ecs_world_t *world);
 
 #ifdef __cplusplus

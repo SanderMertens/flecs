@@ -65,8 +65,17 @@ static void flecs_command_help(
 
     ecs_vec_t children;
     ecs_vec_init_t(NULL, &children, ecs_entity_t, 0);
-    flecs_command_children(world, ecs_get_parent(world, ctx->function),
-        &children);
+
+    const EcsScriptShell *shell = ecs_singleton_get(world, EcsScriptShell);
+    if (shell) {
+        const ecs_entity_t *paths = ecs_vec_first(&shell->command_paths);
+        int32_t p, path_count = ecs_vec_count(&shell->command_paths);
+        for (p = 0; p < path_count; p ++) {
+            if (paths[p] && ecs_is_alive(world, paths[p])) {
+                flecs_command_children(world, paths[p], &children);
+            }
+        }
+    }
 
     int32_t i, count = 0, child_count = ecs_vec_count(&children);
     ecs_entity_t *entities = ecs_vec_first(&children);
@@ -79,6 +88,10 @@ static void flecs_command_help(
         }
 
         if (filter && ecs_os_strcmp(name, filter)) {
+            continue;
+        }
+
+        if (flecs_command_resolve(world, name) != entities[i]) {
             continue;
         }
 
@@ -756,7 +769,8 @@ static void flecs_command_grep(
 }
 
 void flecs_command_core_import(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    ecs_entity_t scope)
 {
     ecs_entity_t string_t = ecs_id(ecs_string_t);
     ecs_entity_t entity_t = ecs_id(ecs_entity_t);
@@ -841,7 +855,7 @@ void flecs_command_core_import(
                 "Scope to search (default: session scope)" }}, (void*)1 },
     };
 
-    flecs_command_register(world, commands,
+    flecs_command_register(world, scope, commands,
         ECS_SIZEOF(commands) / ECS_SIZEOF(flecs_command_desc_t));
 }
 

@@ -43,6 +43,7 @@ typedef struct flecs_command_desc_t {
 
 void flecs_command_register(
     ecs_world_t *world,
+    ecs_entity_t scope,
     const flecs_command_desc_t *commands,
     int32_t count);
 
@@ -54,6 +55,10 @@ void flecs_command_fail(
 
 ecs_entity_t flecs_command_scope(
     const ecs_world_t *world);
+
+ecs_entity_t flecs_command_resolve(
+    const ecs_world_t *world,
+    const char *name);
 
 void flecs_command_history_clear(
     EcsCommandSession *s);
@@ -120,14 +125,17 @@ char* flecs_command_patch(
     ecs_vec_t *changed_lines);
 
 void flecs_command_core_import(
-    ecs_world_t *world);
+    ecs_world_t *world,
+    ecs_entity_t scope);
 
 void flecs_command_script_import(
-    ecs_world_t *world);
+    ecs_world_t *world,
+    ecs_entity_t scope);
 
 #ifdef FLECS_SCRIPT_INPUT
 void flecs_command_input_import(
-    ecs_world_t *world);
+    ecs_world_t *world,
+    ecs_entity_t scope);
 #endif
 
 #endif

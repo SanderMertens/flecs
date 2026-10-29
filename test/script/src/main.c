@@ -4156,6 +4156,12 @@ void Command_invalid_button(void);
 void Command_mouse_keyboard_event(void);
 void Command_listeners(void);
 void Command_call_from_script(void);
+void Command_shell_singleton(void);
+void Command_custom_command_path(void);
+void Command_command_path_order(void);
+void Command_help_custom_command_path(void);
+void Command_no_command_paths(void);
+void Command_command_path_from_script(void);
 
 // Testsuite 'SerializeType'
 void SerializeType_struct(void);
@@ -20490,6 +20496,30 @@ bake_test_case Command_testcases[] = {
     {
         "call_from_script",
         Command_call_from_script
+    },
+    {
+        "shell_singleton",
+        Command_shell_singleton
+    },
+    {
+        "custom_command_path",
+        Command_custom_command_path
+    },
+    {
+        "command_path_order",
+        Command_command_path_order
+    },
+    {
+        "help_custom_command_path",
+        Command_help_custom_command_path
+    },
+    {
+        "no_command_paths",
+        Command_no_command_paths
+    },
+    {
+        "command_path_from_script",
+        Command_command_path_from_script
     }
 };
 
@@ -20988,7 +21018,7 @@ static bake_test_suite suites[] = {
         "Command",
         Command_setup,
         NULL,
-        121,
+        127,
         Command_testcases
     },
     {

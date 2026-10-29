@@ -4304,7 +4304,13 @@
                 "invalid_button",
                 "mouse_keyboard_event",
                 "listeners",
-                "call_from_script"
+                "call_from_script",
+                "shell_singleton",
+                "custom_command_path",
+                "command_path_order",
+                "help_custom_command_path",
+                "no_command_paths",
+                "command_path_from_script"
             ]
         },{
             "id": "SerializeType",
