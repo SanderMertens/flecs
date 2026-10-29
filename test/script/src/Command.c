@@ -1150,6 +1150,184 @@ void Command_cd_pwd(void) {
     ecs_fini(world);
 }
 
+void Command_cd_parent(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptCommand);
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t child = ecs_entity(world, { .name = "parent.child" });
+
+    ecs_command_session_desc_t desc = { .scope = child };
+    ecs_entity_t session = ecs_command_session_init(world, &desc);
+
+    ecs_command_result_t r = ecs_command_run(world, session, "cd ..");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_uint(*(ecs_entity_t*)r.result.ptr, parent);
+    ecs_command_result_fini(world, &r);
+
+    test_uint(ecs_get(world, session, EcsCommandSession)->scope, parent);
+
+    r = ecs_command_run(world, session, "cd ..");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_uint(*(ecs_entity_t*)r.result.ptr, 0);
+    ecs_command_result_fini(world, &r);
+
+    test_uint(ecs_get(world, session, EcsCommandSession)->scope, 0);
+
+    ecs_fini(world);
+}
+
+void Command_cd_parent_parent(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptCommand);
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t grandchild = ecs_entity(world, {
+        .name = "parent.child.grandchild" });
+
+    ecs_command_session_desc_t desc = { .scope = grandchild };
+    ecs_entity_t session = ecs_command_session_init(world, &desc);
+
+    ecs_command_result_t r = ecs_command_run(world, session, "cd ../../");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_uint(*(ecs_entity_t*)r.result.ptr, parent);
+    ecs_command_result_fini(world, &r);
+
+    test_uint(ecs_get(world, session, EcsCommandSession)->scope, parent);
+
+    r = ecs_command_run(world, session, "cd ./child/grandchild");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_uint(*(ecs_entity_t*)r.result.ptr, grandchild);
+    ecs_command_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
+void Command_cd_parent_sibling(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptCommand);
+
+    ecs_entity_t a = ecs_entity(world, { .name = "parent.a" });
+    ecs_entity_t b = ecs_entity(world, { .name = "parent.b" });
+
+    ecs_command_session_desc_t desc = { .scope = a };
+    ecs_entity_t session = ecs_command_session_init(world, &desc);
+
+    ecs_command_result_t r = ecs_command_run(world, session, "cd ../b");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_uint(*(ecs_entity_t*)r.result.ptr, b);
+    ecs_command_result_fini(world, &r);
+
+    test_uint(ecs_get(world, session, EcsCommandSession)->scope, b);
+
+    ecs_fini(world);
+}
+
+void Command_cd_parent_sibling_child(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptCommand);
+
+    ecs_entity_t a = ecs_entity(world, { .name = "parent.a" });
+    ecs_entity_t c = ecs_entity(world, { .name = "parent.b.c" });
+
+    ecs_command_session_desc_t desc = { .scope = a };
+    ecs_entity_t session = ecs_command_session_init(world, &desc);
+
+    ecs_command_result_t r = ecs_command_run(world, session, "cd ../b/c");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_uint(*(ecs_entity_t*)r.result.ptr, c);
+    ecs_command_result_fini(world, &r);
+
+    test_uint(ecs_get(world, session, EcsCommandSession)->scope, c);
+
+    ecs_fini(world);
+}
+
+void Command_cd_parent_at_root(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptCommand);
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+
+    ecs_entity_t session = ecs_command_session_init(world, NULL);
+
+    ecs_command_result_t r = ecs_command_run(world, session, "cd ../..");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_uint(*(ecs_entity_t*)r.result.ptr, 0);
+    ecs_command_result_fini(world, &r);
+
+    r = ecs_command_run(world, session, "cd ../parent");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_uint(*(ecs_entity_t*)r.result.ptr, parent);
+    ecs_command_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
+void Command_cd_current(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptCommand);
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t child = ecs_entity(world, { .name = "parent.child" });
+
+    ecs_command_session_desc_t desc = { .scope = parent };
+    ecs_entity_t session = ecs_command_session_init(world, &desc);
+
+    ecs_command_result_t r = ecs_command_run(world, session, "cd .");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_uint(*(ecs_entity_t*)r.result.ptr, parent);
+    ecs_command_result_fini(world, &r);
+
+    r = ecs_command_run(world, session, "cd ./child");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_uint(*(ecs_entity_t*)r.result.ptr, child);
+    ecs_command_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
+void Command_cd_relative_not_found(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptCommand);
+
+    ecs_entity_t a = ecs_entity(world, { .name = "parent.a" });
+
+    ecs_command_session_desc_t desc = { .scope = a };
+    ecs_entity_t session = ecs_command_session_init(world, &desc);
+
+    ecs_command_result_t r = ecs_command_run(world, session, "cd ../b");
+    test_uint(r.result.type, 0);
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0],
+        "invalid argument '../b' for parameter 'scope' of command 'cd'");
+    ecs_command_result_fini(world, &r);
+
+    test_uint(ecs_get(world, session, EcsCommandSession)->scope, a);
+
+    ecs_fini(world);
+}
+
+void Command_ls_parent(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptCommand);
+
+    ecs_entity_t a = ecs_entity(world, { .name = "parent.a" });
+    ecs_entity(world, { .name = "parent.b" });
+
+    ecs_command_session_desc_t desc = { .scope = a };
+    ecs_entity_t session = ecs_command_session_init(world, &desc);
+
+    ecs_command_result_t r = ecs_command_run(world, session, "ls ..");
+    test_int(ecs_vec_count(&r.errors), 0);
+    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    test_str(str, "[parent.a, parent.b]");
+    ecs_os_free(str);
+    ecs_command_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
 void Command_get(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptCommand);

@@ -508,6 +508,55 @@ static int flecs_command_parse_pair(
     return result;
 }
 
+static bool flecs_command_is_relative(
+    const char *text)
+{
+    if (text[0] != '.') {
+        return false;
+    }
+
+    if (!text[1] || text[1] == '/') {
+        return true;
+    }
+
+    return text[1] == '.' && (!text[2] || text[2] == '/');
+}
+
+static int flecs_command_parse_relative(
+    ecs_world_t *world,
+    const char *text,
+    ecs_entity_t *out)
+{
+    ecs_entity_t e = flecs_command_scope(world);
+    const char *ptr = text;
+    while (ptr[0]) {
+        const char *end = strchr(ptr, '/');
+        int32_t len = end ? flecs_ito(int32_t, end - ptr) :
+            ecs_os_strlen(ptr);
+
+        if (len == 2 && !ecs_os_strncmp(ptr, "..", 2)) {
+            if (e) {
+                e = ecs_get_parent(world, e);
+            }
+        } else if (len && (len != 1 || ptr[0] != '.')) {
+            char *name = flecs_asprintf("%.*s", len, ptr);
+            e = ecs_lookup_child(world, e, name);
+            ecs_os_free(name);
+            if (!e) {
+                return -1;
+            }
+        }
+
+        ptr += len;
+        if (ptr[0] == '/') {
+            ptr ++;
+        }
+    }
+
+    *out = e;
+    return 0;
+}
+
 static char* flecs_command_usage(
     const char *name,
     const EcsScriptFunction *f)
@@ -557,6 +606,15 @@ static int flecs_command_parse_args(
         }
 
         if (type == ecs_id(ecs_entity_t) && !ecs_os_strcmp(text, "$")) {
+            continue;
+        }
+
+        if (type == ecs_id(ecs_entity_t) && flecs_command_is_relative(text)) {
+            if (flecs_command_parse_relative(world, text, argv[i].ptr)) {
+                ecs_err("invalid argument '%s' for parameter '%s' of "
+                    "command '%s'", text, params[i].name, name);
+                return -1;
+            }
             continue;
         }
 

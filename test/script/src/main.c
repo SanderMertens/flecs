@@ -4079,6 +4079,14 @@ void Command_schema(void);
 void Command_schema_not_a_type(void);
 void Command_schema_value(void);
 void Command_cd_pwd(void);
+void Command_cd_parent(void);
+void Command_cd_parent_parent(void);
+void Command_cd_parent_sibling(void);
+void Command_cd_parent_sibling_child(void);
+void Command_cd_parent_at_root(void);
+void Command_cd_current(void);
+void Command_cd_relative_not_found(void);
+void Command_ls_parent(void);
 void Command_get(void);
 void Command_get_not_present(void);
 void Command_set(void);
@@ -20176,6 +20184,38 @@ bake_test_case Command_testcases[] = {
         Command_cd_pwd
     },
     {
+        "cd_parent",
+        Command_cd_parent
+    },
+    {
+        "cd_parent_parent",
+        Command_cd_parent_parent
+    },
+    {
+        "cd_parent_sibling",
+        Command_cd_parent_sibling
+    },
+    {
+        "cd_parent_sibling_child",
+        Command_cd_parent_sibling_child
+    },
+    {
+        "cd_parent_at_root",
+        Command_cd_parent_at_root
+    },
+    {
+        "cd_current",
+        Command_cd_current
+    },
+    {
+        "cd_relative_not_found",
+        Command_cd_relative_not_found
+    },
+    {
+        "ls_parent",
+        Command_ls_parent
+    },
+    {
         "get",
         Command_get
     },
@@ -20948,7 +20988,7 @@ static bake_test_suite suites[] = {
         "Command",
         Command_setup,
         NULL,
-        113,
+        121,
         Command_testcases
     },
     {
