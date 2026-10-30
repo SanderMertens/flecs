@@ -1522,16 +1522,16 @@ void Rest_command_run(void) {
     test_int(0, ecs_http_server_request(srv, "PUT", path, "ls parent", &reply));
     test_int(reply.code, 200);
     reply_str = ecs_strbuf_get(&reply.body);
-    test_str(reply_str, "{\"type\":\"flecs.script.typecache.vector<entity>\", "
-        "\"result\":[\"parent.child\"], \"more\":false, \"errors\":[]}");
+    test_str(reply_str, "{\"results\":[{\"type\":\"flecs.script.typecache.vector<entity>\", "
+        "\"result\":[\"parent.child\"], \"more\":false}], \"errors\":[]}");
     ecs_os_free(reply_str);
 
     reply = ECS_HTTP_REPLY_INIT;
     test_int(0, ecs_http_server_request(srv, "PUT", path, "pwd", &reply));
     test_int(reply.code, 200);
     reply_str = ecs_strbuf_get(&reply.body);
-    test_str(reply_str, "{\"type\":\"flecs.meta.entity\", \"result\":\"#0\", "
-        "\"errors\":[]}");
+    test_str(reply_str, "{\"results\":[{\"type\":\"flecs.meta.entity\", "
+        "\"result\":\"#0\"}], \"errors\":[]}");
     ecs_os_free(reply_str);
 
     reply = ECS_HTTP_REPLY_INIT;
@@ -1539,7 +1539,7 @@ void Rest_command_run(void) {
         &reply));
     test_int(reply.code, 200);
     reply_str = ecs_strbuf_get(&reply.body);
-    test_str(reply_str, "{\"errors\":[]}");
+    test_str(reply_str, "{\"results\":[{}], \"errors\":[]}");
     ecs_os_free(reply_str);
     test_assert(ecs_lookup(world, "parent.child") == 0);
 
@@ -1568,7 +1568,7 @@ void Rest_command_run_error(void) {
     test_int(-1, ecs_http_server_request(srv, "PUT", path, "foo", &reply));
     test_int(reply.code, 400);
     reply_str = ecs_strbuf_get(&reply.body);
-    test_str(reply_str, "{\"errors\":[\"unknown command 'foo'\"]}");
+    test_str(reply_str, "{\"results\":[{}], \"errors\":[\"unknown command 'foo'\"]}");
     ecs_os_free(reply_str);
 
     ecs_rest_server_fini(srv);
@@ -1602,8 +1602,9 @@ void Rest_command_run_offset_limit(void) {
     test_int(0, ecs_http_server_request(srv, "PUT", path, "ls parent", &reply));
     test_int(reply.code, 200);
     reply_str = ecs_strbuf_get(&reply.body);
-    test_str(reply_str, "{\"type\":\"flecs.script.typecache.vector<entity>\", "
-        "\"result\":[\"parent.b\", \"parent.c\"], \"more\":true, "
+    test_str(reply_str, "{\"results\":[{"
+        "\"type\":\"flecs.script.typecache.vector<entity>\", "
+        "\"result\":[\"parent.b\", \"parent.c\"], \"more\":true}], "
         "\"errors\":[]}");
     ecs_os_free(reply_str);
 
@@ -1614,8 +1615,9 @@ void Rest_command_run_offset_limit(void) {
     test_int(0, ecs_http_server_request(srv, "PUT", path, "ls parent", &reply));
     test_int(reply.code, 200);
     reply_str = ecs_strbuf_get(&reply.body);
-    test_str(reply_str, "{\"type\":\"flecs.script.typecache.vector<entity>\", "
-        "\"result\":[\"parent.c\", \"parent.d\"], \"more\":false, "
+    test_str(reply_str, "{\"results\":[{"
+        "\"type\":\"flecs.script.typecache.vector<entity>\", "
+        "\"result\":[\"parent.c\", \"parent.d\"], \"more\":false}], "
         "\"errors\":[]}");
     ecs_os_free(reply_str);
 
@@ -1650,8 +1652,8 @@ void Rest_command_run_string_lines(void) {
     test_int(0, ecs_http_server_request(srv, "PUT", path, "schema C", &reply));
     test_int(reply.code, 200);
     reply_str = ecs_strbuf_get(&reply.body);
-    test_str(reply_str, "{\"type\":\"flecs.meta.string\", "
-        "\"result\":\"struct B(a: A)\\n\", \"more\":true, \"errors\":[]}");
+    test_str(reply_str, "{\"results\":[{\"type\":\"flecs.meta.string\", "
+        "\"result\":\"struct B(a: A)\\n\", \"more\":true}], \"errors\":[]}");
     ecs_os_free(reply_str);
 
     ecs_rest_server_fini(srv);
@@ -2286,8 +2288,9 @@ void Rest_shell_resource_command(void) {
     test_int(0, ecs_http_server_request(srv, "PUT", path, "capture", &reply));
     test_int(reply.code, 200);
     reply_str = ecs_strbuf_get(&reply.body);
-    test_str(reply_str, "{\"type\":\"flecs.script.shell.resource\", "
-        "\"result\":{\"name\":\"1\", \"content_type\":\"text/plain\"}, "
+    test_str(reply_str, "{\"results\":[{"
+        "\"type\":\"flecs.script.shell.resource\", "
+        "\"result\":{\"name\":\"1\", \"content_type\":\"text/plain\"}}], "
         "\"errors\":[]}");
     ecs_os_free(reply_str);
 
@@ -2299,6 +2302,132 @@ void Rest_shell_resource_command(void) {
     test_str(reply.content_type, "text/plain");
     reply_str = ecs_strbuf_get(&reply.body);
     test_str(reply_str, "Hello");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_command_run_multiple(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_entity(world, { .name = "parent.child" });
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/shell/session", NULL, &reply));
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    unsigned long long session = 0;
+    test_int(sscanf(reply_str, "{\"session\":%llu}", &session), 1);
+    ecs_os_free(reply_str);
+
+    char path[128];
+    ecs_os_snprintf(path, 128, "/shell/session/%llu", session);
+
+    reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT", path,
+        "cd parent; rm child; ls", &reply));
+    test_int(reply.code, 200);
+    reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str, "{\"results\":["
+        "{\"type\":\"flecs.meta.entity\", \"result\":\"parent\"}, "
+        "{}, "
+        "{\"type\":\"flecs.script.typecache.vector<entity>\", "
+        "\"result\":[], \"more\":false}], \"errors\":[]}");
+    ecs_os_free(reply_str);
+    test_assert(ecs_lookup(world, "parent.child") == 0);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_command_run_multiple_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_entity(world, { .name = "parent.child" });
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/shell/session", NULL, &reply));
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    unsigned long long session = 0;
+    test_int(sscanf(reply_str, "{\"session\":%llu}", &session), 1);
+    ecs_os_free(reply_str);
+
+    char path[128];
+    ecs_os_snprintf(path, 128, "/shell/session/%llu", session);
+
+    reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT", path,
+        "pwd; foo; rm parent.child", &reply));
+    test_int(reply.code, 400);
+    reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str, "{\"results\":["
+        "{\"type\":\"flecs.meta.entity\", \"result\":\"#0\"}, {}], "
+        "\"errors\":[\"unknown command 'foo'\"]}");
+    ecs_os_free(reply_str);
+    test_assert(ecs_lookup(world, "parent.child") != 0);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_command_run_multiple_offset_limit(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_entity(world, { .name = "foo.a" });
+    ecs_entity(world, { .name = "foo.b" });
+    ecs_entity(world, { .name = "bar.c" });
+    ecs_entity(world, { .name = "bar.d" });
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/shell/session", NULL, &reply));
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    unsigned long long session = 0;
+    test_int(sscanf(reply_str, "{\"session\":%llu}", &session), 1);
+    ecs_os_free(reply_str);
+
+    char path[128];
+    ecs_os_snprintf(path, 128, "/shell/session/%llu?limit=1", session);
+
+    reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT", path,
+        "ls foo; ls bar", &reply));
+    test_int(reply.code, 200);
+    reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str, "{\"results\":["
+        "{\"type\":\"flecs.script.typecache.vector<entity>\", "
+        "\"result\":[\"foo.a\"], \"more\":true}, "
+        "{\"type\":\"flecs.script.typecache.vector<entity>\", "
+        "\"result\":[\"bar.c\"], \"more\":true}], \"errors\":[]}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_root_shell_instructions(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET", "/", NULL, &reply));
+    test_int(reply.code, 200);
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(strstr(reply_str, "PUT /shell/session\n") != NULL);
+    test_assert(strstr(reply_str, "PUT /shell/session/<id>\n") != NULL);
     ecs_os_free(reply_str);
 
     ecs_rest_server_fini(srv);

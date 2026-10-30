@@ -57,6 +57,11 @@
  * Commands with optional parameters can be called with fewer arguments. Use
  * the help command to list the commands and their parameters.
  *
+ * A command line can contain multiple commands separated by `;`. Commands run
+ * in order, and each command sees the session state left by the previous one.
+ * When a command fails the remaining commands do not run. A `;` in a quoted
+ * string, between backticks or in a group is not a separator.
+ *
  * Commands can store files, like images, as resources of the session with
  * ecs_shell_resource_create(). A command signals that it returned a resource
  * by returning the flecs.script.shell.resource type (ecs_shell_resource_t).
@@ -84,15 +89,17 @@ extern "C" {
 #define FLECS_SCRIPT_SHELL_HISTORY_SIZE (256)
 #endif
 
-/** Result of running a command. */
+/** Result of running a command line. */
 typedef struct ecs_shell_result_t {
-    /** Value returned by the command. Empty when the command has no return
-     * value or failed. Commands that edit script code are the exception: when
-     * the edit was applied but reloading the script failed, the result is set
-     * together with the errors of the reload. */
-    ecs_value_t result;
+    /** Values returned by the commands that ran, one entry per command in the
+     * order of the command line (vec<ecs_value_t>). The last entry belongs to
+     * the command that failed, if any. An entry is empty when the command has
+     * no return value or failed. Commands that edit script code are the
+     * exception: when the edit was applied but reloading the script failed,
+     * the entry is set together with the errors of the reload. */
+    ecs_vec_t results;
 
-    /** Errors logged while the command ran, one entry per error (vec<char*>). */
+    /** Errors logged while the commands ran, one entry per error (vec<char*>). */
     ecs_vec_t errors;
 } ecs_shell_result_t;
 
@@ -267,15 +274,17 @@ ecs_entity_t ecs_shell_session_init(
     ecs_world_t *world,
     const ecs_shell_session_desc_t *desc);
 
-/** Run a command.
- * Parses the command line, runs the command and returns its result and the
- * errors that were logged while it ran. The command and a JSON snapshot of its
- * result are added to the history of the session. The result must be freed with ecs_shell_result_fini().
+/** Run a command line.
+ * Parses the command line, runs its commands and returns their results and the
+ * errors that were logged while they ran. Commands are separated by `;`. When a
+ * command fails the remaining commands do not run. Each command that ran and a
+ * JSON snapshot of its result are added to the history of the session. The
+ * result must be freed with ecs_shell_result_fini().
  *
  * @param world The world.
  * @param session The session.
  * @param cmd The command line.
- * @return The result of the command.
+ * @return The results of the commands.
  */
 FLECS_API
 ecs_shell_result_t ecs_shell_run(

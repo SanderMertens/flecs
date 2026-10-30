@@ -996,16 +996,25 @@ static bool flecs_rest_command_run(
     ecs_shell_result_t result = ecs_shell_run(
         world, session, req->body ? req->body : "");
 
-    ecs_strbuf_appendch(&reply->body, '{');
-    if (result.result.type) {
-        flecs_rest_command_value_to_json(
-            world, &result.result, offset, limit, &reply->body);
-        ecs_strbuf_appendlit(&reply->body, ", ");
+    ecs_strbuf_appendlit(&reply->body, "{\"results\":[");
+    const ecs_value_t *values = ecs_vec_first(&result.results);
+    int32_t i, value_count = ecs_vec_count(&result.results);
+    for (i = 0; i < value_count; i ++) {
+        if (i) {
+            ecs_strbuf_appendlit(&reply->body, ", ");
+        }
+
+        ecs_strbuf_appendch(&reply->body, '{');
+        if (values[i].type) {
+            flecs_rest_command_value_to_json(
+                world, &values[i], offset, limit, &reply->body);
+        }
+        ecs_strbuf_appendch(&reply->body, '}');
     }
 
-    ecs_strbuf_appendlit(&reply->body, "\"errors\":[");
+    ecs_strbuf_appendlit(&reply->body, "], \"errors\":[");
     char **errors = ecs_vec_first(&result.errors);
-    int32_t i, count = ecs_vec_count(&result.errors);
+    int32_t count = ecs_vec_count(&result.errors);
     for (i = 0; i < count; i ++) {
         if (i) {
             ecs_strbuf_appendlit(&reply->body, ", ");
@@ -1014,7 +1023,7 @@ static bool flecs_rest_command_run(
     }
     ecs_strbuf_appendlit(&reply->body, "]}");
 
-    if (count && !result.result.type) {
+    if (count && (!value_count || !values[value_count - 1].type)) {
         reply->code = 400;
     }
 
@@ -2401,6 +2410,13 @@ static bool flecs_rest_get_root(
         "PUT /component/Sun/Earth?component=Position&value={\"x\":10}\n\n"
         "## Change code of script my_script.flecs (code in request body)\n"
         "PUT /script/my_script.flecs\n");
+#ifdef FLECS_SCRIPT_SHELL
+    ecs_strbuf_appendlit(&reply->body,
+        "\n## Start a terminal session, returns {\"session\":<id>}\n"
+        "PUT /shell/session\n"
+        "## Send commands in request body, separated by ; (try: help; cd flecs; cat core.Component)\n"
+        "PUT /shell/session/<id>\n");
+#endif
     return true;
 }
 

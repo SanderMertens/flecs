@@ -2057,9 +2057,11 @@ Run commands of the script shell addon (`FLECS_SCRIPT_SHELL`). A session stores 
 | `DELETE` | `/shell/session/<id>` | Delete a session. |
 | `GET` | `/shell/session/<id>/history` | Get the history. Supports `offset`/`limit`. |
 | `GET` | `/shell/session/<id>/resource/<name>` | Get the content of a resource created in the session. |
-| `PUT` | `/shell/session/<id>` | Run the command in the request body. Supports `offset`/`limit`. |
+| `PUT` | `/shell/session/<id>` | Run the commands in the request body, separated by `;`. Supports `offset`/`limit`. |
 
-`offset`/`limit` select lines of a string result and elements of a vector or array result, and are ignored for other types. When they apply, the `more` member indicates whether more lines or elements exist.
+The response has a `results` array with one object per command that ran, and an `errors` array with the errors that were logged while the commands ran. The object for a command without a result is empty.
+
+`offset`/`limit` select lines of a string result and elements of a vector or array result, and are ignored for other types. They apply to each result. When they apply, the `more` member indicates whether more lines or elements exist.
 
 #### Example
 
@@ -2070,17 +2072,33 @@ ls game
 
 ```json
 {
-  "type": "flecs.script.typecache.vector<entity>",
-  "result": ["game.player", "game.enemy"],
-  "more": true,
+  "results": [{
+    "type": "flecs.script.typecache.vector<entity>",
+    "result": ["game.player", "game.enemy"],
+    "more": true
+  }],
   "errors": []
 }
 ```
 
-When a command fails, the response has no result and contains the errors that were logged while the command ran:
+Multiple commands are separated by `;`, and return one result per command:
+
+```
+PUT /shell/session/42
+cd game; rm player
+```
 
 ```json
-{"errors": ["unknown command 'foo'"]}
+{
+  "results": [{"type": "flecs.meta.entity", "result": "game"}, {}],
+  "errors": []
+}
+```
+
+When a command fails the remaining commands do not run and the response code is 400. The object for the failed command is empty, and the response contains the errors that were logged:
+
+```json
+{"results": [{}], "errors": ["unknown command 'foo'"]}
 ```
 
 #### Resources
@@ -2088,8 +2106,10 @@ Commands can store files, like images, as resources of the session. A command th
 
 ```json
 {
-  "type": "flecs.script.shell.resource",
-  "result": {"name": "1", "content_type": "image/png"},
+  "results": [{
+    "type": "flecs.script.shell.resource",
+    "result": {"name": "1", "content_type": "image/png"}
+  }],
   "errors": []
 }
 ```

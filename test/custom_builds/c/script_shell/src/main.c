@@ -16,8 +16,8 @@ int main(int argc, char *argv[]) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "new foo");
     assert(ecs_vec_count(&r.errors) == 0);
-    assert(r.result.type == ecs_id(ecs_entity_t));
-    assert(*(ecs_entity_t*)r.result.ptr == ecs_lookup(world, "foo"));
+    assert(ecs_vec_first_t(&r.results, ecs_value_t)->type == ecs_id(ecs_entity_t));
+    assert(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr == ecs_lookup(world, "foo"));
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "ls");

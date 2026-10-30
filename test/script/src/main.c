@@ -4167,6 +4167,16 @@ void Command_command_path_order(void);
 void Command_help_custom_command_path(void);
 void Command_no_command_paths(void);
 void Command_command_path_from_script(void);
+void Command_multi_command(void);
+void Command_multi_command_no_whitespace(void);
+void Command_multi_command_empty_commands(void);
+void Command_multi_command_only_separators(void);
+void Command_multi_command_stop_on_error(void);
+void Command_multi_command_stop_on_parse_error(void);
+void Command_multi_command_separator_in_argument(void);
+void Command_multi_command_history(void);
+void Command_multi_command_history_errors_per_command(void);
+void Command_multi_command_help(void);
 
 // Testsuite 'CommandResource'
 void CommandResource_setup(void);
@@ -20565,6 +20575,46 @@ bake_test_case Command_testcases[] = {
     {
         "command_path_from_script",
         Command_command_path_from_script
+    },
+    {
+        "multi_command",
+        Command_multi_command
+    },
+    {
+        "multi_command_no_whitespace",
+        Command_multi_command_no_whitespace
+    },
+    {
+        "multi_command_empty_commands",
+        Command_multi_command_empty_commands
+    },
+    {
+        "multi_command_only_separators",
+        Command_multi_command_only_separators
+    },
+    {
+        "multi_command_stop_on_error",
+        Command_multi_command_stop_on_error
+    },
+    {
+        "multi_command_stop_on_parse_error",
+        Command_multi_command_stop_on_parse_error
+    },
+    {
+        "multi_command_separator_in_argument",
+        Command_multi_command_separator_in_argument
+    },
+    {
+        "multi_command_history",
+        Command_multi_command_history
+    },
+    {
+        "multi_command_history_errors_per_command",
+        Command_multi_command_history_errors_per_command
+    },
+    {
+        "multi_command_help",
+        Command_multi_command_help
     }
 };
 
@@ -21134,7 +21184,7 @@ static bake_test_suite suites[] = {
         "Command",
         Command_setup,
         NULL,
-        128,
+        138,
         Command_testcases
     },
     {

@@ -439,7 +439,7 @@ static const char* flecs_command_parse_group(
     int32_t depth = 0;
     while (ptr[0]) {
         char ch = ptr[0];
-        if (!depth && isspace(ch)) {
+        if (!depth && (isspace(ch) || ch == ';')) {
             break;
         }
 
@@ -481,9 +481,20 @@ static const char* flecs_command_parse_group(
     return ptr;
 }
 
+static const char* flecs_command_skip_separators(
+    const char *ptr)
+{
+    while (isspace(ptr[0]) || ptr[0] == ';') {
+        ptr ++;
+    }
+
+    return ptr;
+}
+
 static int flecs_command_tokenize(
     const char *cmd,
-    ecs_vec_t *tokens)
+    ecs_vec_t *tokens,
+    const char **cmd_end)
 {
     const char *ptr = cmd;
     while (true) {
@@ -491,7 +502,7 @@ static int flecs_command_tokenize(
             ptr ++;
         }
 
-        if (!ptr[0]) {
+        if (!ptr[0] || ptr[0] == ';') {
             break;
         }
 
@@ -533,6 +544,7 @@ static int flecs_command_tokenize(
         ecs_vec_append_t(NULL, tokens, char*)[0] = text;
     }
 
+    *cmd_end = ptr;
     return 0;
 }
 
@@ -768,7 +780,9 @@ static void flecs_command_history_set_result(
     ecs_entity_t session,
     const char *cmd,
     const char *scope,
-    const ecs_shell_result_t *result)
+    const ecs_value_t *value,
+    const ecs_vec_t *errors,
+    int32_t first_error)
 {
     EcsCommandSession *s = ecs_get_mut(world, session, EcsCommandSession);
     if (!s) {
@@ -784,14 +798,13 @@ static void flecs_command_history_set_result(
     ecs_strbuf_appendlit(&buf, "{\"scope\":");
     ecs_strbuf_appendstr(&buf, scope);
 
-    if (result->result.type) {
+    if (value->type) {
         ecs_strbuf_appendlit(&buf, ", \"type\":");
-        char *type = ecs_get_path(world, result->result.type);
+        char *type = ecs_get_path(world, value->type);
         ecs_ptr_to_json_buf(world, ecs_id(ecs_string_t), &type, &buf);
         ecs_os_free(type);
         ecs_strbuf_appendlit(&buf, ", \"result\":");
-        char *json = ecs_ptr_to_json(
-            world, result->result.type, result->result.ptr);
+        char *json = ecs_ptr_to_json(world, value->type, value->ptr);
         if (json) {
             ecs_strbuf_appendstr(&buf, json);
             ecs_os_free(json);
@@ -801,13 +814,14 @@ static void flecs_command_history_set_result(
     }
 
     ecs_strbuf_appendlit(&buf, ", \"errors\":[");
-    char **errors = ecs_vec_first(&result->errors);
-    int32_t i, error_count = ecs_vec_count(&result->errors);
-    for (i = 0; i < error_count; i ++) {
-        if (i) {
+    char **error_array = ecs_vec_first(errors);
+    int32_t i, error_count = ecs_vec_count(errors);
+    for (i = first_error; i < error_count; i ++) {
+        if (i != first_error) {
             ecs_strbuf_appendlit(&buf, ", ");
         }
-        ecs_ptr_to_json_buf(world, ecs_id(ecs_string_t), &errors[i], &buf);
+        ecs_ptr_to_json_buf(
+            world, ecs_id(ecs_string_t), &error_array[i], &buf);
     }
     ecs_strbuf_appendlit(&buf, "]}");
 
@@ -837,26 +851,20 @@ void flecs_command_history_clear(
 
 static int flecs_command_invoke(
     ecs_world_t *world,
-    const char *cmd,
+    const ecs_vec_t *tokens,
     ecs_value_t *result)
 {
     int r = -1;
-    ecs_vec_t tokens;
-    ecs_vec_init_t(NULL, &tokens, char*, 0);
     ecs_value_t argv[FLECS_SCRIPT_FUNCTION_ARGS_MAX] = {{0}};
     int32_t i, argc = 0;
     char *usage = NULL;
 
-    if (flecs_command_tokenize(cmd, &tokens)) {
-        goto done;
-    }
-
-    if (!ecs_vec_count(&tokens)) {
+    if (!ecs_vec_count(tokens)) {
         ecs_err("empty command");
         goto done;
     }
 
-    char **t = ecs_vec_first(&tokens);
+    char **t = ecs_vec_first(tokens);
     const char *name = t[0];
     ecs_entity_t function = flecs_command_resolve(world, name);
     const EcsScriptFunction *f = function ?
@@ -867,7 +875,7 @@ static int flecs_command_invoke(
     }
 
     usage = flecs_command_usage(name, f);
-    argc = ecs_vec_count(&tokens) - 1;
+    argc = ecs_vec_count(tokens) - 1;
     if (argc > ecs_vec_count(&f->params)) {
         ecs_err("too many arguments for command '%s' (usage: %s)",
             name, usage);
@@ -899,24 +907,27 @@ done:
     }
 
     ecs_os_free(usage);
-    flecs_command_strings_fini(&tokens);
     return r;
 }
 
-ecs_shell_result_t ecs_shell_run(
+static int flecs_command_run_next(
     ecs_world_t *world,
     ecs_entity_t session,
-    const char *cmd)
+    const char **cmd,
+    ecs_shell_result_t *result)
 {
-    ecs_shell_result_t result = { .result = { 0 } };
-    ecs_vec_init_t(NULL, &result.errors, char*, 0);
+    int r = -1;
+    int32_t first_error = ecs_vec_count(&result->errors);
+    ecs_vec_t tokens;
+    ecs_vec_init_t(NULL, &tokens, char*, 0);
 
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(cmd != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_id(EcsCommandState) != 0, ECS_INVALID_OPERATION,
-        "script command module is not imported");
+    ecs_log_start_collect_errors(&result->errors);
 
-    ecs_log_start_collect_errors(&result.errors);
+    const char *start = *cmd, *end = NULL;
+    bool parsed = !flecs_command_tokenize(start, &tokens, &end);
+    if (!parsed) {
+        end = start + ecs_os_strlen(start);
+    }
 
     EcsCommandSession *s = NULL;
     if (session && ecs_is_alive(world, session)) {
@@ -925,10 +936,20 @@ ecs_shell_result_t ecs_shell_run(
 
     if (!s) {
         ecs_err("entity #%u is not a command session", (uint32_t)session);
-        goto done;
+        ecs_log_stop_collect_errors();
+        flecs_command_strings_fini(&tokens);
+        return -1;
     }
 
-    char *entry = flecs_command_history_push(s, cmd);
+    *cmd = end;
+    while ((end > start) && isspace(end[-1])) {
+        end --;
+    }
+
+    char *text = flecs_asprintf("%.*s", flecs_ito(int32_t, end - start), start);
+    char *entry = flecs_command_history_push(s, text);
+    ecs_os_free(text);
+
     ecs_entity_t cur_scope = s->scope;
     if (cur_scope && !ecs_is_alive(world, cur_scope)) {
         cur_scope = 0;
@@ -941,9 +962,10 @@ ecs_shell_result_t ecs_shell_run(
     ecs_entity_t prev_session = state->session;
     state->session = session;
 
-    int32_t error_count = ecs_vec_count(&result.errors);
-    if (flecs_command_invoke(world, cmd, &result.result)) {
-        if (ecs_vec_count(&result.errors) == error_count) {
+    ecs_value_t value = {0};
+    if (parsed) {
+        r = flecs_command_invoke(world, &tokens, &value);
+        if (r && ecs_vec_count(&result->errors) == first_error) {
             ecs_err("command failed");
         }
     }
@@ -951,14 +973,41 @@ ecs_shell_result_t ecs_shell_run(
     ecs_singleton_ensure(world, EcsCommandState)->session = prev_session;
     ecs_log_stop_collect_errors();
 
+    ecs_vec_append_t(NULL, &result->results, ecs_value_t)[0] = value;
+
     if (scope && ecs_is_alive(world, session)) {
-        flecs_command_history_set_result(world, session, entry, scope, &result);
+        flecs_command_history_set_result(world, session, entry, scope, &value,
+            &result->errors, first_error);
     }
 
     ecs_os_free(scope);
-    return result;
-done:
-    ecs_log_stop_collect_errors();
+    flecs_command_strings_fini(&tokens);
+    return r;
+}
+
+ecs_shell_result_t ecs_shell_run(
+    ecs_world_t *world,
+    ecs_entity_t session,
+    const char *cmd)
+{
+    ecs_shell_result_t result;
+    ecs_vec_init_t(NULL, &result.results, ecs_value_t, 0);
+    ecs_vec_init_t(NULL, &result.errors, char*, 0);
+
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(cmd != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id(EcsCommandState) != 0, ECS_INVALID_OPERATION,
+        "script command module is not imported");
+
+    const char *ptr = flecs_command_skip_separators(cmd);
+    do {
+        if (flecs_command_run_next(world, session, &ptr, &result)) {
+            break;
+        }
+
+        ptr = flecs_command_skip_separators(ptr);
+    } while (ptr[0]);
+
 error:
     return result;
 }
@@ -969,8 +1018,14 @@ void ecs_shell_result_fini(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(result != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_value_fini(world, &result->result);
 
+    ecs_value_t *values = ecs_vec_first(&result->results);
+    int32_t i, count = ecs_vec_count(&result->results);
+    for (i = 0; i < count; i ++) {
+        ecs_value_fini(world, &values[i]);
+    }
+
+    ecs_vec_fini_t(NULL, &result->results, ecs_value_t);
     flecs_command_strings_fini(&result->errors);
 error:
     return;
