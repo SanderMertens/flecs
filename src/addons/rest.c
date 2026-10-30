@@ -858,7 +858,7 @@ static bool flecs_rest_command_new_session(
     ecs_http_reply_t *reply)
 {
     flecs_rest_command_import(world);
-    ecs_entity_t session = ecs_command_session_init(world, NULL);
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
     ecs_strbuf_append(&reply->body, "{\"session\":%llu}", (unsigned long long)session);
     return true;
 }
@@ -888,7 +888,7 @@ static bool flecs_rest_command_resource(
 {
     ecs_size_t size = 0;
     const char *content_type = NULL;
-    void *data = ecs_command_resource_read(
+    void *data = ecs_shell_resource_read(
         world, session, name, &size, &content_type);
     if (!data) {
         flecs_reply_error(reply, "invalid resource");
@@ -993,7 +993,7 @@ static bool flecs_rest_command_run(
         offset = 0;
     }
 
-    ecs_command_result_t result = ecs_command_run(
+    ecs_shell_result_t result = ecs_shell_run(
         world, session, req->body ? req->body : "");
 
     ecs_strbuf_appendch(&reply->body, '{');
@@ -1018,7 +1018,7 @@ static bool flecs_rest_command_run(
         reply->code = 400;
     }
 
-    ecs_command_result_fini(world, &result);
+    ecs_shell_result_fini(world, &result);
     return true;
 }
 #endif

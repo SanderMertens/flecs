@@ -229,7 +229,7 @@ The command can then be used like any other command:
 
 The `help` command describes the command with the doc brief of the function and the briefs of its parameters. When a command runs, the scopes in `command_paths` are searched in order, and the first function with a matching name is used. A command can override a builtin command by inserting its scope before the builtin scopes.
 
-The callback is a regular script function callback. The `argc` argument is the number of arguments that were provided, so optional parameters can be detected. A command gets the session it runs in with `ecs_command_get_session()`, and reports errors by logging them with `ecs_err()`:
+The callback is a regular script function callback. The `argc` argument is the number of arguments that were provided, so optional parameters can be detected. A command gets the session it runs in with `ecs_shell_get_session()`, and reports errors by logging them with `ecs_err()`:
 
 ```c
 void spawn_command(
@@ -246,7 +246,7 @@ void spawn_command(
         return;
     }
 
-    ecs_entity_t session = ecs_command_get_session(ctx->world);
+    ecs_entity_t session = ecs_shell_get_session(ctx->world);
     const EcsCommandSession *s = ecs_get(ctx->world, session, EcsCommandSession);
 
     ecs_entity_t e = 0;
@@ -269,7 +269,7 @@ Commands can return files, like images, by storing them as resources of the sess
 {"name": "1", "content_type": "image/png"}
 ```
 
-A command creates a resource with `ecs_command_resource_create()`, and signals that it returned a resource by returning the `flecs.script.shell.resource` type (`ecs_command_resource_t`):
+A command creates a resource with `ecs_shell_resource_create()`, and signals that it returned a resource by returning the `flecs.script.shell.resource` type (`ecs_shell_resource_t`):
 
 ```c
 void capture_command(
@@ -285,8 +285,8 @@ void capture_command(
         return;
     }
 
-    ecs_command_resource_create(ctx->world,
-        ecs_command_get_session(ctx->world), "image/png", png, png_size,
+    ecs_shell_resource_create(ctx->world,
+        ecs_shell_get_session(ctx->world), "image/png", png, png_size,
         result->ptr);
 
     free(png);
@@ -295,12 +295,12 @@ void capture_command(
 ecs_function(world, {
     .name = "capture",
     .parent = commands,
-    .return_type = ecs_id(ecs_command_resource_t),
+    .return_type = ecs_id(ecs_shell_resource_t),
     .callback = capture_command
 });
 ```
 
-Resource names are unique within a session. The content of a resource is read with `ecs_command_resource_read()`, or remotely with `GET /shell/session/<id>/resource/<name>`. Only resources that were created in the session can be read.
+Resource names are unique within a session. The content of a resource is read with `ecs_shell_resource_read()`, or remotely with `GET /shell/session/<id>/resource/<name>`. Only resources that were created in the session can be read.
 
 Resources are stored in `.flecs/shell/<session>/<name>`, relative to the current working directory. The directory of a session is created when the first resource is created, and is deleted together with the session. Files are written, read and removed with the [OS API](/flecs/group__c__os__api.html), which applications can override to store resources elsewhere.
 
@@ -312,17 +312,17 @@ ECS_IMPORT(world, FlecsScriptShell);
 ```
 
 ### Creating a session
-A session is created with `ecs_command_session_init()`. When no entity is provided, sessions are created in the `script.shell.sessions` scope:
+A session is created with `ecs_shell_session_init()`. When no entity is provided, sessions are created in the `script.shell.sessions` scope:
 
 ```c
-ecs_entity_t session = ecs_command_session_init(world, NULL);
+ecs_entity_t session = ecs_shell_session_init(world, NULL);
 ```
 
 A session can also be created for an existing entity, with an initial scope and a custom history size:
 
 ```c
-ecs_entity_t session = ecs_command_session_init(world,
-    &(ecs_command_session_desc_t){
+ecs_entity_t session = ecs_shell_session_init(world,
+    &(ecs_shell_session_desc_t){
         .entity = my_entity,
         .scope = ecs_lookup(world, "game"),
         .history_size = 100
@@ -336,10 +336,10 @@ ecs_delete(world, session);
 ```
 
 ### Running a command
-A command is run with `ecs_command_run()`, which returns the result of the command and the errors that were logged while it ran. The result must be freed with `ecs_command_result_fini()`:
+A command is run with `ecs_shell_run()`, which returns the result of the command and the errors that were logged while it ran. The result must be freed with `ecs_shell_result_fini()`:
 
 ```c
-ecs_command_result_t r = ecs_command_run(world, session, "ls game");
+ecs_shell_result_t r = ecs_shell_run(world, session, "ls game");
 
 if (ecs_vec_count(&r.errors)) {
     char **errors = ecs_vec_first(&r.errors);
@@ -352,7 +352,7 @@ if (ecs_vec_count(&r.errors)) {
     ecs_os_free(json);
 }
 
-ecs_command_result_fini(world, &r);
+ecs_shell_result_fini(world, &r);
 ```
 
 The `result` member is empty when the command has no return value or failed. Script edit commands are the exception: when the edit was applied but reloading the script failed, the result is set together with the errors of the reload.

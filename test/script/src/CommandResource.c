@@ -218,8 +218,8 @@ static void CommandResource_callback(
 {
     (void)argc;
     (void)argv;
-    ecs_command_resource_create(ctx->world,
-        ecs_command_get_session(ctx->world), "image/png", "PNG", 3,
+    ecs_shell_resource_create(ctx->world,
+        ecs_shell_get_session(ctx->world), "image/png", "PNG", 3,
         result->ptr);
 }
 
@@ -227,9 +227,9 @@ void CommandResource_lookup_type(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptShell);
 
-    test_assert(ecs_id(ecs_command_resource_t) != 0);
+    test_assert(ecs_id(ecs_shell_resource_t) != 0);
     test_uint(ecs_lookup(world, "flecs.script.shell.resource"),
-        ecs_id(ecs_command_resource_t));
+        ecs_id(ecs_shell_resource_t));
 
     ecs_fini(world);
 }
@@ -238,17 +238,17 @@ void CommandResource_create(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptShell);
 
-    ecs_entity_t session = ecs_command_session_init(world, NULL);
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
-    ecs_command_resource_t r = {0};
-    test_int(0, ecs_command_resource_create(
+    ecs_shell_resource_t r = {0};
+    test_int(0, ecs_shell_resource_create(
         world, session, "text/plain", "Hello", 5, &r));
     test_str(r.name, "1");
     test_str(r.content_type, "text/plain");
 
     const EcsCommandSession *s = ecs_get(world, session, EcsCommandSession);
     test_int(ecs_vec_count(&s->resources), 1);
-    ecs_command_resource_t *sr = ecs_vec_first(&s->resources);
+    ecs_shell_resource_t *sr = ecs_vec_first(&s->resources);
     test_str(sr[0].name, "1");
     test_str(sr[0].content_type, "text/plain");
 
@@ -279,21 +279,21 @@ void CommandResource_create_multiple(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptShell);
 
-    ecs_entity_t session = ecs_command_session_init(world, NULL);
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
-    ecs_command_resource_t r1 = {0}, r2 = {0}, r3 = {0};
-    test_int(0, ecs_command_resource_create(
+    ecs_shell_resource_t r1 = {0}, r2 = {0}, r3 = {0};
+    test_int(0, ecs_shell_resource_create(
         world, session, "text/plain", "a", 1, &r1));
-    test_int(0, ecs_command_resource_create(
+    test_int(0, ecs_shell_resource_create(
         world, session, "text/plain", "b", 1, &r2));
-    test_int(0, ecs_command_resource_create(
+    test_int(0, ecs_shell_resource_create(
         world, session, "text/plain", "c", 1, &r3));
     test_str(r1.name, "1");
     test_str(r2.name, "2");
     test_str(r3.name, "3");
 
     ecs_size_t size = 0;
-    char *data = ecs_command_resource_read(world, session, "2", &size, NULL);
+    char *data = ecs_shell_resource_read(world, session, "2", &size, NULL);
     test_assert(data != NULL);
     test_int(size, 1);
     test_assert(data[0] == 'b');
@@ -313,10 +313,10 @@ void CommandResource_create_default_content_type(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptShell);
 
-    ecs_entity_t session = ecs_command_session_init(world, NULL);
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
-    ecs_command_resource_t r = {0};
-    test_int(0, ecs_command_resource_create(
+    ecs_shell_resource_t r = {0};
+    test_int(0, ecs_shell_resource_create(
         world, session, NULL, "Hello", 5, &r));
     test_str(r.name, "1");
     test_str(r.content_type, "application/octet-stream");
@@ -331,14 +331,14 @@ void CommandResource_create_empty(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptShell);
 
-    ecs_entity_t session = ecs_command_session_init(world, NULL);
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
-    test_int(0, ecs_command_resource_create(
+    test_int(0, ecs_shell_resource_create(
         world, session, "text/plain", NULL, 0, NULL));
 
     ecs_size_t size = -1;
     const char *content_type = NULL;
-    void *data = ecs_command_resource_read(
+    void *data = ecs_shell_resource_read(
         world, session, "1", &size, &content_type);
     test_assert(data != NULL);
     test_int(size, 0);
@@ -355,7 +355,7 @@ void CommandResource_create_not_a_session(void) {
     ecs_entity_t e = ecs_new(world);
 
     ecs_log_set_level(-4);
-    test_assert(0 != ecs_command_resource_create(
+    test_assert(0 != ecs_shell_resource_create(
         world, e, "text/plain", "Hello", 5, NULL));
 
     test_int(CommandResource_fs_file_count(), 0);
@@ -368,10 +368,10 @@ void CommandResource_no_dir_without_resource(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptShell);
 
-    ecs_entity_t session = ecs_command_session_init(world, NULL);
-    ecs_command_result_t r = ecs_command_run(world, session, "pwd");
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+    ecs_shell_result_t r = ecs_shell_run(world, session, "pwd");
     test_int(ecs_vec_count(&r.errors), 0);
-    ecs_command_result_fini(world, &r);
+    ecs_shell_result_fini(world, &r);
 
     const EcsCommandSession *s = ecs_get(world, session, EcsCommandSession);
     test_assert(s->resource_path == NULL);
@@ -386,22 +386,22 @@ void CommandResource_names_per_session(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptShell);
 
-    ecs_entity_t session_a = ecs_command_session_init(world, NULL);
-    ecs_entity_t session_b = ecs_command_session_init(world, NULL);
+    ecs_entity_t session_a = ecs_shell_session_init(world, NULL);
+    ecs_entity_t session_b = ecs_shell_session_init(world, NULL);
 
-    test_int(0, ecs_command_resource_create(
+    test_int(0, ecs_shell_resource_create(
         world, session_a, "text/plain", "a", 1, NULL));
-    test_int(0, ecs_command_resource_create(
+    test_int(0, ecs_shell_resource_create(
         world, session_b, "text/plain", "b", 1, NULL));
 
     ecs_size_t size = 0;
-    char *data = ecs_command_resource_read(world, session_a, "1", &size, NULL);
+    char *data = ecs_shell_resource_read(world, session_a, "1", &size, NULL);
     test_assert(data != NULL);
     test_int(size, 1);
     test_assert(data[0] == 'a');
     ecs_os_free(data);
 
-    data = ecs_command_resource_read(world, session_b, "1", &size, NULL);
+    data = ecs_shell_resource_read(world, session_b, "1", &size, NULL);
     test_assert(data != NULL);
     test_int(size, 1);
     test_assert(data[0] == 'b');
@@ -414,14 +414,14 @@ void CommandResource_read(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptShell);
 
-    ecs_entity_t session = ecs_command_session_init(world, NULL);
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
-    test_int(0, ecs_command_resource_create(
+    test_int(0, ecs_shell_resource_create(
         world, session, "text/plain", "Hello World", 11, NULL));
 
     ecs_size_t size = 0;
     const char *content_type = NULL;
-    char *data = ecs_command_resource_read(
+    char *data = ecs_shell_resource_read(
         world, session, "1", &size, &content_type);
     test_assert(data != NULL);
     test_int(size, 11);
@@ -436,7 +436,7 @@ void CommandResource_read_binary(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptShell);
 
-    ecs_entity_t session = ecs_command_session_init(world, NULL);
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
     unsigned char bytes[10000];
     int i;
@@ -444,11 +444,11 @@ void CommandResource_read_binary(void) {
         bytes[i] = (unsigned char)(i * 7);
     }
 
-    test_int(0, ecs_command_resource_create(
+    test_int(0, ecs_shell_resource_create(
         world, session, "image/png", bytes, 10000, NULL));
 
     ecs_size_t size = 0;
-    void *data = ecs_command_resource_read(world, session, "1", &size, NULL);
+    void *data = ecs_shell_resource_read(world, session, "1", &size, NULL);
     test_assert(data != NULL);
     test_int(size, 10000);
     test_assert(!memcmp(data, bytes, 10000));
@@ -461,22 +461,22 @@ void CommandResource_read_unknown(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptShell);
 
-    ecs_entity_t session = ecs_command_session_init(world, NULL);
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
     ecs_size_t size = 0;
-    test_assert(NULL == ecs_command_resource_read(
+    test_assert(NULL == ecs_shell_resource_read(
         world, session, "1", &size, NULL));
 
-    test_int(0, ecs_command_resource_create(
+    test_int(0, ecs_shell_resource_create(
         world, session, "text/plain", "Hello", 5, NULL));
 
-    test_assert(NULL == ecs_command_resource_read(
+    test_assert(NULL == ecs_shell_resource_read(
         world, session, "2", &size, NULL));
-    test_assert(NULL == ecs_command_resource_read(
+    test_assert(NULL == ecs_shell_resource_read(
         world, session, "", &size, NULL));
-    test_assert(NULL == ecs_command_resource_read(
+    test_assert(NULL == ecs_shell_resource_read(
         world, session, "./1", &size, NULL));
-    test_assert(NULL == ecs_command_resource_read(
+    test_assert(NULL == ecs_shell_resource_read(
         world, session, "../../../flecs.h", &size, NULL));
     test_int(size, 0);
 
@@ -487,14 +487,14 @@ void CommandResource_read_other_session(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptShell);
 
-    ecs_entity_t session_a = ecs_command_session_init(world, NULL);
-    ecs_entity_t session_b = ecs_command_session_init(world, NULL);
+    ecs_entity_t session_a = ecs_shell_session_init(world, NULL);
+    ecs_entity_t session_b = ecs_shell_session_init(world, NULL);
 
-    test_int(0, ecs_command_resource_create(
+    test_int(0, ecs_shell_resource_create(
         world, session_a, "text/plain", "Hello", 5, NULL));
 
     ecs_size_t size = 0;
-    test_assert(NULL == ecs_command_resource_read(
+    test_assert(NULL == ecs_shell_resource_read(
         world, session_b, "1", &size, NULL));
 
     ecs_fini(world);
@@ -507,9 +507,9 @@ void CommandResource_read_not_a_session(void) {
     ecs_entity_t e = ecs_new(world);
 
     ecs_size_t size = 0;
-    test_assert(NULL == ecs_command_resource_read(
+    test_assert(NULL == ecs_shell_resource_read(
         world, e, "1", &size, NULL));
-    test_assert(NULL == ecs_command_resource_read(
+    test_assert(NULL == ecs_shell_resource_read(
         world, 0, "1", &size, NULL));
 
     ecs_fini(world);
@@ -519,11 +519,11 @@ void CommandResource_delete_session(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptShell);
 
-    ecs_entity_t session = ecs_command_session_init(world, NULL);
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
-    test_int(0, ecs_command_resource_create(
+    test_int(0, ecs_shell_resource_create(
         world, session, "text/plain", "a", 1, NULL));
-    test_int(0, ecs_command_resource_create(
+    test_int(0, ecs_shell_resource_create(
         world, session, "text/plain", "b", 1, NULL));
 
     char file[128];
@@ -550,12 +550,12 @@ void CommandResource_delete_session_keeps_other_session(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptShell);
 
-    ecs_entity_t session_a = ecs_command_session_init(world, NULL);
-    ecs_entity_t session_b = ecs_command_session_init(world, NULL);
+    ecs_entity_t session_a = ecs_shell_session_init(world, NULL);
+    ecs_entity_t session_b = ecs_shell_session_init(world, NULL);
 
-    test_int(0, ecs_command_resource_create(
+    test_int(0, ecs_shell_resource_create(
         world, session_a, "text/plain", "a", 1, NULL));
-    test_int(0, ecs_command_resource_create(
+    test_int(0, ecs_shell_resource_create(
         world, session_b, "text/plain", "b", 1, NULL));
 
     ecs_delete(world, session_a);
@@ -563,7 +563,7 @@ void CommandResource_delete_session_keeps_other_session(void) {
     test_int(CommandResource_fs_dir_count(), 3);
 
     ecs_size_t size = 0;
-    char *data = ecs_command_resource_read(world, session_b, "1", &size, NULL);
+    char *data = ecs_shell_resource_read(world, session_b, "1", &size, NULL);
     test_assert(data != NULL);
     test_int(size, 1);
     test_assert(data[0] == 'b');
@@ -576,9 +576,9 @@ void CommandResource_world_fini(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptShell);
 
-    ecs_entity_t session = ecs_command_session_init(world, NULL);
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
-    test_int(0, ecs_command_resource_create(
+    test_int(0, ecs_shell_resource_create(
         world, session, "text/plain", "a", 1, NULL));
 
     ecs_fini(world);
@@ -600,7 +600,7 @@ void CommandResource_command_returns_resource(void) {
     ecs_function(world, {
         .name = "capture",
         .parent = commands,
-        .return_type = ecs_id(ecs_command_resource_t),
+        .return_type = ecs_id(ecs_shell_resource_t),
         .callback = CommandResource_callback
     });
 
@@ -608,24 +608,24 @@ void CommandResource_command_returns_resource(void) {
     ecs_vec_append_t(NULL, &shell->command_paths, ecs_entity_t)[0] = commands;
     ecs_singleton_modified(world, EcsScriptShell);
 
-    ecs_entity_t session = ecs_command_session_init(world, NULL);
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
-    ecs_command_result_t r = ecs_command_run(world, session, "capture");
+    ecs_shell_result_t r = ecs_shell_run(world, session, "capture");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(r.result.type, ecs_id(ecs_command_resource_t));
-    ecs_command_resource_t *res = r.result.ptr;
+    test_uint(r.result.type, ecs_id(ecs_shell_resource_t));
+    ecs_shell_resource_t *res = r.result.ptr;
     test_str(res->name, "1");
     test_str(res->content_type, "image/png");
-    ecs_command_result_fini(world, &r);
+    ecs_shell_result_fini(world, &r);
 
-    r = ecs_command_run(world, session, "capture");
+    r = ecs_shell_run(world, session, "capture");
     test_int(ecs_vec_count(&r.errors), 0);
     res = r.result.ptr;
     test_str(res->name, "2");
-    ecs_command_result_fini(world, &r);
+    ecs_shell_result_fini(world, &r);
 
     ecs_size_t size = 0;
-    char *data = ecs_command_resource_read(world, session, "2", &size, NULL);
+    char *data = ecs_shell_resource_read(world, session, "2", &size, NULL);
     test_assert(data != NULL);
     test_int(size, 3);
     test_assert(!memcmp(data, "PNG", 3));

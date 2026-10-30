@@ -2040,8 +2040,8 @@ static void Rest_resource_callback(
 {
     (void)argc;
     (void)argv;
-    ecs_command_resource_create(ctx->world,
-        ecs_command_get_session(ctx->world), "text/plain", "Hello", 5,
+    ecs_shell_resource_create(ctx->world,
+        ecs_shell_get_session(ctx->world), "text/plain", "Hello", 5,
         result->ptr);
 }
 
@@ -2059,8 +2059,8 @@ void Rest_shell_resource(void) {
     test_int(sscanf(reply_str, "{\"session\":%llu}", &session), 1);
     ecs_os_free(reply_str);
 
-    ecs_command_resource_t r = {0};
-    test_int(0, ecs_command_resource_create(world, (ecs_entity_t)session,
+    ecs_shell_resource_t r = {0};
+    test_int(0, ecs_shell_resource_create(world, (ecs_entity_t)session,
         "text/plain", "Hello World", 11, &r));
     test_str(r.name, "1");
 
@@ -2098,7 +2098,7 @@ void Rest_shell_resource_binary(void) {
     ecs_os_free(reply_str);
 
     const unsigned char data[] = { 0x89, 'P', 'N', 'G', 0, 1, 2, 0, 0xff };
-    test_int(0, ecs_command_resource_create(world, (ecs_entity_t)session,
+    test_int(0, ecs_shell_resource_create(world, (ecs_entity_t)session,
         "image/png", data, ECS_SIZEOF(data), NULL));
 
     char path[128];
@@ -2131,7 +2131,7 @@ void Rest_shell_resource_unknown(void) {
     test_int(sscanf(reply_str, "{\"session\":%llu}", &session), 1);
     ecs_os_free(reply_str);
 
-    test_int(0, ecs_command_resource_create(world, (ecs_entity_t)session,
+    test_int(0, ecs_shell_resource_create(world, (ecs_entity_t)session,
         "text/plain", "Hello", 5, NULL));
 
     char path[128];
@@ -2185,7 +2185,7 @@ void Rest_shell_resource_other_session(void) {
     test_int(sscanf(reply_str, "{\"session\":%llu}", &session_b), 1);
     ecs_os_free(reply_str);
 
-    test_int(0, ecs_command_resource_create(world, (ecs_entity_t)session_a,
+    test_int(0, ecs_shell_resource_create(world, (ecs_entity_t)session_a,
         "text/plain", "Hello", 5, NULL));
 
     char path[128];
@@ -2223,7 +2223,7 @@ void Rest_shell_resource_deleted_session(void) {
     test_int(sscanf(reply_str, "{\"session\":%llu}", &session), 1);
     ecs_os_free(reply_str);
 
-    test_int(0, ecs_command_resource_create(world, (ecs_entity_t)session,
+    test_int(0, ecs_shell_resource_create(world, (ecs_entity_t)session,
         "text/plain", "Hello", 5, NULL));
 
     char path[128];
@@ -2271,7 +2271,7 @@ void Rest_shell_resource_command(void) {
     ecs_function(world, {
         .name = "capture",
         .parent = commands,
-        .return_type = ecs_id(ecs_command_resource_t),
+        .return_type = ecs_id(ecs_shell_resource_t),
         .callback = Rest_resource_callback
     });
 
