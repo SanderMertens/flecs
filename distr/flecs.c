@@ -60538,10 +60538,20 @@ static int flecs_meta_write_primitive(
             flecs_json_string_escape_ctrl(str, *(char* const*)ptr);
             return 0;
         case EcsOpF32:
-        case EcsOpF64:
-            ecs_strbuf_appendflt(str, kind == EcsOpF32
-                ? (double)*(const float*)ptr : *(const double*)ptr, '"');
+        case EcsOpF64: {
+            bool is_f32 = kind == EcsOpF32;
+            double value = is_f32
+                ? (double)*(const float*)ptr : *(const double*)ptr;
+            if (ecs_os_isnan(value) || ecs_os_isinf(value)) {
+                ecs_strbuf_appendflt(str, value, '"');
+            } else {
+                /* Shortest representation that reads back to the same value */
+                char buf[32];
+                flecs_meta_flt_to_str(buf, 32, value, is_f32);
+                ecs_strbuf_appendstr(str, buf);
+            }
             return 0;
+        }
         default:
             break;
         }
@@ -62433,7 +62443,7 @@ const char* flecs_parse_digit(
 
     for (; (ch = *ptr); ptr ++) {
         if (!isdigit((unsigned char)ch) && (ch != '.') && !flecs_parse_is_e(ch)) {
-            if (ch != '-' || !flecs_parse_is_e(ptr[-1])) {
+            if ((ch != '-' && ch != '+') || !flecs_parse_is_e(ptr[-1])) {
                 break;
             }
         }

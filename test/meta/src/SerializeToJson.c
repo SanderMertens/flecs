@@ -504,14 +504,14 @@ void SerializeToJson_struct_double_large(void) {
         T value = {60000};
         char *expr = ecs_ptr_to_json(world, t, &value);
         test_assert(expr != NULL);
-        test_str(expr, "{\"x\":\"6e4\"}");
+        test_str(expr, "{\"x\":60000}");
         ecs_os_free(expr);
     }
     {
         T value = {1.9885e30};
         char *expr = ecs_ptr_to_json(world, t, &value);
         test_assert(expr != NULL);
-        test_str(expr, "{\"x\":\"1.98849999999e30\"}");
+        test_str(expr, "{\"x\":1.9885e+30}");
         ecs_os_free(expr);
     }
 
@@ -535,8 +535,184 @@ void SerializeToJson_struct_double_large_e(void) {
     T value = {5.9722e24};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\":\"5.9722e24\"}");
+    test_str(expr, "{\"x\":5.9722e+24}");
     ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_double_small(void) {
+    typedef struct {
+        ecs_f64_t x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_f64_t)}
+        }
+    });
+
+    {
+        T value = {1e-11};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+        test_str(expr, "{\"x\":1e-11}");
+        ecs_os_free(expr);
+    }
+    {
+        T value = {-2.5e-300};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+        test_str(expr, "{\"x\":-2.5e-300}");
+        ecs_os_free(expr);
+    }
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_double_precise(void) {
+    typedef struct {
+        ecs_f64_t x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_f64_t)}
+        }
+    });
+
+    {
+        T value = {0.1 + 0.2};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+        test_str(expr, "{\"x\":0.30000000000000004}");
+        ecs_os_free(expr);
+    }
+    {
+        T value = {0.1};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+        test_str(expr, "{\"x\":0.1}");
+        ecs_os_free(expr);
+    }
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_float_precise(void) {
+    typedef struct {
+        ecs_f32_t x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    {
+        T value = {0.1f};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+        test_str(expr, "{\"x\":0.1}");
+        ecs_os_free(expr);
+    }
+    {
+        T value = {16777217.0f};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+        test_str(expr, "{\"x\":16777216}");
+        ecs_os_free(expr);
+    }
+    {
+        T value = {1e-20f};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+        test_str(expr, "{\"x\":1e-20}");
+        ecs_os_free(expr);
+    }
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_double_roundtrip(void) {
+    typedef struct {
+        ecs_f64_t x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_f64_t)}
+        }
+    });
+
+    const ecs_f64_t values[] = {
+        1.0 / 3.0, 3.141592653589793, 6.02214076e23, 1.7976931348623157e308,
+        2.2250738585072014e-308, 5e-324, -123456.789e-17, 1e15, 1e21,
+        9007199254740993.0
+    };
+
+    int32_t i, count = (int32_t)(sizeof(values) / sizeof(values[0]));
+    for (i = 0; i < count; i ++) {
+        T value = {values[i]};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+
+        T result = {0};
+        const char *ptr = ecs_ptr_from_json(world, t, &result, expr, NULL);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == '\0');
+        test_assert(memcmp(&result.x, &value.x, sizeof(ecs_f64_t)) == 0);
+        ecs_os_free(expr);
+    }
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_float_roundtrip(void) {
+    typedef struct {
+        ecs_f32_t x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const ecs_f32_t values[] = {
+        1.0f / 3.0f, 3.14159265f, 3.4028235e38f, 1.17549435e-38f,
+        1.4e-45f, -0.0001f, 123456.789f, 1e10f
+    };
+
+    int32_t i, count = (int32_t)(sizeof(values) / sizeof(values[0]));
+    for (i = 0; i < count; i ++) {
+        T value = {values[i]};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+
+        T result = {0};
+        const char *ptr = ecs_ptr_from_json(world, t, &result, expr, NULL);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == '\0');
+        test_assert(memcmp(&result.x, &value.x, sizeof(ecs_f32_t)) == 0);
+        ecs_os_free(expr);
+    }
 
     ecs_fini(world);
 }
