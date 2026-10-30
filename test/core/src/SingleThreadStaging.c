@@ -2898,3 +2898,35 @@ void SingleThreadStaging_lookup_w_scope_after_stage_count_change(void) {
 
     ecs_fini(world);
 }
+
+static ecs_entity_t stage_entity_external = 0;
+static ecs_world_t *stage_entity_stage = NULL;
+
+static void CreateStageEntity(ecs_iter_t *it) {
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
+    ecs_world_t *stage = it->stage;
+    ecs_entity_t e = ecs_new(stage);
+    ecs_add(stage, e, Position);
+    ecs_set(stage, e, Velocity, {1, 2});
+    stage_entity_external = e;
+    stage_entity_stage = stage;
+}
+
+void SingleThreadStaging_delete_stage_entity_after_progress(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, CreateStageEntity, EcsOnLoad, Position(), Velocity());
+
+    ecs_progress(world, 0);
+
+    test_assert(stage_entity_external != 0);
+    test_assert(stage_entity_stage != NULL);
+
+    ecs_delete(stage_entity_stage, stage_entity_external);
+
+    ecs_fini(world);
+}

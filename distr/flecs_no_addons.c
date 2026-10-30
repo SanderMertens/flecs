@@ -19816,6 +19816,11 @@ int ecs_fini(
 
     world->flags |= EcsWorldQuit;
 
+    int32_t i;
+    for (i = 0; i < world->stage_count; i ++) {
+        flecs_commands_flush(world, world->stages[i]);
+    }
+
     /* Tree spawners can keep tables alive, which can conflict with entity
      * cleanup. Cleanup treespawners first before cleaning up other entities.
      * This means that prefab spawning does not work during world cleanup. */
@@ -29266,11 +29271,6 @@ static void flecs_table_init_flags(
             } else if (r == ecs_id(EcsPoly)) {
                 table->flags |= EcsTableHasModule;
             }
-#if defined(FLECS_DEBUG_INFO) && defined(FLECS_DOC)
-            else if (id == ecs_pair_t(EcsDocDescription, EcsName)) {
-                table->_->doc_name_column = flecs_ito(int16_t, i);
-            }
-#endif
         } else {
             if (ECS_HAS_ID_FLAG(id, TOGGLE)) {
                 ecs_table__t *meta = table->_;
@@ -33969,9 +33969,6 @@ yield:
 static void flecs_query_iter_fini(
     ecs_iter_t *it)
 {
-#if defined(FLECS_CACHED_QUERIES) || defined(FLECS_QUERY_PLANS)
-    ecs_query_iter_t *qit = &it->priv_.iter.query;
-#endif
     const ecs_query_t *q = it->query;
     (void)q;
     ecs_assert(q != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -33995,9 +33992,6 @@ ecs_iter_t flecs_query_iter(
 #endif
 
     flecs_poly_assert(q, ecs_query_t);
-#if defined(FLECS_CACHED_QUERIES) || defined(FLECS_QUERY_PLANS)
-    ecs_query_impl_t *impl = flecs_query_impl(q);
-#endif
 
     it.stage = ECS_CONST_CAST(ecs_world_t*, world);
 
