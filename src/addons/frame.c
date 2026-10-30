@@ -67,28 +67,41 @@ static ecs_ftime_t flecs_start_measure_frame(
         (ECS_EQZERO(user_delta_time)))
     {
         ecs_time_t t = world->frame_start_time;
-        do {
-            if (world->frame_start_time.nanosec || world->frame_start_time.sec){
-                delta_time = flecs_insert_sleep(world, &t);
+
+        /* A simulated clock can legitimately start at 0, so the frame start
+         * time itself can't tell whether a previous frame measured one. */
+        if (world->flags & EcsWorldFrameStartTimeSet) {
+            delta_time = flecs_insert_sleep(world, &t);
+        } else {
+            ecs_time_measure(&t);
+            if (ECS_NEQZERO(world->info.target_fps)) {
+                delta_time = (ecs_ftime_t)1.0 / world->info.target_fps;
             } else {
-                ecs_time_measure(&t);
-                if (ECS_NEQZERO(world->info.target_fps)) {
-                    delta_time = (ecs_ftime_t)1.0 / world->info.target_fps;
-                } else {
-                    /* Best guess */
-                    delta_time = (ecs_ftime_t)1.0 / (ecs_ftime_t)60.0;
-
-                    if (ECS_EQZERO(delta_time)) {
-                        delta_time = user_delta_time;
-                        break;
-                    }
-                }
+                /* Best guess */
+                delta_time = (ecs_ftime_t)1.0 / (ecs_ftime_t)60.0;
             }
+        }
 
-        /* Keep trying while delta_time is zero */
-        } while (ECS_EQZERO(delta_time));
+        if (delta_time < ECS_FRAME_MIN_DELTA_TIME) {
+            /* A coarse or host-stepped clock can legitimately return the same
+             * instant twice. Report the smallest nonzero delta rather than
+             * measure again until the clock moves, which never returns on a
+             * host-stepped clock. The frame start time is unchanged, so the
+             * elapsed time is credited in full to the frame in which the
+             * clock next advances. */
+            delta_time = ECS_FRAME_MIN_DELTA_TIME;
+
+            /* Once per world, so a rate computed by dividing by the minimum
+             * can be traced to this rather than debugged as a spike. */
+            if (!(world->flags & EcsWorldFrameMinDeltaWarned)) {
+                world->flags |= EcsWorldFrameMinDeltaWarned;
+                ecs_warn("clock did not advance between frames, "
+                    "reporting minimal delta time");
+            }
+        }
 
         world->frame_start_time = t;
+        world->flags |= EcsWorldFrameStartTimeSet;
 
         /* Keep track of total time passed in world */
         world->info.world_time_total_raw += (double)delta_time;

@@ -3030,6 +3030,10 @@ void World_system_time_scale(void);
 void World_quit(void);
 void World_get_delta_time(void);
 void World_get_delta_time_auto(void);
+void World_progress_w_stalled_clock(void);
+void World_progress_w_stalled_clock_at_zero(void);
+void World_progress_w_stalled_clock_warns_once(void);
+void World_progress_w_coarse_clock(void);
 void World_recreate_world(void);
 void World_recreate_world_w_component(void);
 void World_no_threading(void);
@@ -15585,6 +15589,22 @@ bake_test_case World_testcases[] = {
         World_get_delta_time_auto
     },
     {
+        "progress_w_stalled_clock",
+        World_progress_w_stalled_clock
+    },
+    {
+        "progress_w_stalled_clock_at_zero",
+        World_progress_w_stalled_clock_at_zero
+    },
+    {
+        "progress_w_stalled_clock_warns_once",
+        World_progress_w_stalled_clock_warns_once
+    },
+    {
+        "progress_w_coarse_clock",
+        World_progress_w_coarse_clock
+    },
+    {
         "recreate_world",
         World_recreate_world
     },
@@ -18543,7 +18563,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        193,
+        197,
         World_testcases
     },
     {
