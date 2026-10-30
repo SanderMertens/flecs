@@ -22303,6 +22303,11 @@ int ecs_fini(
 
     world->flags |= EcsWorldQuit;
 
+    int32_t i;
+    for (i = 0; i < world->stage_count; i ++) {
+        flecs_commands_flush(world, world->stages[i]);
+    }
+
     /* Tree spawners can keep tables alive, which can conflict with entity
      * cleanup. Cleanup treespawners first before cleaning up other entities.
      * This means that prefab spawning does not work during world cleanup. */

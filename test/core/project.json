@@ -3672,7 +3672,8 @@
                 "add_to_world_while_readonly",
                 "add_to_world_and_stage_while_readonly",
                 "lookup_after_stage_count_change",
-                "lookup_w_scope_after_stage_count_change"
+                "lookup_w_scope_after_stage_count_change",
+                "delete_stage_entity_after_progress"
             ]
         }, {
             "id": "Stresstests",
