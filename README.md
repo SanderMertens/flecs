@@ -188,3 +188,5 @@ The following language bindings have been developed with Flecs! Note that these 
   - [flecs-hub/flecs-lua](https://github.com/flecs-hub/flecs-lua)
 - Clojure
   - [vybe-flecs](https://vybegame.dev/vybe-flecs)
+- Java
+  - [flecs-java](https://github.com/elebras1/flecs-java)
