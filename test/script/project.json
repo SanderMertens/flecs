@@ -4203,6 +4203,7 @@
                 "too_many_args",
                 "missing_arg",
                 "invalid_arg",
+                "invalid_arg_backtick_string",
                 "quoted_arg",
                 "quoted_arg_w_escape",
                 "backtick_arg",

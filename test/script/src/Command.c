@@ -556,6 +556,21 @@ void Command_invalid_arg(void) {
     ecs_fini(world);
 }
 
+void Command_invalid_arg_backtick_string(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+    ecs_shell_result_t r = ecs_shell_run(world, session, "ls `a\\.b`");
+    test_uint(r.result.type, 0);
+    test_assert(ecs_vec_count(&r.errors) != 0);
+    test_str(ecs_vec_last_t(&r.errors, char*)[0],
+        "invalid argument '`a\\.b`' for parameter 'scope' of command 'ls'");
+    ecs_shell_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
 void Command_quoted_arg(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptShell);

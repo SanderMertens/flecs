@@ -4054,6 +4054,7 @@ void Command_empty_command(void);
 void Command_too_many_args(void);
 void Command_missing_arg(void);
 void Command_invalid_arg(void);
+void Command_invalid_arg_backtick_string(void);
 void Command_quoted_arg(void);
 void Command_quoted_arg_w_escape(void);
 void Command_backtick_arg(void);
@@ -20110,6 +20111,10 @@ bake_test_case Command_testcases[] = {
         Command_invalid_arg
     },
     {
+        "invalid_arg_backtick_string",
+        Command_invalid_arg_backtick_string
+    },
+    {
         "quoted_arg",
         Command_quoted_arg
     },
@@ -21109,7 +21114,7 @@ static bake_test_suite suites[] = {
         "Command",
         Command_setup,
         NULL,
-        127,
+        128,
         Command_testcases
     },
     {
