@@ -30197,7 +30197,11 @@ void flecs_table_fini(
 
     ecs_os_perf_trace_push("flecs.table.free");
 
-    if (!is_root && !(world->flags & EcsWorldQuit)) {
+    /* Notify query caches unless the store itself is being torn down. While
+     * the world is quitting (ecs_quit, or ecs_fini deleting root entities
+     * with regular operations) queries are still alive and can be iterated
+     * or revalidated, so they must not keep pointers to deleted tables. */
+    if (!is_root && !(world->flags & EcsWorldFini)) {
         if (table->flags & EcsTableHasOnTableDelete) {
             flecs_table_emit(world, table, EcsOnTableDelete);
         }

@@ -1952,6 +1952,8 @@ void Cached_on_add_childof_observer_w_parent_component_and_up_query(void);
 void Cached_fini_w_optional_cascade_query_and_nested_parent(void);
 void Cached_delete_disabled_child_table_after_rematch(void);
 void Cached_delete_table_w_on_table_delete_observer_creating_tables(void);
+void Cached_fini_revalidate_after_table_delete(void);
+void Cached_table_delete_after_quit(void);
 
 // Testsuite 'ChangeDetection'
 void ChangeDetection_query_changed_after_new(void);
@@ -10670,6 +10672,14 @@ bake_test_case Cached_testcases[] = {
     {
         "delete_table_w_on_table_delete_observer_creating_tables",
         Cached_delete_table_w_on_table_delete_observer_creating_tables
+    },
+    {
+        "fini_revalidate_after_table_delete",
+        Cached_fini_revalidate_after_table_delete
+    },
+    {
+        "table_delete_after_quit",
+        Cached_table_delete_after_quit
     }
 };
 
@@ -14997,7 +15007,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        172,
+        174,
         Cached_testcases
     },
     {
