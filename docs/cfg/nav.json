@@ -33,6 +33,7 @@
         { "page": "docs/Systems.md" },
         { "page": "docs/PrefabsManual.md" },
         { "page": "docs/FlecsScript.md" },
+        { "page": "docs/FlecsShell.md" },
         { "page": "docs/FlecsQueryLanguage.md", "title": "Query Language" },
         { "page": "docs/FlecsRemoteApi.md", "title": "Remote API" }
       ]

@@ -8,22 +8,24 @@
 #ifdef FLECS_SCRIPT_SHELL
 #include "command.h"
 
+ECS_COMPONENT_DECLARE(EcsScriptShell);
 ECS_COMPONENT_DECLARE(EcsCommandSession);
-ECS_COMPONENT_DECLARE(ecs_command_param_info_t);
-ECS_COMPONENT_DECLARE(ecs_command_info_t);
-ECS_COMPONENT_DECLARE(ecs_command_tree_node_t);
-ECS_COMPONENT_DECLARE(ecs_command_component_value_t);
-ECS_COMPONENT_DECLARE(ecs_command_entity_info_t);
-ECS_COMPONENT_DECLARE(ecs_command_doc_info_t);
-ECS_COMPONENT_DECLARE(ecs_command_query_row_t);
-ECS_COMPONENT_DECLARE(ecs_command_grep_match_t);
-ECS_COMPONENT_DECLARE(ecs_command_script_info_t);
-ECS_COMPONENT_DECLARE(ecs_command_script_line_t);
-ECS_COMPONENT_DECLARE(ecs_command_script_match_t);
-ECS_COMPONENT_DECLARE(ecs_command_script_location_t);
-ECS_COMPONENT_DECLARE(ecs_command_script_error_t);
+ECS_COMPONENT_DECLARE(ecs_shell_resource_t);
+ECS_COMPONENT_DECLARE(ecs_shell_param_info_t);
+ECS_COMPONENT_DECLARE(ecs_shell_info_t);
+ECS_COMPONENT_DECLARE(ecs_shell_tree_node_t);
+ECS_COMPONENT_DECLARE(ecs_shell_component_value_t);
+ECS_COMPONENT_DECLARE(ecs_shell_entity_info_t);
+ECS_COMPONENT_DECLARE(ecs_shell_doc_info_t);
+ECS_COMPONENT_DECLARE(ecs_shell_query_row_t);
+ECS_COMPONENT_DECLARE(ecs_shell_grep_match_t);
+ECS_COMPONENT_DECLARE(ecs_shell_script_info_t);
+ECS_COMPONENT_DECLARE(ecs_shell_script_line_t);
+ECS_COMPONENT_DECLARE(ecs_shell_script_match_t);
+ECS_COMPONENT_DECLARE(ecs_shell_script_location_t);
+ECS_COMPONENT_DECLARE(ecs_shell_script_error_t);
 #ifdef FLECS_SCRIPT_INPUT
-ECS_COMPONENT_DECLARE(ecs_command_pointer_state_t);
+ECS_COMPONENT_DECLARE(ecs_shell_pointer_state_t);
 ECS_COMPONENT_DECLARE(ecs_script_event_result_t);
 #endif
 
@@ -32,6 +34,9 @@ typedef struct EcsCommandState {
 } EcsCommandState;
 
 static ECS_COMPONENT_DECLARE(EcsCommandState);
+
+#define FLECS_COMMAND_RESOURCE_ROOT ".flecs"
+#define FLECS_COMMAND_RESOURCE_DIR ".flecs/shell"
 
 static void flecs_command_strings_fini(
     ecs_vec_t *strings)
@@ -45,9 +50,52 @@ static void flecs_command_strings_fini(
     ecs_vec_fini_t(NULL, strings, char*);
 }
 
+static void flecs_command_resources_fini(
+    EcsCommandSession *s)
+{
+    ecs_shell_resource_t *array = ecs_vec_first(&s->resources);
+    int32_t i, count = ecs_vec_count(&s->resources);
+    for (i = 0; i < count; i ++) {
+        char *file = flecs_asprintf("%s/%s", s->resource_path, array[i].name);
+        ecs_os_remove(file);
+        ecs_os_free(file);
+        ecs_os_free(array[i].name);
+        ecs_os_free(array[i].content_type);
+    }
+
+    ecs_vec_fini_t(NULL, &s->resources, ecs_shell_resource_t);
+
+    if (s->resource_path) {
+        ecs_os_rmdir(s->resource_path);
+        ecs_os_free(s->resource_path);
+        s->resource_path = NULL;
+    }
+}
+
+static ECS_CTOR(EcsScriptShell, ptr, {
+    ecs_vec_init_t(NULL, &ptr->command_paths, ecs_entity_t, 0);
+})
+
+static ECS_COPY(EcsScriptShell, dst, src, {
+    ecs_vec_fini_t(NULL, &dst->command_paths, ecs_entity_t);
+    dst->command_paths = ecs_vec_copy_t(
+        NULL, &src->command_paths, ecs_entity_t);
+})
+
+static ECS_MOVE(EcsScriptShell, dst, src, {
+    ecs_vec_fini_t(NULL, &dst->command_paths, ecs_entity_t);
+    *dst = *src;
+    ecs_os_zeromem(src);
+})
+
+static ECS_DTOR(EcsScriptShell, ptr, {
+    ecs_vec_fini_t(NULL, &ptr->command_paths, ecs_entity_t);
+})
+
 static ECS_MOVE(EcsCommandSession, dst, src, {
     flecs_command_strings_fini(&dst->history);
     flecs_command_strings_fini(&dst->results);
+    flecs_command_resources_fini(dst);
     *dst = *src;
     ecs_os_zeromem(src);
 })
@@ -55,9 +103,10 @@ static ECS_MOVE(EcsCommandSession, dst, src, {
 static ECS_DTOR(EcsCommandSession, ptr, {
     flecs_command_strings_fini(&ptr->history);
     flecs_command_strings_fini(&ptr->results);
+    flecs_command_resources_fini(ptr);
 })
 
-ecs_entity_t ecs_command_get_session(
+ecs_entity_t ecs_shell_get_session(
     const ecs_world_t *world)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -79,7 +128,7 @@ error:
 ecs_entity_t flecs_command_scope(
     const ecs_world_t *world)
 {
-    ecs_entity_t session = ecs_command_get_session(world);
+    ecs_entity_t session = ecs_shell_get_session(world);
     if (!session) {
         return 0;
     }
@@ -90,6 +139,31 @@ ecs_entity_t flecs_command_scope(
     }
 
     return s->scope;
+}
+
+ecs_entity_t flecs_command_resolve(
+    const ecs_world_t *world,
+    const char *name)
+{
+    const EcsScriptShell *shell = ecs_singleton_get(world, EcsScriptShell);
+    if (!shell) {
+        return 0;
+    }
+
+    const ecs_entity_t *paths = ecs_vec_first(&shell->command_paths);
+    int32_t i, count = ecs_vec_count(&shell->command_paths);
+    for (i = 0; i < count; i ++) {
+        if (!paths[i] || !ecs_is_alive(world, paths[i])) {
+            continue;
+        }
+
+        ecs_entity_t function = ecs_lookup_child(world, paths[i], name);
+        if (function && ecs_has(world, function, EcsScriptFunction)) {
+            return function;
+        }
+    }
+
+    return 0;
 }
 
 ecs_entity_t flecs_command_lookup(
@@ -298,8 +372,8 @@ void flecs_command_lines_append(
         }
 
         if (line >= first) {
-            ecs_command_script_line_t *l = ecs_vec_append_t(
-                NULL, lines, ecs_command_script_line_t);
+            ecs_shell_script_line_t *l = ecs_vec_append_t(
+                NULL, lines, ecs_shell_script_line_t);
             l->line = line;
             l->text = flecs_asprintf("%.*s",
                 flecs_ito(int32_t, end - ptr), ptr);
@@ -694,7 +768,7 @@ static void flecs_command_history_set_result(
     ecs_entity_t session,
     const char *cmd,
     const char *scope,
-    const ecs_command_result_t *result)
+    const ecs_shell_result_t *result)
 {
     EcsCommandSession *s = ecs_get_mut(world, session, EcsCommandSession);
     if (!s) {
@@ -784,8 +858,7 @@ static int flecs_command_invoke(
 
     char **t = ecs_vec_first(&tokens);
     const char *name = t[0];
-    ecs_entity_t scope = ecs_lookup(world, "flecs.script.command");
-    ecs_entity_t function = scope ? ecs_lookup_child(world, scope, name) : 0;
+    ecs_entity_t function = flecs_command_resolve(world, name);
     const EcsScriptFunction *f = function ?
         ecs_get(world, function, EcsScriptFunction) : NULL;
     if (!f || !f->callback) {
@@ -830,12 +903,12 @@ done:
     return r;
 }
 
-ecs_command_result_t ecs_command_run(
+ecs_shell_result_t ecs_shell_run(
     ecs_world_t *world,
     ecs_entity_t session,
     const char *cmd)
 {
-    ecs_command_result_t result = { .result = { 0 } };
+    ecs_shell_result_t result = { .result = { 0 } };
     ecs_vec_init_t(NULL, &result.errors, char*, 0);
 
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -890,9 +963,9 @@ error:
     return result;
 }
 
-void ecs_command_result_fini(
+void ecs_shell_result_fini(
     ecs_world_t *world,
-    ecs_command_result_t *result)
+    ecs_shell_result_t *result)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(result != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -903,22 +976,22 @@ error:
     return;
 }
 
-ecs_entity_t ecs_command_session_init(
+ecs_entity_t ecs_shell_session_init(
     ecs_world_t *world,
-    const ecs_command_session_desc_t *desc)
+    const ecs_shell_session_desc_t *desc)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_id(EcsCommandSession) != 0, ECS_INVALID_OPERATION,
         "script command module is not imported");
 
-    ecs_command_session_desc_t empty = {0};
+    ecs_shell_session_desc_t empty = {0};
     if (!desc) {
         desc = &empty;
     }
 
     ecs_entity_t session = desc->entity;
     if (!session) {
-        ecs_entity_t parent = ecs_lookup(world, "script.command.sessions");
+        ecs_entity_t parent = ecs_lookup(world, "script.shell.sessions");
         session = ecs_new_w_pair(world, EcsChildOf, parent);
     }
 
@@ -932,18 +1005,169 @@ error:
     return 0;
 }
 
+int ecs_shell_resource_create(
+    ecs_world_t *world,
+    ecs_entity_t session,
+    const char *content_type,
+    const void *data,
+    ecs_size_t size,
+    ecs_shell_resource_t *resource)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(size >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(data != NULL || !size, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id(EcsCommandSession) != 0, ECS_INVALID_OPERATION,
+        "script command module is not imported");
+
+    EcsCommandSession *s = NULL;
+    if (session && ecs_is_alive(world, session)) {
+        s = ecs_get_mut(world, session, EcsCommandSession);
+    }
+
+    if (!s) {
+        ecs_err("entity #%u is not a command session", (uint32_t)session);
+        return -1;
+    }
+
+    if (!ecs_os_has_dirs()) {
+        ecs_err("cannot create resource: OS API has no directory support");
+        return -1;
+    }
+
+    if (!s->resource_path) {
+        char *path = flecs_asprintf("%s/%llu", FLECS_COMMAND_RESOURCE_DIR,
+            (unsigned long long)session);
+        if (ecs_os_mkdir(FLECS_COMMAND_RESOURCE_ROOT) ||
+            ecs_os_mkdir(FLECS_COMMAND_RESOURCE_DIR) ||
+            ecs_os_mkdir(path))
+        {
+            ecs_err("failed to create resource directory '%s'", path);
+            ecs_os_free(path);
+            return -1;
+        }
+
+        s->resource_path = path;
+    }
+
+    char *name = flecs_asprintf("%d", ecs_vec_count(&s->resources) + 1);
+    char *file = flecs_asprintf("%s/%s", s->resource_path, name);
+    FILE *f = ecs_os_fopen(file, "wb");
+    if (!f) {
+        ecs_err("failed to open resource file '%s'", file);
+        ecs_os_free(file);
+        ecs_os_free(name);
+        return -1;
+    }
+
+    bool written = !size || ecs_os_fwrite(data, (size_t)size, 1, f) == 1;
+    ecs_os_fclose(f);
+    if (!written) {
+        ecs_err("failed to write resource file '%s'", file);
+        ecs_os_remove(file);
+        ecs_os_free(file);
+        ecs_os_free(name);
+        return -1;
+    }
+
+    ecs_os_free(file);
+
+    ecs_vec_init_if_t(&s->resources, ecs_shell_resource_t);
+    ecs_shell_resource_t *r = ecs_vec_append_t(
+        NULL, &s->resources, ecs_shell_resource_t);
+    r->name = name;
+    r->content_type = ecs_os_strdup(
+        content_type ? content_type : "application/octet-stream");
+
+    if (resource) {
+        resource->name = ecs_os_strdup(r->name);
+        resource->content_type = ecs_os_strdup(r->content_type);
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+void* ecs_shell_resource_read(
+    const ecs_world_t *world,
+    ecs_entity_t session,
+    const char *name,
+    ecs_size_t *size,
+    const char **content_type)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(name != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(size != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    *size = 0;
+    world = ecs_get_world(world);
+    if (!ecs_id(EcsCommandSession) || !session ||
+        !ecs_is_alive(world, session))
+    {
+        return NULL;
+    }
+
+    const EcsCommandSession *s = ecs_get(world, session, EcsCommandSession);
+    if (!s) {
+        return NULL;
+    }
+
+    const ecs_shell_resource_t *array = ecs_vec_first(&s->resources);
+    int32_t i, count = ecs_vec_count(&s->resources);
+    for (i = 0; i < count; i ++) {
+        if (!ecs_os_strcmp(array[i].name, name)) {
+            break;
+        }
+    }
+
+    if (i == count) {
+        return NULL;
+    }
+
+    char *file = flecs_asprintf("%s/%s", s->resource_path, array[i].name);
+    FILE *f = ecs_os_fopen(file, "rb");
+    ecs_os_free(file);
+    if (!f) {
+        return NULL;
+    }
+
+    char *result = NULL;
+    ecs_size_t len = 0, cap = 0;
+    size_t read;
+    do {
+        if (len == cap) {
+            cap = cap ? cap * 2 : 4096;
+            result = ecs_os_realloc(result, cap);
+        }
+
+        read = ecs_os_fread(&result[len], 1, (size_t)(cap - len), f);
+        len += flecs_uto(ecs_size_t, read);
+    } while (read);
+
+    ecs_os_fclose(f);
+
+    *size = len;
+    if (content_type) {
+        *content_type = array[i].content_type;
+    }
+
+    return result;
+error:
+    return NULL;
+}
+
 void flecs_command_register(
     ecs_world_t *world,
+    ecs_entity_t scope,
     const flecs_command_desc_t *commands,
     int32_t count)
 {
-    ecs_entity_t parent = ecs_lookup(world, "flecs.script.command");
     int32_t i;
     for (i = 0; i < count; i ++) {
         const flecs_command_desc_t *cmd = &commands[i];
         ecs_function_desc_t desc = {
             .name = cmd->name,
-            .parent = parent,
+            .parent = scope,
             .return_type = cmd->return_type,
             .callback = cmd->callback,
             .ctx = cmd->ctx
@@ -973,41 +1197,46 @@ static void flecs_command_register_types(
     ecs_entity_t i32_t = ecs_id(ecs_i32_t);
     ecs_entity_t bool_t = ecs_id(ecs_bool_t);
 
-    flecs_command_struct(world, ecs_command_param_info_t, "ParamInfo", {
+    flecs_command_struct(world, ecs_shell_resource_t, "resource", {
+        { .name = "name", .type = string_t },
+        { .name = "content_type", .type = string_t }
+    });
+
+    flecs_command_struct(world, ecs_shell_param_info_t, "ParamInfo", {
         { .name = "name", .type = string_t },
         { .name = "type", .type = entity_t },
         { .name = "optional", .type = bool_t },
         { .name = "brief", .type = string_t }
     });
 
-    flecs_command_struct(world, ecs_command_info_t, "CommandInfo", {
+    flecs_command_struct(world, ecs_shell_info_t, "CommandInfo", {
         { .name = "name", .type = string_t },
         { .name = "brief", .type = string_t },
         { .name = "params", .type = flecs_script_vector_type(
-            world, ecs_id(ecs_command_param_info_t)) },
+            world, ecs_id(ecs_shell_param_info_t)) },
         { .name = "return_type", .type = entity_t }
     });
 
-    flecs_command_struct(world, ecs_command_tree_node_t, "TreeNode", {
+    flecs_command_struct(world, ecs_shell_tree_node_t, "TreeNode", {
         { .name = "entity", .type = entity_t },
         { .name = "depth", .type = i32_t }
     });
 
-    flecs_command_struct(world, ecs_command_component_value_t,
+    flecs_command_struct(world, ecs_shell_component_value_t,
         "ComponentValue", {
         { .name = "id", .type = id_t },
         { .name = "value", .type = ecs_id(ecs_value_t) }
     });
 
-    flecs_command_struct(world, ecs_command_entity_info_t, "EntityInfo", {
+    flecs_command_struct(world, ecs_shell_entity_info_t, "EntityInfo", {
         { .name = "entity", .type = entity_t },
         { .name = "id", .type = ecs_id(ecs_u64_t) },
         { .name = "components", .type = flecs_script_vector_type(
-            world, ecs_id(ecs_command_component_value_t)) },
+            world, ecs_id(ecs_shell_component_value_t)) },
         { .name = "ids", .type = flecs_script_vector_type(world, id_t) }
     });
 
-    flecs_command_struct(world, ecs_command_doc_info_t, "DocInfo", {
+    flecs_command_struct(world, ecs_shell_doc_info_t, "DocInfo", {
         { .name = "entity", .type = entity_t },
         { .name = "name", .type = string_t },
         { .name = "brief", .type = string_t },
@@ -1016,19 +1245,19 @@ static void flecs_command_register_types(
         { .name = "color", .type = string_t }
     });
 
-    flecs_command_struct(world, ecs_command_query_row_t, "QueryRow", {
+    flecs_command_struct(world, ecs_shell_query_row_t, "QueryRow", {
         { .name = "entity", .type = entity_t },
         { .name = "fields", .type = flecs_script_vector_type(
-            world, ecs_id(ecs_command_component_value_t)) }
+            world, ecs_id(ecs_shell_component_value_t)) }
     });
 
-    flecs_command_struct(world, ecs_command_grep_match_t, "GrepMatch", {
+    flecs_command_struct(world, ecs_shell_grep_match_t, "GrepMatch", {
         { .name = "entity", .type = entity_t },
         { .name = "id", .type = id_t },
         { .name = "text", .type = string_t }
     });
 
-    flecs_command_struct(world, ecs_command_script_info_t, "ScriptInfo", {
+    flecs_command_struct(world, ecs_shell_script_info_t, "ScriptInfo", {
         { .name = "script", .type = entity_t },
         { .name = "filename", .type = string_t },
         { .name = "lines", .type = i32_t },
@@ -1036,18 +1265,18 @@ static void flecs_command_register_types(
         { .name = "error", .type = string_t }
     });
 
-    flecs_command_struct(world, ecs_command_script_line_t, "ScriptLine", {
+    flecs_command_struct(world, ecs_shell_script_line_t, "ScriptLine", {
         { .name = "line", .type = i32_t },
         { .name = "text", .type = string_t }
     });
 
-    flecs_command_struct(world, ecs_command_script_match_t, "ScriptMatch", {
+    flecs_command_struct(world, ecs_shell_script_match_t, "ScriptMatch", {
         { .name = "script", .type = entity_t },
         { .name = "line", .type = i32_t },
         { .name = "text", .type = string_t }
     });
 
-    flecs_command_struct(world, ecs_command_script_location_t,
+    flecs_command_struct(world, ecs_shell_script_location_t,
         "ScriptLocation", {
         { .name = "script", .type = entity_t },
         { .name = "line", .type = i32_t },
@@ -1056,13 +1285,13 @@ static void flecs_command_register_types(
         { .name = "statement", .type = string_t }
     });
 
-    flecs_command_struct(world, ecs_command_script_error_t, "ScriptError", {
+    flecs_command_struct(world, ecs_shell_script_error_t, "ScriptError", {
         { .name = "script", .type = entity_t },
         { .name = "error", .type = string_t }
     });
 
 #ifdef FLECS_SCRIPT_INPUT
-    flecs_command_struct(world, ecs_command_pointer_state_t, "PointerState", {
+    flecs_command_struct(world, ecs_shell_pointer_state_t, "PointerState", {
         { .name = "event", .type = ecs_id(EcsScriptMouseEvent) },
         { .name = "pressed", .type = entity_t }
     });
@@ -1074,10 +1303,21 @@ static void flecs_command_register_types(
 #endif
 }
 
-void FlecsScriptCommandImport(
+static ecs_entity_t flecs_command_path_init(
+    ecs_world_t *world,
+    const char *name)
+{
+    ecs_entity_t path = ecs_entity(world, { .name = name });
+    EcsScriptShell *shell = ecs_singleton_ensure(world, EcsScriptShell);
+    ecs_vec_append_t(NULL, &shell->command_paths, ecs_entity_t)[0] = path;
+    ecs_singleton_modified(world, EcsScriptShell);
+    return path;
+}
+
+void FlecsScriptShellImport(
     ecs_world_t *world)
 {
-    ECS_MODULE(world, FlecsScriptCommand);
+    ECS_MODULE(world, FlecsScriptShell);
     ECS_IMPORT(world, FlecsScript);
     ECS_IMPORT(world, FlecsDoc);
 #ifdef FLECS_SCRIPT_INPUT
@@ -1087,6 +1327,24 @@ void FlecsScriptCommandImport(
     ecs_set_name_prefix(world, "Ecs");
     ECS_COMPONENT_DEFINE(world, EcsCommandSession);
     ECS_COMPONENT_DEFINE(world, EcsCommandState);
+
+    ecs_set_name_prefix(world, "EcsScript");
+    ECS_COMPONENT_DEFINE(world, EcsScriptShell);
+
+    ecs_set_hooks(world, EcsScriptShell, {
+        .ctor = ecs_ctor(EcsScriptShell),
+        .copy = ecs_copy(EcsScriptShell),
+        .move = ecs_move(EcsScriptShell),
+        .dtor = ecs_dtor(EcsScriptShell)
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(EcsScriptShell),
+        .members = {
+            { .name = "command_paths", .type = flecs_script_vector_type(
+                world, ecs_id(ecs_entity_t)) }
+        }
+    });
 
     ecs_set_hooks(world, EcsCommandState, {
         .ctor = flecs_default_ctor
@@ -1113,14 +1371,17 @@ void FlecsScriptCommandImport(
         EcsDontInherit);
 
     flecs_command_register_types(world);
-    flecs_command_core_import(world);
-    flecs_command_script_import(world);
+    flecs_command_core_import(world,
+        flecs_command_path_init(world, "commands.core"));
 #ifdef FLECS_SCRIPT_INPUT
-    flecs_command_input_import(world);
+    flecs_command_input_import(world,
+        flecs_command_path_init(world, "commands.input"));
 #endif
+    flecs_command_script_import(world,
+        flecs_command_path_init(world, "commands.script"));
 
     ecs_entity_t prev_scope = ecs_set_scope(world, 0);
-    ecs_entity(world, { .name = "script.command.sessions" });
+    ecs_entity(world, { .name = "script.shell.sessions" });
     ecs_set_scope(world, prev_scope);
 
     ecs_singleton_add(world, EcsCommandState);

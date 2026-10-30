@@ -208,8 +208,8 @@ static void flecs_command_scripts(
     int32_t i, count = ecs_vec_count(&scripts);
     for (i = 0; i < count; i ++) {
         const EcsScript *s = ecs_get(world, entities[i], EcsScript);
-        ecs_command_script_info_t *info = ecs_vec_append_t(
-            NULL, result->ptr, ecs_command_script_info_t);
+        ecs_shell_script_info_t *info = ecs_vec_append_t(
+            NULL, result->ptr, ecs_shell_script_info_t);
         info->script = entities[i];
         info->filename = ecs_os_strdup(s->filename);
         info->lines = flecs_command_line_count(s->code);
@@ -242,15 +242,15 @@ static void flecs_command_script_grep_one(
     ecs_vec_t *out)
 {
     ecs_vec_t lines;
-    ecs_vec_init_t(NULL, &lines, ecs_command_script_line_t, 0);
+    ecs_vec_init_t(NULL, &lines, ecs_shell_script_line_t, 0);
     flecs_command_lines_append(&lines, s->code, 1, -1);
 
-    ecs_command_script_line_t *l = ecs_vec_first(&lines);
+    ecs_shell_script_line_t *l = ecs_vec_first(&lines);
     int32_t i, count = ecs_vec_count(&lines);
     for (i = 0; i < count; i ++) {
         if (strstr(l[i].text, text)) {
-            ecs_command_script_match_t *m = ecs_vec_append_t(
-                NULL, out, ecs_command_script_match_t);
+            ecs_shell_script_match_t *m = ecs_vec_append_t(
+                NULL, out, ecs_shell_script_match_t);
             m->script = script;
             m->line = l[i].line;
             m->text = l[i].text;
@@ -259,7 +259,7 @@ static void flecs_command_script_grep_one(
         }
     }
 
-    ecs_vec_fini_t(NULL, &lines, ecs_command_script_line_t);
+    ecs_vec_fini_t(NULL, &lines, ecs_shell_script_line_t);
 }
 
 static void flecs_command_script_grep(
@@ -326,7 +326,7 @@ static void flecs_command_script_where(
         end ++;
     }
 
-    ecs_command_script_location_t *loc = result->ptr;
+    ecs_shell_script_location_t *loc = result->ptr;
     loc->script = owner;
     loc->line = src.line;
     loc->column = src.column;
@@ -356,8 +356,8 @@ static void flecs_command_script_errors(
             continue;
         }
 
-        ecs_command_script_error_t *err = ecs_vec_append_t(
-            NULL, result->ptr, ecs_command_script_error_t);
+        ecs_shell_script_error_t *err = ecs_vec_append_t(
+            NULL, result->ptr, ecs_shell_script_error_t);
         err->script = entities[i];
         err->error = ecs_os_strdup(s->error);
     }
@@ -556,14 +556,14 @@ static void flecs_command_script_set(
     ecs_script_update(world, owner, 0, new_code);
 
     ecs_vec_t lines;
-    ecs_vec_init_t(NULL, &lines, ecs_command_script_line_t, 0);
+    ecs_vec_init_t(NULL, &lines, ecs_shell_script_line_t, 0);
     flecs_command_lines_append(&lines, new_code, line, line);
     if (ecs_vec_count(&lines)) {
-        *(ecs_command_script_line_t*)result->ptr =
-            ecs_vec_first_t(&lines, ecs_command_script_line_t)[0];
+        *(ecs_shell_script_line_t*)result->ptr =
+            ecs_vec_first_t(&lines, ecs_shell_script_line_t)[0];
     }
 
-    ecs_vec_fini_t(NULL, &lines, ecs_command_script_line_t);
+    ecs_vec_fini_t(NULL, &lines, ecs_shell_script_line_t);
     ecs_os_free(new_code);
 }
 
@@ -722,19 +722,20 @@ static void flecs_command_script_undo(
 }
 
 void flecs_command_script_import(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    ecs_entity_t scope)
 {
     ecs_entity_t string_t = ecs_id(ecs_string_t);
     ecs_entity_t entity_t = ecs_id(ecs_entity_t);
     ecs_entity_t id_t = ecs_id(ecs_id_t);
     ecs_entity_t line_vec = flecs_script_vector_type(
-        world, ecs_id(ecs_command_script_line_t));
+        world, ecs_id(ecs_shell_script_line_t));
     ecs_entity_t script_info_vec = flecs_script_vector_type(
-        world, ecs_id(ecs_command_script_info_t));
+        world, ecs_id(ecs_shell_script_info_t));
     ecs_entity_t script_match_vec = flecs_script_vector_type(
-        world, ecs_id(ecs_command_script_match_t));
+        world, ecs_id(ecs_shell_script_match_t));
     ecs_entity_t script_error_vec = flecs_script_vector_type(
-        world, ecs_id(ecs_command_script_error_t));
+        world, ecs_id(ecs_shell_script_error_t));
 
     flecs_command_desc_t commands[] = {
         { "scripts", flecs_command_scripts, script_info_vec,
@@ -750,7 +751,7 @@ void flecs_command_script_import(
             { "script", entity_t, true,
                 "Script (default: scripts in session scope)" }}},
         { "script_where", flecs_command_script_where,
-            ecs_id(ecs_command_script_location_t),
+            ecs_id(ecs_shell_script_location_t),
             "Script statement that declares an entity", {
             { "entity", entity_t, false, "Entity" }}},
         { "script_errors", flecs_command_script_errors, script_error_vec,
@@ -779,7 +780,7 @@ void flecs_command_script_import(
                 "Unified diff, '@@ <anchor>' lines may be used instead of line "
                 "numbers" }}},
         { "script_set", flecs_command_script_set,
-            ecs_id(ecs_command_script_line_t),
+            ecs_id(ecs_shell_script_line_t),
             "Set component value in the script that declares the entity", {
             { "entity", entity_t, false, "Entity, $ for singleton" },
             { "component", id_t, false, "Component" },
@@ -809,7 +810,7 @@ void flecs_command_script_import(
             { "script", entity_t, false, "Script" }}},
     };
 
-    flecs_command_register(world, commands,
+    flecs_command_register(world, scope, commands,
         ECS_SIZEOF(commands) / ECS_SIZEOF(flecs_command_desc_t));
 }
 

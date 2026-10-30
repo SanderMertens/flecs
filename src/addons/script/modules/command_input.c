@@ -183,7 +183,7 @@ static void flecs_command_pointer(
 {
     (void)argc;
     (void)argv;
-    ecs_command_pointer_state_t *state = result->ptr;
+    ecs_shell_pointer_state_t *state = result->ptr;
     ecs_script_get_mouse_state(ctx->world, &state->event, &state->pressed);
 }
 
@@ -469,7 +469,8 @@ static void flecs_command_listeners(
 }
 
 void flecs_command_input_import(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    ecs_entity_t scope)
 {
     ecs_entity_t string_t = ecs_id(ecs_string_t);
     ecs_entity_t entity_t = ecs_id(ecs_entity_t);
@@ -487,7 +488,7 @@ void flecs_command_input_import(
             { "entity", entity_t, true, "Entity to focus, 0 to clear" }}},
         { "blur", flecs_command_blur, 0, "Clear the focus" },
         { "pointer", flecs_command_pointer,
-            ecs_id(ecs_command_pointer_state_t),
+            ecs_id(ecs_shell_pointer_state_t),
             "Last mouse event and pressed entity" },
         { "move", flecs_command_move, event_result,
             "Move the pointer to an entity, keeps held buttons held", {
@@ -534,7 +535,7 @@ void flecs_command_input_import(
             { "entity", entity_t, false, "Entity" }}},
     };
 
-    flecs_command_register(world, commands,
+    flecs_command_register(world, scope, commands,
         ECS_SIZEOF(commands) / ECS_SIZEOF(flecs_command_desc_t));
 }
 

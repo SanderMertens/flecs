@@ -12,21 +12,21 @@
 #pragma clang diagnostic ignored "-Wmissing-field-initializers"
 #endif
 
-extern ECS_COMPONENT_DECLARE(ecs_command_param_info_t);
-extern ECS_COMPONENT_DECLARE(ecs_command_info_t);
-extern ECS_COMPONENT_DECLARE(ecs_command_tree_node_t);
-extern ECS_COMPONENT_DECLARE(ecs_command_component_value_t);
-extern ECS_COMPONENT_DECLARE(ecs_command_entity_info_t);
-extern ECS_COMPONENT_DECLARE(ecs_command_doc_info_t);
-extern ECS_COMPONENT_DECLARE(ecs_command_query_row_t);
-extern ECS_COMPONENT_DECLARE(ecs_command_grep_match_t);
-extern ECS_COMPONENT_DECLARE(ecs_command_script_info_t);
-extern ECS_COMPONENT_DECLARE(ecs_command_script_line_t);
-extern ECS_COMPONENT_DECLARE(ecs_command_script_match_t);
-extern ECS_COMPONENT_DECLARE(ecs_command_script_location_t);
-extern ECS_COMPONENT_DECLARE(ecs_command_script_error_t);
+extern ECS_COMPONENT_DECLARE(ecs_shell_param_info_t);
+extern ECS_COMPONENT_DECLARE(ecs_shell_info_t);
+extern ECS_COMPONENT_DECLARE(ecs_shell_tree_node_t);
+extern ECS_COMPONENT_DECLARE(ecs_shell_component_value_t);
+extern ECS_COMPONENT_DECLARE(ecs_shell_entity_info_t);
+extern ECS_COMPONENT_DECLARE(ecs_shell_doc_info_t);
+extern ECS_COMPONENT_DECLARE(ecs_shell_query_row_t);
+extern ECS_COMPONENT_DECLARE(ecs_shell_grep_match_t);
+extern ECS_COMPONENT_DECLARE(ecs_shell_script_info_t);
+extern ECS_COMPONENT_DECLARE(ecs_shell_script_line_t);
+extern ECS_COMPONENT_DECLARE(ecs_shell_script_match_t);
+extern ECS_COMPONENT_DECLARE(ecs_shell_script_location_t);
+extern ECS_COMPONENT_DECLARE(ecs_shell_script_error_t);
 #ifdef FLECS_SCRIPT_INPUT
-extern ECS_COMPONENT_DECLARE(ecs_command_pointer_state_t);
+extern ECS_COMPONENT_DECLARE(ecs_shell_pointer_state_t);
 extern ECS_COMPONENT_DECLARE(ecs_script_event_result_t);
 #endif
 
@@ -43,6 +43,7 @@ typedef struct flecs_command_desc_t {
 
 void flecs_command_register(
     ecs_world_t *world,
+    ecs_entity_t scope,
     const flecs_command_desc_t *commands,
     int32_t count);
 
@@ -54,6 +55,10 @@ void flecs_command_fail(
 
 ecs_entity_t flecs_command_scope(
     const ecs_world_t *world);
+
+ecs_entity_t flecs_command_resolve(
+    const ecs_world_t *world,
+    const char *name);
 
 void flecs_command_history_clear(
     EcsCommandSession *s);
@@ -120,14 +125,17 @@ char* flecs_command_patch(
     ecs_vec_t *changed_lines);
 
 void flecs_command_core_import(
-    ecs_world_t *world);
+    ecs_world_t *world,
+    ecs_entity_t scope);
 
 void flecs_command_script_import(
-    ecs_world_t *world);
+    ecs_world_t *world,
+    ecs_entity_t scope);
 
 #ifdef FLECS_SCRIPT_INPUT
 void flecs_command_input_import(
-    ecs_world_t *world);
+    ecs_world_t *world,
+    ecs_entity_t scope);
 #endif
 
 #endif

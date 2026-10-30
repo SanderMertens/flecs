@@ -16203,6 +16203,13 @@ void ecs_remove_all(
     flecs_journal_end();
 }
 
+#if defined(ECS_TARGET_WINDOWS)
+#include <direct.h>
+#elif defined(ECS_TARGET_POSIX) && !defined(ECS_TARGET_WASM)
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
+
 void ecs_os_api_impl(ecs_os_api_t *api);
 
 static bool ecs_os_api_initialized = false;
@@ -16655,6 +16662,34 @@ static size_t ecs_os_api_fwrite(
     return fwrite(ptr, size, count, file);
 }
 
+#if defined(ECS_TARGET_WINDOWS) || \
+    (defined(ECS_TARGET_POSIX) && !defined(ECS_TARGET_WASM))
+static int ecs_os_api_mkdir(const char *path) {
+#ifdef ECS_TARGET_WINDOWS
+    int result = _mkdir(path);
+#else
+    int result = mkdir(path, 0777);
+#endif
+    if (result && errno == EEXIST) {
+        return 0;
+    }
+
+    return result;
+}
+
+static int ecs_os_api_rmdir(const char *path) {
+#ifdef ECS_TARGET_WINDOWS
+    return _rmdir(path);
+#else
+    return rmdir(path);
+#endif
+}
+
+static int ecs_os_api_remove(const char *path) {
+    return remove(path);
+}
+#endif
+
 char* ecs_os_strdup_(const char *str) {
     if (!str) {
         return NULL;
@@ -16767,6 +16802,12 @@ void ecs_os_set_api_defaults(void)
     ecs_os_api.fclose_ = ecs_os_api_fclose;
     ecs_os_api.fread_ = ecs_os_api_fread;
     ecs_os_api.fwrite_ = ecs_os_api_fwrite;
+#if defined(ECS_TARGET_WINDOWS) || \
+    (defined(ECS_TARGET_POSIX) && !defined(ECS_TARGET_WASM))
+    ecs_os_api.mkdir_ = ecs_os_api_mkdir;
+    ecs_os_api.rmdir_ = ecs_os_api_rmdir;
+    ecs_os_api.remove_ = ecs_os_api_remove;
+#endif
 
     /* Time */
     ecs_os_api.get_time_ = ecs_os_gettime;
@@ -16856,6 +16897,13 @@ bool ecs_os_has_modules(void) {
     return 
         (ecs_os_api.module_to_dl_ != NULL) &&
         (ecs_os_api.module_to_etc_ != NULL);
+}
+
+bool ecs_os_has_dirs(void) {
+    return 
+        (ecs_os_api.mkdir_ != NULL) &&
+        (ecs_os_api.rmdir_ != NULL) &&
+        (ecs_os_api.remove_ != NULL);
 }
 
 #if defined(ECS_TARGET_WINDOWS)

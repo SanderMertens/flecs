@@ -2049,21 +2049,22 @@ ecs_script_update(world, s, 0, "SpaceShip{}");
 </div>
 
 ### Command sessions
-Run commands of the script shell addon (`FLECS_SCRIPT_SHELL`). A session stores the scope relative to which commands resolve identifiers, and a bounded command history. Use the `help` command to list the available commands.
+Run commands of the script shell addon (`FLECS_SCRIPT_SHELL`). A session stores the scope relative to which commands resolve identifiers, and a bounded command history. Use the `help` command to list the available commands. See the [Flecs Shell manual](FlecsShell.md) for the command syntax and the builtin commands.
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `PUT` | `/command/session` | Create a session. Returns `{"session": <id>}`. |
-| `DELETE` | `/command/session/<id>` | Delete a session. |
-| `GET` | `/command/session/<id>/history` | Get the history. Supports `offset`/`limit`. |
-| `PUT` | `/command/session/<id>` | Run the command in the request body. Supports `offset`/`limit`. |
+| `PUT` | `/shell/session` | Create a session. Returns `{"session": <id>}`. |
+| `DELETE` | `/shell/session/<id>` | Delete a session. |
+| `GET` | `/shell/session/<id>/history` | Get the history. Supports `offset`/`limit`. |
+| `GET` | `/shell/session/<id>/resource/<name>` | Get the content of a resource created in the session. |
+| `PUT` | `/shell/session/<id>` | Run the command in the request body. Supports `offset`/`limit`. |
 
 `offset`/`limit` select lines of a string result and elements of a vector or array result, and are ignored for other types. When they apply, the `more` member indicates whether more lines or elements exist.
 
 #### Example
 
 ```
-PUT /command/session/42?limit=2
+PUT /shell/session/42?limit=2
 ls game
 ```
 
@@ -2081,3 +2082,16 @@ When a command fails, the response has no result and contains the errors that we
 ```json
 {"errors": ["unknown command 'foo'"]}
 ```
+
+#### Resources
+Commands can store files, like images, as resources of the session. A command that returns a resource has the `flecs.script.shell.resource` result type:
+
+```json
+{
+  "type": "flecs.script.shell.resource",
+  "result": {"name": "1", "content_type": "image/png"},
+  "errors": []
+}
+```
+
+The content of the resource can be fetched with `GET /shell/session/<id>/resource/<name>`, which replies with the content type of the resource. Only resources created in the session can be fetched. Resource files are stored in `.flecs/shell/<id>/` in the current working directory, which is created when the first resource is created and deleted together with the session.
