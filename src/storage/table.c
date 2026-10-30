@@ -1137,6 +1137,76 @@ static void flecs_table_dtor_all(
 #define FLECS_LOCKED_STORAGE_MSG(operation) \
     "a " #operation " failed because the table is locked, to defer pass a stage to the operation instead of a world"
 
+/* Allocate storage for a column with the component's column allocator, or the
+ * OS allocator if the component doesn't have one. */
+static void* flecs_table_column_alloc(
+    const ecs_type_info_t *ti,
+    int32_t size)
+{
+    const ecs_column_allocator_t *a = &ti->hooks.column_allocator;
+    ecs_size_t bytes = ti->size * size;
+    if (!a->malloc_) {
+        return ecs_os_malloc(bytes);
+    }
+
+    void *result = a->malloc_(bytes, ti->alignment, a->ctx);
+    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+    return result;
+}
+
+static void flecs_table_column_free(
+    const ecs_type_info_t *ti,
+    void *ptr,
+    int32_t size)
+{
+    if (!ptr) {
+        return;
+    }
+
+    const ecs_column_allocator_t *a = &ti->hooks.column_allocator;
+    if (!a->free_) {
+        ecs_os_free(ptr);
+    } else {
+        a->free_(ptr, ti->size * size, a->ctx);
+    }
+}
+
+/* Resize column storage. Only valid for storage that can be moved with memcpy
+ * (component without ctor_move_dtor, or no elements to move). */
+static void* flecs_table_column_realloc(
+    const ecs_type_info_t *ti,
+    void *ptr,
+    int32_t old_size,
+    int32_t new_size)
+{
+    const ecs_column_allocator_t *a = &ti->hooks.column_allocator;
+    if (!a->malloc_) {
+        return ecs_os_realloc(ptr, ti->size * new_size);
+    }
+
+    if (!new_size) {
+        flecs_table_column_free(ti, ptr, old_size);
+        return NULL;
+    }
+
+    if (!ptr) {
+        return flecs_table_column_alloc(ti, new_size);
+    }
+
+    void *result;
+    if (a->realloc_) {
+        result = a->realloc_(ptr, ti->size * old_size, ti->size * new_size,
+            ti->alignment, a->ctx);
+        ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+    } else {
+        result = flecs_table_column_alloc(ti, new_size);
+        ecs_os_memcpy(result, ptr, ti->size * ECS_MIN(old_size, new_size));
+        flecs_table_column_free(ti, ptr, old_size);
+    }
+
+    return result;
+}
+
 /* Cleanup table storage */
 static void flecs_table_fini_data(
     ecs_world_t *world,
@@ -1159,7 +1229,8 @@ static void flecs_table_fini_data(
             int32_t c, column_count = table->column_count;
             for (c = 0; c < column_count; c ++) {
                 ecs_column_t *column = &columns[c];
-                ecs_os_free(column->data);
+                flecs_table_column_free(
+                    column->ti, column->data, table->data.size);
                 column->data = NULL;
             }
 
@@ -1480,15 +1551,15 @@ static void flecs_table_resize_column(
     if (!new_size) {
         column->data = NULL;
     } else if (count && (ti->hooks.ctor_move_dtor || new_size < old_size)) {
-        void *ptr = ecs_os_malloc(ti->size * new_size);
+        void *ptr = flecs_table_column_alloc(ti, new_size);
         flecs_type_info_ctor_move_dtor(ptr, old, count, ti);
         column->data = ptr;
     } else {
-        column->data = ecs_os_realloc(old, ti->size * new_size);
+        column->data = flecs_table_column_realloc(ti, old, old_size, new_size);
         return;
     }
 
-    ecs_os_free(old);
+    flecs_table_column_free(ti, old, old_size);
 }
 
 static FLECS_ALWAYS_INLINE int32_t flecs_table_grow_data(
@@ -1521,8 +1592,8 @@ static FLECS_ALWAYS_INLINE int32_t flecs_table_grow_data(
         if (prev_size != entities.size) {
             for (int32_t i = 0; i < table->column_count; i ++) {
                 ecs_column_t *column = &table->data.columns[i];
-                column->data = ecs_os_realloc(
-                    column->data, column->ti->size * entities.size);
+                column->data = flecs_table_column_realloc(column->ti,
+                    column->data, prev_size, entities.size);
             }
         }
 
@@ -2131,16 +2202,16 @@ void flecs_table_merge(
                 flecs_type_info_ctor_move_dtor(
                     ECS_ELEM(dst->data, ti->size, dst_count),
                     src->data, src_count, ti);
-                ecs_os_free(src->data);
+                flecs_table_column_free(ti, src->data, src_table->data.size);
             } else {
-                ecs_os_free(dst->data);
+                flecs_table_column_free(ti, dst->data, dst_table->data.size);
                 dst->data = src->data;
             }
 
             flecs_table_mark_table_dirty(world, dst_table, ++ dst_i);
         } else {
             flecs_table_invoke_dtor(src, 0, src_count);
-            ecs_os_free(src->data);
+            flecs_table_column_free(ti, src->data, src_table->data.size);
         }
 
         src->data = NULL;
