@@ -2949,7 +2949,11 @@
                 "include_absolute_path_template_from_shared_include",
                 "include_absolute_path_unresolved_refs_no_infinite_loop",
                 "include_w_semicolon",
-                "include_wo_trailing_newline"
+                "include_wo_trailing_newline",
+                "include_managed_named_after_script_entity",
+                "include_managed_missing_file_no_orphan_entity",
+                "include_managed_missing_file_w_other_include_sets_error",
+                "include_managed_same_relative_path_different_dir"
             ]
         }, {
             "id": "Fuzzing",

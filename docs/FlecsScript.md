@@ -1708,7 +1708,7 @@ The path is resolved relative to the directory of the current script. Paths cont
 
 If the included path does not end in `.flecs`, the extension is appended automatically.
 
-When `include` is used from a managed script (see [Managed script](#managed-script)), the included script is also loaded as a managed script. If a managed script at that path already exists, it is not loaded again. When used from a non-managed script, the included script is executed in place and no script entity is created.
+When `include` is used from a managed script (see [Managed script](#managed-script)), the included script is also loaded as a managed script. Its entity is named after the include path, relative to the path of the including script's entity: a script entity `scenes/parent.flecs` that includes `ui/child` creates the script entity `scenes/ui/child.flecs`. If a managed script at that path already exists, it is not loaded again, unless it was loaded from a different file, in which case the included script entity is named after its file path. When used from a non-managed script, the included script is executed in place and no script entity is created.
 
 If a script contains a `module` statement, `include` statements must appear after the `module` statement.
 

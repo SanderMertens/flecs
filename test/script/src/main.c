@@ -2868,6 +2868,10 @@ void Include_include_absolute_path_template_from_shared_include(void);
 void Include_include_absolute_path_unresolved_refs_no_infinite_loop(void);
 void Include_include_w_semicolon(void);
 void Include_include_wo_trailing_newline(void);
+void Include_include_managed_named_after_script_entity(void);
+void Include_include_managed_missing_file_no_orphan_entity(void);
+void Include_include_managed_missing_file_w_other_include_sets_error(void);
+void Include_include_managed_same_relative_path_different_dir(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_setup(void);
@@ -15500,6 +15504,22 @@ bake_test_case Include_testcases[] = {
     {
         "include_wo_trailing_newline",
         Include_include_wo_trailing_newline
+    },
+    {
+        "include_managed_named_after_script_entity",
+        Include_include_managed_named_after_script_entity
+    },
+    {
+        "include_managed_missing_file_no_orphan_entity",
+        Include_include_managed_missing_file_no_orphan_entity
+    },
+    {
+        "include_managed_missing_file_w_other_include_sets_error",
+        Include_include_managed_missing_file_w_other_include_sets_error
+    },
+    {
+        "include_managed_same_relative_path_different_dir",
+        Include_include_managed_same_relative_path_different_dir
     }
 };
 
@@ -20981,7 +21001,7 @@ static bake_test_suite suites[] = {
         "Include",
         Include_setup,
         NULL,
-        62,
+        66,
         Include_testcases,
         1,
         Include_params

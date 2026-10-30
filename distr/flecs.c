@@ -98866,19 +98866,39 @@ static int flecs_script_include_node(
     rt->include_nesting ++;
 
     if (v->script_entity) {
+        char *script_path = ecs_get_path_w_sep(
+            v->world, 0, v->script_entity, "/", NULL);
+        char *entity_path = flecs_script_include_resolve(
+            script_path, node->filename);
+        ecs_os_free(script_path);
         ecs_entity_t existing = ecs_lookup_path_w_sep(
-            v->world, 0, resolved, "/", "/", false);
-        if (existing && ecs_has(v->world, existing, EcsScript)) {
-            const EcsScript *existing_script = ecs_get(
-                v->world, existing, EcsScript);
-            if (!existing_script->error) {
-                goto done;
-            }
+            v->world, 0, entity_path, "/", "/", false);
+        const EcsScript *existing_script = existing ?
+            ecs_get(v->world, existing, EcsScript) : NULL;
+
+        if (existing_script && existing_script->filename &&
+            ecs_os_strcmp(existing_script->filename, resolved))
+        {
+            ecs_os_free(entity_path);
+            entity_path = ecs_os_strdup(resolved);
+            existing = ecs_lookup_path_w_sep(
+                v->world, 0, entity_path, "/", "/", false);
+            existing_script = existing ?
+                ecs_get(v->world, existing, EcsScript) : NULL;
+        }
+
+        if (existing_script && !existing_script->error) {
+            ecs_os_free(entity_path);
+            goto done;
         }
 
         ecs_entity_t prev_scope = ecs_set_scope(v->world, 0);
+        ecs_entity_t include_entity = ecs_new_from_path_w_sep(
+            v->world, 0, entity_path, "/", "/");
+        ecs_os_free(entity_path);
         rt->include_depth ++;
         ecs_entity_t e = ecs_script_init(v->world, &(ecs_script_desc_t){
+            .entity = include_entity,
             .filename = resolved,
             .ir = v->base.script->ir_enabled
         });
@@ -98890,6 +98910,10 @@ static int flecs_script_include_node(
         }
 
         if (!e) {
+            if (!existing) {
+                ecs_delete(v->world, include_entity);
+            }
+
             flecs_script_eval_error(v, node,
                 "failed to include managed script '%s'", resolved);
             result = -1;
