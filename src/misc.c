@@ -85,7 +85,10 @@ ecs_time_t ecs_time_sub(
 void ecs_sleepf(
     double t)
 {
-    if (t > 0) {
+    /* Refuse durations that cannot be converted to int seconds, as an
+     * out-of-range conversion is undefined behavior. The comparison also
+     * rejects NaN. */
+    if (t > 0 && t <= (double)INT32_MAX) {
         int sec = (int)t;
         int nsec = (int)((t - sec) * 1000000000);
         ecs_os_sleep(sec, nsec);
