@@ -3826,6 +3826,20 @@
                 "init_fini",
                 "multiple_overlapping_cursors"
             ]
+        }, {
+            "id": "ColumnAllocator",
+            "testcases": [
+                "grow_and_free",
+                "grow_and_free_no_realloc",
+                "grow_w_move_hooks",
+                "shrink",
+                "merge",
+                "merge_into_empty",
+                "delete_table",
+                "pair",
+                "set_in_use",
+                "set_missing_free"
+            ]
         }]
     }
 }

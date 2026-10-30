@@ -3722,6 +3722,18 @@ void Error_log_collect_errors_restores_level(void);
 void StackAlloc_init_fini(void);
 void StackAlloc_multiple_overlapping_cursors(void);
 
+// Testsuite 'ColumnAllocator'
+void ColumnAllocator_grow_and_free(void);
+void ColumnAllocator_grow_and_free_no_realloc(void);
+void ColumnAllocator_grow_w_move_hooks(void);
+void ColumnAllocator_shrink(void);
+void ColumnAllocator_merge(void);
+void ColumnAllocator_merge_into_empty(void);
+void ColumnAllocator_delete_table(void);
+void ColumnAllocator_pair(void);
+void ColumnAllocator_set_in_use(void);
+void ColumnAllocator_set_missing_free(void);
+
 bake_test_case Id_testcases[] = {
     {
         "long_entity_from_str",
@@ -18274,6 +18286,49 @@ bake_test_case StackAlloc_testcases[] = {
     }
 };
 
+bake_test_case ColumnAllocator_testcases[] = {
+    {
+        "grow_and_free",
+        ColumnAllocator_grow_and_free
+    },
+    {
+        "grow_and_free_no_realloc",
+        ColumnAllocator_grow_and_free_no_realloc
+    },
+    {
+        "grow_w_move_hooks",
+        ColumnAllocator_grow_w_move_hooks
+    },
+    {
+        "shrink",
+        ColumnAllocator_shrink
+    },
+    {
+        "merge",
+        ColumnAllocator_merge
+    },
+    {
+        "merge_into_empty",
+        ColumnAllocator_merge_into_empty
+    },
+    {
+        "delete_table",
+        ColumnAllocator_delete_table
+    },
+    {
+        "pair",
+        ColumnAllocator_pair
+    },
+    {
+        "set_in_use",
+        ColumnAllocator_set_in_use
+    },
+    {
+        "set_missing_free",
+        ColumnAllocator_set_missing_free
+    }
+};
+
 const char* Sparse_fragment_param[] = {"yes", "no"};
 bake_test_param Sparse_params[] = {
     {"fragment", (char**)Sparse_fragment_param, 2}
@@ -18617,9 +18672,16 @@ static bake_test_suite suites[] = {
         NULL,
         2,
         StackAlloc_testcases
+    },
+    {
+        "ColumnAllocator",
+        NULL,
+        NULL,
+        10,
+        ColumnAllocator_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("core", argc, argv, suites, 48);
+    return bake_test_run("core", argc, argv, suites, 49);
 }

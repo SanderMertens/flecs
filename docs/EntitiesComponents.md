@@ -1059,6 +1059,24 @@ When type hooks are configured and a hook is left to `NULL`, it is assumed that 
 
 In the C++ API the hooks and flags are set automatically when registering a component type.
 
+#### Column allocator
+By default the table columns that store a component are allocated with the OS API. The `column_allocator` member of `ecs_type_hooks_t` replaces this allocator for a single component, which allows component data to be stored in memory with special properties, such as memory that is shared with a GPU:
+
+```c
+ecs_set_hooks(world, Position, {
+  .column_allocator = {
+    .malloc_ = gpu_alloc,   // void* (ecs_size_t size, ecs_size_t alignment, void *ctx)
+    .realloc_ = gpu_realloc, // optional, otherwise malloc_ + memcpy + free_
+    .free_ = gpu_free,      // void (void *ptr, ecs_size_t size, void *ctx)
+    .ctx = gpu_heap
+  }
+});
+```
+
+All allocations, resizes and deallocations of the component's table columns, including columns for pairs that use the component as type, go through the allocator. Callbacks receive allocation sizes in bytes. The allocator must be set before the component is used, and its `ctx` must remain valid until `ecs_fini()` returns. Components that are not stored in tables (`Sparse`, `DontFragment`) use the default allocator.
+
+Column storage moves when a table grows, shrinks or is merged with another table. Code that caches column pointers (for example a renderer that maps a column to a GPU buffer) should re-obtain them with `ecs_table_get_column()` or from an iterator before use, or track moves in the allocator callbacks, which observe every allocation that a column pointer can point to.
+
 The following table lists all component hooks:
 
 | Name             | Description |

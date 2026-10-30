@@ -4257,6 +4257,47 @@ typedef bool (*ecs_on_validate_t)(
     ecs_entity_t entity,
     void *ptr);
 
+/** Column allocator callback that allocates storage for a table column.
+ *
+ * @param size Size of the allocation in bytes.
+ * @param alignment Alignment of the component type.
+ * @param ctx User context from ecs_column_allocator_t::ctx.
+ * @return The allocated memory.
+ */
+typedef void* (*ecs_column_malloc_t)(
+    ecs_size_t size,
+    ecs_size_t alignment,
+    void *ctx);
+
+/** Column allocator callback that resizes storage for a table column.
+ * The contents of the old storage up to the smallest of old_size and new_size
+ * must be preserved, like with realloc().
+ *
+ * @param ptr Storage previously returned by the allocator.
+ * @param old_size Current size of the allocation in bytes.
+ * @param new_size New size of the allocation in bytes.
+ * @param alignment Alignment of the component type.
+ * @param ctx User context from ecs_column_allocator_t::ctx.
+ * @return The (possibly moved) storage.
+ */
+typedef void* (*ecs_column_realloc_t)(
+    void *ptr,
+    ecs_size_t old_size,
+    ecs_size_t new_size,
+    ecs_size_t alignment,
+    void *ctx);
+
+/** Column allocator callback that frees storage for a table column.
+ *
+ * @param ptr Storage previously returned by the allocator.
+ * @param size Size of the allocation in bytes.
+ * @param ctx User context from ecs_column_allocator_t::ctx.
+ */
+typedef void (*ecs_column_free_t)(
+    void *ptr,
+    ecs_size_t size,
+    void *ctx);
+
 /** Destructor function for poly objects. */
 typedef void (*flecs_poly_dtor_t)(
     ecs_poly_t *poly);
@@ -4511,6 +4552,35 @@ struct ecs_observer_t {
     ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL|ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL|\
     ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL|ECS_TYPE_HOOK_CMP_ILLEGAL|\
     ECS_TYPE_HOOK_EQUALS_ILLEGAL)
+
+/** Custom allocator for the table columns of a component.
+ * When set for a component (see ecs_type_hooks_t::column_allocator), all
+ * memory for table columns that store the component is allocated, resized and
+ * freed with these callbacks instead of the OS API. This makes it possible to
+ * store component data in memory with special properties, such as memory that
+ * is shared with a GPU.
+ *
+ * Column storage may move when a table grows, shrinks (ecs_shrink()) or is
+ * merged. Applications that cache column pointers should re-obtain them with
+ * ecs_table_get_column() or from an iterator, or track moves in the allocator
+ * callbacks.
+ *
+ * The allocator is only used for table storage. Components that are stored
+ * outside of tables (e.g. Sparse or DontFragment components) are allocated
+ * with the default allocator. The ctx must remain valid for as long as the
+ * world has tables with the component (until ecs_fini() returns).
+ *
+ * @ingroup components
+ */
+typedef struct ecs_column_allocator_t {
+    ecs_column_malloc_t malloc_;       /**< Allocate column storage (required). */
+    ecs_column_realloc_t realloc_;     /**< Resize column storage (optional). If
+                                        * not set, malloc_, memcpy and free_ are
+                                        * used. */
+    ecs_column_free_t free_;           /**< Free column storage (required). */
+    void *ctx;                         /**< User context passed to callbacks. */
+} ecs_column_allocator_t;
+
 struct ecs_type_hooks_t {
     ecs_xtor_t ctor;            /**< ctor. */
     ecs_xtor_t dtor;            /**< dtor. */
@@ -4579,6 +4649,10 @@ struct ecs_type_hooks_t {
     ecs_ctx_free_t ctx_free;           /**< Callback to free ctx. */
     ecs_ctx_free_t binding_ctx_free;   /**< Callback to free binding_ctx. */
     ecs_ctx_free_t lifecycle_ctx_free; /**< Callback to free lifecycle_ctx. */
+
+    /** Custom allocator for table columns of the component (optional). Cannot
+     * be changed while the component is in use. */
+    ecs_column_allocator_t column_allocator;
 };
 
 /** Type that contains component information (passed to ctors/dtors/...).

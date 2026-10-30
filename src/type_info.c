@@ -376,6 +376,13 @@ static bool flecs_type_hooks_storage_equal(
         return false;
     }
 
+    /* Columns that already exist were allocated with the current allocator */
+    if (ecs_os_memcmp_t(&a->column_allocator, &b->column_allocator,
+        ecs_column_allocator_t))
+    {
+        return false;
+    }
+
     return true;
 }
 
@@ -500,6 +507,14 @@ void ecs_set_hooks_id(
     if (h->ctx_free) hooks.ctx_free = h->ctx_free;
     if (h->binding_ctx_free) hooks.binding_ctx_free = h->binding_ctx_free;
     if (h->lifecycle_ctx_free) hooks.lifecycle_ctx_free = h->lifecycle_ctx_free;
+
+    if (h->column_allocator.malloc_ || h->column_allocator.free_) {
+        ecs_check(h->column_allocator.malloc_ && h->column_allocator.free_,
+            ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component "
+            "'%s': column allocator must set both malloc_ and free_",
+                flecs_errstr(ecs_get_path(world, component)));
+        hooks.column_allocator = h->column_allocator;
+    }
 
     /* If no constructor is set, invoking any of the other lifecycle actions
      * is not safe as they will potentially access uninitialized memory. For
