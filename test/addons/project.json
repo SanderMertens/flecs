@@ -609,7 +609,11 @@
                 "shell_resource_unknown",
                 "shell_resource_other_session",
                 "shell_resource_deleted_session",
-                "shell_resource_command"
+                "shell_resource_command",
+                "command_run_multiple",
+                "command_run_multiple_error",
+                "command_run_multiple_offset_limit",
+                "root_shell_instructions"
             ]
         }, {
             "id": "Metrics",

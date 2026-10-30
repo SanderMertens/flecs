@@ -220,8 +220,8 @@ void Command_get_session_in_command(void) {
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
     ecs_shell_result_t r = ecs_shell_run(world, session, "session");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(r.result.type, ecs_id(ecs_entity_t));
-    test_uint(*(ecs_entity_t*)r.result.ptr, session);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_id(ecs_entity_t));
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, session);
     test_uint(command_session_invoked, session);
     ecs_shell_result_fini(world, &r);
 
@@ -279,7 +279,7 @@ void Command_custom_command_error(void) {
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "custom");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0], "custom error");
     ecs_shell_result_fini(world, &r);
@@ -426,7 +426,7 @@ void Command_clear(void) {
 
     r = ecs_shell_run(world, session, "clear");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     ecs_shell_result_fini(world, &r);
 
     s = ecs_get(world, session, EcsCommandSession);
@@ -475,7 +475,7 @@ void Command_invalid_session(void) {
 
     ecs_entity_t e = ecs_new(world);
     ecs_shell_result_t r = ecs_shell_run(world, e, "pwd");
-    test_uint(r.result.type, 0);
+    test_int(ecs_vec_count(&r.results), 0);
     test_int(ecs_vec_count(&r.errors), 1);
     ecs_shell_result_fini(world, &r);
 
@@ -488,7 +488,7 @@ void Command_unknown_command(void) {
 
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
     ecs_shell_result_t r = ecs_shell_run(world, session, "foo 10");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0], "unknown command 'foo'");
     ecs_shell_result_fini(world, &r);
@@ -502,7 +502,7 @@ void Command_empty_command(void) {
 
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
     ecs_shell_result_t r = ecs_shell_run(world, session, "   ");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0], "empty command");
     ecs_shell_result_fini(world, &r);
@@ -516,7 +516,7 @@ void Command_too_many_args(void) {
 
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
     ecs_shell_result_t r = ecs_shell_run(world, session, "pwd foo");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "too many arguments for command 'pwd' (usage: pwd)");
@@ -531,7 +531,7 @@ void Command_missing_arg(void) {
 
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
     ecs_shell_result_t r = ecs_shell_run(world, session, "get foo");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "missing argument 'component' for command 'get' "
@@ -547,7 +547,7 @@ void Command_invalid_arg(void) {
 
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
     ecs_shell_result_t r = ecs_shell_run(world, session, "ls foo");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 2);
     test_str(ecs_vec_get_t(&r.errors, char*, 1)[0],
         "invalid argument 'foo' for parameter 'scope' of command 'ls'");
@@ -562,7 +562,7 @@ void Command_invalid_arg_backtick_string(void) {
 
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
     ecs_shell_result_t r = ecs_shell_run(world, session, "ls `a\\.b`");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_assert(ecs_vec_count(&r.errors) != 0);
     test_str(ecs_vec_last_t(&r.errors, char*)[0],
         "invalid argument '`a\\.b`' for parameter 'scope' of command 'ls'");
@@ -579,8 +579,8 @@ void Command_quoted_arg(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "new \"foo bar\"");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(r.result.type, ecs_id(ecs_entity_t));
-    ecs_entity_t e = *(ecs_entity_t*)r.result.ptr;
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_id(ecs_entity_t));
+    ecs_entity_t e = *(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
     test_str(ecs_get_name(world, e), "foo bar");
     ecs_shell_result_fini(world, &r);
 
@@ -595,7 +595,7 @@ void Command_quoted_arg_w_escape(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "script_write s \"a {}\\nb { \\\"c\\\" {} }\"");
     test_int(ecs_vec_count(&r.errors), 0);
-    ecs_entity_t s = *(ecs_entity_t*)r.result.ptr;
+    ecs_entity_t s = *(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
     ecs_shell_result_fini(world, &r);
 
     const EcsScript *script = ecs_get(world, s, EcsScript);
@@ -615,7 +615,7 @@ void Command_backtick_arg(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "script_write s ```a {}\n\"b\" {} // \\n```");
     test_int(ecs_vec_count(&r.errors), 0);
-    ecs_entity_t s = *(ecs_entity_t*)r.result.ptr;
+    ecs_entity_t s = *(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
     ecs_shell_result_fini(world, &r);
 
     const EcsScript *script = ecs_get(world, s, EcsScript);
@@ -632,14 +632,14 @@ void Command_unterminated_quote(void) {
 
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
     ecs_shell_result_t r = ecs_shell_run(world, session, "new \"foo");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "missing closing '\"' in command");
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "new ```foo");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "missing closing ``` in command");
@@ -656,14 +656,14 @@ void Command_grouped_arg(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "eval (1 + 2)");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "{i64: 3}");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "eval [1, (2 + 3), 4]");
     test_int(ecs_vec_count(&r.errors), 0);
-    str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "{flecs.script.typecache.vector<i64>: [1, 5, 4]}");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
@@ -682,14 +682,14 @@ void Command_unbalanced_group(void) {
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "eval (1 + 2");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "missing ')' in argument");
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "eval (1 + 2]");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "unexpected ']' in argument");
@@ -711,17 +711,17 @@ void Command_lookup_relative_to_scope(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "man child");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(((ecs_shell_doc_info_t*)r.result.ptr)->entity, child);
+    test_uint(((ecs_shell_doc_info_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr)->entity, child);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "man root");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(((ecs_shell_doc_info_t*)r.result.ptr)->entity, root);
+    test_uint(((ecs_shell_doc_info_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr)->entity, root);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "man parent.child");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(((ecs_shell_doc_info_t*)r.result.ptr)->entity, child);
+    test_uint(((ecs_shell_doc_info_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr)->entity, child);
     ecs_shell_result_fini(world, &r);
 
     ecs_fini(world);
@@ -736,7 +736,7 @@ void Command_command_does_not_set_scope(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "cd parent");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, parent);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, parent);
     ecs_shell_result_fini(world, &r);
     test_uint(ecs_get_scope(world), 0);
 
@@ -773,7 +773,7 @@ void Command_singleton_arg(void) {
 
     r = ecs_shell_run(world, session, "get $ Position");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "{Position: {x: 10, y: 20}}");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
@@ -788,7 +788,7 @@ void Command_singleton_arg_no_component(void) {
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "cat $");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "'$' requires a component argument for command 'cat'");
@@ -810,8 +810,8 @@ void Command_pair_arg(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "add e (Rel, parent.Tgt)");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(r.result.type, ecs_id(ecs_id_t));
-    test_uint(*(ecs_id_t*)r.result.ptr, ecs_pair(rel, tgt));
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_id(ecs_id_t));
+    test_uint(*(ecs_id_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, ecs_pair(rel, tgt));
     ecs_shell_result_fini(world, &r);
     test_assert(ecs_has_pair(world, e, rel, tgt));
 
@@ -821,7 +821,7 @@ void Command_pair_arg(void) {
     test_assert(!ecs_has_pair(world, e, rel, tgt));
 
     r = ecs_shell_run(world, session, "add e (Rel, Foo)");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_assert(ecs_vec_count(&r.errors) > 0);
     ecs_shell_result_fini(world, &r);
 
@@ -836,11 +836,11 @@ void Command_help(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "help");
     test_int(ecs_vec_count(&r.errors), 0);
-    const EcsVector *v = ecs_get(world, r.result.type, EcsVector);
+    const EcsVector *v = ecs_get(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, EcsVector);
     test_assert(v != NULL);
     test_uint(v->type, ecs_lookup(world, "flecs.script.shell.CommandInfo"));
 
-    ecs_vec_t *commands = r.result.ptr;
+    ecs_vec_t *commands = ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
     test_assert(ecs_vec_count(commands) > 50);
     ecs_shell_info_t *info = ecs_vec_first(commands);
     test_str(info[0].name, "add");
@@ -863,7 +863,7 @@ void Command_help_command(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "help grep");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[{name: \"grep\", brief: \"Search names, component names "
         "and values of descendants\", params: [{name: \"text\", "
         "type: flecs.meta.string, optional: false, brief: \"Text to find\"}, "
@@ -875,7 +875,7 @@ void Command_help_command(void) {
 
     r = ecs_shell_run(world, session, "help rm");
     test_int(ecs_vec_count(&r.errors), 0);
-    ecs_shell_info_t *info = ecs_vec_first(r.result.ptr);
+    ecs_shell_info_t *info = ecs_vec_first(ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_uint(info->return_type, 0);
     ecs_shell_result_fini(world, &r);
 
@@ -889,7 +889,7 @@ void Command_help_unknown(void) {
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "help foo");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0], "unknown command 'foo'");
     ecs_shell_result_fini(world, &r);
@@ -909,7 +909,7 @@ void Command_ls(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "ls parent");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[parent.a, parent.b]");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
@@ -928,8 +928,8 @@ void Command_ls_root(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "ls");
     test_int(ecs_vec_count(&r.errors), 0);
-    ecs_entity_t *entities = ecs_vec_first(r.result.ptr);
-    int32_t i, count = ecs_vec_count(r.result.ptr);
+    ecs_entity_t *entities = ecs_vec_first(ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
+    int32_t i, count = ecs_vec_count(ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     bool has_flecs = false, has_parent = false, has_child = false;
     for (i = 0; i < count; i ++) {
         has_flecs |= entities[i] == EcsFlecs;
@@ -956,7 +956,7 @@ void Command_ls_session_scope(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "ls");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[parent.a]");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
@@ -971,7 +971,7 @@ void Command_invalid_entity(void) {
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "cat 0");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0], "entity #0 is not alive");
     ecs_shell_result_fini(world, &r);
@@ -991,7 +991,7 @@ void Command_tree(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "tree parent");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[{entity: parent.a, depth: 0}, "
         "{entity: parent.a.b, depth: 1}, {entity: parent.c, depth: 0}]");
     ecs_os_free(str);
@@ -1011,8 +1011,8 @@ void Command_tree_root_skips_flecs(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "tree");
     test_int(ecs_vec_count(&r.errors), 0);
-    ecs_shell_tree_node_t *nodes = ecs_vec_first(r.result.ptr);
-    int32_t i, count = ecs_vec_count(r.result.ptr);
+    ecs_shell_tree_node_t *nodes = ecs_vec_first(ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
+    int32_t i, count = ecs_vec_count(ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     bool has_flecs = false, has_core = false, has_child = false;
     for (i = 0; i < count; i ++) {
         has_flecs |= nodes[i].entity == EcsFlecs;
@@ -1046,8 +1046,8 @@ void Command_cat(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "cat e");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(r.result.type, ecs_lookup(world, "flecs.script.shell.EntityInfo"));
-    ecs_shell_entity_info_t *info = r.result.ptr;
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_lookup(world, "flecs.script.shell.EntityInfo"));
+    ecs_shell_entity_info_t *info = ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
     test_uint(info->entity, e);
     test_uint(info->id, e);
 
@@ -1089,8 +1089,8 @@ void Command_schema(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "schema Line");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(r.result.type, ecs_id(ecs_string_t));
-    test_str(*(char**)r.result.ptr,
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_id(ecs_string_t));
+    test_str(*(char**)ecs_vec_first_t(&r.results, ecs_value_t)->ptr,
         HEAD "struct Position(x: f32, y: f32)"
         LINE "struct Line(start: Position, stop: Position)"
         LINE);
@@ -1107,7 +1107,7 @@ void Command_schema_not_a_type(void) {
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "schema Tag");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0], "'Tag' is not a type");
     ecs_shell_result_fini(world, &r);
@@ -1126,8 +1126,8 @@ void Command_schema_value(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "schema_value Position");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(r.result.type, ecs_id(ecs_value_t));
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_id(ecs_value_t));
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "{Position: {x: 0, y: 0}}");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
@@ -1146,29 +1146,29 @@ void Command_cd_pwd(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "pwd");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, 0);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, 0);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "cd parent");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, parent);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, parent);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "cd child");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, child);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, child);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "pwd");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, child);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, child);
     ecs_shell_result_fini(world, &r);
 
     test_uint(ecs_get(world, session, EcsCommandSession)->scope, child);
 
     r = ecs_shell_run(world, session, "cd");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, 0);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, 0);
     ecs_shell_result_fini(world, &r);
 
     test_uint(ecs_get(world, session, EcsCommandSession)->scope, 0);
@@ -1188,14 +1188,14 @@ void Command_cd_parent(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "cd ..");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, parent);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, parent);
     ecs_shell_result_fini(world, &r);
 
     test_uint(ecs_get(world, session, EcsCommandSession)->scope, parent);
 
     r = ecs_shell_run(world, session, "cd ..");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, 0);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, 0);
     ecs_shell_result_fini(world, &r);
 
     test_uint(ecs_get(world, session, EcsCommandSession)->scope, 0);
@@ -1216,14 +1216,14 @@ void Command_cd_parent_parent(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "cd ../../");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, parent);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, parent);
     ecs_shell_result_fini(world, &r);
 
     test_uint(ecs_get(world, session, EcsCommandSession)->scope, parent);
 
     r = ecs_shell_run(world, session, "cd ./child/grandchild");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, grandchild);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, grandchild);
     ecs_shell_result_fini(world, &r);
 
     ecs_fini(world);
@@ -1241,7 +1241,7 @@ void Command_cd_parent_sibling(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "cd ../b");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, b);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, b);
     ecs_shell_result_fini(world, &r);
 
     test_uint(ecs_get(world, session, EcsCommandSession)->scope, b);
@@ -1261,7 +1261,7 @@ void Command_cd_parent_sibling_child(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "cd ../b/c");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, c);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, c);
     ecs_shell_result_fini(world, &r);
 
     test_uint(ecs_get(world, session, EcsCommandSession)->scope, c);
@@ -1279,12 +1279,12 @@ void Command_cd_parent_at_root(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "cd ../..");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, 0);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, 0);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "cd ../parent");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, parent);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, parent);
     ecs_shell_result_fini(world, &r);
 
     ecs_fini(world);
@@ -1302,12 +1302,12 @@ void Command_cd_current(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "cd .");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, parent);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, parent);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "cd ./child");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, child);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, child);
     ecs_shell_result_fini(world, &r);
 
     ecs_fini(world);
@@ -1323,7 +1323,7 @@ void Command_cd_relative_not_found(void) {
     ecs_entity_t session = ecs_shell_session_init(world, &desc);
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "cd ../b");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "invalid argument '../b' for parameter 'scope' of command 'cd'");
@@ -1346,7 +1346,7 @@ void Command_ls_parent(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "ls ..");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[parent.a, parent.b]");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
@@ -1366,8 +1366,8 @@ void Command_get(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "get e Position");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(r.result.type, ecs_id(ecs_value_t));
-    ecs_value_t *v = r.result.ptr;
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_id(ecs_value_t));
+    ecs_value_t *v = ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
     test_uint(v->type, ecs_lookup(world, "Position"));
     test_int(((Position*)v->ptr)->x, 1);
     test_int(((Position*)v->ptr)->y, 2);
@@ -1388,14 +1388,14 @@ void Command_get_not_present(void) {
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "get e Position");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "entity 'e' does not have component 'Position'");
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "get e Tag");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "'Tag' is not a component with a value");
@@ -1417,7 +1417,7 @@ void Command_set(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "set e Position {10, 20}");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "{Position: {x: 10, y: 20}}");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
@@ -1476,7 +1476,7 @@ void Command_set_nested_partial(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "set e Line {stop: {x: 30, y: 40}}");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "{Line: {start: {x: 1, y: 2}, stop: {x: 30, y: 40}}}");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
@@ -1498,7 +1498,7 @@ void Command_set_invalid_value(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "set e Position {z: 10}");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_assert(ecs_vec_count(&r.errors) > 0);
     ecs_shell_result_fini(world, &r);
 
@@ -1520,13 +1520,13 @@ void Command_add_remove(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "add e Tag");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_id_t*)r.result.ptr, tag);
+    test_uint(*(ecs_id_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, tag);
     ecs_shell_result_fini(world, &r);
     test_assert(ecs_has_id(world, e, tag));
 
     r = ecs_shell_run(world, session, "rm e Tag");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     ecs_shell_result_fini(world, &r);
     test_assert(!ecs_has_id(world, e, tag));
 
@@ -1541,7 +1541,7 @@ void Command_new(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "new");
     test_int(ecs_vec_count(&r.errors), 0);
-    ecs_entity_t e = *(ecs_entity_t*)r.result.ptr;
+    ecs_entity_t e = *(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
     test_assert(e != 0);
     test_assert(ecs_is_alive(world, e));
     test_uint(ecs_get_parent(world, e), 0);
@@ -1549,7 +1549,7 @@ void Command_new(void) {
 
     r = ecs_shell_run(world, session, "new foo");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, ecs_lookup(world, "foo"));
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, ecs_lookup(world, "foo"));
     ecs_shell_result_fini(world, &r);
 
     ecs_fini(world);
@@ -1565,12 +1565,12 @@ void Command_new_in_scope(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "new");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(ecs_get_parent(world, *(ecs_entity_t*)r.result.ptr), parent);
+    test_uint(ecs_get_parent(world, *(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr), parent);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "new foo");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, ecs_lookup(world, "parent.foo"));
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, ecs_lookup(world, "parent.foo"));
     ecs_shell_result_fini(world, &r);
 
     ecs_fini(world);
@@ -1584,7 +1584,7 @@ void Command_new_existing(void) {
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "new foo");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "entity 'foo' already exists");
@@ -1602,7 +1602,7 @@ void Command_delete(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "rm e");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     ecs_shell_result_fini(world, &r);
     test_assert(!ecs_is_alive(world, e));
 
@@ -1619,7 +1619,7 @@ void Command_mv(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "mv e f");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, e);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, e);
     ecs_shell_result_fini(world, &r);
     test_str(ecs_get_name(world, e), "f");
     test_uint(ecs_get_parent(world, e), 0);
@@ -1650,21 +1650,21 @@ void Command_mv_errors(void) {
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "mv e foo.e");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "parent 'foo' does not exist");
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "mv e e.child.e");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "cannot move entity into itself");
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "mv e f");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "entity 'f' already exists");
@@ -1690,7 +1690,7 @@ void Command_man(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "man e");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "{entity: e, name: \"Entity\", brief: \"Brief\", "
         "detail: \"Detail\", link: \"https://flecs.dev\", color: \"#ff0000\"}");
     ecs_os_free(str);
@@ -1708,15 +1708,15 @@ void Command_eval(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "eval ```10 * 2 + 1```");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(r.result.type, ecs_id(ecs_value_t));
-    ecs_value_t *v = r.result.ptr;
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_id(ecs_value_t));
+    ecs_value_t *v = ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
     test_uint(v->type, ecs_id(ecs_i64_t));
     test_int(*(int64_t*)v->ptr, 21);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "eval ```\"Hello\"```");
     test_int(ecs_vec_count(&r.errors), 0);
-    v = r.result.ptr;
+    v = ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
     test_uint(v->type, ecs_id(ecs_string_t));
     test_str(*(char**)v->ptr, "Hello");
     ecs_shell_result_fini(world, &r);
@@ -1731,7 +1731,7 @@ void Command_eval_error(void) {
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "eval \"1 +\"");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_assert(ecs_vec_count(&r.errors) > 0);
     ecs_shell_result_fini(world, &r);
 
@@ -1753,7 +1753,7 @@ void Command_query(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "query \"Position, Tag\"");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[{entity: b, fields: [{id: Position, value: "
         "{Position: {x: 3, y: 4}}}]}]");
     ecs_os_free(str);
@@ -1761,7 +1761,7 @@ void Command_query(void) {
 
     r = ecs_shell_run(world, session, "query Position");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_int(ecs_vec_count(r.result.ptr), 2);
+    test_int(ecs_vec_count(ecs_vec_first_t(&r.results, ecs_value_t)->ptr), 2);
     ecs_shell_result_fini(world, &r);
 
     ecs_fini(world);
@@ -1774,7 +1774,7 @@ void Command_query_error(void) {
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "query Foo");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_assert(ecs_vec_count(&r.errors) > 0);
     ecs_shell_result_fini(world, &r);
 
@@ -1790,7 +1790,7 @@ void Command_quit(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "quit");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     ecs_shell_result_fini(world, &r);
 
     test_bool(ecs_should_quit(world), true);
@@ -1810,7 +1810,7 @@ void Command_find(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "find player");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[parent.player_one, other.player_two]");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
@@ -1820,7 +1820,7 @@ void Command_find(void) {
 
     r = ecs_shell_run(world, session, "find player");
     test_int(ecs_vec_count(&r.errors), 0);
-    str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[parent.player_one]");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
@@ -1836,7 +1836,7 @@ void Command_find_root_skips_flecs(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "find Identifier");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_int(ecs_vec_count(r.result.ptr), 0);
+    test_int(ecs_vec_count(ecs_vec_first_t(&r.results, ecs_value_t)->ptr), 0);
     ecs_shell_result_fini(world, &r);
 
     ecs_fini(world);
@@ -1859,21 +1859,21 @@ void Command_grep(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "grep foo scene");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[{entity: scene.foo_entity, id: #0, text: \"foo_entity\"}]");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "grep Foo scene");
     test_int(ecs_vec_count(&r.errors), 0);
-    str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[{entity: scene.a, id: TagFoo, text: \"TagFoo\"}]");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "grep 42 scene");
     test_int(ecs_vec_count(&r.errors), 0);
-    str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[{entity: scene.b, id: Position, text: \"{x: 42, y: 0}\"}]");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
@@ -1897,7 +1897,7 @@ void Command_grep_i(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "grep_i FOO scene");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[{entity: scene.foo_entity, id: #0, text: \"foo_entity\"}, "
         "{entity: scene.a, id: TagFoo, text: \"TagFoo\"}]");
     ecs_os_free(str);
@@ -1926,8 +1926,8 @@ void Command_scripts(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "scripts");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_int(ecs_vec_count(r.result.ptr), 2);
-    ecs_shell_script_info_t *info = ecs_vec_first(r.result.ptr);
+    test_int(ecs_vec_count(ecs_vec_first_t(&r.results, ecs_value_t)->ptr), 2);
+    ecs_shell_script_info_t *info = ecs_vec_first(ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_uint(info[0].script, a);
     test_int(info[0].lines, 2);
     test_bool(info[0].unsaved, false);
@@ -1956,8 +1956,8 @@ void Command_scripts_unsaved(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "scripts");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_int(ecs_vec_count(r.result.ptr), 1);
-    ecs_shell_script_info_t *info = ecs_vec_first(r.result.ptr);
+    test_int(ecs_vec_count(ecs_vec_first_t(&r.results, ecs_value_t)->ptr), 1);
+    ecs_shell_script_info_t *info = ecs_vec_first(ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_bool(info[0].unsaved, true);
     ecs_shell_result_fini(world, &r);
 
@@ -1977,7 +1977,7 @@ void Command_script_read(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "script_read s");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[{line: 1, text: \"e {}\"}, {line: 2, text: \"\"}, "
         "{line: 3, text: \"f {}\"}]");
     ecs_os_free(str);
@@ -1994,7 +1994,7 @@ void Command_script_read_not_a_script(void) {
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "script_read e");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0], "'e' is not a script");
     ecs_shell_result_fini(world, &r);
@@ -2020,7 +2020,7 @@ void Command_script_grep(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "script_grep foo a");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[{script: a, line: 1, text: \"foo {}\"}, "
         "{script: a, line: 3, text: \"foo_bar {}\"}]");
     ecs_os_free(str);
@@ -2028,7 +2028,7 @@ void Command_script_grep(void) {
 
     r = ecs_shell_run(world, session, "script_grep foo");
     test_int(ecs_vec_count(&r.errors), 0);
-    str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[{script: a, line: 1, text: \"foo {}\"}, "
         "{script: a, line: 3, text: \"foo_bar {}\"}, "
         "{script: b, line: 1, text: \"my_foo {}\"}]");
@@ -2057,7 +2057,7 @@ void Command_script_where(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "script_where parent.child");
     test_int(ecs_vec_count(&r.errors), 0);
-    ecs_shell_script_location_t *loc = r.result.ptr;
+    ecs_shell_script_location_t *loc = ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
     test_uint(loc->script, s);
     test_int(loc->line, 2);
     test_int(loc->column, 3);
@@ -2076,7 +2076,7 @@ void Command_script_where_not_declared(void) {
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "script_where e");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "entity 'e' is not declared by a managed script");
@@ -2105,8 +2105,8 @@ void Command_script_errors(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "script_errors");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_int(ecs_vec_count(r.result.ptr), 1);
-    ecs_shell_script_error_t *err = ecs_vec_first(r.result.ptr);
+    test_int(ecs_vec_count(ecs_vec_first_t(&r.results, ecs_value_t)->ptr), 1);
+    ecs_shell_script_error_t *err = ecs_vec_first(ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_uint(err->script, b);
     test_str(err->error, ecs_get(world, b, EcsScript)->error);
     ecs_shell_result_fini(world, &r);
@@ -2128,7 +2128,7 @@ void Command_script_replace(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "script_replace s \"b {}\" \"d {}\\ne {}\"");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[{line: 2, text: \"d {}\"}, {line: 3, text: \"e {}\"}]");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
@@ -2154,7 +2154,7 @@ void Command_script_replace_not_found(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "script_replace s foo bar");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "text 'foo' not found in script");
@@ -2178,7 +2178,7 @@ void Command_script_replace_multiple(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "script_replace s a c");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "text 'a' occurs 2 times in script, it must occur exactly once "
@@ -2204,7 +2204,7 @@ void Command_script_replace_all(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "script_replace_all s a x");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[{line: 1, text: \"x {}\"}, {line: 3, text: \"xb {}\"}]");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
@@ -2224,14 +2224,14 @@ void Command_script_write(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "script_write s \"a {}\"");
     test_int(ecs_vec_count(&r.errors), 0);
-    ecs_entity_t s = *(ecs_entity_t*)r.result.ptr;
+    ecs_entity_t s = *(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
     test_uint(s, ecs_lookup(world, "s"));
     ecs_shell_result_fini(world, &r);
     test_assert(ecs_lookup(world, "a") != 0);
 
     r = ecs_shell_run(world, session, "script_write s \"b {}\"");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, s);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, s);
     ecs_shell_result_fini(world, &r);
     test_assert(ecs_lookup(world, "a") == 0);
     test_assert(ecs_lookup(world, "b") != 0);
@@ -2251,7 +2251,7 @@ void Command_script_write_in_scope(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "script_write s \"a {}\"");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, ecs_lookup(world, "parent.s"));
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, ecs_lookup(world, "parent.s"));
     ecs_shell_result_fini(world, &r);
 
     ecs_fini(world);
@@ -2282,7 +2282,7 @@ void Command_script_patch(void) {
         LINE " c {}"
         LINE "```");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[{line: 1, text: \"a {}\"}, {line: 2, text: \"e {}\"}, "
         "{line: 3, text: \"c {}\"}]");
     ecs_os_free(str);
@@ -2325,7 +2325,7 @@ void Command_script_patch_anchor(void) {
         LINE "+  y {}"
         LINE "```");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[{line: 5, text: \"  y {}\"}]");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
@@ -2403,7 +2403,7 @@ void Command_script_patch_multiple_hunks(void) {
         LINE "+y {}"
         LINE "```");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[{line: 1, text: \"x {}\"}, {line: 4, text: \"y {}\"}]");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
@@ -2440,7 +2440,7 @@ void Command_script_patch_no_match(void) {
         LINE "-c  {}"
         LINE "+d {}"
         LINE "```");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "hunk 1 does not match, closest match at line 2:"
@@ -2480,7 +2480,7 @@ void Command_script_patch_ambiguous(void) {
         LINE "-  x {}"
         LINE "+  y {}"
         LINE "```");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "hunk 1 matches 2 times, add context lines or an anchor to make it "
@@ -2513,7 +2513,7 @@ void Command_script_patch_all_or_nothing(void) {
         LINE "-c {}"
         LINE "+y {}"
         LINE "```");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     ecs_shell_result_fini(world, &r);
 
@@ -2540,7 +2540,7 @@ void Command_script_patch_anchor_not_found(void) {
         HEAD "@@ foo"
         LINE "+b {}"
         LINE "```");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "anchor 'foo' of hunk 1 not found");
@@ -2562,8 +2562,8 @@ void Command_script_edit_reload_error(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "script_replace s \"a {}\" \"a { Foo }\"");
-    test_assert(r.result.type != 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    test_assert(ecs_vec_first_t(&r.results, ecs_value_t)->type != 0);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[{line: 1, text: \"a { Foo }\"}]");
     ecs_os_free(str);
     test_int(ecs_vec_count(&r.errors), 1);
@@ -2595,7 +2595,7 @@ void Command_script_set(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "script_set e Position {y: 20}");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "{line: 3, text: \"  Position: {1, 20}\"}");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
@@ -2626,7 +2626,7 @@ void Command_script_set_not_declared(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "script_set e Position {1, 2}");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "entity 'e' is not declared by a managed script");
@@ -2654,7 +2654,7 @@ void Command_script_remove(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "script_remove e Tag");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     ecs_shell_result_fini(world, &r);
 
     test_str(ecs_get(world, s, EcsScript)->code,
@@ -2685,7 +2685,7 @@ void Command_script_delete(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "script_delete a");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     ecs_shell_result_fini(world, &r);
 
     test_str(ecs_get(world, s, EcsScript)->code, "b {}\n");
@@ -2714,7 +2714,7 @@ void Command_script_sync(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "script_sync s");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_bool(*(bool*)r.result.ptr, false);
+    test_bool(*(bool*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, false);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "set e Position {x: 5}");
@@ -2722,7 +2722,7 @@ void Command_script_sync(void) {
 
     r = ecs_shell_run(world, session, "script_sync s");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_bool(*(bool*)r.result.ptr, true);
+    test_bool(*(bool*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, true);
     ecs_shell_result_fini(world, &r);
 
     test_str(ecs_get(world, s, EcsScript)->code,
@@ -2759,7 +2759,7 @@ void Command_script_diff(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "script_diff s");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_str(*(char**)r.result.ptr, "");
+    test_str(*(char**)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, "");
     ecs_shell_result_fini(world, &r);
 
     ecs_script_update(world, s, 0,
@@ -2778,7 +2778,7 @@ void Command_script_diff(void) {
 
     r = ecs_shell_run(world, session, "script_diff s");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_str(*(char**)r.result.ptr,
+    test_str(*(char**)ecs_vec_first_t(&r.results, ecs_value_t)->ptr,
         HEAD "@@ -1,5 +1,5 @@"
         LINE " a {}"
         LINE "-b {}"
@@ -2832,7 +2832,7 @@ void Command_script_diff_patch_roundtrip(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session, "script_diff a");
     test_int(ecs_vec_count(&r.errors), 0);
     char *cmd = flecs_asprintf("script_patch b ```%s```",
-        *(char**)r.result.ptr);
+        *(char**)ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, cmd);
@@ -2868,7 +2868,7 @@ void Command_script_save(void) {
 
     r = ecs_shell_run(world, session, "scripts");
     test_bool(((ecs_shell_script_info_t*)
-        ecs_vec_first(r.result.ptr))->unsaved, true);
+        ecs_vec_first(ecs_vec_first_t(&r.results, ecs_value_t)->ptr))->unsaved, true);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "script_save s");
@@ -2880,7 +2880,7 @@ void Command_script_save(void) {
 
     r = ecs_shell_run(world, session, "scripts");
     test_bool(((ecs_shell_script_info_t*)
-        ecs_vec_first(r.result.ptr))->unsaved, false);
+        ecs_vec_first(ecs_vec_first_t(&r.results, ecs_value_t)->ptr))->unsaved, false);
     ecs_shell_result_fini(world, &r);
 
     ecs_fini(world);
@@ -3026,18 +3026,18 @@ void Command_focus_blur(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "focus");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, 0);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, 0);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "focus e");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, e);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, e);
     ecs_shell_result_fini(world, &r);
     test_uint(ecs_script_get_focus(world), e);
 
     r = ecs_shell_run(world, session, "blur");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     ecs_shell_result_fini(world, &r);
     test_uint(ecs_script_get_focus(world), 0);
 
@@ -3075,7 +3075,7 @@ void Command_click(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "click w");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "{resolved: 1, stopped: false}");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
@@ -3121,7 +3121,7 @@ void Command_press_release(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "press w");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_int(((ecs_script_event_result_t*)r.result.ptr)->resolved, 1);
+    test_int(((ecs_script_event_result_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr)->resolved, 1);
     ecs_shell_result_fini(world, &r);
 
     const int64_t *v = ecs_get_id(world, w, mut);
@@ -3130,7 +3130,7 @@ void Command_press_release(void) {
 
     r = ecs_shell_run(world, session, "pointer");
     test_int(ecs_vec_count(&r.errors), 0);
-    ecs_shell_pointer_state_t *ps = r.result.ptr;
+    ecs_shell_pointer_state_t *ps = ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
     test_uint(ps->pressed, w);
     test_uint(ps->event.target, w);
     test_uint(ps->event.buttons, 1);
@@ -3146,7 +3146,7 @@ void Command_press_release(void) {
 
     r = ecs_shell_run(world, session, "pointer");
     test_int(ecs_vec_count(&r.errors), 0);
-    ps = r.result.ptr;
+    ps = ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
     test_uint(ps->pressed, 0);
     test_uint(ps->event.buttons, 0);
     ecs_shell_result_fini(world, &r);
@@ -3199,7 +3199,7 @@ void Command_move_drag(void) {
     test_int(v->drags, 0);
 
     r = ecs_shell_run(world, session, "pointer");
-    ecs_shell_pointer_state_t *ps = r.result.ptr;
+    ecs_shell_pointer_state_t *ps = ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
     test_flt(ps->event.local_x, 4);
     test_flt(ps->event.local_y, 6);
     ecs_shell_result_fini(world, &r);
@@ -3230,7 +3230,7 @@ void Command_move_drag(void) {
     test_flt(v->dx, 15);
 
     r = ecs_shell_run(world, session, "pointer");
-    ps = r.result.ptr;
+    ps = ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
     test_uint(ps->event.buttons, 0);
     ecs_shell_result_fini(world, &r);
 
@@ -3296,7 +3296,7 @@ void Command_key(void) {
 
     r = ecs_shell_run(world, session, "key a");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_int(((ecs_script_event_result_t*)r.result.ptr)->resolved, 2);
+    test_int(((ecs_script_event_result_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr)->resolved, 2);
     ecs_shell_result_fini(world, &r);
 
     const widget_t *v = ecs_get_id(world, w, mut);
@@ -3323,7 +3323,7 @@ void Command_key(void) {
 
     r = ecs_shell_run(world, session, "type \"abc\"");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_int(((ecs_script_event_result_t*)r.result.ptr)->resolved, 6);
+    test_int(((ecs_script_event_result_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr)->resolved, 6);
     ecs_shell_result_fini(world, &r);
 
     v = ecs_get_id(world, w, mut);
@@ -3380,14 +3380,14 @@ void Command_invalid_button(void) {
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "click e up");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "invalid button 'up', expected left, middle or right");
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "click e foo+left");
-    test_uint(r.result.type, 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
     test_int(ecs_vec_count(&r.errors), 1);
     test_str(ecs_vec_first_t(&r.errors, char*)[0],
         "invalid modifier 'foo' in 'foo+left', expected ctrl, shift, alt "
@@ -3424,7 +3424,7 @@ void Command_mouse_keyboard_event(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session,
         "mouse_event {target: w, buttons: 1, local_x: 5}");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_int(((ecs_script_event_result_t*)r.result.ptr)->resolved, 1);
+    test_int(((ecs_script_event_result_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr)->resolved, 1);
     ecs_shell_result_fini(world, &r);
 
     const int64_t *v = ecs_get_id(world, w, mut);
@@ -3434,7 +3434,7 @@ void Command_mouse_keyboard_event(void) {
     r = ecs_shell_run(world, session,
         "keyboard_event {key: \"x\", down: true}");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_int(((ecs_script_event_result_t*)r.result.ptr)->resolved, 1);
+    test_int(((ecs_script_event_result_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr)->resolved, 1);
     ecs_shell_result_fini(world, &r);
 
     v = ecs_get_id(world, w, mut);
@@ -3464,14 +3464,14 @@ void Command_listeners(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "listeners w");
     test_int(ecs_vec_count(&r.errors), 0);
-    char *str = ecs_ptr_to_expr(world, r.result.type, r.result.ptr);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
     test_str(str, "[\"click\", \"key_down\"]");
     ecs_os_free(str);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "listeners other");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_int(ecs_vec_count(r.result.ptr), 0);
+    test_int(ecs_vec_count(ecs_vec_first_t(&r.results, ecs_value_t)->ptr), 0);
     ecs_shell_result_fini(world, &r);
 
     ecs_fini(world);
@@ -3551,8 +3551,8 @@ void Command_custom_command_path(void) {
 
     r = ecs_shell_run(world, session, "custom");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(r.result.type, ecs_id(ecs_entity_t));
-    test_uint(*(ecs_entity_t*)r.result.ptr, custom);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_id(ecs_entity_t));
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, custom);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "ls");
@@ -3599,12 +3599,12 @@ void Command_command_path_order(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "custom");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, a_custom);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, a_custom);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "ls");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_assert(r.result.type != ecs_id(ecs_entity_t));
+    test_assert(ecs_vec_first_t(&r.results, ecs_value_t)->type != ecs_id(ecs_entity_t));
     ecs_shell_result_fini(world, &r);
 
     shell = ecs_singleton_ensure(world, EcsScriptShell);
@@ -3615,12 +3615,12 @@ void Command_command_path_order(void) {
 
     r = ecs_shell_run(world, session, "custom");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, b_custom);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, b_custom);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "ls");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, b_ls);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, b_ls);
     ecs_shell_result_fini(world, &r);
 
     ecs_fini(world);
@@ -3654,7 +3654,7 @@ void Command_help_custom_command_path(void) {
     ecs_shell_result_t r = ecs_shell_run(world, session, "help");
     test_int(ecs_vec_count(&r.errors), 0);
 
-    ecs_vec_t *infos = r.result.ptr;
+    ecs_vec_t *infos = ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
     ecs_shell_info_t *info = ecs_vec_first(infos);
     int32_t i, count = ecs_vec_count(infos);
     int32_t custom_count = 0, ls_count = 0, click_count = 0, scripts_count = 0;
@@ -3682,7 +3682,7 @@ void Command_help_custom_command_path(void) {
 
     r = ecs_shell_run(world, session, "help custom");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_int(ecs_vec_count(r.result.ptr), 1);
+    test_int(ecs_vec_count(ecs_vec_first_t(&r.results, ecs_value_t)->ptr), 1);
     ecs_shell_result_fini(world, &r);
 
     ecs_fini(world);
@@ -3729,11 +3729,255 @@ void Command_command_path_from_script(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "custom");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(*(ecs_entity_t*)r.result.ptr, custom);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, custom);
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "scripts");
     test_int(ecs_vec_count(&r.errors), 1);
+    ecs_shell_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
+void Command_multi_command(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "Parent" });
+    ecs_entity_t child = ecs_entity(world, { .name = "Parent.Child" });
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session, "cd Parent; rm Child; pwd");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_int(ecs_vec_count(&r.results), 3);
+
+    ecs_value_t *values = ecs_vec_first(&r.results);
+    test_uint(values[0].type, ecs_id(ecs_entity_t));
+    test_uint(*(ecs_entity_t*)values[0].ptr, parent);
+    test_uint(values[1].type, 0);
+    test_uint(values[2].type, ecs_id(ecs_entity_t));
+    test_uint(*(ecs_entity_t*)values[2].ptr, parent);
+    ecs_shell_result_fini(world, &r);
+
+    test_assert(!ecs_is_alive(world, child));
+
+    ecs_fini(world);
+}
+
+void Command_multi_command_no_whitespace(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "Parent" });
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session, "cd Parent;pwd");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_int(ecs_vec_count(&r.results), 2);
+    test_uint(*(ecs_entity_t*)ecs_vec_get_t(
+        &r.results, ecs_value_t, 1)->ptr, parent);
+    ecs_shell_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
+void Command_multi_command_empty_commands(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session, " ; pwd ;; pwd ; ");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_int(ecs_vec_count(&r.results), 2);
+    ecs_shell_result_fini(world, &r);
+
+    const EcsCommandSession *s = ecs_get(world, session, EcsCommandSession);
+    test_int(ecs_vec_count(&s->history), 2);
+    test_str(ecs_vec_get_t(&s->history, char*, 0)[0], "pwd");
+    test_str(ecs_vec_get_t(&s->history, char*, 1)[0], "pwd");
+
+    ecs_fini(world);
+}
+
+void Command_multi_command_only_separators(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session, " ; ; ");
+    test_int(ecs_vec_count(&r.results), 1);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0], "empty command");
+    ecs_shell_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
+void Command_multi_command_stop_on_error(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session, "pwd; unknown; rm Foo");
+    test_int(ecs_vec_count(&r.results), 2);
+    test_uint(ecs_vec_get_t(&r.results, ecs_value_t, 0)->type,
+        ecs_id(ecs_entity_t));
+    test_uint(ecs_vec_get_t(&r.results, ecs_value_t, 1)->type, 0);
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0], "unknown command 'unknown'");
+    ecs_shell_result_fini(world, &r);
+
+    test_assert(ecs_is_alive(world, e));
+
+    const EcsCommandSession *s = ecs_get(world, session, EcsCommandSession);
+    test_int(ecs_vec_count(&s->history), 2);
+
+    ecs_fini(world);
+}
+
+void Command_multi_command_stop_on_parse_error(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session,
+        "pwd; ls \"foo; rm Foo");
+    test_int(ecs_vec_count(&r.results), 2);
+    test_uint(ecs_vec_get_t(&r.results, ecs_value_t, 1)->type, 0);
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0],
+        "missing closing '\"' in command");
+    ecs_shell_result_fini(world, &r);
+
+    test_assert(ecs_is_alive(world, e));
+
+    const EcsCommandSession *s = ecs_get(world, session, EcsCommandSession);
+    test_int(ecs_vec_count(&s->history), 2);
+    test_str(ecs_vec_get_t(&s->history, char*, 1)[0], "ls \"foo; rm Foo");
+
+    ecs_fini(world);
+}
+
+static void command_capture_arg(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)ctx;
+    (void)argc;
+    *(char**)result->ptr = ecs_os_strdup(*(char**)argv[0].ptr);
+}
+
+void Command_multi_command_separator_in_argument(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t path = ecs_entity(world, { .name = "my_commands" });
+    ecs_function(world, {
+        .name = "echo",
+        .parent = path,
+        .return_type = ecs_id(ecs_string_t),
+        .params = {{ "arg", ecs_id(ecs_string_t) }},
+        .callback = command_capture_arg
+    });
+
+    EcsScriptShell *shell = ecs_singleton_ensure(world, EcsScriptShell);
+    ecs_vec_append_t(NULL, &shell->command_paths, ecs_entity_t)[0] = path;
+    ecs_singleton_modified(world, EcsScriptShell);
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session,
+        "echo \"a;b\"; echo ```c;d```; echo {e;f}; echo g\"h;i\"");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_int(ecs_vec_count(&r.results), 4);
+
+    ecs_value_t *values = ecs_vec_first(&r.results);
+    test_str(*(char**)values[0].ptr, "a;b");
+    test_str(*(char**)values[1].ptr, "c;d");
+    test_str(*(char**)values[2].ptr, "{e;f}");
+    test_str(*(char**)values[3].ptr, "g\"h;i\"");
+    ecs_shell_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
+void Command_multi_command_history(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity(world, { .name = "Parent" });
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session,
+        "cd Parent; pwd; unknown");
+    ecs_shell_result_fini(world, &r);
+
+    const EcsCommandSession *s = ecs_get(world, session, EcsCommandSession);
+    test_int(ecs_vec_count(&s->history), 3);
+    test_str(ecs_vec_get_t(&s->history, char*, 0)[0], "cd Parent");
+    test_str(ecs_vec_get_t(&s->history, char*, 1)[0], "pwd");
+    test_str(ecs_vec_get_t(&s->history, char*, 2)[0], "unknown");
+
+    test_int(ecs_vec_count(&s->results), 3);
+    test_str(ecs_vec_get_t(&s->results, char*, 0)[0],
+        "{\"scope\":\"#0\", \"type\":\"flecs.meta.entity\", "
+        "\"result\":\"Parent\", \"errors\":[]}");
+    test_str(ecs_vec_get_t(&s->results, char*, 1)[0],
+        "{\"scope\":\"Parent\", \"type\":\"flecs.meta.entity\", "
+        "\"result\":\"Parent\", \"errors\":[]}");
+    test_str(ecs_vec_get_t(&s->results, char*, 2)[0],
+        "{\"scope\":\"Parent\", \"errors\":[\"unknown command 'unknown'\"]}");
+
+    ecs_fini(world);
+}
+
+void Command_multi_command_history_errors_per_command(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session, "pwd; unknown");
+    test_int(ecs_vec_count(&r.errors), 1);
+    ecs_shell_result_fini(world, &r);
+
+    const EcsCommandSession *s = ecs_get(world, session, EcsCommandSession);
+    test_int(ecs_vec_count(&s->results), 2);
+    test_str(ecs_vec_get_t(&s->results, char*, 0)[0],
+        "{\"scope\":\"#0\", \"type\":\"flecs.meta.entity\", "
+        "\"result\":\"#0\", \"errors\":[]}");
+
+    ecs_fini(world);
+}
+
+void Command_multi_command_help(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session, "help help");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_int(ecs_vec_count(&r.results), 1);
+
+    ecs_vec_t *infos = ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
+    test_int(ecs_vec_count(infos), 1);
+    test_assert(strstr(ecs_vec_first_t(infos, ecs_shell_info_t)->brief,
+        "';'") != NULL);
     ecs_shell_result_fini(world, &r);
 
     ecs_fini(world);

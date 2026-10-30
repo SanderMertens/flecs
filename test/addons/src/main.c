@@ -560,6 +560,10 @@ void Rest_shell_resource_unknown(void);
 void Rest_shell_resource_other_session(void);
 void Rest_shell_resource_deleted_session(void);
 void Rest_shell_resource_command(void);
+void Rest_command_run_multiple(void);
+void Rest_command_run_multiple_error(void);
+void Rest_command_run_multiple_offset_limit(void);
+void Rest_root_shell_instructions(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -2714,6 +2718,22 @@ bake_test_case Rest_testcases[] = {
     {
         "shell_resource_command",
         Rest_shell_resource_command
+    },
+    {
+        "command_run_multiple",
+        Rest_command_run_multiple
+    },
+    {
+        "command_run_multiple_error",
+        Rest_command_run_multiple_error
+    },
+    {
+        "command_run_multiple_offset_limit",
+        Rest_command_run_multiple_offset_limit
+    },
+    {
+        "root_shell_instructions",
+        Rest_root_shell_instructions
     }
 };
 
@@ -3174,7 +3194,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        66,
+        70,
         Rest_testcases
     },
     {

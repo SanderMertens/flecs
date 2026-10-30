@@ -788,7 +788,8 @@ void flecs_command_core_import(
 
     flecs_command_desc_t commands[] = {
         { "help", flecs_command_help, info_vec,
-            "Commands with parameters and descriptions", {
+            "Commands with parameters and descriptions. Run multiple commands by "
+            "separating them with ';'", {
             { "command", string_t, true, "Command to describe" }}},
         { "ls", flecs_command_ls, entity_vec, "Direct children", {
             { "scope", entity_t, true,

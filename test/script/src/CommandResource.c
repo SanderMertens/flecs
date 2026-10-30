@@ -612,15 +612,15 @@ void CommandResource_command_returns_resource(void) {
 
     ecs_shell_result_t r = ecs_shell_run(world, session, "capture");
     test_int(ecs_vec_count(&r.errors), 0);
-    test_uint(r.result.type, ecs_id(ecs_shell_resource_t));
-    ecs_shell_resource_t *res = r.result.ptr;
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_id(ecs_shell_resource_t));
+    ecs_shell_resource_t *res = ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
     test_str(res->name, "1");
     test_str(res->content_type, "image/png");
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "capture");
     test_int(ecs_vec_count(&r.errors), 0);
-    res = r.result.ptr;
+    res = ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
     test_str(res->name, "2");
     ecs_shell_result_fini(world, &r);
 

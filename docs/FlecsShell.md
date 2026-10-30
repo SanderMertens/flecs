@@ -58,6 +58,14 @@ Arguments are parsed as flecs script expressions. The following command is valid
 set bob Position {10, 5 + 15}
 ```
 
+Multiple commands can be run at once by separating them with `;`. Commands run in order, and each command sees the session state left by the previous one:
+
+```ruby
+cd flecs; cat core.Component
+```
+
+When a command fails, the remaining commands do not run. A `;` in double quotes, between backticks or inside of parentheses, curly braces or angular brackets is not a separator.
+
 ### Navigating
 Commands are ran relative to a scope. The following examples show how to move the scope around:
 
@@ -336,23 +344,29 @@ ecs_delete(world, session);
 ```
 
 ### Running a command
-A command is run with `ecs_shell_run()`, which returns the result of the command and the errors that were logged while it ran. The result must be freed with `ecs_shell_result_fini()`:
+A command is run with `ecs_shell_run()`, which returns the results of the commands in the command line and the errors that were logged while they ran. The result must be freed with `ecs_shell_result_fini()`:
 
 ```c
-ecs_shell_result_t r = ecs_shell_run(world, session, "ls game");
+ecs_shell_result_t r = ecs_shell_run(world, session, "cd game; ls");
 
 if (ecs_vec_count(&r.errors)) {
     char **errors = ecs_vec_first(&r.errors);
     for (int i = 0; i < ecs_vec_count(&r.errors); i ++) {
         printf("error: %s\n", errors[i]);
     }
-} else if (r.result.type) {
-    char *json = ecs_ptr_to_json(world, r.result.type, r.result.ptr);
-    printf("%s\n", json);
-    ecs_os_free(json);
+} else {
+    ecs_value_t *results = ecs_vec_first(&r.results);
+    for (int i = 0; i < ecs_vec_count(&r.results); i ++) {
+        if (results[i].type) {
+            char *json = ecs_ptr_to_json(
+                world, results[i].type, results[i].ptr);
+            printf("%s\n", json);
+            ecs_os_free(json);
+        }
+    }
 }
 
 ecs_shell_result_fini(world, &r);
 ```
 
-The `result` member is empty when the command has no return value or failed. Script edit commands are the exception: when the edit was applied but reloading the script failed, the result is set together with the errors of the reload.
+The `results` member has one `ecs_value_t` for each command that ran. When a command fails the remaining commands do not run, so the last entry belongs to the failed command. An entry is empty when the command has no return value or failed. Script edit commands are the exception: when the edit was applied but reloading the script failed, the entry is set together with the errors of the reload.
