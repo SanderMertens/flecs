@@ -103349,6 +103349,9 @@ static const char* flecs_script_parse_lhs(
                     parser, Token(0));
             } else {
                 *out = (ecs_expr_node_t*)flecs_expr_string(parser, Token(0));
+                if (!*out) {
+                    goto error;
+                }
             }
 
             break;
