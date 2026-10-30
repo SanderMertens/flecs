@@ -2618,3 +2618,160 @@ void Include_include_wo_trailing_newline(void) {
 
     ecs_fini(world);
 }
+
+void Include_include_managed_named_after_script_entity(void) {
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "/root/scenes/ui/child.flecs", "ChildEntity{}\n", 0 };
+    test_files[1] = (test_file_t){ "/root/scenes/parent.flecs", "include ui/child\n", 0 };
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_new_from_path_w_sep(
+            world, 0, "scenes/parent.flecs", "/", "/"),
+        .filename = "/root/scenes/parent.flecs"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "ChildEntity") != 0);
+
+    ecs_entity_t child_script = ecs_lookup_path_w_sep(
+        world, 0, "scenes/ui/child.flecs", "/", "/", false);
+    test_assert(child_script != 0);
+    test_assert(ecs_has(world, child_script, EcsScript));
+
+    test_assert(ecs_lookup_path_w_sep(
+        world, 0, "/root/scenes/ui/child.flecs", "/", "/", false) == 0);
+
+    ecs_fini(world);
+}
+
+void Include_include_managed_missing_file_no_orphan_entity(void) {
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "parent.flecs", "include does_not_exist\n", 0 };
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "Parent" }),
+        .filename = "parent.flecs"
+    });
+
+    test_assert(ecs_lookup_path_w_sep(
+        world, 0, "does_not_exist.flecs", "/", "/", false) == 0);
+
+    ecs_fini(world);
+}
+
+void Include_include_managed_missing_file_w_other_include_sets_error(void) {
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "other.flecs", "Foo {}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs",
+        "include does_not_exist\n"
+        "include other\n", 0 };
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "Parent" }),
+        .filename = "parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
+
+    ecs_fini(world);
+}
+
+void Include_include_managed_same_relative_path_different_dir(void) {
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "/a/common.flecs", "FromA {}\n", 0 };
+    test_files[1] = (test_file_t){ "/b/common.flecs", "FromB {}\n", 0 };
+    test_files[2] = (test_file_t){ "/a/main.flecs", "include common\n", 0 };
+    test_files[3] = (test_file_t){ "/b/main.flecs", "include common\n", 0 };
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t script_a = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "MainA" }),
+        .filename = "/a/main.flecs"
+    });
+    test_assert(script_a != 0);
+
+    ecs_entity_t script_b = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "MainB" }),
+        .filename = "/b/main.flecs"
+    });
+    test_assert(script_b != 0);
+
+    test_assert(ecs_lookup(world, "FromA") != 0);
+    test_assert(ecs_lookup(world, "FromB") != 0);
+
+    ecs_fini(world);
+}
