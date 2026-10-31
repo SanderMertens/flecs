@@ -195,6 +195,22 @@ static bool flecs_json_has_id(
         flecs_id_qsort_cmp) != NULL;
 }
 
+static bool flecs_json_is_cycle(
+    const ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_entity_t parent)
+{
+    while (parent) {
+        if (parent == e) {
+            return true;
+        }
+
+        parent = ecs_get_parent(world, parent);
+    }
+
+    return false;
+}
+
 static const char* flecs_json_deser_ids(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -227,6 +243,12 @@ static const char* flecs_json_deser_ids(
         ecs_entity_t target = flecs_json_lookup(world, 0, str, desc);
         if (str != token) ecs_os_free(str);
         if (!target) {
+            return NULL;
+        }
+
+        if (rel == EcsChildOf && flecs_json_is_cycle(world, e, target)) {
+            ecs_parser_error(desc->name, desc->expr, json - desc->expr,
+                "ChildOf pair would create cycle");
             return NULL;
         }
 
@@ -469,6 +491,13 @@ static const char* flecs_entity_from_json(
             if (field == Parent) {
                 parent = flecs_json_lookup(world, 0, str, desc);
                 if (!parent) {
+                    if (str != token) ecs_os_free(str);
+                    goto error;
+                }
+
+                if (e && flecs_json_is_cycle(world, e, parent)) {
+                    ecs_parser_error(desc->name, expr, json - expr,
+                        "parent would create cycle");
                     if (str != token) ecs_os_free(str);
                     goto error;
                 }

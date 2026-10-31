@@ -910,7 +910,10 @@
                 "struct_unknown_member_nested_large_string",
                 "entity_tag_id_generation_only",
                 "entity_tag_id_w_flags",
-                "world_negative_entity_id"
+                "world_negative_entity_id",
+                "entity_parent_is_self",
+                "entity_childof_pair_is_self",
+                "entity_parent_is_child"
             ]
         }, {
             "id": "SerializeToJson",
