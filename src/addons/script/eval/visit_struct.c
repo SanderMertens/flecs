@@ -107,7 +107,8 @@ int flecs_script_struct_visit(
         }
 
         if ((!is_init && !member.type) ||
-            (member.type && !ecs_is_valid(world, member.type)))
+            (member.type && (!ecs_is_valid(world, member.type) ||
+                !ecs_has(world, member.type, EcsType))))
         {
             flecs_expr_visit_error(script, elem->value,
                 "invalid type for struct member '%s'", elem->member);
