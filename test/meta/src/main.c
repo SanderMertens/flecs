@@ -882,6 +882,9 @@ void DeserializeFromJson_struct_unknown_member_nested_large_string(void);
 void DeserializeFromJson_entity_tag_id_generation_only(void);
 void DeserializeFromJson_entity_tag_id_w_flags(void);
 void DeserializeFromJson_world_negative_entity_id(void);
+void DeserializeFromJson_entity_parent_is_self(void);
+void DeserializeFromJson_entity_childof_pair_is_self(void);
+void DeserializeFromJson_entity_parent_is_child(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_string_w_control_char(void);
@@ -4990,6 +4993,18 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "world_negative_entity_id",
         DeserializeFromJson_world_negative_entity_id
+    },
+    {
+        "entity_parent_is_self",
+        DeserializeFromJson_entity_parent_is_self
+    },
+    {
+        "entity_childof_pair_is_self",
+        DeserializeFromJson_entity_childof_pair_is_self
+    },
+    {
+        "entity_parent_is_child",
+        DeserializeFromJson_entity_parent_is_child
     }
 };
 
@@ -7717,7 +7732,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        214,
+        217,
         DeserializeFromJson_testcases
     },
     {
