@@ -3121,7 +3121,8 @@
                 "struct_member_w_alive_non_type",
                 "set_component_on_entity_id_zero",
                 "set_member_on_invalid_anonymous_id",
-                "entity_kind_parent"
+                "entity_kind_parent",
+                "enum_duplicate_constant_w_underlying_type"
             ]
         }, {
             "id": "Refs",

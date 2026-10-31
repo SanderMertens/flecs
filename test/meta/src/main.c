@@ -98,6 +98,7 @@ void EnumTypes_constant_to_entity_w_underlying_u16(void);
 void EnumTypes_constant_to_entity_w_underlying_u32(void);
 void EnumTypes_constant_to_entity_w_underlying_u64(void);
 void EnumTypes_constant_to_entity_w_bitmask(void);
+void EnumTypes_unsigned_enum_duplicate_constant_value(void);
 
 // Testsuite 'BitmaskTypes'
 void BitmaskTypes_bitmask_1_constant(void);
@@ -1916,6 +1917,10 @@ bake_test_case EnumTypes_testcases[] = {
     {
         "constant_to_entity_w_bitmask",
         EnumTypes_constant_to_entity_w_bitmask
+    },
+    {
+        "unsigned_enum_duplicate_constant_value",
+        EnumTypes_unsigned_enum_duplicate_constant_value
     }
 };
 
@@ -7675,7 +7680,7 @@ static bake_test_suite suites[] = {
         "EnumTypes",
         NULL,
         NULL,
-        31,
+        32,
         EnumTypes_testcases
     },
     {

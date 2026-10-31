@@ -1407,3 +1407,20 @@ void EnumTypes_constant_to_entity_w_bitmask(void) {
 
     ecs_fini(world);
 }
+
+void EnumTypes_unsigned_enum_duplicate_constant_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .underlying_type = ecs_id(ecs_u32_t),
+        .constants = {
+            {"A", .value_unsigned = 2},
+            {"B", .value_unsigned = 2}
+        }
+    });
+    (void)e;
+    test_assert(true);
+
+    ecs_fini(world);
+}

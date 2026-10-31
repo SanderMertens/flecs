@@ -81,22 +81,14 @@ static int flecs_constants_insert(
     EcsConstants *ptr,
     ecs_entity_t entity,
     int64_t value,
-    uint64_t value_unsigned,
-    bool abort_on_conflict)
+    uint64_t value_unsigned)
 {
     ecs_map_key_t key = (uint64_t)value | value_unsigned;
     ecs_enum_constant_t *c = ecs_map_get_ptr(ptr->constants, key);
     if (c) {
         char *path = ecs_get_path(world, entity);
-        if (abort_on_conflict) {
-            ecs_abort(ECS_INTERNAL_ERROR,
-                "conflicting constant value %u for '%s' (other is '%s')",
-                    value_unsigned, path, c->name);
-        } else {
-            ecs_err("conflicting constant value for '%s' (other is '%s')",
-                path, c->name);
-        }
-
+        ecs_err("conflicting constant value for '%s' (other is '%s')",
+            path, c->name);
         ecs_os_free(path);
         return -1;
     }
@@ -212,9 +204,7 @@ static int flecs_add_constant_to_enum(
         }
     }
 
-    if (flecs_constants_insert(world, ptr, e, value, value_unsigned,
-        ut_is_unsigned))
-    {
+    if (flecs_constants_insert(world, ptr, e, value, value_unsigned)) {
         return -1;
     }
 
@@ -270,7 +260,7 @@ static int flecs_add_constant_to_bitmask(
         value = 1u << (ecs_u32_t)ecs_map_count(ptr->constants);
     }
 
-    if (flecs_constants_insert(world, ptr, e, value, 0, false)) {
+    if (flecs_constants_insert(world, ptr, e, value, 0)) {
         return -1;
     }
 
