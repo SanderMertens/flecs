@@ -194,3 +194,21 @@ void Http_headers_and_body(void) {
 void Http_headers_max_with_body(void) {
     Http_headers_body_request(ECS_HTTP_HEADER_COUNT_MAX + 1);
 }
+
+void Http_empty_target_encoded_path(void) {
+    ecs_set_os_api_impl();
+
+    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
+        .port = 27754,
+        .callback = OnRequestEcho
+    });
+
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_http_request(srv,
+        "GET  %41%41%41\r\nHost: x\r\n\r\n", 0, &reply));
+    test_int(reply.code, 400);
+
+    ecs_http_server_fini(srv);
+}
