@@ -3108,7 +3108,9 @@
                 "147",
                 "149",
                 "150",
-                "rerun_empty_struct_in_use"
+                "rerun_empty_struct_in_use",
+                "rerun_derived_template_in_use",
+                "rerun_derived_template_w_prop_override_in_use"
             ]
         }, {
             "id": "Refs",

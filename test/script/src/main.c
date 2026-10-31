@@ -3022,6 +3022,8 @@ void Fuzzing_147(void);
 void Fuzzing_149(void);
 void Fuzzing_150(void);
 void Fuzzing_rerun_empty_struct_in_use(void);
+void Fuzzing_rerun_derived_template_in_use(void);
+void Fuzzing_rerun_derived_template_w_prop_override_in_use(void);
 
 // Testsuite 'Refs'
 void Refs_setup(void);
@@ -16122,6 +16124,14 @@ bake_test_case Fuzzing_testcases[] = {
     {
         "rerun_empty_struct_in_use",
         Fuzzing_rerun_empty_struct_in_use
+    },
+    {
+        "rerun_derived_template_in_use",
+        Fuzzing_rerun_derived_template_in_use
+    },
+    {
+        "rerun_derived_template_w_prop_override_in_use",
+        Fuzzing_rerun_derived_template_w_prop_override_in_use
     }
 };
 
@@ -21065,7 +21075,7 @@ static bake_test_suite suites[] = {
         "Fuzzing",
         Fuzzing_setup,
         NULL,
-        147,
+        149,
         Fuzzing_testcases,
         1,
         Fuzzing_params

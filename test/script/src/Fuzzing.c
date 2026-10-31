@@ -9956,3 +9956,40 @@ void Fuzzing_rerun_empty_struct_in_use(void) {
     test_int(0, ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
     ecs_fini(world);
 }
+
+void Fuzzing_rerun_derived_template_in_use(void) {
+    const char *expr =
+    HEAD "template Base {"
+    LINE "  prop x: f32 = 1"
+    LINE "}"
+    LINE "template Derived : Base {"
+    LINE "}"
+    LINE "e { Derived: {} }"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    test_int(0, ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    test_int(0, ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    ecs_fini(world);
+}
+
+void Fuzzing_rerun_derived_template_w_prop_override_in_use(void) {
+    const char *expr =
+    HEAD "template Base {"
+    LINE "  prop x: f32 = 1"
+    LINE "}"
+    LINE "template Derived : Base {"
+    LINE "  prop x: f32 = 5"
+    LINE "}"
+    LINE "e { Derived: {} }"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    test_int(0, ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    test_int(0, ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    ecs_fini(world);
+}
