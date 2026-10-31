@@ -878,6 +878,7 @@ void DeserializeFromJson_entity_component_id_zero(void);
 void DeserializeFromJson_entity_pair_rel_id_zero(void);
 void DeserializeFromJson_entity_component_pair_id_zero(void);
 void DeserializeFromJson_entity_large_pair_relationship_name(void);
+void DeserializeFromJson_struct_unknown_member_nested_large_string(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_string_w_control_char(void);
@@ -4970,6 +4971,10 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "entity_large_pair_relationship_name",
         DeserializeFromJson_entity_large_pair_relationship_name
+    },
+    {
+        "struct_unknown_member_nested_large_string",
+        DeserializeFromJson_struct_unknown_member_nested_large_string
     }
 };
 
@@ -7697,7 +7702,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        210,
+        211,
         DeserializeFromJson_testcases
     },
     {
