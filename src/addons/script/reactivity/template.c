@@ -1820,9 +1820,11 @@ static int flecs_script_template_inherit_members(
     ecs_allocator_t *a = &v->base.script->allocator;
     ecs_script_template_vars_t *vars = mut ? &template->muts : &template->props;
 
-    if (!ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = vars->type
-    })) {
+    if (!ecs_has(world, vars->type, EcsStruct) &&
+        !ecs_struct_init(world, &(ecs_struct_desc_t){
+            .entity = vars->type
+        }))
+    {
         flecs_script_eval_error(v, node,
             "failed to inherit members of base '%s' for template '%s'",
             node->base, node->name);
