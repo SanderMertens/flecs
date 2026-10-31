@@ -8965,3 +8965,99 @@ void Cached_delete_table_w_on_table_delete_observer_creating_tables(void) {
 
     ecs_fini(world);
 }
+
+void Cached_fini_revalidate_after_table_delete(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t rel = ecs_new(world);
+    ecs_add_id(world, rel, EcsTraversable);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { Tag },
+            { Foo, .src.id = EcsUp, .trav = rel }
+        },
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q != NULL);
+
+    /* a0 and a1 are deleted together with their parent during ecs_fini */
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t a0 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_add(world, a0, Foo);
+    ecs_entity_t a1 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_add_pair(world, a1, rel, a0);
+    ecs_entity_t b = ecs_new_w_pair(world, rel, a0);
+
+    /* Two cached tables in the same group: [Tag, (rel, b)], [Tag, (rel, a1)] */
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_add_pair(world, e1, rel, b);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_add_pair(world, e2, rel, a1);
+
+    test_int(ecs_query_count(q).entities, 2);
+
+    /* Deleting a1 deletes table [Tag, (rel, a1)], deleting a0 revalidates
+     * [Tag, (rel, b)], which no longer matches. Removing it from the cache must
+     * not touch the deleted table. */
+    ecs_fini(world);
+}
+
+void Cached_table_delete_after_quit(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t rel = ecs_new(world);
+    ecs_add_id(world, rel, EcsTraversable);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { Tag },
+            { Foo, .src.id = EcsUp, .trav = rel }
+        },
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t p1 = ecs_new_w(world, Foo);
+    ecs_entity_t p2 = ecs_new_w(world, Foo);
+    ecs_entity_t p3 = ecs_new_w(world, Foo);
+
+    /* Cached tables: [Tag, (rel, p2)], [Tag, (rel, p1)], [Tag, (rel, p3)] */
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_add_pair(world, e2, rel, p2);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_add_pair(world, e1, rel, p1);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_add_pair(world, e3, rel, p3);
+
+    test_int(ecs_query_count(q).entities, 3);
+    test_int(ecs_query_count(q).tables, 3);
+
+    ecs_quit(world);
+
+    /* Deletes table [Tag, (rel, p1)] while the world is quitting */
+    ecs_delete(world, p1);
+    test_assert(ecs_is_alive(world, e1));
+    test_int(ecs_query_count(q).entities, 2);
+    test_int(ecs_query_count(q).tables, 2);
+
+    /* Unmatches [Tag, (rel, p2)], which moves the last cached table */
+    ecs_remove(world, p2, Foo);
+    test_int(ecs_query_count(q).entities, 1);
+    test_int(ecs_query_count(q).tables, 1);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
