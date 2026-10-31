@@ -1532,6 +1532,13 @@ static int flecs_script_eval_component(
             ecs_ptr_copy_w_type_info(v->world, ti, value.ptr, existing);
         }
 
+        if (!src) {
+            flecs_script_eval_error(v, node,
+                "cannot set component '%s' on invalid entity", node->id.first);
+            flecs_type_info_dtor(value.ptr, 1, ti);
+            return -1;
+        }
+
         if (flecs_script_eval_expr(v, &node->expr, &value)) {
             flecs_type_info_dtor(value.ptr, 1, ti);
             return -1;

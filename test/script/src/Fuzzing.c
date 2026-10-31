@@ -10100,3 +10100,30 @@ void Fuzzing_struct_member_w_alive_non_type(void) {
     test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
     ecs_fini(world);
 }
+
+void Fuzzing_set_component_on_entity_id_zero(void) {
+    const char *expr =
+    HEAD "struct Foo(x: f32)"
+    LINE "#0 { Foo: {1} }"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    ecs_fini(world);
+}
+
+void Fuzzing_set_member_on_invalid_anonymous_id(void) {
+    const char *expr =
+    HEAD "struct Bar {"
+    LINE "  #x { member: {f32} }"
+    LINE "}"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    ecs_fini(world);
+}

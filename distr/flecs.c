@@ -96775,6 +96775,13 @@ static int flecs_script_eval_component(
             ecs_ptr_copy_w_type_info(v->world, ti, value.ptr, existing);
         }
 
+        if (!src) {
+            flecs_script_eval_error(v, node,
+                "cannot set component '%s' on invalid entity", node->id.first);
+            flecs_type_info_dtor(value.ptr, 1, ti);
+            return -1;
+        }
+
         if (flecs_script_eval_expr(v, &node->expr, &value)) {
             flecs_type_info_dtor(value.ptr, 1, ti);
             return -1;
@@ -112668,6 +112675,12 @@ static int flecs_ir_component_end(
     }
 
     ecs_entity_t src = flecs_script_get_src(v->world, v->entity->eval, id);
+    if (!src) {
+        flecs_ir_error(vm, node,
+            "cannot set component '%s' on invalid entity", node->id.first);
+        return -1;
+    }
+
     flecs_ir_prof(EcsIrProfileComponentSet);
     if (desc->needs_set || (!desc->ti && ti->hooks.on_replace)) {
         ecs_set_id(v->world, src, id, flecs_itosize(ti->size), value);
