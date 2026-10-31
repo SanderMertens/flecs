@@ -1062,6 +1062,13 @@ int flecs_script_eval_entity_enter_w_name(
             goto error;
         }
 
+        if (ecs_id_is_wildcard(state->eval_kind)) {
+            flecs_script_eval_error(v, node,
+                "cannot use wildcard '%s' as kind of entity '%s'",
+                node->kind, node->name);
+            goto error;
+        }
+
         flecs_script_add_entity_kind(
             v, state->eval, state->eval_kind, node->kind_w_expr);
     }

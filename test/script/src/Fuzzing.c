@@ -10056,3 +10056,15 @@ void Fuzzing_enum_w_integer_underlying_type(void) {
     test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
     ecs_fini(world);
 }
+
+void Fuzzing_entity_w_wildcard_kind(void) {
+    const char *expr =
+    HEAD "_ e {}"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    ecs_fini(world);
+}

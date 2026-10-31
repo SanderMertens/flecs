@@ -3115,7 +3115,8 @@
                 "struct_member_w_integer_type",
                 "struct_member_w_integer_type_generation",
                 "struct_member_initializer_w_integer_type",
-                "enum_w_integer_underlying_type"
+                "enum_w_integer_underlying_type",
+                "entity_w_wildcard_kind"
             ]
         }, {
             "id": "Refs",
