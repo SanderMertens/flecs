@@ -870,6 +870,7 @@ void DeserializeFromJson_value_assign_different_type(void);
 void DeserializeFromJson_struct_w_value(void);
 void DeserializeFromJson_value_unknown_type(void);
 void DeserializeFromJson_value_unknown_type_strict(void);
+void DeserializeFromJson_entity_unknown_component_truncated_nested_value(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_string_w_control_char(void);
@@ -4930,6 +4931,10 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "value_unknown_type_strict",
         DeserializeFromJson_value_unknown_type_strict
+    },
+    {
+        "entity_unknown_component_truncated_nested_value",
+        DeserializeFromJson_entity_unknown_component_truncated_nested_value
     }
 };
 
@@ -7657,7 +7662,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        202,
+        203,
         DeserializeFromJson_testcases
     },
     {

@@ -8473,3 +8473,16 @@ void DeserializeFromJson_restore_removes_trailing_tag_with_observer(void) {
     test_int(removed, 1);
     ecs_fini(world);
 }
+
+void DeserializeFromJson_entity_unknown_component_truncated_nested_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_log_set_level(-4);
+    const char *result = ecs_entity_from_json(world, e,
+        "{\"components\":{\"Unknown\":{\"a\":{\"b\":", NULL);
+    test_assert(result == NULL);
+
+    ecs_fini(world);
+}

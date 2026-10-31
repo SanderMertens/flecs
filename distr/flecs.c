@@ -51922,7 +51922,9 @@ static const char* flecs_json_skip_scope(
             return NULL;
         }
 
-        ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (!json) {
+            break;
+        }
     }
 
     ecs_parser_error(desc->name, desc->expr, json ? json - desc->expr : 0,
