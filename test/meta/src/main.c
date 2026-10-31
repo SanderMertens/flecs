@@ -871,6 +871,12 @@ void DeserializeFromJson_struct_w_value(void);
 void DeserializeFromJson_value_unknown_type(void);
 void DeserializeFromJson_value_unknown_type_strict(void);
 void DeserializeFromJson_entity_unknown_component_truncated_nested_value(void);
+void DeserializeFromJson_entity_pair_target_id_zero(void);
+void DeserializeFromJson_entity_tag_id_zero(void);
+void DeserializeFromJson_entity_parent_id_zero(void);
+void DeserializeFromJson_entity_component_id_zero(void);
+void DeserializeFromJson_entity_pair_rel_id_zero(void);
+void DeserializeFromJson_entity_component_pair_id_zero(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_string_w_control_char(void);
@@ -4935,6 +4941,30 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "entity_unknown_component_truncated_nested_value",
         DeserializeFromJson_entity_unknown_component_truncated_nested_value
+    },
+    {
+        "entity_pair_target_id_zero",
+        DeserializeFromJson_entity_pair_target_id_zero
+    },
+    {
+        "entity_tag_id_zero",
+        DeserializeFromJson_entity_tag_id_zero
+    },
+    {
+        "entity_parent_id_zero",
+        DeserializeFromJson_entity_parent_id_zero
+    },
+    {
+        "entity_component_id_zero",
+        DeserializeFromJson_entity_component_id_zero
+    },
+    {
+        "entity_pair_rel_id_zero",
+        DeserializeFromJson_entity_pair_rel_id_zero
+    },
+    {
+        "entity_component_pair_id_zero",
+        DeserializeFromJson_entity_component_pair_id_zero
     }
 };
 
@@ -7662,7 +7692,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        203,
+        209,
         DeserializeFromJson_testcases
     },
     {

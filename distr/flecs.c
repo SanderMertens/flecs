@@ -47531,6 +47531,11 @@ static ecs_entity_t flecs_json_lookup(
         ecs_set_scope(world, scope);
     }
 
+    if (!result) {
+        ecs_parser_error(desc->name, desc->expr, 0,
+            "failed to resolve entity '%s'", name);
+    }
+
     return result;
 }
 
@@ -47568,6 +47573,10 @@ static ecs_entity_t flecs_json_ensure_entity(
     if (flecs_name_is_id(name)) {
         /* Anonymous entity, find or create mapping to new id */
         ecs_entity_t ser_id = flecs_ito(ecs_entity_t, atoll(&name[1]));
+        if (!ser_id) {
+            return 0;
+        }
+
         ecs_entity_t *deser_id = ecs_map_get(anonymous_ids, ser_id);
         if (deser_id) {
             if (!deser_id[0]) {
@@ -47665,6 +47674,10 @@ static const char* flecs_json_deser_ids(
 
         ecs_entity_t target = flecs_json_lookup(world, 0, str, desc);
         if (str != token) ecs_os_free(str);
+        if (!target) {
+            return NULL;
+        }
+
         ecs_id_t id = rel ? ecs_pair(rel, target) : target;
         ecs_add_id(world, e, id);
         flecs_json_track_id(ctx, id);
@@ -47704,6 +47717,10 @@ static const char* flecs_json_deser_pairs(
     json = flecs_json_expect_member(json, token, desc);
     while (json) {
         ecs_entity_t rel = flecs_json_lookup(world, 0, token, desc);
+        if (!rel) {
+            return NULL;
+        }
+
         json = flecs_json_deser_ids(world, e, rel, json, desc, ctx);
         if (!json) {
             return NULL;
@@ -47750,6 +47767,9 @@ static const char* flecs_json_deser_components(
 
         if (token[0] != '(') {
             id = flecs_json_lookup(world, 0, token, desc);
+            if (!id) {
+                goto error;
+            }
         } else {
             char token_buffer[256];
             ecs_term_t term = {0};
@@ -47764,7 +47784,10 @@ static const char* flecs_json_deser_components(
                 world, 0, term.first.name, desc);
             ecs_entity_t tgt = flecs_json_lookup(
                 world, 0, term.second.name, desc);
-            
+            if (!rel || !tgt) {
+                goto error;
+            }
+
             id = ecs_pair(rel, tgt);
         }
 
@@ -47893,6 +47916,11 @@ static const char* flecs_entity_from_json(
             if (!json) goto error;
             if (field == Parent) {
                 parent = flecs_json_lookup(world, 0, str, desc);
+                if (!parent) {
+                    if (str != token) ecs_os_free(str);
+                    goto error;
+                }
+
                 if (e) ecs_add_pair(world, e, EcsChildOf, parent);
                 ecs_vec_append_t(ctx->a, &ctx->ids, ecs_id_t)[0] = ecs_pair(EcsChildOf, parent);
             } else if (str[0] != '#') {
