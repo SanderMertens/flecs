@@ -2917,6 +2917,8 @@
                 "not_up_cached_rematch_after_remove_from_parent",
                 "not_up_uncached_mixed_parents",
                 "this_src_childof_var_doesnt_match_root",
+                "var_src_childof_var_direct_parent",
+                "var_src_childof_var_filter_parent_multi_child",
                 "var_src_childof_wildcard_no_match",
                 "var_src_childof_any_no_match",
                 "var_src_self_childof_wildcard_no_match",

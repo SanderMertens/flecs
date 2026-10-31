@@ -2826,6 +2826,8 @@ void NonFragmentingChildOf_up_query_cache_stale_table_after_shrink(void);
 void NonFragmentingChildOf_not_up_cached_rematch_after_remove_from_parent(void);
 void NonFragmentingChildOf_not_up_uncached_mixed_parents(void);
 void NonFragmentingChildOf_this_src_childof_var_doesnt_match_root(void);
+void NonFragmentingChildOf_var_src_childof_var_direct_parent(void);
+void NonFragmentingChildOf_var_src_childof_var_filter_parent_multi_child(void);
 void NonFragmentingChildOf_var_src_childof_wildcard_no_match(void);
 void NonFragmentingChildOf_var_src_childof_any_no_match(void);
 void NonFragmentingChildOf_var_src_self_childof_wildcard_no_match(void);
@@ -14113,6 +14115,14 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_this_src_childof_var_doesnt_match_root
     },
     {
+        "var_src_childof_var_direct_parent",
+        NonFragmentingChildOf_var_src_childof_var_direct_parent
+    },
+    {
+        "var_src_childof_var_filter_parent_multi_child",
+        NonFragmentingChildOf_var_src_childof_var_filter_parent_multi_child
+    },
+    {
         "var_src_childof_wildcard_no_match",
         NonFragmentingChildOf_var_src_childof_wildcard_no_match
     },
@@ -15054,7 +15064,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        362,
+        364,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params
