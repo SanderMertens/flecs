@@ -1284,7 +1284,8 @@
                 "defer_batch_remove_name_w_add_childof",
                 "defer_batch_remove_childof_w_add_name",
                 "defer_batch_remove_add_childof_same_pair_named",
-                "add_path_w_sep_null_path"
+                "add_path_w_sep_null_path",
+                "add_parent_wo_value_add_component"
             ]
         }, {
             "id": "OrderedChildren",

@@ -1249,6 +1249,7 @@ void Hierarchies_defer_batch_remove_name_w_add_childof(void);
 void Hierarchies_defer_batch_remove_childof_w_add_name(void);
 void Hierarchies_defer_batch_remove_add_childof_same_pair_named(void);
 void Hierarchies_add_path_w_sep_null_path(void);
+void Hierarchies_add_parent_wo_value_add_component(void);
 
 // Testsuite 'OrderedChildren'
 void OrderedChildren_iter_no_children(void);
@@ -8601,6 +8602,10 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "add_path_w_sep_null_path",
         Hierarchies_add_path_w_sep_null_path
+    },
+    {
+        "add_parent_wo_value_add_component",
+        Hierarchies_add_parent_wo_value_add_component
     }
 };
 
@@ -18389,7 +18394,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        119,
+        120,
         Hierarchies_testcases
     },
     {

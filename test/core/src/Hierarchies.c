@@ -2223,3 +2223,17 @@ void Hierarchies_add_path_w_sep_null_path(void) {
 
     ecs_fini(world);
 }
+
+void Hierarchies_add_parent_wo_value_add_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, EcsParent);
+    ecs_add(world, e, TagA);
+    test_assert(ecs_has(world, e, EcsParent));
+    test_assert(ecs_has(world, e, TagA));
+
+    ecs_fini(world);
+}

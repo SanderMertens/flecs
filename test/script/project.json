@@ -3120,7 +3120,8 @@
                 "ast_to_str_empty_quoted_identifier",
                 "struct_member_w_alive_non_type",
                 "set_component_on_entity_id_zero",
-                "set_member_on_invalid_anonymous_id"
+                "set_member_on_invalid_anonymous_id",
+                "entity_kind_parent"
             ]
         }, {
             "id": "Refs",
