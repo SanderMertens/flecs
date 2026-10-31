@@ -3879,10 +3879,10 @@ void ecs_os_set_api_defaults(void);
 #endif
 
 #ifdef ECS_TARGET_MINGW
-/* mingw bug: without this, a conversion error is thrown, but isnan/isinf should
- * accept float, double, and long double. */
-#define ecs_os_isnan(val) (isnan((float)val))
-#define ecs_os_isinf(val) (isinf((float)val))
+/* mingw bug: isnan/isinf throw a conversion error for double arguments. Use the
+ * type-generic builtins, as casting to float turns large doubles into inf. */
+#define ecs_os_isnan(val) (__builtin_isnan(val))
+#define ecs_os_isinf(val) (__builtin_isinf(val))
 #else
 #define ecs_os_isnan(val) (isnan(val))
 #define ecs_os_isinf(val) (isinf(val))

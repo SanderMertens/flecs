@@ -210,7 +210,7 @@ const char* flecs_parse_digit(
 
     for (; (ch = *ptr); ptr ++) {
         if (!isdigit((unsigned char)ch) && (ch != '.') && !flecs_parse_is_e(ch)) {
-            if (ch != '-' || !flecs_parse_is_e(ptr[-1])) {
+            if ((ch != '-' && ch != '+') || !flecs_parse_is_e(ptr[-1])) {
                 break;
             }
         }

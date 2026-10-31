@@ -691,6 +691,7 @@ void DeserializeFromJson_struct_float(void);
 void DeserializeFromJson_struct_float_scientific_notation(void);
 void DeserializeFromJson_struct_double(void);
 void DeserializeFromJson_struct_double_scientific_notation(void);
+void DeserializeFromJson_struct_double_scientific_notation_plus(void);
 void DeserializeFromJson_struct_negative_int(void);
 void DeserializeFromJson_struct_negative_float(void);
 void DeserializeFromJson_struct_string(void);
@@ -902,6 +903,11 @@ void SerializeToJson_struct_double_nan(void);
 void SerializeToJson_struct_double_inf(void);
 void SerializeToJson_struct_double_large(void);
 void SerializeToJson_struct_double_large_e(void);
+void SerializeToJson_struct_double_small(void);
+void SerializeToJson_struct_double_precise(void);
+void SerializeToJson_struct_float_precise(void);
+void SerializeToJson_struct_double_roundtrip(void);
+void SerializeToJson_struct_float_roundtrip(void);
 void SerializeToJson_struct_enum(void);
 void SerializeToJson_struct_bitmask(void);
 void SerializeToJson_struct_i32_i32(void);
@@ -4216,6 +4222,10 @@ bake_test_case DeserializeFromJson_testcases[] = {
         DeserializeFromJson_struct_double_scientific_notation
     },
     {
+        "struct_double_scientific_notation_plus",
+        DeserializeFromJson_struct_double_scientific_notation_plus
+    },
+    {
         "struct_negative_int",
         DeserializeFromJson_struct_negative_int
     },
@@ -5053,6 +5063,26 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "struct_double_large_e",
         SerializeToJson_struct_double_large_e
+    },
+    {
+        "struct_double_small",
+        SerializeToJson_struct_double_small
+    },
+    {
+        "struct_double_precise",
+        SerializeToJson_struct_double_precise
+    },
+    {
+        "struct_float_precise",
+        SerializeToJson_struct_float_precise
+    },
+    {
+        "struct_double_roundtrip",
+        SerializeToJson_struct_double_roundtrip
+    },
+    {
+        "struct_float_roundtrip",
+        SerializeToJson_struct_float_roundtrip
     },
     {
         "struct_enum",
@@ -7568,6 +7598,7 @@ bake_test_case SetRttHooks_testcases[] = {
     }
 };
 
+
 static bake_test_suite suites[] = {
     {
         "PrimitiveTypes",
@@ -7657,14 +7688,14 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        202,
+        203,
         DeserializeFromJson_testcases
     },
     {
         "SerializeToJson",
         NULL,
         NULL,
-        94,
+        99,
         SerializeToJson_testcases
     },
     {
