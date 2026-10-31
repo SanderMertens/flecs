@@ -3029,6 +3029,7 @@ void Fuzzing_struct_member_w_integer_type(void);
 void Fuzzing_struct_member_w_integer_type_generation(void);
 void Fuzzing_struct_member_initializer_w_integer_type(void);
 void Fuzzing_enum_w_integer_underlying_type(void);
+void Fuzzing_entity_w_wildcard_kind(void);
 
 // Testsuite 'Refs'
 void Refs_setup(void);
@@ -16157,6 +16158,10 @@ bake_test_case Fuzzing_testcases[] = {
     {
         "enum_w_integer_underlying_type",
         Fuzzing_enum_w_integer_underlying_type
+    },
+    {
+        "entity_w_wildcard_kind",
+        Fuzzing_entity_w_wildcard_kind
     }
 };
 
@@ -21100,7 +21105,7 @@ static bake_test_suite suites[] = {
         "Fuzzing",
         Fuzzing_setup,
         NULL,
-        154,
+        155,
         Fuzzing_testcases,
         1,
         Fuzzing_params
