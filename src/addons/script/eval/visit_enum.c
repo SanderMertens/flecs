@@ -105,7 +105,7 @@ static int flecs_script_constants_visit(
                 return -1;
             }
 
-            if (!underlying) {
+            if (!underlying || !ecs_is_valid(world, underlying)) {
                 flecs_expr_visit_error(script, elem->value,
                     "invalid underlying_type for enum '%s'",
                         ecs_get_name(world, ctx->entity));
