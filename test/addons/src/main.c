@@ -491,6 +491,7 @@ void Http_decode_plus(void);
 void Http_query_params_max(void);
 void Http_headers_and_body(void);
 void Http_headers_max_with_body(void);
+void Http_empty_target_encoded_path(void);
 
 // Testsuite 'Rest'
 void Rest_setup(void);
@@ -2451,6 +2452,10 @@ bake_test_case Http_testcases[] = {
     {
         "headers_max_with_body",
         Http_headers_max_with_body
+    },
+    {
+        "empty_target_encoded_path",
+        Http_empty_target_encoded_path
     }
 };
 
@@ -3187,7 +3192,7 @@ static bake_test_suite suites[] = {
         "Http",
         NULL,
         NULL,
-        8,
+        9,
         Http_testcases
     },
     {

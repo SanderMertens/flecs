@@ -46485,7 +46485,7 @@ static bool http_parse_request(
 
         if (!frag->line_offset) {
             char *space = memchr(line, ' ', flecs_ito(size_t, line_length));
-            if (!space || !memchr(space + 1, ' ',
+            if (!space || space[1] == ' ' || !memchr(space + 1, ' ',
                 flecs_ito(size_t, nl - space - 2)))
             {
                 frag->invalid = true;
