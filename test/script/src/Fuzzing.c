@@ -10068,3 +10068,19 @@ void Fuzzing_entity_w_wildcard_kind(void) {
     test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
     ecs_fini(world);
 }
+
+void Fuzzing_ast_to_str_empty_quoted_identifier(void) {
+    const char *expr =
+    HEAD "``";
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    char *str = ecs_script_ast_to_str(script, false);
+    test_assert(str != NULL);
+    ecs_os_free(str);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
