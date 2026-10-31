@@ -10152,3 +10152,51 @@ void Fuzzing_enum_duplicate_constant_w_underlying_type(void) {
     test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
     ecs_fini(world);
 }
+
+void Fuzzing_export_const_new_w_unresolved_var(void) {
+    const char *expr =
+    HEAD "export const e = new {$F}"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    ecs_fini(world);
+}
+
+void Fuzzing_export_mut_new_w_unresolved_var(void) {
+    const char *expr =
+    HEAD "export mut e = new {$F}"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    ecs_fini(world);
+}
+
+void Fuzzing_export_const_new_w_unresolved_var_in_child(void) {
+    const char *expr =
+    HEAD "export const e = new { x { $F } }"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    ecs_fini(world);
+}
+
+void Fuzzing_export_const_new_w_unresolved_pair_var(void) {
+    const char *expr =
+    HEAD "export const e = new {(R, $F)}"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    ecs_fini(world);
+}

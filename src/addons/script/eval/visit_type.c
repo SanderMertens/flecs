@@ -1428,6 +1428,8 @@ static int flecs_script_type_const(
     }
 
     ecs_entity_t type = expected_type;
+    int32_t prev_unresolved = ecs_vec_count(
+        &t->v->base.script->unresolved_refs);
     int expr_result = flecs_script_type_check_expr(t, &node->expr, &type);
     if (expr_result) {
         if (expr_result == 1) {
@@ -1436,6 +1438,13 @@ static int flecs_script_type_const(
         }
 
         return -1;
+    }
+
+    if (export && ecs_vec_count(
+        &t->v->base.script->unresolved_refs) > prev_unresolved)
+    {
+        flecs_script_type_skip_var(t, node->name);
+        return 0;
     }
 
     node->eval_type = type;
