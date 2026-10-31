@@ -3036,6 +3036,10 @@ void Fuzzing_set_component_on_entity_id_zero(void);
 void Fuzzing_set_member_on_invalid_anonymous_id(void);
 void Fuzzing_entity_kind_parent(void);
 void Fuzzing_enum_duplicate_constant_w_underlying_type(void);
+void Fuzzing_export_const_new_w_unresolved_var(void);
+void Fuzzing_export_mut_new_w_unresolved_var(void);
+void Fuzzing_export_const_new_w_unresolved_var_in_child(void);
+void Fuzzing_export_const_new_w_unresolved_pair_var(void);
 
 // Testsuite 'Refs'
 void Refs_setup(void);
@@ -16192,6 +16196,22 @@ bake_test_case Fuzzing_testcases[] = {
     {
         "enum_duplicate_constant_w_underlying_type",
         Fuzzing_enum_duplicate_constant_w_underlying_type
+    },
+    {
+        "export_const_new_w_unresolved_var",
+        Fuzzing_export_const_new_w_unresolved_var
+    },
+    {
+        "export_mut_new_w_unresolved_var",
+        Fuzzing_export_mut_new_w_unresolved_var
+    },
+    {
+        "export_const_new_w_unresolved_var_in_child",
+        Fuzzing_export_const_new_w_unresolved_var_in_child
+    },
+    {
+        "export_const_new_w_unresolved_pair_var",
+        Fuzzing_export_const_new_w_unresolved_pair_var
     }
 };
 
@@ -21135,7 +21155,7 @@ static bake_test_suite suites[] = {
         "Fuzzing",
         Fuzzing_setup,
         NULL,
-        161,
+        165,
         Fuzzing_testcases,
         1,
         Fuzzing_params

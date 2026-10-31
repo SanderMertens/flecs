@@ -3122,7 +3122,11 @@
                 "set_component_on_entity_id_zero",
                 "set_member_on_invalid_anonymous_id",
                 "entity_kind_parent",
-                "enum_duplicate_constant_w_underlying_type"
+                "enum_duplicate_constant_w_underlying_type",
+                "export_const_new_w_unresolved_var",
+                "export_mut_new_w_unresolved_var",
+                "export_const_new_w_unresolved_var_in_child",
+                "export_const_new_w_unresolved_pair_var"
             ]
         }, {
             "id": "Refs",
