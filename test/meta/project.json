@@ -907,7 +907,10 @@
                 "entity_pair_rel_id_zero",
                 "entity_component_pair_id_zero",
                 "entity_large_pair_relationship_name",
-                "struct_unknown_member_nested_large_string"
+                "struct_unknown_member_nested_large_string",
+                "entity_tag_id_generation_only",
+                "entity_tag_id_w_flags",
+                "world_negative_entity_id"
             ]
         }, {
             "id": "SerializeToJson",
