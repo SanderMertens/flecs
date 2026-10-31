@@ -828,6 +828,12 @@ static int flecs_ir_component_end(
     }
 
     ecs_entity_t src = flecs_script_get_src(v->world, v->entity->eval, id);
+    if (!src) {
+        flecs_ir_error(vm, node,
+            "cannot set component '%s' on invalid entity", node->id.first);
+        return -1;
+    }
+
     flecs_ir_prof(EcsIrProfileComponentSet);
     if (desc->needs_set || (!desc->ti && ti->hooks.on_replace)) {
         ecs_set_id(v->world, src, id, flecs_itosize(ti->size), value);

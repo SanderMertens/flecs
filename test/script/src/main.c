@@ -3032,6 +3032,8 @@ void Fuzzing_enum_w_integer_underlying_type(void);
 void Fuzzing_entity_w_wildcard_kind(void);
 void Fuzzing_ast_to_str_empty_quoted_identifier(void);
 void Fuzzing_struct_member_w_alive_non_type(void);
+void Fuzzing_set_component_on_entity_id_zero(void);
+void Fuzzing_set_member_on_invalid_anonymous_id(void);
 
 // Testsuite 'Refs'
 void Refs_setup(void);
@@ -16172,6 +16174,14 @@ bake_test_case Fuzzing_testcases[] = {
     {
         "struct_member_w_alive_non_type",
         Fuzzing_struct_member_w_alive_non_type
+    },
+    {
+        "set_component_on_entity_id_zero",
+        Fuzzing_set_component_on_entity_id_zero
+    },
+    {
+        "set_member_on_invalid_anonymous_id",
+        Fuzzing_set_member_on_invalid_anonymous_id
     }
 };
 
@@ -21115,7 +21125,7 @@ static bake_test_suite suites[] = {
         "Fuzzing",
         Fuzzing_setup,
         NULL,
-        157,
+        159,
         Fuzzing_testcases,
         1,
         Fuzzing_params
