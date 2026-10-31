@@ -9993,3 +9993,18 @@ void Fuzzing_rerun_derived_template_w_prop_override_in_use(void) {
     test_int(0, ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
     ecs_fini(world);
 }
+
+void Fuzzing_template_prop_w_default_of_non_type(void) {
+    const char *expr =
+    HEAD "Rgb {}"
+    LINE "template Foo {"
+    LINE "  prop r: Rgb = {}"
+    LINE "}"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    ecs_fini(world);
+}
