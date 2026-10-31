@@ -913,7 +913,11 @@
                 "world_negative_entity_id",
                 "entity_parent_is_self",
                 "entity_childof_pair_is_self",
-                "entity_parent_is_child"
+                "entity_parent_is_child",
+                "entity_wildcard_parent",
+                "entity_wildcard_tag",
+                "entity_wildcard_pair_target",
+                "entity_wildcard_component"
             ]
         }, {
             "id": "SerializeToJson",

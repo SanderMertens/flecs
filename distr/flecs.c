@@ -47534,6 +47534,10 @@ static ecs_entity_t flecs_json_lookup(
     if (!result) {
         ecs_parser_error(desc->name, desc->expr, 0,
             "failed to resolve entity '%s'", name);
+    } else if (ecs_id_is_wildcard(result)) {
+        ecs_parser_error(desc->name, desc->expr, 0,
+            "cannot use wildcard '%s' as entity", name);
+        return 0;
     }
 
     return result;
