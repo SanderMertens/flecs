@@ -614,7 +614,8 @@
                 "command_run_multiple",
                 "command_run_multiple_error",
                 "command_run_multiple_offset_limit",
-                "root_shell_instructions"
+                "root_shell_instructions",
+                "get_stats_wo_stats_import"
             ]
         }, {
             "id": "Metrics",

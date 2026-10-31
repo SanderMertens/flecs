@@ -29489,6 +29489,12 @@ static bool flecs_rest_get_stats(
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
 {
+    if (!ecs_id(FlecsStats) || !ecs_is_alive(world, ecs_id(FlecsStats))) {
+        flecs_reply_error(reply, "bad request (stats module not imported)");
+        reply->code = 400;
+        return false;
+    }
+
     char *period_str = NULL;
     flecs_rest_string_param(req, "period", &period_str);
     char *category = &req->path[6];
