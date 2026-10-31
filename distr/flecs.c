@@ -40415,6 +40415,10 @@ void flecs_non_fragmenting_childof_move(
     for (; i < end; i ++) {
         ecs_entity_t e = entities[i];
         ecs_entity_t p = parents[i].value;
+        if (!p) {
+            continue;
+        }
+
         ecs_assert(flecs_entities_is_alive(world, p),
             ECS_INTERNAL_ERROR, NULL);
 
