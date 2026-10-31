@@ -23896,6 +23896,59 @@ void NonFragmentingChildOf_optional_up_set_var_2nd_child(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_var_src_childof_var_filter_parent_multi_child(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Foo($p), Bar, ChildOf($this, $p)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    int p_var = ecs_query_find_var(q, "p");
+    test_assert(p_var != -1);
+
+    ecs_entity_t p1 = ecs_new(world);
+    ecs_entity_t p2 = ecs_new(world);
+    ecs_entity_t p3 = ecs_new(world); /* No Foo, children must not match */
+    ecs_add(world, p1, Foo);
+    ecs_add(world, p2, Foo);
+
+    ecs_entity_t c1 = ecs_new_w_parent(world, p1, NULL);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p1, NULL);
+    ecs_entity_t c3 = ecs_new_w_parent(world, p2, NULL);
+    ecs_entity_t c4 = ecs_new_w_parent(world, p3, NULL);
+    ecs_add(world, c1, Bar);
+    ecs_add(world, c2, Bar);
+    ecs_add(world, c3, Bar);
+    ecs_add(world, c4, Bar);
+
+    int32_t count = 0;
+    bool found_c1 = false, found_c2 = false, found_c3 = false;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        for (int32_t i = 0; i < it.count; i ++) {
+            ecs_entity_t e = it.entities[i];
+            test_assert(e != c4);
+            test_uint(ecs_get_parent(world, e), ecs_iter_get_var(&it, p_var));
+            found_c1 |= e == c1;
+            found_c2 |= e == c2;
+            found_c3 |= e == c3;
+            count ++;
+        }
+    }
+    test_int(count, 3);
+    test_bool(found_c1, true);
+    test_bool(found_c2, true);
+    test_bool(found_c3, true);
+
+    ecs_query_fini(q);
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_this_src_childof_var_doesnt_match_root(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -23966,6 +24019,48 @@ void NonFragmentingChildOf_this_src_childof_var_doesnt_match_root(void) {
         ecs_query_fini(q);
     }
 
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_var_src_childof_var_direct_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    // Query exists before the entities, like the query of a system.
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Foo($p), Bar, ChildOf($this, $p)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    int p_var = ecs_query_find_var(q, "p");
+    test_assert(p_var != -1);
+
+    ecs_entity_t p1 = ecs_new(world);
+    ecs_entity_t p2 = ecs_new(world);
+    ecs_add(world, p1, Foo);
+    ecs_add(world, p2, Foo);
+
+    ecs_entity_t c1 = ecs_new_w_parent(world, p1, NULL);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p2, NULL);
+    ecs_add(world, c1, Bar);
+    ecs_add(world, c2, Bar);
+
+    int32_t count = 0;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        for (int32_t i = 0; i < it.count; i ++) {
+            ecs_entity_t e = it.entities[i];
+            test_assert(e == c1 || e == c2);
+            test_uint(ecs_get_parent(world, e), ecs_iter_get_var(&it, p_var));
+            count ++;
+        }
+    }
+    test_int(count, 2);
+
+    ecs_query_fini(q);
     ecs_fini(world);
 }
 
