@@ -125,7 +125,7 @@ static ecs_entity_t flecs_json_ensure_entity(
     if (flecs_name_is_id(name)) {
         /* Anonymous entity, find or create mapping to new id */
         ecs_entity_t ser_id = flecs_ito(ecs_entity_t, atoll(&name[1]));
-        if (!ser_id) {
+        if (!(uint32_t)ser_id || (ser_id & ECS_ID_FLAGS_MASK)) {
             return 0;
         }
 
@@ -493,7 +493,14 @@ static const char* flecs_entity_from_json(
                 goto error;
             }
 
-            serialized_id |= flecs_ito(uint64_t, atoll(token)) << (field == Version ? 32 : 0);
+            int64_t id_value = atoll(token);
+            if (id_value < 0) {
+                ecs_parser_error(desc->name, expr, json - expr,
+                    "invalid value for %s", fields[field]);
+                goto error;
+            }
+
+            serialized_id |= (uint64_t)id_value << (field == Version ? 32 : 0);
             has_id = true;
             break;
         case Alerts:
