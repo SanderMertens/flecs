@@ -8486,3 +8486,84 @@ void DeserializeFromJson_entity_unknown_component_truncated_nested_value(void) {
 
     ecs_fini(world);
 }
+
+void DeserializeFromJson_entity_pair_target_id_zero(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_entity(world, { .name = "Rel" });
+
+    ecs_log_set_level(-4);
+    const char *result = ecs_entity_from_json(world, e,
+        "{\"pairs\":{\"Rel\":\"#0\"}}", NULL);
+    test_assert(result == NULL);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_entity_tag_id_zero(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_log_set_level(-4);
+    const char *result = ecs_entity_from_json(world, e,
+        "{\"tags\":[\"#0\"]}", NULL);
+    test_assert(result == NULL);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_entity_parent_id_zero(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_log_set_level(-4);
+    const char *result = ecs_entity_from_json(world, e,
+        "{\"parent\":\"#0\"}", NULL);
+    test_assert(result == NULL);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_entity_component_id_zero(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_log_set_level(-4);
+    const char *result = ecs_entity_from_json(world, e,
+        "{\"components\":{\"#0\":null}}", NULL);
+    test_assert(result == NULL);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_entity_pair_rel_id_zero(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_entity(world, { .name = "Tgt" });
+
+    ecs_log_set_level(-4);
+    const char *result = ecs_entity_from_json(world, e,
+        "{\"pairs\":{\"#0\":\"Tgt\"}}", NULL);
+    test_assert(result == NULL);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_entity_component_pair_id_zero(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_entity(world, { .name = "Rel" });
+
+    ecs_log_set_level(-4);
+    const char *result = ecs_entity_from_json(world, e,
+        "{\"components\":{\"(Rel,#0)\":null}}", NULL);
+    test_assert(result == NULL);
+
+    ecs_fini(world);
+}
