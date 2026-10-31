@@ -3117,7 +3117,8 @@
                 "struct_member_initializer_w_integer_type",
                 "enum_w_integer_underlying_type",
                 "entity_w_wildcard_kind",
-                "ast_to_str_empty_quoted_identifier"
+                "ast_to_str_empty_quoted_identifier",
+                "struct_member_w_alive_non_type"
             ]
         }, {
             "id": "Refs",

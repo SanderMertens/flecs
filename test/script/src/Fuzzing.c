@@ -10084,3 +10084,19 @@ void Fuzzing_ast_to_str_empty_quoted_identifier(void) {
     ecs_script_free(script);
     ecs_fini(world);
 }
+
+void Fuzzing_struct_member_w_alive_non_type(void) {
+    const char *expr =
+    HEAD "struct Position(x: 2)"
+    LINE "struct Facade(height: 3)"
+    LINE "template Wood : Facade {"
+    LINE "  Position: {height}"
+    LINE "}"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    ecs_fini(world);
+}
