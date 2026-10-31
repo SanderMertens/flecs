@@ -10140,3 +10140,15 @@ void Fuzzing_entity_kind_parent(void) {
     test_assert(ecs_lookup(world, "e") != 0);
     ecs_fini(world);
 }
+
+void Fuzzing_enum_duplicate_constant_w_underlying_type(void) {
+    const char *expr =
+    HEAD "enum Color({underlying_type: u32}, A: 2, B: 2)"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    ecs_fini(world);
+}

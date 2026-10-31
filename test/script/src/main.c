@@ -3035,6 +3035,7 @@ void Fuzzing_struct_member_w_alive_non_type(void);
 void Fuzzing_set_component_on_entity_id_zero(void);
 void Fuzzing_set_member_on_invalid_anonymous_id(void);
 void Fuzzing_entity_kind_parent(void);
+void Fuzzing_enum_duplicate_constant_w_underlying_type(void);
 
 // Testsuite 'Refs'
 void Refs_setup(void);
@@ -16187,6 +16188,10 @@ bake_test_case Fuzzing_testcases[] = {
     {
         "entity_kind_parent",
         Fuzzing_entity_kind_parent
+    },
+    {
+        "enum_duplicate_constant_w_underlying_type",
+        Fuzzing_enum_duplicate_constant_w_underlying_type
     }
 };
 
@@ -21130,7 +21135,7 @@ static bake_test_suite suites[] = {
         "Fuzzing",
         Fuzzing_setup,
         NULL,
-        160,
+        161,
         Fuzzing_testcases,
         1,
         Fuzzing_params
