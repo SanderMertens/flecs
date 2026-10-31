@@ -9942,3 +9942,17 @@ void Fuzzing_143(void) {
 void Fuzzing_148(void) {
     // Implement testcase
 }
+
+void Fuzzing_rerun_empty_struct_in_use(void) {
+    const char *expr =
+    HEAD "struct Facade()"
+    LINE "e { Facade }"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    test_int(0, ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    test_int(0, ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    ecs_fini(world);
+}
