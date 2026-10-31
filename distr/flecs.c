@@ -51458,6 +51458,15 @@ const char* ecs_ptr_from_json(
 
     while ((json = flecs_json_parse(json, &token_kind, token))) {
         if (skip) {
+            if (token_kind == JsonLargeString) {
+                ecs_strbuf_t large_token = ECS_STRBUF_INIT;
+                json = flecs_json_parse_large_string(json, &large_token);
+                ecs_strbuf_reset(&large_token);
+                if (!json) {
+                    break;
+                }
+            }
+
             /* Skip over tokens in case an unknown member was encountered */
             if (token_kind == JsonObjectOpen || token_kind == JsonArrayOpen) {
                 skip_depth ++;

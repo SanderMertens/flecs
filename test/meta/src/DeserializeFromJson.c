@@ -8580,3 +8580,28 @@ void DeserializeFromJson_entity_large_pair_relationship_name(void) {
 
     ecs_fini(world);
 }
+
+void DeserializeFromJson_struct_unknown_member_nested_large_string(void) {
+    typedef struct {
+        int32_t v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    T value = {0};
+
+    ecs_log_set_level(-4);
+    const char *result = ecs_ptr_from_json(world, t, &value,
+        "{\"unknown\":{\"a\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}, \"v\": 10}", NULL);
+    test_assert(result != NULL);
+    test_int(value.v, 10);
+
+    ecs_fini(world);
+}
