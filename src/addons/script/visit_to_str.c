@@ -62,7 +62,7 @@ static void flecs_scriptbuf_appendstr(
 
     ecs_strbuf_appendstr(v->buf, str);
 
-    if (str[strlen(str) - 1] == '\n') {
+    if (str[0] && str[strlen(str) - 1] == '\n') {
         v->newline = true;
     }
 }
