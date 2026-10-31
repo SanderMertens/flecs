@@ -565,6 +565,7 @@ void Rest_command_run_multiple(void);
 void Rest_command_run_multiple_error(void);
 void Rest_command_run_multiple_offset_limit(void);
 void Rest_root_shell_instructions(void);
+void Rest_get_stats_wo_stats_import(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -2739,6 +2740,10 @@ bake_test_case Rest_testcases[] = {
     {
         "root_shell_instructions",
         Rest_root_shell_instructions
+    },
+    {
+        "get_stats_wo_stats_import",
+        Rest_get_stats_wo_stats_import
     }
 };
 
@@ -3199,7 +3204,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        70,
+        71,
         Rest_testcases
     },
     {
