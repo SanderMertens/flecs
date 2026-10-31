@@ -3025,6 +3025,10 @@ void Fuzzing_rerun_empty_struct_in_use(void);
 void Fuzzing_rerun_derived_template_in_use(void);
 void Fuzzing_rerun_derived_template_w_prop_override_in_use(void);
 void Fuzzing_template_prop_w_default_of_non_type(void);
+void Fuzzing_struct_member_w_integer_type(void);
+void Fuzzing_struct_member_w_integer_type_generation(void);
+void Fuzzing_struct_member_initializer_w_integer_type(void);
+void Fuzzing_enum_w_integer_underlying_type(void);
 
 // Testsuite 'Refs'
 void Refs_setup(void);
@@ -16137,6 +16141,22 @@ bake_test_case Fuzzing_testcases[] = {
     {
         "template_prop_w_default_of_non_type",
         Fuzzing_template_prop_w_default_of_non_type
+    },
+    {
+        "struct_member_w_integer_type",
+        Fuzzing_struct_member_w_integer_type
+    },
+    {
+        "struct_member_w_integer_type_generation",
+        Fuzzing_struct_member_w_integer_type_generation
+    },
+    {
+        "struct_member_initializer_w_integer_type",
+        Fuzzing_struct_member_initializer_w_integer_type
+    },
+    {
+        "enum_w_integer_underlying_type",
+        Fuzzing_enum_w_integer_underlying_type
     }
 };
 
@@ -21080,7 +21100,7 @@ static bake_test_suite suites[] = {
         "Fuzzing",
         Fuzzing_setup,
         NULL,
-        150,
+        154,
         Fuzzing_testcases,
         1,
         Fuzzing_params

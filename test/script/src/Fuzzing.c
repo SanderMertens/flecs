@@ -10008,3 +10008,51 @@ void Fuzzing_template_prop_w_default_of_non_type(void) {
     test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
     ecs_fini(world);
 }
+
+void Fuzzing_struct_member_w_integer_type(void) {
+    const char *expr =
+    HEAD "struct Foo(x: 28)"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    ecs_fini(world);
+}
+
+void Fuzzing_struct_member_w_integer_type_generation(void) {
+    const char *expr =
+    HEAD "struct Foo(x: 4294967296)"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    ecs_fini(world);
+}
+
+void Fuzzing_struct_member_initializer_w_integer_type(void) {
+    const char *expr =
+    HEAD "struct Foo(x: {type: 28})"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    ecs_fini(world);
+}
+
+void Fuzzing_enum_w_integer_underlying_type(void) {
+    const char *expr =
+    HEAD "enum Foo({underlying_type: 28}, X)"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    ecs_fini(world);
+}
