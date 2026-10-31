@@ -280,6 +280,9 @@ const char* flecs_json_expect_member(
 
     if (out != token) {
         ecs_os_free(out);
+        ecs_parser_error(desc->name, desc->expr, json - desc->expr,
+            "member name exceeds maximum length (%d)", ECS_MAX_TOKEN_SIZE);
+        return NULL;
     }
 
     json = flecs_json_expect(json, JsonColon, token, desc);

@@ -8567,3 +8567,16 @@ void DeserializeFromJson_entity_component_pair_id_zero(void) {
 
     ecs_fini(world);
 }
+
+void DeserializeFromJson_entity_large_pair_relationship_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_log_set_level(-4);
+    const char *result = ecs_entity_from_json(world, e,
+        "{\"pairs\":{\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\":\"Tgt\"}}", NULL);
+    test_assert(result == NULL);
+
+    ecs_fini(world);
+}

@@ -905,7 +905,8 @@
                 "entity_parent_id_zero",
                 "entity_component_id_zero",
                 "entity_pair_rel_id_zero",
-                "entity_component_pair_id_zero"
+                "entity_component_pair_id_zero",
+                "entity_large_pair_relationship_name"
             ]
         }, {
             "id": "SerializeToJson",
