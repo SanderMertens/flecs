@@ -1585,6 +1585,12 @@ static int flecs_script_type_template_var(
             t->v->world, ecs_id(ecs_script_template_ref_t));
     }
 
+    if (type && !ecs_get_type_info(t->v->world, type)) {
+        flecs_script_eval_error(t->v, node,
+            "type of %s '%s' is not a type", mut ? "mut" : "prop", node->name);
+        return -1;
+    }
+
     if (node->expr) {
         int result = flecs_script_type_check_expr(t, &node->expr, &type);
         if (result) {
