@@ -3021,6 +3021,7 @@ void Fuzzing_146(void);
 void Fuzzing_147(void);
 void Fuzzing_149(void);
 void Fuzzing_150(void);
+void Fuzzing_rerun_empty_struct_in_use(void);
 
 // Testsuite 'Refs'
 void Refs_setup(void);
@@ -16117,6 +16118,10 @@ bake_test_case Fuzzing_testcases[] = {
     {
         "150",
         Fuzzing_150
+    },
+    {
+        "rerun_empty_struct_in_use",
+        Fuzzing_rerun_empty_struct_in_use
     }
 };
 
@@ -21060,7 +21065,7 @@ static bake_test_suite suites[] = {
         "Fuzzing",
         Fuzzing_setup,
         NULL,
-        146,
+        147,
         Fuzzing_testcases,
         1,
         Fuzzing_params

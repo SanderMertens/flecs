@@ -99122,7 +99122,10 @@ int flecs_script_struct_visit(
         !ecs_vec_count(&node->elements))
     {
         const EcsStruct *st = ecs_get(world, ctx->entity, EcsStruct);
-        if (st && flecs_struct_inherited_count(world, ctx->entity, st) > 0) {
+        if (st && (flecs_struct_inherited_count(world, ctx->entity, st) > 0 ||
+            (!ecs_vec_count(&st->members) &&
+                ecs_has(world, ctx->entity, EcsType))))
+        {
             return 0;
         }
 
