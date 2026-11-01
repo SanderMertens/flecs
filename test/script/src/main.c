@@ -3040,6 +3040,16 @@ void Fuzzing_export_const_new_w_unresolved_var(void);
 void Fuzzing_export_mut_new_w_unresolved_var(void);
 void Fuzzing_export_const_new_w_unresolved_var_in_child(void);
 void Fuzzing_export_const_new_w_unresolved_pair_var(void);
+void Fuzzing_childof_self(void);
+void Fuzzing_tag_w_relationship_trait(void);
+void Fuzzing_entity_kind_w_relationship_trait(void);
+void Fuzzing_inherit_from_prefab_tag(void);
+void Fuzzing_add_singleton_to_entity(void);
+void Fuzzing_set_parent_component_empty(void);
+void Fuzzing_entity_kind_parent_w_child(void);
+void Fuzzing_enum_w_member_cycle(void);
+void Fuzzing_nested_mut_shadow_assign_in_async(void);
+void Fuzzing_managed_script_template_ref_after_error(void);
 
 // Testsuite 'Refs'
 void Refs_setup(void);
@@ -16212,6 +16222,46 @@ bake_test_case Fuzzing_testcases[] = {
     {
         "export_const_new_w_unresolved_pair_var",
         Fuzzing_export_const_new_w_unresolved_pair_var
+    },
+    {
+        "childof_self",
+        Fuzzing_childof_self
+    },
+    {
+        "tag_w_relationship_trait",
+        Fuzzing_tag_w_relationship_trait
+    },
+    {
+        "entity_kind_w_relationship_trait",
+        Fuzzing_entity_kind_w_relationship_trait
+    },
+    {
+        "inherit_from_prefab_tag",
+        Fuzzing_inherit_from_prefab_tag
+    },
+    {
+        "add_singleton_to_entity",
+        Fuzzing_add_singleton_to_entity
+    },
+    {
+        "set_parent_component_empty",
+        Fuzzing_set_parent_component_empty
+    },
+    {
+        "entity_kind_parent_w_child",
+        Fuzzing_entity_kind_parent_w_child
+    },
+    {
+        "enum_w_member_cycle",
+        Fuzzing_enum_w_member_cycle
+    },
+    {
+        "nested_mut_shadow_assign_in_async",
+        Fuzzing_nested_mut_shadow_assign_in_async
+    },
+    {
+        "managed_script_template_ref_after_error",
+        Fuzzing_managed_script_template_ref_after_error
     }
 };
 
@@ -21155,7 +21205,7 @@ static bake_test_suite suites[] = {
         "Fuzzing",
         Fuzzing_setup,
         NULL,
-        165,
+        175,
         Fuzzing_testcases,
         1,
         Fuzzing_params

@@ -15,13 +15,29 @@ ECS_DECLARE(EcsScriptTemplateManual);
 ECS_DECLARE(EcsScriptTemplatePending);
 ECS_COMPONENT_DECLARE(ecs_script_template_ref_t);
 
+static const ecs_type_info_t* flecs_script_template_ref_ti(
+    const ecs_world_t *world,
+    const ecs_script_template_ref_t *ref)
+{
+    return ref->ti ? ref->ti : ecs_get_type_info(world, ref->type);
+}
+
 static void flecs_script_template_ref_clear(
     ecs_world_t *world,
     ecs_script_template_ref_t *ref)
 {
     if (ref->value) {
-        ecs_ptr_free(world, ref->type, ref->value);
+        const ecs_type_info_t *ti = flecs_script_template_ref_ti(world, ref);
+        if (ti) {
+            ecs_ptr_free_w_type_info(world, ti, ref->value);
+        }
+
+        if (ref->ti) {
+            flecs_type_info_release(ref->ti);
+        }
+
         ref->value = NULL;
+        ref->ti = NULL;
     }
 }
 
@@ -34,6 +50,10 @@ void flecs_script_template_ref_set(
     flecs_script_template_ref_clear(world, ref);
     ref->type = type;
     ref->value = value;
+    if (value) {
+        ref->ti = ecs_get_type_info(world, type);
+        flecs_type_info_claim(ref->ti);
+    }
 }
 
 int flecs_script_template_ref_apply(
@@ -65,13 +85,16 @@ static void flecs_script_template_ref_copy(
     const ecs_script_template_ref_t *src = src_ptr;
     int32_t i;
     for (i = 0; i < count; i ++) {
-        void *value = NULL;
+        flecs_script_template_ref_clear(world, &dst[i]);
+        dst[i].type = src[i].type;
         if (src[i].value) {
-            value = ecs_ptr_new(world, src[i].type);
-            ecs_ptr_copy(world, src[i].type, value, src[i].value);
+            const ecs_type_info_t *src_ti = flecs_script_template_ref_ti(
+                world, &src[i]);
+            dst[i].value = ecs_ptr_new_w_type_info(world, src_ti);
+            ecs_ptr_copy_w_type_info(world, src_ti, dst[i].value, src[i].value);
+            dst[i].ti = src_ti;
+            flecs_type_info_claim(src_ti);
         }
-
-        flecs_script_template_ref_set(world, &dst[i], src[i].type, value);
     }
 }
 
@@ -86,9 +109,10 @@ static void flecs_script_template_ref_move(
     ecs_script_template_ref_t *src = src_ptr;
     int32_t i;
     for (i = 0; i < count; i ++) {
-        flecs_script_template_ref_set(
-            world, &dst[i], src[i].type, src[i].value);
+        flecs_script_template_ref_clear(world, &dst[i]);
+        dst[i] = src[i];
         src[i].value = NULL;
+        src[i].ti = NULL;
     }
 }
 
@@ -1673,6 +1697,22 @@ int flecs_script_template_eval_var(
             mut ? "mut" : "prop", node->name,
             ecs_get_name(v->world, template->props.type));
         return -1;
+    }
+
+    ecs_script_var_t *shadowed = v->vars->parent
+        ? ecs_script_vars_lookup(v->vars->parent, node->name)
+        : NULL;
+    if (shadowed) {
+        ecs_script_template_member_t *members = ecs_vec_first(&template->members);
+        int32_t i, count = ecs_vec_count(&template->members);
+        for (i = 0; i < count; i ++) {
+            if (members[i].sp == shadowed->sp) {
+                flecs_script_eval_error(v, node,
+                    "%s '%s' redeclares template member with the same name",
+                    mut ? "mut" : "prop", node->name);
+                return -1;
+            }
+        }
     }
 
     ecs_script_var_t *var = ecs_script_vars_declare(v->vars, node->name);

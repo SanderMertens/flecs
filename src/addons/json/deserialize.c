@@ -35,6 +35,12 @@ static void flecs_from_json_ctx_fini(
     ecs_map_fini(&ctx->missing_reflection);
 }
 
+static bool flecs_json_ids_exhausted(
+    const ecs_world_t *world)
+{
+    return flecs_entities_max_id(ecs_get_world(world)) == UINT32_MAX;
+}
+
 static ecs_entity_t flecs_json_new_id(
     ecs_world_t *world,
     ecs_entity_t ser_id)
@@ -42,6 +48,8 @@ static ecs_entity_t flecs_json_new_id(
     /* Try to honor low id requirements */
     if (ser_id < FLECS_HI_COMPONENT_ID) {
         return ecs_new_low_id(world);
+    } else if (flecs_json_ids_exhausted(world)) {
+        return 0;
     } else {
         return ecs_new(world);
     }
@@ -138,6 +146,9 @@ static ecs_entity_t flecs_json_ensure_entity(
             if (!deser_id[0]) {
                 /* Id is already issued by deserializer, create new id */
                 deser_id[0] = flecs_json_new_id(world, ser_id);
+                if (!deser_id[0]) {
+                    return 0;
+                }
 
                 /* Mark new id as reserved */
                 flecs_json_mark_reserved(anonymous_ids, deser_id[0]);
@@ -161,6 +172,9 @@ static ecs_entity_t flecs_json_ensure_entity(
             } else {
                 /* If id exists and is not alive, create a new id */
                 deser_id[0] = flecs_json_new_id(world, ser_id);
+                if (!deser_id[0]) {
+                    return 0;
+                }
 
                 /* Mark new id as reserved */
                 flecs_json_mark_reserved(anonymous_ids, deser_id[0]);
@@ -171,6 +185,10 @@ static ecs_entity_t flecs_json_ensure_entity(
     } else {
         e = ecs_lookup_path_w_sep(world, 0, name, ".", NULL, false);
         if (!e) {
+            if (flecs_json_ids_exhausted(world)) {
+                return 0;
+            }
+
             e = ecs_entity(world, { .name = name });
             flecs_json_mark_reserved(anonymous_ids, e);
         }
@@ -199,20 +217,39 @@ static bool flecs_json_has_id(
         flecs_id_qsort_cmp) != NULL;
 }
 
-static bool flecs_json_is_cycle(
+static int flecs_json_check_id(
     const ecs_world_t *world,
     ecs_entity_t e,
-    ecs_entity_t parent)
+    ecs_id_t id,
+    const char *json,
+    const ecs_from_json_desc_t *desc)
 {
-    while (parent) {
-        if (parent == e) {
-            return true;
-        }
-
-        parent = ecs_get_parent(world, parent);
+    char *err = NULL;
+    if (flecs_component_check_constraints(world, e, id, &err)) {
+        ecs_parser_error(desc->name, desc->expr, json - desc->expr, "%s", err);
+        ecs_os_free(err);
+        return -1;
     }
 
-    return false;
+    return 0;
+}
+
+static int flecs_json_check_value(
+    const ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_id_t id,
+    const void *value,
+    const char *json,
+    const ecs_from_json_desc_t *desc)
+{
+    char *err = NULL;
+    if (flecs_component_check_value(world, e, id, value, &err)) {
+        ecs_parser_error(desc->name, desc->expr, json - desc->expr, "%s", err);
+        ecs_os_free(err);
+        return -1;
+    }
+
+    return 0;
 }
 
 static const char* flecs_json_deser_ids(
@@ -250,13 +287,11 @@ static const char* flecs_json_deser_ids(
             return NULL;
         }
 
-        if (rel == EcsChildOf && flecs_json_is_cycle(world, e, target)) {
-            ecs_parser_error(desc->name, desc->expr, json - desc->expr,
-                "ChildOf pair would create cycle");
+        ecs_id_t id = rel ? ecs_pair(rel, target) : target;
+        if (flecs_json_check_id(world, e, id, json, desc)) {
             return NULL;
         }
 
-        ecs_id_t id = rel ? ecs_pair(rel, target) : target;
         ecs_add_id(world, e, id);
         flecs_json_track_id(ctx, id);
         if (!array) {
@@ -369,8 +404,16 @@ static const char* flecs_json_deser_components(
             id = ecs_pair(rel, tgt);
         }
 
+        if (flecs_json_check_id(world, e, id, json, desc)) {
+            goto error;
+        }
+
         lah = flecs_json_parse(json, &token_kind, token);
         if (token_kind == JsonNull) {
+            if (flecs_json_check_value(world, e, id, NULL, json, desc)) {
+                goto error;
+            }
+
             ecs_add_id(world, e, id);
             json = lah;
         } else {
@@ -379,11 +422,30 @@ static const char* flecs_json_deser_components(
                 ECS_PAIR_FIRST(id) == ecs_id(EcsIdentifier) &&
                 ECS_PAIR_SECOND(id) != EcsAlias;
             const char *next = NULL;
-            if (ti) {
+            if (ti && ti->hooks.on_replace) {
+                void *ptr = ecs_ptr_new_w_type_info(world, ti);
+                next = ecs_ptr_from_json(world, ti->component, ptr, json, desc);
+                if (next) {
+                    if (flecs_json_check_value(world, e, id, ptr, json, desc)) {
+                        ecs_ptr_free_w_type_info(world, ti, ptr);
+                        goto error;
+                    }
+
+                    ecs_set_id(world, e, id, flecs_ito(size_t, ti->size), ptr);
+                }
+
+                ecs_ptr_free_w_type_info(world, ti, ptr);
+            } else if (ti) {
                 void *ptr = ecs_ensure_id(world, e, id, flecs_ito(size_t, ti->size));
                 if (!skip) {
                     next = ecs_ptr_from_json(world, ti->component, ptr, json, desc);
                     if (next) {
+                        if (flecs_json_check_value(
+                            world, e, id, ptr, json, desc))
+                        {
+                            goto error;
+                        }
+
                         ecs_modified_id(world, e, id);
                     }
                 }
@@ -499,9 +561,9 @@ static const char* flecs_entity_from_json(
                     goto error;
                 }
 
-                if (e && flecs_json_is_cycle(world, e, parent)) {
-                    ecs_parser_error(desc->name, expr, json - expr,
-                        "parent would create cycle");
+                if (flecs_json_check_id(
+                    world, e, ecs_childof(parent), json, desc))
+                {
                     if (str != token) ecs_os_free(str);
                     goto error;
                 }

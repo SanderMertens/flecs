@@ -10200,3 +10200,169 @@ void Fuzzing_export_const_new_w_unresolved_pair_var(void) {
     test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
     ecs_fini(world);
 }
+
+void Fuzzing_childof_self(void) {
+    const char *expr =
+    HEAD "e { (ChildOf, e) }"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
+}
+
+void Fuzzing_tag_w_relationship_trait(void) {
+    const char *expr =
+    HEAD "e { ChildOf }"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
+}
+
+void Fuzzing_entity_kind_w_relationship_trait(void) {
+    const char *expr =
+    HEAD "ChildOf e {}"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
+}
+
+void Fuzzing_inherit_from_prefab_tag(void) {
+    const char *expr =
+    HEAD "Foo : Prefab {}"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
+}
+
+void Fuzzing_add_singleton_to_entity(void) {
+    const char *expr =
+    HEAD "e { flecs.meta }"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
+}
+
+void Fuzzing_set_parent_component_empty(void) {
+    const char *expr =
+    HEAD "e { flecs.core.Parent: {} }"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
+}
+
+void Fuzzing_entity_kind_parent_w_child(void) {
+    const char *expr =
+    HEAD "Parent e {"
+    LINE "  Child {}"
+    LINE "}"
+    LINE "Foo {}"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
+}
+
+void Fuzzing_enum_w_member_cycle(void) {
+    const char *expr =
+    HEAD "enum Color {"
+    LINE "  flecs.core.constant e {"
+    LINE "    member: {Color}"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
+}
+
+void Fuzzing_nested_mut_shadow_assign_in_async(void) {
+    const char *expr =
+    HEAD "template T {"
+    LINE "  mut y: f32 = 0"
+    LINE "  {"
+    LINE "    mut y: f32 = 0"
+    LINE "    async {"
+    LINE "      y = y"
+    LINE "    }"
+    LINE "  }"
+    LINE "  {}"
+    LINE "}"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
+}
+
+void Fuzzing_managed_script_template_ref_after_error(void) {
+    const char *expr =
+    HEAD "struct Road(size: i32)"
+    LINE "struct Rgb(r: u8, g: u8, b: u8)"
+    LINE "template MyRoad : Road {"
+    LINE "  prop color: Rgb = {}"
+    LINE "}"
+    LINE "template RoadNetwork {"
+    LINE "  prop road : template Road = MyRoad(color: {1, 2, 3})"
+    LINE "  prop corner : template Road"
+    LINE "  r { road: {size: 1} }"
+    LINE "  c { corner: {size: 2} }"
+    LINE "}"
+    LINE "template City {"
+    LINE "  prop roads : template RoadNetwork = RoadNetwork(corner: MyRoad())"
+    LINE "  n { roads }"
+    LINE "}"
+    LINE "City a()"
+    LINE "City b(roadS: RoadNetwork(road: MyRoad(color: {4, 5, 6})))"
+    ;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-5);
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    ecs_script_update(world, s, 0, expr);
+    test_assert(true);
+    ecs_fini(world);
+}

@@ -45,6 +45,8 @@ typedef int ecs_http_socket_t;
 /* Number of retries receiving request */
 #define ECS_HTTP_REQUEST_RECV_RETRY (10)
 
+#define ECS_HTTP_REQUEST_FRAGMENT_RECV_RETRY (100)
+
 /* Minimum interval between dequeueing requests (ms) */
 #define ECS_HTTP_MIN_DEQUEUE_INTERVAL (50)
 

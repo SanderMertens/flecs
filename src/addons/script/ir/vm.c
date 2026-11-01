@@ -834,6 +834,10 @@ static int flecs_ir_component_end(
         return -1;
     }
 
+    if (flecs_script_eval_check_value(v, node, src, id, value)) {
+        return -1;
+    }
+
     flecs_ir_prof(EcsIrProfileComponentSet);
     if (desc->needs_set || (!desc->ti && ti->hooks.on_replace)) {
         ecs_set_id(v->world, src, id, flecs_itosize(ti->size), value);
@@ -869,6 +873,10 @@ static int flecs_ir_with_component_begin(
     const ecs_script_component_t *node = op->node;
     ecs_id_t id;
     if (flecs_ir_id_get(vm, desc, node, &id)) {
+        return -1;
+    }
+
+    if (flecs_script_eval_check_id(v, node, 0, id, op->b != -1)) {
         return -1;
     }
 

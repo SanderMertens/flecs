@@ -202,4 +202,25 @@ void flecs_component_update_childof_w_depth(
     ecs_component_record_t *cr,
     int32_t depth);
 
+int32_t flecs_component_check_constraints(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    char **err);
+
+int32_t flecs_component_check_value(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    const void *value,
+    char **err);
+
+#ifdef FLECS_META
+char* flecs_meta_value_constraint_error(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    const void *value);
+#endif
+
 #endif

@@ -918,7 +918,10 @@
                 "entity_wildcard_parent",
                 "entity_wildcard_tag",
                 "entity_wildcard_pair_target",
-                "entity_wildcard_component"
+                "entity_wildcard_component",
+                "entity_pair_target_childof",
+                "entity_id_max_then_new_entity",
+                "entity_component_w_on_replace"
             ]
         }, {
             "id": "SerializeToJson",
