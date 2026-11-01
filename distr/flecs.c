@@ -16411,7 +16411,9 @@ static void flecs_multi_observer_invoke(
         if (match) {
             /* The target table matches but the entity hasn't moved to it yet. 
              * Now match the not_query, which will populate the iterator with
-             * data from the table the entity is still stored in. */
+             * data from the table the entity is still stored in. This can fail
+             * when other ids changed in the same move or a term is matched per
+             * entity, in which case the observer isn't invoked for this event. */
             user_it.flags |= EcsIterSkip; /* Prevent change detection on fini */
             ecs_iter_fini(&user_it);
             ecs_table_range_t prev_range = {
@@ -16421,10 +16423,6 @@ static void flecs_multi_observer_invoke(
             };
             match = flecs_observer_query_has_range(
                 impl->not_query, &prev_range, term, it->event_id, &user_it);
-
-            /* A not query replaces Not terms with Optional terms, so if the 
-             * regular query matches, the not_query should also match. */
-            ecs_assert(match, ECS_INTERNAL_ERROR, NULL);
         }
     } else {
         int trivial = -1;

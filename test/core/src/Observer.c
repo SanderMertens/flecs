@@ -16158,3 +16158,132 @@ void Observer_no_terms_on_add(void) {
 
     ecs_fini(world);
 }
+
+void Observer_not_term_on_remove_batched_w_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagB);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position) },
+            { TagB, .oper = EcsNot }
+        },
+        .events = { EcsOnRemove },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    ecs_readonly_begin(world, false);
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_add(stage, e, TagB);
+    ecs_remove(stage, e, Position);
+    ecs_readonly_end(world);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_uint(ctx.e[0], e);
+    test_uint(ctx.event, EcsOnRemove);
+    test_uint(ctx.event_id, ecs_id(Position));
+    test_int(ctx.term_index, 0);
+
+    ecs_fini(world);
+}
+
+void Observer_not_term_on_add_batched_w_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagB);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position) },
+            { TagB, .oper = EcsNot }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new_w(world, TagB);
+
+    ecs_readonly_begin(world, false);
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_remove(stage, e, TagB);
+    ecs_set(stage, e, Position, {10, 20});
+    ecs_readonly_end(world);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_uint(ctx.e[0], e);
+    test_uint(ctx.event, EcsOnAdd);
+    test_uint(ctx.event_id, ecs_id(Position));
+    test_int(ctx.term_index, 0);
+
+    ecs_fini(world);
+}
+
+void Observer_not_term_on_remove_other_entity_matches_up_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t parent_w_pos = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    ecs_entity_t e = ecs_new_w_parent(world, parent, NULL);
+    ecs_entity_t other = ecs_new_w_parent(world, parent_w_pos, NULL);
+    test_assert(ecs_get_table(world, e) == ecs_get_table(world, other));
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position), .src.id = EcsSelf|EcsUp, .trav = EcsChildOf },
+            { TagB, .oper = EcsNot }
+        },
+        .events = { EcsOnRemove },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_add(world, e, TagB);
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
+
+void Observer_not_term_on_remove_other_entity_matches_dont_fragment(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_entity_t other = ecs_new(world);
+    ecs_set(world, other, Position, {10, 20});
+    test_assert(ecs_get_table(world, e) == ecs_get_table(world, other));
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position) },
+            { TagB, .oper = EcsNot }
+        },
+        .events = { EcsOnRemove },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_add(world, e, TagB);
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
