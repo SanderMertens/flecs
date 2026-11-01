@@ -1786,3 +1786,28 @@ void OrderedChildren_ordered_children_parent_is_traversable(void) {
 
     ecs_fini(world);
 }
+
+void OrderedChildren_deferred_reparent_then_remove_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p1 = ecs_new(world);
+    ecs_add_id(world, p1, EcsOrderedChildren);
+    ecs_entity_t p2 = ecs_new(world);
+    ecs_add_id(world, p2, EcsOrderedChildren);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, p1);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, p1);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_add_pair(stage, e1, EcsChildOf, p2);
+    ecs_remove_pair(stage, e1, EcsChildOf, EcsWildcard);
+    ecs_merge(stage);
+
+    test_assert(!ecs_has_pair(world, e1, EcsChildOf, EcsWildcard));
+    ecs_entities_t c1 = ecs_get_ordered_children(world, p1);
+    test_int(c1.count, 1);
+    test_uint(c1.ids[0], e2);
+    test_int(ecs_get_ordered_children(world, p2).count, 0);
+
+    ecs_fini(world);
+}

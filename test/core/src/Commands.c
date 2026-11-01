@@ -6172,3 +6172,249 @@ void Commands_defer_remove_two_set_other_get_before_merge(void) {
 
     ecs_fini(world);
 }
+
+static int batch_net_on_add = 0;
+static int batch_net_on_remove = 0;
+static ecs_id_t batch_net_last_add = 0;
+
+static void BatchNetOnAdd(ecs_iter_t *it) {
+    batch_net_on_add += it->count;
+    batch_net_last_add = ecs_field_id(it, 0);
+}
+
+static void BatchNetOnRemove(ecs_iter_t *it) {
+    batch_net_on_remove += it->count;
+}
+
+void Commands_batch_add_then_wildcard_remove_no_on_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_pair(EcsChildOf, EcsWildcard) }},
+        .events = { EcsOnAdd },
+        .callback = BatchNetOnAdd
+    });
+    ecs_observer(world, {
+        .query.terms = {{ ecs_pair(EcsChildOf, EcsWildcard) }},
+        .events = { EcsOnRemove },
+        .callback = BatchNetOnRemove
+    });
+
+    ecs_entity_t p1 = ecs_new(world);
+    ecs_entity_t p2 = ecs_new(world);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p1);
+    batch_net_on_add = 0;
+    batch_net_on_remove = 0;
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_add_pair(stage, e, EcsChildOf, p2);
+    ecs_remove_pair(stage, e, EcsChildOf, EcsWildcard);
+    ecs_merge(stage);
+
+    test_assert(!ecs_has_pair(world, e, EcsChildOf, EcsWildcard));
+    test_int(batch_net_on_add, 0);
+    test_int(batch_net_on_remove, 1);
+
+    ecs_fini(world);
+}
+
+void Commands_batch_childof_replaced_twice_one_on_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_pair(EcsChildOf, EcsWildcard) }},
+        .events = { EcsOnAdd },
+        .callback = BatchNetOnAdd
+    });
+    ecs_observer(world, {
+        .query.terms = {{ ecs_pair(EcsChildOf, EcsWildcard) }},
+        .events = { EcsOnRemove },
+        .callback = BatchNetOnRemove
+    });
+
+    ecs_entity_t p1 = ecs_new(world);
+    ecs_entity_t p2 = ecs_new(world);
+    ecs_entity_t e = ecs_new(world);
+    batch_net_on_add = 0;
+    batch_net_on_remove = 0;
+    batch_net_last_add = 0;
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_add_pair(stage, e, EcsChildOf, p1);
+    ecs_add_pair(stage, e, EcsChildOf, p2);
+    ecs_merge(stage);
+
+    test_assert(ecs_has_pair(world, e, EcsChildOf, p2));
+    test_int(batch_net_on_add, 1);
+    test_uint(batch_net_last_add, ecs_pair(EcsChildOf, p2));
+    test_int(batch_net_on_remove, 0);
+
+    ecs_fini(world);
+}
+
+void Commands_batch_add_remove_add_one_on_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnAdd },
+        .callback = BatchNetOnAdd
+    });
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnRemove },
+        .callback = BatchNetOnRemove
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    batch_net_on_add = 0;
+    batch_net_on_remove = 0;
+    batch_net_last_add = 0;
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_add(stage, e, Position);
+    ecs_remove(stage, e, Position);
+    ecs_add(stage, e, Position);
+    ecs_merge(stage);
+
+    test_assert(ecs_has(world, e, Position));
+    test_int(batch_net_on_add, 1);
+    test_int(batch_net_on_remove, 0);
+
+    ecs_fini(world);
+}
+
+void Commands_batch_childof_replaced_back_one_on_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_pair(EcsChildOf, EcsWildcard) }},
+        .events = { EcsOnAdd },
+        .callback = BatchNetOnAdd
+    });
+    ecs_observer(world, {
+        .query.terms = {{ ecs_pair(EcsChildOf, EcsWildcard) }},
+        .events = { EcsOnRemove },
+        .callback = BatchNetOnRemove
+    });
+
+    ecs_entity_t p1 = ecs_new(world);
+    ecs_entity_t p2 = ecs_new(world);
+    ecs_entity_t e = ecs_new(world);
+    batch_net_on_add = 0;
+    batch_net_on_remove = 0;
+    batch_net_last_add = 0;
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_add_pair(stage, e, EcsChildOf, p1);
+    ecs_add_pair(stage, e, EcsChildOf, p2);
+    ecs_add_pair(stage, e, EcsChildOf, p1);
+    ecs_merge(stage);
+
+    test_assert(ecs_has_pair(world, e, EcsChildOf, p1));
+    test_int(batch_net_on_add, 1);
+    test_uint(batch_net_last_add, ecs_pair(EcsChildOf, p1));
+    test_int(batch_net_on_remove, 0);
+
+    ecs_fini(world);
+}
+
+void Commands_batch_add_then_remove_isa_no_instantiate(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_new_w_pair(world, EcsChildOf, base);
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_add_pair(stage, e, EcsIsA, base);
+    ecs_remove_pair(stage, e, EcsIsA, base);
+    ecs_merge(stage);
+
+    test_assert(!ecs_has_pair(world, e, EcsIsA, base));
+    ecs_iter_t it = ecs_children(world, e);
+    test_assert(!ecs_children_next(&it));
+
+    ecs_fini(world);
+}
+
+void Commands_batch_add_then_remove_keeps_with_dont_fragment(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t bar = ecs_new(world);
+    ecs_add_id(world, bar, EcsDontFragment);
+    ecs_entity_t foo = ecs_new(world);
+    ecs_add_pair(world, foo, EcsWith, bar);
+    ecs_entity_t tag = ecs_new(world);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_id(world, e, tag);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_add_id(stage, e, foo);
+    ecs_remove_id(stage, e, tag);
+    ecs_remove_id(stage, e, foo);
+    ecs_merge(stage);
+
+    test_assert(!ecs_has_id(world, e, foo));
+    test_assert(!ecs_has_id(world, e, tag));
+    test_assert(ecs_has_id(world, e, bar));
+
+    ecs_fini(world);
+}
+
+void Commands_batch_reparent_add_tag_remove_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t p1 = ecs_new(world);
+    ecs_add_id(world, p1, EcsOrderedChildren);
+    ecs_entity_t p2 = ecs_new(world);
+    ecs_add_id(world, p2, EcsOrderedChildren);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, p1);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, p1);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_add_pair(stage, e1, EcsChildOf, p2);
+    ecs_add(stage, e1, Tag);
+    ecs_remove_pair(stage, e1, EcsChildOf, EcsWildcard);
+    ecs_merge(stage);
+
+    test_assert(ecs_has(world, e1, Tag));
+    test_assert(!ecs_has_pair(world, e1, EcsChildOf, EcsWildcard));
+    ecs_entities_t c1 = ecs_get_ordered_children(world, p1);
+    test_int(c1.count, 1);
+    test_uint(c1.ids[0], e2);
+    test_int(ecs_get_ordered_children(world, p2).count, 0);
+
+    ecs_fini(world);
+}
+
+void Commands_batch_reparent_then_clear(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p1 = ecs_new(world);
+    ecs_add_id(world, p1, EcsOrderedChildren);
+    ecs_entity_t p2 = ecs_new(world);
+    ecs_add_id(world, p2, EcsOrderedChildren);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, p1);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, p1);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_add_pair(stage, e1, EcsChildOf, p2);
+    ecs_clear(stage, e1);
+    ecs_merge(stage);
+
+    test_assert(!ecs_has_pair(world, e1, EcsChildOf, EcsWildcard));
+    ecs_entities_t c1 = ecs_get_ordered_children(world, p1);
+    test_int(c1.count, 1);
+    test_uint(c1.ids[0], e2);
+    test_int(ecs_get_ordered_children(world, p2).count, 0);
+
+    ecs_fini(world);
+}

@@ -1300,6 +1300,7 @@ void OrderedChildren_lookup_after_clear(void);
 void OrderedChildren_bulk_create_ordered_children(void);
 void OrderedChildren_get_ordered_children_from_prefab_instance_nested_children(void);
 void OrderedChildren_ordered_children_parent_is_traversable(void);
+void OrderedChildren_deferred_reparent_then_remove_wildcard(void);
 
 // Testsuite 'Has'
 void Has_zero(void);
@@ -3514,6 +3515,14 @@ void Commands_defer_remove_wildcard_set_pair(void);
 void Commands_defer_set_interleaved_entities(void);
 void Commands_defer_ensure_remove_wildcard_ensure_pair(void);
 void Commands_defer_remove_two_set_other_get_before_merge(void);
+void Commands_batch_add_then_wildcard_remove_no_on_add(void);
+void Commands_batch_childof_replaced_twice_one_on_add(void);
+void Commands_batch_add_remove_add_one_on_add(void);
+void Commands_batch_childof_replaced_back_one_on_add(void);
+void Commands_batch_add_then_remove_isa_no_instantiate(void);
+void Commands_batch_add_then_remove_keeps_with_dont_fragment(void);
+void Commands_batch_reparent_add_tag_remove_childof(void);
+void Commands_batch_reparent_then_clear(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -8801,6 +8810,10 @@ bake_test_case OrderedChildren_testcases[] = {
     {
         "ordered_children_parent_is_traversable",
         OrderedChildren_ordered_children_parent_is_traversable
+    },
+    {
+        "deferred_reparent_then_remove_wildcard",
+        OrderedChildren_deferred_reparent_then_remove_wildcard
     }
 };
 
@@ -17496,6 +17509,38 @@ bake_test_case Commands_testcases[] = {
     {
         "defer_remove_two_set_other_get_before_merge",
         Commands_defer_remove_two_set_other_get_before_merge
+    },
+    {
+        "batch_add_then_wildcard_remove_no_on_add",
+        Commands_batch_add_then_wildcard_remove_no_on_add
+    },
+    {
+        "batch_childof_replaced_twice_one_on_add",
+        Commands_batch_childof_replaced_twice_one_on_add
+    },
+    {
+        "batch_add_remove_add_one_on_add",
+        Commands_batch_add_remove_add_one_on_add
+    },
+    {
+        "batch_childof_replaced_back_one_on_add",
+        Commands_batch_childof_replaced_back_one_on_add
+    },
+    {
+        "batch_add_then_remove_isa_no_instantiate",
+        Commands_batch_add_then_remove_isa_no_instantiate
+    },
+    {
+        "batch_add_then_remove_keeps_with_dont_fragment",
+        Commands_batch_add_then_remove_keeps_with_dont_fragment
+    },
+    {
+        "batch_reparent_add_tag_remove_childof",
+        Commands_batch_reparent_add_tag_remove_childof
+    },
+    {
+        "batch_reparent_then_clear",
+        Commands_batch_reparent_then_clear
     }
 };
 
@@ -18401,7 +18446,7 @@ static bake_test_suite suites[] = {
         "OrderedChildren",
         NULL,
         NULL,
-        48,
+        49,
         OrderedChildren_testcases
     },
     {
@@ -18576,7 +18621,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        201,
+        209,
         Commands_testcases
     },
     {

@@ -1337,7 +1337,8 @@
                 "lookup_after_clear",
                 "bulk_create_ordered_children",
                 "get_ordered_children_from_prefab_instance_nested_children",
-                "ordered_children_parent_is_traversable"
+                "ordered_children_parent_is_traversable",
+                "deferred_reparent_then_remove_wildcard"
             ]
         }, {
             "id": "Has",
@@ -3602,7 +3603,15 @@
                 "defer_remove_wildcard_set_pair",
                 "defer_set_interleaved_entities",
                 "defer_ensure_remove_wildcard_ensure_pair",
-                "defer_remove_two_set_other_get_before_merge"
+                "defer_remove_two_set_other_get_before_merge",
+                "batch_add_then_wildcard_remove_no_on_add",
+                "batch_childof_replaced_twice_one_on_add",
+                "batch_add_remove_add_one_on_add",
+                "batch_childof_replaced_back_one_on_add",
+                "batch_add_then_remove_isa_no_instantiate",
+                "batch_add_then_remove_keeps_with_dont_fragment",
+                "batch_reparent_add_tag_remove_childof",
+                "batch_reparent_then_clear"
             ]
         }, {
             "id": "SingleThreadStaging",

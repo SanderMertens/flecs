@@ -965,6 +965,45 @@ static bool flecs_cmd_table_has_id(
     return cr && flecs_component_get_table(cr, table) != NULL;
 }
 
+static int32_t flecs_cmd_batch_diff_net(
+    ecs_world_t *world,
+    ecs_id_t *ids,
+    int32_t count,
+    const ecs_table_t *table,
+    ecs_flags32_t *flags,
+    bool keep_dont_fragment)
+{
+    int32_t i, j, kept = 0;
+    bool childof = false;
+    for (i = 0; i < count; i ++) {
+        ecs_id_t id = ids[i];
+        ecs_component_record_t *cr = flecs_components_get(world, id);
+        bool dont_fragment = cr && (cr->flags & EcsIdDontFragment);
+        if (!(keep_dont_fragment && dont_fragment) &&
+            !flecs_cmd_table_has_id(table, id, cr))
+        {
+            continue;
+        }
+
+        for (j = 0; j < kept; j ++) {
+            if (ids[j] == id) {
+                break;
+            }
+        }
+
+        if (j == kept) {
+            childof |= ECS_HAS_RELATION(id, EcsChildOf);
+            ids[kept ++] = id;
+        }
+    }
+
+    if (!childof) {
+        *flags &= ~EcsTableEdgeReparent;
+    }
+
+    return kept;
+}
+
 static void flecs_cmd_batch_for_entity(
     ecs_world_t *world,
     ecs_table_diff_builder_t *diff,
@@ -1134,6 +1173,14 @@ static void flecs_cmd_batch_for_entity(
     } while ((cur = next_for_entity));
 
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (diff->added.count && diff->removed.count) {
+        diff->added.count = flecs_cmd_batch_diff_net(world, diff->added.array,
+            diff->added.count, table, &diff->added_flags, true);
+        diff->removed.count = flecs_cmd_batch_diff_net(world,
+            diff->removed.array, diff->removed.count, start_table,
+            &diff->removed_flags, false);
+    }
 
     /* Save added ids and clear from diff so that they won't be emitted as
      * part of the commit below. OnAdd events will be emitted separately after
