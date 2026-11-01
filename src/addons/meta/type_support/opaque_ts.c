@@ -26,7 +26,7 @@ static void flecs_set_opaque_type(ecs_iter_t *it) {
          * opaque type. That way we don't end up with a bunch of anonymous entities
          * in the root scope. */
         if (!ecs_get_parent(world, as_type) && !ecs_get_name(world, as_type)) {
-            ecs_add_pair(world, as_type, EcsChildOf, e);
+            ecs_add_pair(it->stage, as_type, EcsChildOf, e);
         }
 
         const EcsComponent *comp = ecs_get(world, e, EcsComponent);
@@ -37,7 +37,7 @@ static void flecs_set_opaque_type(ecs_iter_t *it) {
             continue;
         }
 
-        if (flecs_init_type(world, e, EcsOpaqueType, comp->size, comp->alignment)) {
+        if (flecs_init_type(it->stage, e, EcsOpaqueType, comp->size, comp->alignment)) {
             continue;
         }
     }

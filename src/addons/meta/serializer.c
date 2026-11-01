@@ -252,7 +252,7 @@ void flecs_meta_type_serializer_init(
             continue;
         }
 
-        EcsTypeSerializer *ptr = ecs_ensure(world, type, EcsTypeSerializer);
+        EcsTypeSerializer *ptr = ecs_ensure(it->stage, type, EcsTypeSerializer);
         if (ptr->ops.array) {
             flecs_type_serializer_dtor(ptr);
         }
@@ -260,7 +260,7 @@ void flecs_meta_type_serializer_init(
         ptr->kind = type_ptr->kind;
         ptr->ops = ops;
 
-        ecs_modified(world, type, EcsTypeSerializer);
+        ecs_modified(it->stage, type, EcsTypeSerializer);
     }
 }
 
