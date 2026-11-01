@@ -2218,6 +2218,19 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add_isa_after_set(void);
 void Trigger_on_set_superset_after_filter_observer_w_on_add_2(void);
 
 // Testsuite 'Observer'
+void Observer_on_set_observer_grow_table_w_stage(void);
+void Observer_on_set_observer_delete_other_create_new_w_stage(void);
+void Observer_on_set_observer_add_w_stage(void);
+void Observer_on_set_observer_remove_w_stage(void);
+void Observer_on_set_observer_delete_w_stage(void);
+void Observer_on_set_multi_observer_add_w_stage(void);
+void Observer_on_set_observer_set_existing_w_world(void);
+void Observer_on_set_observer_set_existing_w_world_change_detection(void);
+void Observer_on_set_observer_add_w_world(void);
+void Observer_on_set_observer_remove_w_world(void);
+void Observer_on_set_observer_delete_w_world(void);
+void Observer_on_set_observer_new_in_table_w_world(void);
+void Observer_on_set_multi_observer_add_w_world(void);
 void Observer_multi_term_inheritable_component_owned(void);
 void Observer_multi_term_inheritable_component_w_not_term(void);
 void Observer_multi_term_inheritable_component_w_prefab_term(void);
@@ -12405,6 +12418,58 @@ bake_test_case Trigger_testcases[] = {
 
 bake_test_case Observer_testcases[] = {
     {
+        "on_set_observer_grow_table_w_stage",
+        Observer_on_set_observer_grow_table_w_stage
+    },
+    {
+        "on_set_observer_delete_other_create_new_w_stage",
+        Observer_on_set_observer_delete_other_create_new_w_stage
+    },
+    {
+        "on_set_observer_add_w_stage",
+        Observer_on_set_observer_add_w_stage
+    },
+    {
+        "on_set_observer_remove_w_stage",
+        Observer_on_set_observer_remove_w_stage
+    },
+    {
+        "on_set_observer_delete_w_stage",
+        Observer_on_set_observer_delete_w_stage
+    },
+    {
+        "on_set_multi_observer_add_w_stage",
+        Observer_on_set_multi_observer_add_w_stage
+    },
+    {
+        "on_set_observer_set_existing_w_world",
+        Observer_on_set_observer_set_existing_w_world
+    },
+    {
+        "on_set_observer_set_existing_w_world_change_detection",
+        Observer_on_set_observer_set_existing_w_world_change_detection
+    },
+    {
+        "on_set_observer_add_w_world",
+        Observer_on_set_observer_add_w_world
+    },
+    {
+        "on_set_observer_remove_w_world",
+        Observer_on_set_observer_remove_w_world
+    },
+    {
+        "on_set_observer_delete_w_world",
+        Observer_on_set_observer_delete_w_world
+    },
+    {
+        "on_set_observer_new_in_table_w_world",
+        Observer_on_set_observer_new_in_table_w_world
+    },
+    {
+        "on_set_multi_observer_add_w_world",
+        Observer_on_set_multi_observer_add_w_world
+    },
+    {
         "multi_term_inheritable_component_owned",
         Observer_multi_term_inheritable_component_owned
     },
@@ -18599,7 +18664,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        418,
+        431,
         Observer_testcases
     },
     {

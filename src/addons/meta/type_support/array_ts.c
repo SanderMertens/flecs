@@ -45,7 +45,7 @@ static void flecs_set_array(ecs_iter_t *it) {
             continue;
         }
 
-        if (flecs_init_type(world, e, EcsArrayType, 
+        if (flecs_init_type(it->stage, e, EcsArrayType, 
             elem_ptr->size * elem_count, elem_ptr->alignment)) 
         {
             continue;
@@ -82,7 +82,7 @@ static void flecs_set_vector(ecs_iter_t *it) {
             continue;
         }
 
-        if (flecs_init_type_t(world, e, EcsVectorType, ecs_vec_t)) {
+        if (flecs_init_type_t(it->stage, e, EcsVectorType, ecs_vec_t)) {
             continue;
         }
     }

@@ -331,6 +331,8 @@ The queued changes become visible when the stage is merged. `ecs_readonly_end` m
 
 Observer and system iterators expose `it->stage` for queued operations and `it->world` for access to the actual world. World operations require writable storage. In C++, use `it.stage()` and `it.world()`, and use `entity.mut(stage)` to obtain an entity handle that queues mutations.
 
+Tables are locked while OnAdd, OnRemove and OnSet observers for those tables run. An observer can assign components that an entity already has through `it->world`, but operations that add, remove or move entities in a locked table must go through `it->stage`.
+
 Observer commands use nested command queues. When a command invokes an observer, commands queued by that observer, including commands from further nested observers, finish before the next command in the parent queue.
 
 Creating a staged entity allocates its identifier immediately. Commands targeting an entity deleted before their execution are discarded. Commands that parent an entity to a deleted parent delete the child during the merge.

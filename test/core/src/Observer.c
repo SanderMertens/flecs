@@ -16158,3 +16158,392 @@ void Observer_no_terms_on_add(void) {
 
     ecs_fini(world);
 }
+
+static ecs_entity_t on_set_lock_entity = 0;
+static ecs_entity_t on_set_lock_other = 0;
+static ecs_id_t on_set_lock_id = 0;
+static int32_t on_set_lock_invoked = 0;
+static int32_t on_set_lock_others = 0;
+
+static void OnSetLockGrowTableStage(ecs_iter_t *it) {
+    on_set_lock_invoked ++;
+    if (on_set_lock_invoked == 1) {
+        ecs_entity_t other = ecs_new(it->stage);
+        ecs_set_id(it->stage, other, on_set_lock_id, sizeof(Position),
+            &(Position){5, 6});
+    }
+}
+
+void Observer_on_set_observer_grow_table_w_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    on_set_lock_id = ecs_id(Position);
+
+    ecs_entity_t first = ecs_new(world);
+    ecs_set(world, first, Position, {3, 4});
+    ecs_entity_t e = ecs_new(world);
+
+    for (int i = 0; i < 2; i ++) {
+        ecs_observer(world, {
+            .query.terms = {{ ecs_id(Position), .src.id = e }},
+            .events = { EcsOnSet },
+            .callback = OnSetLockGrowTableStage
+        });
+    }
+
+    on_set_lock_invoked = 0;
+    ecs_set(world, e, Position, {1, 2});
+    test_int(on_set_lock_invoked, 2);
+    test_int(ecs_count(world, Position), 3);
+
+    ecs_fini(world);
+}
+
+static void OnSetLockDeleteOtherStage(ecs_iter_t *it) {
+    if (it->entities[0] != on_set_lock_entity) {
+        on_set_lock_others ++;
+        return;
+    }
+
+    on_set_lock_invoked ++;
+    if (on_set_lock_invoked == 1) {
+        ecs_delete(it->stage, on_set_lock_other);
+        ecs_entity_t n = ecs_new(it->stage);
+        ecs_set_id(it->stage, n, on_set_lock_id, sizeof(Position),
+            &(Position){9, 9});
+    }
+}
+
+void Observer_on_set_observer_delete_other_create_new_w_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    on_set_lock_id = ecs_id(Position);
+
+    on_set_lock_other = ecs_new(world);
+    ecs_set(world, on_set_lock_other, Position, {3, 4});
+    on_set_lock_entity = ecs_new(world);
+    ecs_add(world, on_set_lock_entity, Position);
+
+    for (int i = 0; i < 2; i ++) {
+        ecs_observer(world, {
+            .query.terms = {{ ecs_id(Position) }},
+            .events = { EcsOnSet },
+            .callback = OnSetLockDeleteOtherStage
+        });
+    }
+
+    on_set_lock_invoked = 0;
+    on_set_lock_others = 0;
+    ecs_set(world, on_set_lock_entity, Position, {1, 2});
+    test_int(on_set_lock_invoked, 2);
+    test_int(on_set_lock_others, 2);
+    test_assert(!ecs_is_alive(world, on_set_lock_other));
+
+    ecs_fini(world);
+}
+
+static void OnSetLockAddStage(ecs_iter_t *it) {
+    test_uint(it->entities[0], on_set_lock_entity);
+    on_set_lock_invoked ++;
+    ecs_add_id(it->stage, it->entities[0], on_set_lock_id);
+    test_assert(!ecs_has_id(it->world, it->entities[0], on_set_lock_id));
+}
+
+void Observer_on_set_observer_add_w_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+    on_set_lock_id = Tag;
+    on_set_lock_entity = ecs_new(world);
+
+    for (int i = 0; i < 2; i ++) {
+        ecs_observer(world, {
+            .query.terms = {{ ecs_id(Position) }},
+            .events = { EcsOnSet },
+            .callback = OnSetLockAddStage
+        });
+    }
+
+    on_set_lock_invoked = 0;
+    ecs_set(world, on_set_lock_entity, Position, {1, 2});
+    test_int(on_set_lock_invoked, 2);
+    test_assert(ecs_has(world, on_set_lock_entity, Tag));
+
+    ecs_fini(world);
+}
+
+static void OnSetLockRemoveStage(ecs_iter_t *it) {
+    on_set_lock_invoked ++;
+    ecs_remove_id(it->stage, it->entities[0], on_set_lock_id);
+}
+
+void Observer_on_set_observer_remove_w_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    on_set_lock_id = ecs_id(Position);
+    ecs_entity_t e = ecs_new(world);
+
+    for (int i = 0; i < 2; i ++) {
+        ecs_observer(world, {
+            .query.terms = {{ ecs_id(Position) }},
+            .events = { EcsOnSet },
+            .callback = OnSetLockRemoveStage
+        });
+    }
+
+    on_set_lock_invoked = 0;
+    ecs_set(world, e, Position, {1, 2});
+    test_int(on_set_lock_invoked, 2);
+    test_assert(!ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}
+
+static void OnSetLockDeleteStage(ecs_iter_t *it) {
+    on_set_lock_invoked ++;
+    ecs_delete(it->stage, it->entities[0]);
+}
+
+void Observer_on_set_observer_delete_w_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t e = ecs_new(world);
+
+    for (int i = 0; i < 2; i ++) {
+        ecs_observer(world, {
+            .query.terms = {{ ecs_id(Position) }},
+            .events = { EcsOnSet },
+            .callback = OnSetLockDeleteStage
+        });
+    }
+
+    on_set_lock_invoked = 0;
+    ecs_set(world, e, Position, {1, 2});
+    test_int(on_set_lock_invoked, 2);
+    test_assert(!ecs_is_alive(world, e));
+
+    ecs_fini(world);
+}
+
+void Observer_on_set_multi_observer_add_w_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Tag);
+    on_set_lock_id = Tag;
+    on_set_lock_entity = ecs_new(world);
+    ecs_set(world, on_set_lock_entity, Velocity, {1, 2});
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnSet },
+        .callback = OnSetLockAddStage
+    });
+
+    on_set_lock_invoked = 0;
+    ecs_set(world, on_set_lock_entity, Position, {1, 2});
+    test_int(on_set_lock_invoked, 1);
+    test_assert(ecs_has(world, on_set_lock_entity, Tag));
+
+    ecs_fini(world);
+}
+
+static void OnSetLockSetExistingWorld(ecs_iter_t *it) {
+    on_set_lock_invoked ++;
+    ecs_set_id(it->world, it->entities[0], on_set_lock_id, sizeof(Position),
+        &(Position){7, 8});
+}
+
+void Observer_on_set_observer_set_existing_w_world(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    on_set_lock_id = ecs_id(Velocity);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Velocity, {1, 2});
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = OnSetLockSetExistingWorld
+    });
+
+    on_set_lock_invoked = 0;
+    ecs_set(world, e, Position, {1, 2});
+    test_int(on_set_lock_invoked, 1);
+
+    const Velocity *v = ecs_get(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 7);
+    test_int(v->y, 8);
+
+    ecs_fini(world);
+}
+
+void Observer_on_set_observer_set_existing_w_world_change_detection(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    on_set_lock_id = ecs_id(Velocity);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {0, 0});
+    ecs_set(world, e, Velocity, {1, 2});
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Velocity), .inout = EcsIn }},
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
+    });
+    test_bool(ecs_query_changed(q), true);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) { }
+    test_bool(ecs_query_changed(q), false);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = OnSetLockSetExistingWorld
+    });
+
+    on_set_lock_invoked = 0;
+    ecs_set(world, e, Position, {1, 2});
+    test_int(on_set_lock_invoked, 1);
+    test_bool(ecs_query_changed(q), true);
+
+    const Velocity *v = ecs_get(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 7);
+
+    ecs_query_fini(q);
+    ecs_fini(world);
+}
+
+static void OnSetLockAddWorld(ecs_iter_t *it) {
+    ecs_add_id(it->world, it->entities[0], on_set_lock_id);
+}
+
+void Observer_on_set_observer_add_w_world(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+    on_set_lock_id = Tag;
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = OnSetLockAddWorld
+    });
+
+    test_expect_abort_code(ECS_LOCKED_STORAGE);
+    ecs_set(world, e, Position, {1, 2});
+}
+
+static void OnSetLockRemoveWorld(ecs_iter_t *it) {
+    ecs_remove_id(it->world, it->entities[0], on_set_lock_id);
+}
+
+void Observer_on_set_observer_remove_w_world(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    on_set_lock_id = ecs_id(Position);
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = OnSetLockRemoveWorld
+    });
+
+    test_expect_abort_code(ECS_LOCKED_STORAGE);
+    ecs_set(world, e, Position, {1, 2});
+}
+
+static void OnSetLockDeleteOtherWorld(ecs_iter_t *it) {
+    ecs_delete(it->world, on_set_lock_other);
+}
+
+void Observer_on_set_observer_delete_w_world(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    on_set_lock_other = ecs_new(world);
+    ecs_set(world, on_set_lock_other, Position, {3, 4});
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = OnSetLockDeleteOtherWorld
+    });
+
+    test_expect_abort_code(ECS_LOCKED_STORAGE);
+    ecs_set(world, e, Position, {1, 2});
+}
+
+static void OnSetLockNewWorld(ecs_iter_t *it) {
+    ecs_entity_t other = ecs_new(it->world);
+    ecs_set_id(it->world, other, on_set_lock_id, sizeof(Position),
+        &(Position){5, 6});
+}
+
+void Observer_on_set_observer_new_in_table_w_world(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    on_set_lock_id = ecs_id(Position);
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = OnSetLockNewWorld
+    });
+
+    test_expect_abort_code(ECS_LOCKED_STORAGE);
+    ecs_set(world, e, Position, {1, 2});
+}
+
+void Observer_on_set_multi_observer_add_w_world(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Tag);
+    on_set_lock_id = Tag;
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Velocity, {1, 2});
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnSet },
+        .callback = OnSetLockAddWorld
+    });
+
+    test_expect_abort_code(ECS_LOCKED_STORAGE);
+    ecs_set(world, e, Position, {1, 2});
+}

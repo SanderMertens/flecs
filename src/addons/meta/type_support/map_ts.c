@@ -90,7 +90,7 @@ static void flecs_set_map(ecs_iter_t *it) {
             continue;
         }
 
-        if (flecs_init_type_t(world, e, EcsMapType, ecs_map_t)) {
+        if (flecs_init_type_t(it->stage, e, EcsMapType, ecs_map_t)) {
             continue;
         }
     }

@@ -14243,7 +14243,9 @@ static ecs_table_t* flecs_observer_lock_table(
     const ecs_iter_t *it,
     ecs_table_t *table)
 {
-    if (it->event == EcsOnAdd || it->event == EcsOnRemove) {
+    if (it->event == EcsOnAdd || it->event == EcsOnRemove ||
+        it->event == EcsOnSet)
+    {
         return table;
     }
     return NULL;
@@ -30422,9 +30424,6 @@ void flecs_table_mark_dirty(
         /* Column is offset by 1, 0 is reserved for entity column. */
 
         table->dirty_state[column] ++;
-
-        ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, 
-            FLECS_LOCKED_STORAGE_MSG("dirty marking"));
     }
 }
 

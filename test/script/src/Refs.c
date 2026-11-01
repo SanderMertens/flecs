@@ -7553,12 +7553,27 @@ void Refs_has_ref_resolve_observer_on_add(void) {
     ecs_fini(world);
 }
 
+static ecs_entity_t update_script_event = 0;
+
 static void update_script_on_position_set(
     ecs_iter_t *it)
 {
     ecs_entity_t *script = it->ctx;
     Position *p = ecs_field_w_size(it, sizeof(Position), 0);
     if (*script && p[0].x == 20) {
+        ecs_enqueue(it->stage, &(ecs_event_desc_t){
+            .event = update_script_event,
+            .ids = &(ecs_type_t){ .count = 1, .array = (ecs_id_t[]){ it->event_id } },
+            .entity = it->entities[0]
+        });
+    }
+}
+
+static void update_script_on_event(
+    ecs_iter_t *it)
+{
+    ecs_entity_t *script = it->ctx;
+    if (*script) {
         ecs_entity_t s = *script;
         *script = 0;
         ecs_script_update(it->world, s, 0, "foo { Position: {30, 0} }");
@@ -7602,6 +7617,14 @@ void Refs_update_script_during_ref_eval(void) {
         .ctx = &script
     });
 
+    update_script_event = ecs_new(world);
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { update_script_event },
+        .callback = update_script_on_event,
+        .ctx = &script
+    });
+
     ecs_set(world, e, Mass, {20});
     test_int(script, 0);
     test_assert(ecs_is_alive(world, s));
@@ -7635,7 +7658,7 @@ static void delete_script_on_position_set(
     if (*script && p[0].x == 20) {
         ecs_entity_t s = *script;
         *script = 0;
-        ecs_delete(it->world, s);
+        ecs_delete(it->stage, s);
     }
 }
 
