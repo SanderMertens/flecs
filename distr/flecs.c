@@ -87601,13 +87601,16 @@ repeat:
     ecs_entity_t parent = op_ctx->parents[op_ctx->cur - range.offset].value;
 
     ecs_iter_t *it = ctx->it;
-    flecs_query_iter_set_id(it, op->field_index, ecs_childof(parent));
+    ecs_id_t actual_id = flecs_query_iter_set_id(
+        it, op->field_index, ecs_childof(parent));
 
     if (tgt != EcsWildcard) {
         if ((uint32_t)parent != op_ctx->tgt) {
             redo = true;
             goto repeat;
         }
+    } else {
+        flecs_query_set_vars(op, actual_id, ctx);
     }
 
     flecs_query_src_set_single(op, op_ctx->cur, ctx);
