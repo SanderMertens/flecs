@@ -664,6 +664,239 @@ void Table_clear_table_kills_entities(void) {
     ecs_fini(world);
 }
 
+void Table_clear_table_cleans_up_targets(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_entity_t other = ecs_new_w_pair(world, Rel, e);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, e);
+
+    ecs_table_clear_entities(world, ecs_get_table(world, e));
+
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(!ecs_is_alive(world, child));
+    test_assert(ecs_is_alive(world, other));
+    test_assert(!ecs_has_pair(world, other, Rel, EcsWildcard));
+
+    ecs_fini(world);
+}
+
+void Table_clear_table_recycled_id_inherits_nothing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_entity_t other = ecs_new_w_pair(world, Rel, e);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, e);
+
+    ecs_table_clear_entities(world, ecs_get_table(world, e));
+
+    ecs_entity_t fresh = ecs_new(world);
+    if ((uint32_t)fresh != (uint32_t)e) {
+        fresh = ecs_new(world);
+    }
+    test_assert((uint32_t)fresh == (uint32_t)e);
+    test_assert(!ecs_has_pair(world, other, Rel, fresh));
+    test_assert(!ecs_is_alive(world, child));
+
+    ecs_iter_t it = ecs_children(world, fresh);
+    test_assert(!ecs_children_next(&it));
+
+    ecs_fini(world);
+}
+
+void Table_clear_table_pair_on_own_entity(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t b = ecs_new(world);
+    ecs_add(world, b, Position);
+    ecs_add_pair(world, b, Rel, b);
+    ecs_entity_t a = ecs_new(world);
+    ecs_add(world, a, Position);
+    ecs_add_pair(world, a, Rel, b);
+    test_assert(ecs_get_table(world, a) == ecs_get_table(world, b));
+
+    ecs_table_clear_entities(world, ecs_get_table(world, a));
+
+    test_assert(!ecs_is_alive(world, a));
+    test_assert(!ecs_is_alive(world, b));
+
+    ecs_fini(world);
+}
+
+void Table_clear_table_non_fragmenting_child(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_add(world, p, Position);
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {p}));
+
+    ecs_table_clear_entities(world, ecs_get_table(world, p));
+
+    test_assert(!ecs_is_alive(world, p));
+    test_assert(!ecs_is_alive(world, child));
+
+    ecs_fini(world);
+}
+
+static int clear_table_target_alive = 0;
+static int clear_table_on_remove = 0;
+
+static void ClearTableOnRemove(ecs_iter_t *it) {
+    ecs_entity_t tgt = ecs_pair_second(it->world, ecs_field_id(it, 0));
+    clear_table_target_alive += ecs_is_alive(it->world, tgt);
+    clear_table_on_remove += it->count;
+}
+
+void Table_clear_table_on_remove_target_alive(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Rel);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_pair(Rel, EcsWildcard) }},
+        .events = { EcsOnRemove },
+        .callback = ClearTableOnRemove
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_new_w_pair(world, Rel, e);
+
+    ecs_table_clear_entities(world, ecs_get_table(world, e));
+
+    test_int(clear_table_on_remove, 1);
+    test_int(clear_table_target_alive, 1);
+
+    ecs_fini(world);
+}
+
+void Table_clear_table_entity_moved_in_survives(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_entity_t other = ecs_new(world);
+    ecs_add(world, other, Position);
+    ecs_add_pair(world, other, Rel, e);
+
+    ecs_table_t *table = ecs_get_table(world, e);
+    ecs_table_clear_entities(world, table);
+
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(ecs_is_alive(world, other));
+    test_assert(ecs_has(world, other, Position));
+    test_assert(!ecs_has_pair(world, other, Rel, EcsWildcard));
+
+    ecs_fini(world);
+}
+
+static ecs_entity_t clear_table_delete_in_observer = 0;
+
+static void ClearTableDeleteOnRemove(ecs_iter_t *it) {
+    if (clear_table_delete_in_observer) {
+        ecs_delete(it->world, clear_table_delete_in_observer);
+        clear_table_delete_in_observer = 0;
+    }
+}
+
+void Table_clear_table_delete_in_on_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Rel);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnRemove },
+        .callback = ClearTableDeleteOnRemove
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_new_w_pair(world, Rel, e);
+
+    ecs_entity_t x = ecs_new(world);
+    ecs_entity_t x_child = ecs_new_w_pair(world, EcsChildOf, x);
+    clear_table_delete_in_observer = x;
+
+    ecs_table_clear_entities(world, ecs_get_table(world, e));
+
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(!ecs_is_alive(world, x));
+    test_assert(!ecs_is_alive(world, x_child));
+
+    ecs_fini(world);
+}
+
+static ecs_entity_t clear_table_add_in_observer = 0;
+static ecs_entity_t clear_table_add_tag = 0;
+
+static void ClearTableAddOnRemove(ecs_iter_t *it) {
+    if (clear_table_add_in_observer) {
+        ecs_add_id(ecs_get_stage(it->world, 0), clear_table_add_in_observer,
+            clear_table_add_tag);
+        clear_table_add_in_observer = 0;
+    }
+}
+
+void Table_clear_table_flush_observer_commands(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnRemove },
+        .callback = ClearTableAddOnRemove
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_entity_t y = ecs_new(world);
+    clear_table_add_in_observer = y;
+    clear_table_add_tag = Tag;
+
+    ecs_table_clear_entities(world, ecs_get_table(world, e));
+
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(ecs_has(world, y, Tag));
+
+    ecs_fini(world);
+}
+
+void Table_clear_table_on_delete_panic(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_add_pair(world, e, EcsOnDelete, EcsPanic);
+
+    test_expect_abort();
+    ecs_table_clear_entities(world, ecs_get_table(world, e));
+}
+
 void Table_clear_table_add_new(void) {
     ecs_world_t *world = ecs_mini();
 
