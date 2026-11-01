@@ -3665,6 +3665,8 @@ void Poly_on_set_poly_system(void);
 
 // Testsuite 'Internals'
 void Internals_setup(void);
+void Internals_noinline_attribute_on_gnu_and_msvc(void);
+void Internals_always_inline_attribute_on_clang_only(void);
 void Internals_os_memset_n_w_expression_count(void);
 void Internals_deactivate_table(void);
 void Internals_activate_table(void);
@@ -18078,6 +18080,14 @@ bake_test_case Poly_testcases[] = {
 
 bake_test_case Internals_testcases[] = {
     {
+        "noinline_attribute_on_gnu_and_msvc",
+        Internals_noinline_attribute_on_gnu_and_msvc
+    },
+    {
+        "always_inline_attribute_on_clang_only",
+        Internals_always_inline_attribute_on_clang_only
+    },
+    {
         "os_memset_n_w_expression_count",
         Internals_os_memset_n_w_expression_count
     },
@@ -18676,7 +18686,7 @@ static bake_test_suite suites[] = {
         "Internals",
         Internals_setup,
         NULL,
-        46,
+        48,
         Internals_testcases
     },
     {
