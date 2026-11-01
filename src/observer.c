@@ -492,7 +492,9 @@ static ecs_table_t* flecs_observer_lock_table(
     const ecs_iter_t *it,
     ecs_table_t *table)
 {
-    if (it->event == EcsOnAdd || it->event == EcsOnRemove) {
+    if (it->event == EcsOnAdd || it->event == EcsOnRemove ||
+        it->event == EcsOnSet)
+    {
         return table;
     }
     return NULL;

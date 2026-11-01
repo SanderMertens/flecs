@@ -108,7 +108,7 @@ static void flecs_set_primitive(ecs_iter_t *it) {
         ecs_entity_t builtin = flecs_meta_primitive_type(type->kind);
         if (builtin) {
             const ecs_type_info_t *ti = ecs_get_type_info(world, builtin);
-            flecs_init_type(world, e, EcsPrimitiveType, ti->size, ti->alignment);
+            flecs_init_type(it->stage, e, EcsPrimitiveType, ti->size, ti->alignment);
         }
     }
 }

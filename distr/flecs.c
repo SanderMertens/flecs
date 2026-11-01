@@ -16212,7 +16212,9 @@ static ecs_table_t* flecs_observer_lock_table(
     const ecs_iter_t *it,
     ecs_table_t *table)
 {
-    if (it->event == EcsOnAdd || it->event == EcsOnRemove) {
+    if (it->event == EcsOnAdd || it->event == EcsOnRemove ||
+        it->event == EcsOnSet)
+    {
         return table;
     }
     return NULL;
@@ -42683,9 +42685,6 @@ void flecs_table_mark_dirty(
         /* Column is offset by 1, 0 is reserved for entity column. */
 
         table->dirty_state[column] ++;
-
-        ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, 
-            FLECS_LOCKED_STORAGE_MSG("dirty marking"));
     }
 }
 
@@ -61110,7 +61109,7 @@ void flecs_meta_type_serializer_init(
             continue;
         }
 
-        EcsTypeSerializer *ptr = ecs_ensure(world, type, EcsTypeSerializer);
+        EcsTypeSerializer *ptr = ecs_ensure(it->stage, type, EcsTypeSerializer);
         if (ptr->ops.array) {
             flecs_type_serializer_dtor(ptr);
         }
@@ -61118,7 +61117,7 @@ void flecs_meta_type_serializer_init(
         ptr->kind = type_ptr->kind;
         ptr->ops = ops;
 
-        ecs_modified(world, type, EcsTypeSerializer);
+        ecs_modified(it->stage, type, EcsTypeSerializer);
     }
 }
 
@@ -90781,7 +90780,7 @@ static void flecs_set_array(ecs_iter_t *it) {
             continue;
         }
 
-        if (flecs_init_type(world, e, EcsArrayType, 
+        if (flecs_init_type(it->stage, e, EcsArrayType, 
             elem_ptr->size * elem_count, elem_ptr->alignment)) 
         {
             continue;
@@ -90818,7 +90817,7 @@ static void flecs_set_vector(ecs_iter_t *it) {
             continue;
         }
 
-        if (flecs_init_type_t(world, e, EcsVectorType, ecs_vec_t)) {
+        if (flecs_init_type_t(it->stage, e, EcsVectorType, ecs_vec_t)) {
             continue;
         }
     }
@@ -91197,15 +91196,15 @@ static void flecs_add_enum(ecs_iter_t *it) {
             continue;
         }
 
-        if (flecs_init_type(world, e, EcsEnumType, uc->size, uc->alignment)) {
+        if (flecs_init_type(it->stage, e, EcsEnumType, uc->size, uc->alignment)) {
             continue;
         }
 
-        ecs_add_id(world, e, EcsExclusive);
+        ecs_add_id(it->stage, e, EcsExclusive);
 #ifdef FLECS_CONSTRAINT_TRAITS
-        ecs_add_id(world, e, EcsOneOf);
+        ecs_add_id(it->stage, e, EcsOneOf);
 #endif
-        ecs_add_id(world, e, EcsPairIsTag);
+        ecs_add_id(it->stage, e, EcsPairIsTag);
     }
 }
 
@@ -91589,7 +91588,7 @@ static void flecs_set_map(ecs_iter_t *it) {
             continue;
         }
 
-        if (flecs_init_type_t(world, e, EcsMapType, ecs_map_t)) {
+        if (flecs_init_type_t(it->stage, e, EcsMapType, ecs_map_t)) {
             continue;
         }
     }
@@ -91660,7 +91659,7 @@ static void flecs_set_opaque_type(ecs_iter_t *it) {
          * opaque type. That way we don't end up with a bunch of anonymous entities
          * in the root scope. */
         if (!ecs_get_parent(world, as_type) && !ecs_get_name(world, as_type)) {
-            ecs_add_pair(world, as_type, EcsChildOf, e);
+            ecs_add_pair(it->stage, as_type, EcsChildOf, e);
         }
 
         const EcsComponent *comp = ecs_get(world, e, EcsComponent);
@@ -91671,7 +91670,7 @@ static void flecs_set_opaque_type(ecs_iter_t *it) {
             continue;
         }
 
-        if (flecs_init_type(world, e, EcsOpaqueType, comp->size, comp->alignment)) {
+        if (flecs_init_type(it->stage, e, EcsOpaqueType, comp->size, comp->alignment)) {
             continue;
         }
     }
@@ -91825,7 +91824,7 @@ static void flecs_set_primitive(ecs_iter_t *it) {
         ecs_entity_t builtin = flecs_meta_primitive_type(type->kind);
         if (builtin) {
             const ecs_type_info_t *ti = ecs_get_type_info(world, builtin);
-            flecs_init_type(world, e, EcsPrimitiveType, ti->size, ti->alignment);
+            flecs_init_type(it->stage, e, EcsPrimitiveType, ti->size, ti->alignment);
         }
     }
 }
@@ -92153,7 +92152,8 @@ static int flecs_add_member_to_struct(
     ecs_world_t *world,
     ecs_entity_t struct_type,
     ecs_entity_t member_entity,
-    const ecs_member_t *m_ptr)
+    const ecs_member_t *m_ptr,
+    bool deferred)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(struct_type != 0, ECS_INTERNAL_ERROR, NULL);
@@ -92219,7 +92219,8 @@ static int flecs_add_member_to_struct(
         }
     }
 
-    EcsStruct *s = ecs_ensure(world, struct_type, EcsStruct);
+    ecs_world_t *stage = deferred ? ecs_get_stage(world, 0) : world;
+    EcsStruct *s = ecs_ensure(stage, struct_type, EcsStruct);
     ecs_assert(s != NULL, ECS_INTERNAL_ERROR, NULL);
 
     flecs_struct_inherit(world, struct_type, s);
@@ -92286,7 +92287,7 @@ static int flecs_add_member_to_struct(
     bool explicit_offset = m.offset || m.use_offset;
 
     return flecs_struct_layout(
-        world, struct_type, s, explicit_offset ? i : -1, unchanged, false);
+        world, struct_type, s, explicit_offset ? i : -1, unchanged, deferred);
 }
 
 static int flecs_struct_layout(
@@ -92341,7 +92342,7 @@ static int flecs_struct_layout(
                 ? ecs_vec_get_t(&base_st->members, ecs_member_t, i)->offset
                 : ECS_ALIGN(size, member_alignment);
             if (elem->member && i >= inherited) {
-                ecs_ensure(world, elem->member, EcsMember)->offset = offset;
+                ecs_ensure(stage, elem->member, EcsMember)->offset = offset;
             }
         }
 
@@ -92439,7 +92440,7 @@ static void flecs_set_member_from_component(
         m.warning_range = ranges->warning;
     }
 
-    flecs_add_member_to_struct(world, struct_type, e, &m);
+    flecs_add_member_to_struct(world, struct_type, e, &m, true);
 }
 
 static void flecs_set_member(ecs_iter_t *it) {
@@ -92665,7 +92666,7 @@ ecs_entity_t ecs_struct_init(
         }
 
         if (!create_member_entity) {
-            if (flecs_add_member_to_struct(world, type, 0, &member)) {
+            if (flecs_add_member_to_struct(world, type, 0, &member, false)) {
                 goto error;
             }
         } else {
@@ -92750,7 +92751,7 @@ int ecs_struct_add_member(
 #ifdef FLECS_CREATE_MEMBER_ENTITIES
     flecs_struct_create_member_entity(world, type, member, ranges_set);
 #else
-    if (flecs_add_member_to_struct(world, type, 0, member)) {
+    if (flecs_add_member_to_struct(world, type, 0, member, false)) {
         goto error;
     }
 #endif

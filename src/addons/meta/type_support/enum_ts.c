@@ -297,15 +297,15 @@ static void flecs_add_enum(ecs_iter_t *it) {
             continue;
         }
 
-        if (flecs_init_type(world, e, EcsEnumType, uc->size, uc->alignment)) {
+        if (flecs_init_type(it->stage, e, EcsEnumType, uc->size, uc->alignment)) {
             continue;
         }
 
-        ecs_add_id(world, e, EcsExclusive);
+        ecs_add_id(it->stage, e, EcsExclusive);
 #ifdef FLECS_CONSTRAINT_TRAITS
-        ecs_add_id(world, e, EcsOneOf);
+        ecs_add_id(it->stage, e, EcsOneOf);
 #endif
-        ecs_add_id(world, e, EcsPairIsTag);
+        ecs_add_id(it->stage, e, EcsPairIsTag);
     }
 }
 
