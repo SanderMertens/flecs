@@ -3764,6 +3764,8 @@
             "id": "Internals",
             "setup": true,
             "testcases": [
+                "noinline_attribute_on_gnu_and_msvc",
+                "always_inline_attribute_on_clang_only",
                 "os_memset_n_w_expression_count",
                 "deactivate_table",
                 "activate_table",

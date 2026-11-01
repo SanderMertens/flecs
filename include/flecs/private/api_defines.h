@@ -235,7 +235,7 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #endif
 
 #ifndef FLECS_NO_ALWAYS_INLINE
-    #if defined(ECS_TARGET_CLANG) || defined(ECS_TARGET_GCC)
+    #if defined(ECS_TARGET_CLANG)
         #define FLECS_ALWAYS_INLINE __attribute__((always_inline))
     #elif defined(ECS_TARGET_MSVC)
         #define FLECS_ALWAYS_INLINE
@@ -246,7 +246,7 @@ typedef struct ecs_allocator_t ecs_allocator_t;
     #define FLECS_ALWAYS_INLINE
 #endif
 
-#if defined(ECS_TARGET_CLANG) || defined(ECS_TARGET_GCC)
+#if defined(ECS_TARGET_CLANG) || defined(ECS_TARGET_GNU)
     #define FLECS_NOINLINE __attribute__((noinline))
 #elif defined(ECS_TARGET_MSVC)
     #define FLECS_NOINLINE __declspec(noinline)
