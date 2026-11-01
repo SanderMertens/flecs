@@ -3240,3 +3240,34 @@ void SerializeIterToJson_table_different_dont_fragment_components(void) {
     ecs_query_fini(q);
     ecs_fini(world);
 }
+
+void SerializeIterToJson_serialize_sparse_each(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
+
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {30, 40});
+
+    ecs_iter_t it = ecs_each_id(world, ecs_id(Position));
+
+    char *json = ecs_iter_to_json(&it, NULL);
+    test_json(json, "{\"results\":[{\"name\":\"Foo\", \"fields\":{\"values\":[{\"x\":10, \"y\":20}]}}, {\"name\":\"Bar\", \"fields\":{\"values\":[{\"x\":30, \"y\":40}]}}]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}

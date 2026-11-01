@@ -2339,6 +2339,8 @@ void Sparse_sparse_pair_second(void);
 void Sparse_sparse_pair_first_after_query(void);
 void Sparse_sparse_pair_second_after_query(void);
 void Sparse_sparse_after_or(void);
+void Sparse_ecs_field_on_sparse_self(void);
+void Sparse_ecs_field_on_sparse_up(void);
 
 // Testsuite 'DontFragment'
 void DontFragment_setup(void);
@@ -2490,6 +2492,8 @@ void DontFragment_1_fixed_sparse_second_wildcard_w_empty_tgt(void);
 void DontFragment_1_this_sparse_written_second_wildcard_w_empty_tgt(void);
 void DontFragment_1_this_sparse_first_wildcard_w_empty_rel(void);
 void DontFragment_this_wildcard_wildcard_pair_w_empty_pair(void);
+void DontFragment_ecs_field_on_dont_fragment_up(void);
+void DontFragment_ecs_field_at_on_dont_fragment_up(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_setup(void);
@@ -12181,6 +12185,14 @@ bake_test_case Sparse_testcases[] = {
     {
         "sparse_after_or",
         Sparse_sparse_after_or
+    },
+    {
+        "ecs_field_on_sparse_self",
+        Sparse_ecs_field_on_sparse_self
+    },
+    {
+        "ecs_field_on_sparse_up",
+        Sparse_ecs_field_on_sparse_up
     }
 };
 
@@ -12776,6 +12788,14 @@ bake_test_case DontFragment_testcases[] = {
     {
         "this_wildcard_wildcard_pair_w_empty_pair",
         DontFragment_this_wildcard_wildcard_pair_w_empty_pair
+    },
+    {
+        "ecs_field_on_dont_fragment_up",
+        DontFragment_ecs_field_on_dont_fragment_up
+    },
+    {
+        "ecs_field_at_on_dont_fragment_up",
+        DontFragment_ecs_field_at_on_dont_fragment_up
     }
 };
 
@@ -15036,7 +15056,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        33,
+        35,
         Sparse_testcases,
         1,
         Sparse_params
@@ -15045,7 +15065,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        148,
+        150,
         DontFragment_testcases,
         1,
         DontFragment_params

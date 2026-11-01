@@ -1195,7 +1195,8 @@
                 "serialize_children_w_tag_w_parent_component_table",
                 "serialize_childof_var_w_parent",
                 "serialize_childof_wildcard_w_parent",
-                "serialize_table_dont_fragment_no_leak"
+                "serialize_table_dont_fragment_no_leak",
+                "serialize_sparse_each"
             ]
         }, {
             "id": "SerializeIterToRowJson",

@@ -1581,3 +1581,48 @@ void Sparse_sparse_written_up_2_levels(void) {
     ecs_query_fini(q);
     ecs_fini(world);
 }
+
+void Sparse_ecs_field_on_sparse_self(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position) }},
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+
+    test_expect_abort();
+    ecs_field(&it, Position, 0);
+}
+
+void Sparse_ecs_field_on_sparse_up(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t p = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_new_w_pair(world, EcsChildOf, p);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .src.id = EcsUp, .trav = EcsChildOf }},
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+
+    test_expect_abort();
+    ecs_field(&it, Position, 0);
+}

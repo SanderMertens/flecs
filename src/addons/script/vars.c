@@ -305,14 +305,23 @@ void ecs_script_vars_from_iter(
                 continue;
             }
 
-            void *ptr = ecs_base_field_w_size(it, flecs_itosize(size), i);
-            if (!ptr) {
-                continue;
-            }
+            void *ptr;
+            if (it->row_fields & (1llu << i)) {
+                /* Sparse fields are read per row */
+                ptr = ecs_field_at_w_size(it, flecs_itosize(size), i, offset);
+                if (!ptr) {
+                    continue;
+                }
+            } else {
+                ptr = ecs_base_field_w_size(it, flecs_itosize(size), i);
+                if (!ptr) {
+                    continue;
+                }
 
-            if (!it->sources[i]) {
-                ptr = ECS_OFFSET(ptr, 
-                    offset * flecs_uto(ecs_size_t, ecs_field_stride(it, i)));
+                if (!it->sources[i]) {
+                    ptr = ECS_OFFSET(ptr, offset * 
+                        flecs_uto(ecs_size_t, ecs_field_stride(it, i)));
+                }
             }
 
             if (flecs_script_vars_set_ref(vars, flecs_script_iter_field_names[i],

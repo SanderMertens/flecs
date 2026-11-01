@@ -595,3 +595,85 @@ void Vars_from_iter_w_pair_wildcard(void) {
     ecs_query_fini(q);
     ecs_fini(world);
 }
+
+void Vars_from_iter_w_sparse(void) {
+    typedef struct {
+        float x, y;
+    } Position;
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Position, {30, 40});
+
+    ecs_query_t *q = ecs_query(world, { .expr = "Position" });
+    test_assert(q != NULL);
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(2, it.count);
+
+    ecs_script_vars_from_iter(&it, vars, 1);
+
+    ecs_script_var_t *this_var = ecs_script_vars_lookup(vars, "this");
+    test_assert(this_var != NULL);
+    test_uint(e2, *(ecs_entity_t*)this_var->value.ptr);
+
+    ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
+    test_assert(v != NULL);
+    test_assert(v->value.ptr != NULL);
+    test_int(30, (int32_t)((Position*)v->value.ptr)->x);
+    test_int(40, (int32_t)((Position*)v->value.ptr)->y);
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_script_vars_fini(vars);
+    ecs_query_fini(q);
+    ecs_fini(world);
+}
+
+void Vars_from_iter_w_sparse_up(void) {
+    typedef struct {
+        float x, y;
+    } Position;
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_set(world, p, Position, {10, 20});
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+
+    ecs_query_t *q = ecs_query(world, { .expr = "Position(up)" });
+    test_assert(q != NULL);
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(c, it.entities[0]);
+
+    ecs_script_vars_from_iter(&it, vars, 0);
+
+    ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
+    test_assert(v != NULL);
+    test_assert(v->value.ptr != NULL);
+    test_int(10, (int32_t)((Position*)v->value.ptr)->x);
+    test_int(20, (int32_t)((Position*)v->value.ptr)->y);
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_script_vars_fini(vars);
+    ecs_query_fini(q);
+    ecs_fini(world);
+}

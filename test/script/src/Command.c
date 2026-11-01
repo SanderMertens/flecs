@@ -3982,3 +3982,42 @@ void Command_multi_command_help(void) {
 
     ecs_fini(world);
 }
+
+void Command_query_sparse(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_script_run(world, NULL,
+        HEAD "struct Position(x: f32, y: f32)"
+        LINE "Tag {}", NULL);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+    ecs_add_id(world, position, EcsSparse);
+
+    ecs_script_run(world, NULL,
+        HEAD "a { Position: {1, 2} }"
+        LINE "b { Position: {3, 4}; Tag }"
+        LINE "a { c { Tag } }", NULL);
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session,
+        "query \"Position, Tag\"");
+    test_int(ecs_vec_count(&r.errors), 0);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
+    test_str(str, "[{entity: b, fields: [{id: Position, value: "
+        "{Position: {x: 3, y: 4}}}]}]");
+    ecs_os_free(str);
+    ecs_shell_result_fini(world, &r);
+
+    r = ecs_shell_run(world, session, "query \"Position(up), Tag\"");
+    test_int(ecs_vec_count(&r.errors), 0);
+    str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
+    test_str(str, "[{entity: a.c, fields: [{id: Position, value: "
+        "{Position: {x: 1, y: 2}}}]}]");
+    ecs_os_free(str);
+    ecs_shell_result_fini(world, &r);
+
+    ecs_fini(world);
+}

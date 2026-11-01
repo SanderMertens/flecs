@@ -1161,6 +1161,7 @@ void SerializeIterToJson_serialize_children_w_tag_w_parent_component_table(void)
 void SerializeIterToJson_serialize_childof_var_w_parent(void);
 void SerializeIterToJson_serialize_childof_wildcard_w_parent(void);
 void SerializeIterToJson_serialize_table_dont_fragment_no_leak(void);
+void SerializeIterToJson_serialize_sparse_each(void);
 
 // Testsuite 'SerializeIterToRowJson'
 void SerializeIterToRowJson_serialize_this_w_1_tag(void);
@@ -6079,6 +6080,10 @@ bake_test_case SerializeIterToJson_testcases[] = {
     {
         "serialize_table_dont_fragment_no_leak",
         SerializeIterToJson_serialize_table_dont_fragment_no_leak
+    },
+    {
+        "serialize_sparse_each",
+        SerializeIterToJson_serialize_sparse_each
     }
 };
 
@@ -7568,6 +7573,7 @@ bake_test_case SetRttHooks_testcases[] = {
     }
 };
 
+
 static bake_test_suite suites[] = {
     {
         "PrimitiveTypes",
@@ -7678,7 +7684,7 @@ static bake_test_suite suites[] = {
         "SerializeIterToJson",
         NULL,
         NULL,
-        90,
+        91,
         SerializeIterToJson_testcases
     },
     {
