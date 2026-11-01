@@ -7685,3 +7685,59 @@ void DontFragment_this_wildcard_wildcard_pair_w_empty_pair(void) {
 
     ecs_fini(world);
 }
+
+void DontFragment_ecs_field_on_dont_fragment_up(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t p = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_new_w_pair(world, EcsChildOf, p);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .src.id = EcsUp, .trav = EcsChildOf }},
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+
+    test_expect_abort();
+    ecs_field(&it, Position, 0);
+}
+
+void DontFragment_ecs_field_at_on_dont_fragment_up(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t p = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .src.id = EcsUp, .trav = EcsChildOf }},
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(c, it.entities[0]);
+    test_uint(p, ecs_field_src(&it, 0));
+
+    Position *ptr = ecs_field_at(&it, Position, 0, 0);
+    test_assert(ptr != NULL);
+    test_int(10, ptr->x);
+    test_int(20, ptr->y);
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+    ecs_fini(world);
+}

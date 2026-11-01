@@ -176,6 +176,33 @@ void* ecs_base_field_w_size(
     return flecs_field_ptr(it, size, index, true);
 }
 
+static ecs_component_record_t* flecs_field_cr(
+    const ecs_iter_t *it,
+    int8_t index)
+{
+    ecs_component_record_t *cr = NULL;
+    const ecs_table_record_t *tr = it->trs[index];
+    if (!tr) {
+        const ecs_query_t *q = it->query;
+        if (q) {
+            ecs_component_record_t **cr_cache = flecs_query_impl(q)->cr_cache;
+            cr = cr_cache[index];
+            if (!cr || cr->id != it->ids[index]) {
+                cr = cr_cache[index] = flecs_components_get(
+                    it->world, it->ids[index]);
+            }
+        } else {
+            cr = flecs_components_get(it->world, it->ids[index]);
+        }
+
+        ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    } else {
+        cr = tr->hdr.cr;
+    }
+
+    return cr;
+}
+
 void* flecs_field_shared(
     const ecs_iter_t *it,
     size_t size,
@@ -184,6 +211,10 @@ void* flecs_field_shared(
     if (!ecs_field_is_set(it, index)) {
         return NULL;
     }
+
+    ecs_check(!(flecs_field_cr(it, index)->flags & EcsIdSparse),
+        ECS_INVALID_OPERATION,
+        "use ecs_field_at to access fields for sparse components");
 
     ecs_entity_t src = it->sources[index];
     ecs_record_t *r = flecs_entities_get(it->world, src);
@@ -210,33 +241,8 @@ void* flecs_field_shared(
     tr = flecs_component_get_table(cr, table);
     ecs_column_t *col = &table->data.columns[tr->column];
     return ECS_ELEM(col->data, col->ti->size, row);
-}
-
-static ecs_component_record_t* flecs_field_cr(
-    const ecs_iter_t *it,
-    int8_t index)
-{
-    ecs_component_record_t *cr = NULL;
-    const ecs_table_record_t *tr = it->trs[index];
-    if (!tr) {
-        const ecs_query_t *q = it->query;
-        if (q) {
-            ecs_component_record_t **cr_cache = flecs_query_impl(q)->cr_cache;
-            cr = cr_cache[index];
-            if (!cr || cr->id != it->ids[index]) {
-                cr = cr_cache[index] = flecs_components_get(
-                    it->world, it->ids[index]);
-            }
-        } else {
-            cr = flecs_components_get(it->world, it->ids[index]);
-        }
-
-        ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    } else {
-        cr = tr->hdr.cr;
-    }
-
-    return cr;
+error:
+    return NULL;
 }
 
 void* ecs_field_at_w_size(

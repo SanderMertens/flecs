@@ -151,7 +151,7 @@ static int flecs_json_serialize_iter_result_field_values(
         fields &= it->query->data_fields;
     }
 
-    ecs_termset_t row_fields = it->query ? it->query->row_fields : 0;
+    ecs_termset_t row_fields = it->row_fields;
 
     for (f = 0; f < field_count; f ++) {
         ecs_termset_t field_bit = (ecs_termset_t)(1u << f);

@@ -2546,6 +2546,8 @@ void Vars_define_large_type_no_leak(void);
 void Vars_from_iter_w_derived_component(void);
 void Vars_from_iter_w_pair(void);
 void Vars_from_iter_w_pair_wildcard(void);
+void Vars_from_iter_w_sparse(void);
+void Vars_from_iter_w_sparse_up(void);
 
 // Testsuite 'Serialize'
 void Serialize_bool(void);
@@ -4196,6 +4198,7 @@ void Command_multi_command_separator_in_argument(void);
 void Command_multi_command_history(void);
 void Command_multi_command_history_errors_per_command(void);
 void Command_multi_command_help(void);
+void Command_query_sparse(void);
 
 // Testsuite 'CommandResource'
 void CommandResource_setup(void);
@@ -14268,6 +14271,14 @@ bake_test_case Vars_testcases[] = {
     {
         "from_iter_w_pair_wildcard",
         Vars_from_iter_w_pair_wildcard
+    },
+    {
+        "from_iter_w_sparse",
+        Vars_from_iter_w_sparse
+    },
+    {
+        "from_iter_w_sparse_up",
+        Vars_from_iter_w_sparse_up
     }
 };
 
@@ -20710,6 +20721,10 @@ bake_test_case Command_testcases[] = {
     {
         "multi_command_help",
         Command_multi_command_help
+    },
+    {
+        "query_sparse",
+        Command_query_sparse
     }
 };
 
@@ -21123,7 +21138,7 @@ static bake_test_suite suites[] = {
         "Vars",
         NULL,
         NULL,
-        19,
+        21,
         Vars_testcases
     },
     {
@@ -21279,7 +21294,7 @@ static bake_test_suite suites[] = {
         "Command",
         Command_setup,
         NULL,
-        138,
+        139,
         Command_testcases
     },
     {

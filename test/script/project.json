@@ -2615,7 +2615,9 @@
                 "define_large_type_no_leak",
                 "from_iter_w_derived_component",
                 "from_iter_w_pair",
-                "from_iter_w_pair_wildcard"
+                "from_iter_w_pair_wildcard",
+                "from_iter_w_sparse",
+                "from_iter_w_sparse_up"
             ]
         }, {
             "id": "Serialize",
@@ -4344,7 +4346,8 @@
                 "multi_command_separator_in_argument",
                 "multi_command_history",
                 "multi_command_history_errors_per_command",
-                "multi_command_help"
+                "multi_command_help",
+                "query_sparse"
             ]
         }, {
             "id": "CommandResource",

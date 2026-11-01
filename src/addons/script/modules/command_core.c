@@ -609,13 +609,22 @@ static void flecs_command_query(
                     continue;
                 }
 
-                const void *ptr = ecs_field_w_size(&it, (size_t)size, f);
-                if (!ptr) {
-                    continue;
-                }
+                const void *ptr;
+                if (it.row_fields & (1llu << f)) {
+                    /* Sparse fields are read per row */
+                    ptr = ecs_field_at_w_size(&it, (size_t)size, f, i);
+                    if (!ptr) {
+                        continue;
+                    }
+                } else {
+                    ptr = ecs_field_w_size(&it, (size_t)size, f);
+                    if (!ptr) {
+                        continue;
+                    }
 
-                if (ecs_field_is_self(&it, f)) {
-                    ptr = ECS_ELEM(ptr, size, i);
+                    if (ecs_field_is_self(&it, f)) {
+                        ptr = ECS_ELEM(ptr, size, i);
+                    }
                 }
 
                 ecs_shell_component_value_t *cv = ecs_vec_append_t(
