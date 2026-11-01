@@ -1218,11 +1218,41 @@ const ecs_entity_t* ecs_table_entities(
     return table->data.entities;
 }
 
-void ecs_table_clear_entities(
+void flecs_table_clear_entities(
     ecs_world_t* world,
     ecs_table_t* table)
 {
     flecs_table_fini_data(world, table, true, false);
+}
+
+void ecs_table_clear_entities(
+    ecs_world_t* world,
+    ecs_table_t* table)
+{
+    int32_t i, count = ecs_table_count(table);
+    const ecs_entity_t *entities = ecs_table_entities(table);
+    for (i = 0; i < count; i ++) {
+        ecs_record_t *r = flecs_entities_get(world, entities[i]);
+        if (ECS_RECORD_TO_ROW_FLAGS(r->row) &
+            (EcsEntityIsId|EcsEntityIsTarget))
+        {
+            break;
+        }
+    }
+
+    if (i == count) {
+        flecs_commands_begin(world, world->stages[0]);
+        flecs_table_clear_entities(world, table);
+        flecs_commands_end(world, world->stages[0]);
+        return;
+    }
+
+    ecs_entity_t *ids = flecs_walloc_n(world, ecs_entity_t, count);
+    ecs_os_memcpy_n(ids, entities, ecs_entity_t, count);
+    for (i = 0; i < count; i ++) {
+        ecs_delete(world, ids[i]);
+    }
+    flecs_wfree_n(world, ecs_entity_t, count, ids);
 }
 
 /* Remove all components in table. This function is called before a table is
