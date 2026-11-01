@@ -597,7 +597,7 @@ static bool flecs_on_delete_clear_entities(
                         ecs_dbg_3(
                             "#[red]delete#[reset] entities from table %u", 
                             (uint32_t)table->id);
-                        ecs_table_clear_entities(world, table);
+                        flecs_table_clear_entities(world, table);
                     }
                 }
             }

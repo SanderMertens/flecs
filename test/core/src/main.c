@@ -3633,6 +3633,15 @@ void Table_has_wildcard_pair(void);
 void Table_has_any_pair(void);
 void Table_get_target_out_of_range(void);
 void Table_clear_table_kills_entities(void);
+void Table_clear_table_cleans_up_targets(void);
+void Table_clear_table_recycled_id_inherits_nothing(void);
+void Table_clear_table_pair_on_own_entity(void);
+void Table_clear_table_non_fragmenting_child(void);
+void Table_clear_table_on_remove_target_alive(void);
+void Table_clear_table_entity_moved_in_survives(void);
+void Table_clear_table_delete_in_on_remove(void);
+void Table_clear_table_flush_observer_commands(void);
+void Table_clear_table_on_delete_panic(void);
 void Table_clear_table_add_new(void);
 void Table_clear_table_check_size(void);
 void Table_clear_table_twice_check_size(void);
@@ -17955,6 +17964,42 @@ bake_test_case Table_testcases[] = {
         Table_clear_table_kills_entities
     },
     {
+        "clear_table_cleans_up_targets",
+        Table_clear_table_cleans_up_targets
+    },
+    {
+        "clear_table_recycled_id_inherits_nothing",
+        Table_clear_table_recycled_id_inherits_nothing
+    },
+    {
+        "clear_table_pair_on_own_entity",
+        Table_clear_table_pair_on_own_entity
+    },
+    {
+        "clear_table_non_fragmenting_child",
+        Table_clear_table_non_fragmenting_child
+    },
+    {
+        "clear_table_on_remove_target_alive",
+        Table_clear_table_on_remove_target_alive
+    },
+    {
+        "clear_table_entity_moved_in_survives",
+        Table_clear_table_entity_moved_in_survives
+    },
+    {
+        "clear_table_delete_in_on_remove",
+        Table_clear_table_delete_in_on_remove
+    },
+    {
+        "clear_table_flush_observer_commands",
+        Table_clear_table_flush_observer_commands
+    },
+    {
+        "clear_table_on_delete_panic",
+        Table_clear_table_on_delete_panic
+    },
+    {
         "clear_table_add_new",
         Table_clear_table_add_new
     },
@@ -18617,7 +18662,7 @@ static bake_test_suite suites[] = {
         "Table",
         NULL,
         NULL,
-        41,
+        50,
         Table_testcases
     },
     {

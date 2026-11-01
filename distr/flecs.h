@@ -11090,9 +11090,12 @@ int32_t ecs_search_relation_for_entity(
     ecs_id_t *id_out,
     struct ecs_table_record_t **tr_out);
 
-/** Remove all entities in a table. Does not deallocate table memory. 
- * Retaining table memory can be efficient when planning 
- * to refill the table with operations like ecs_bulk_init().
+/** Delete all entities in a table. The entities are deleted as with
+ * ecs_delete(), which cleans up relationships and children that refer to them.
+ * Does not deallocate table memory, unless the cleanup deletes the table (for
+ * example when the table has a pair with one of its own entities as target).
+ * Retaining table memory can be efficient when planning to refill the table
+ * with operations like ecs_bulk_init().
  *
  * @param world The world.
  * @param table The table to clear.

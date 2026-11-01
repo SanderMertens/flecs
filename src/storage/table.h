@@ -187,6 +187,10 @@ void flecs_table_remove_actions(
     ecs_world_t *world,
     ecs_table_t *table);
 
+void flecs_table_clear_entities(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
 /* Free table */
 void flecs_table_fini(
     ecs_world_t *world,
