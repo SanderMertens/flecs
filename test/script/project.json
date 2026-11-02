@@ -1180,7 +1180,22 @@
                 "delay_cancel_on_restart",
                 "delay_cancel_on_delete",
                 "delay_pending_at_fini",
-                "delay_cancel_on_script_delete"
+                "delay_cancel_on_script_delete",
+                "event_emit_await",
+                "event_listener_after_emitter",
+                "event_emit_does_not_pause",
+                "event_no_listeners",
+                "event_queued_in_order",
+                "event_busy_block_receives_queued",
+                "event_to_template_blocks",
+                "event_from_template_block",
+                "event_string_payload",
+                "event_no_members",
+                "event_self_emit_does_not_hang",
+                "event_queue_limit",
+                "event_cancel_drops_queue",
+                "event_cancel_while_waiting",
+                "error_event"
             ]
         }, {
             "id": "Input",

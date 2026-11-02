@@ -8127,3 +8127,538 @@ void AsyncBlock_delay_cancel_on_script_delete(void) {
 
     ecs_fini(world);
 }
+
+void AsyncBlock_event_emit_await(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Build(slot: i32)"
+            LINE "export mut got: i32 = 0"
+            LINE "async {"
+            LINE "  const e = await Build"
+            LINE "  got = e.slot"
+            LINE "}"
+            LINE "async {"
+            LINE "  emit Build(slot: 7)"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "got")).ptr, 7);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_event_listener_after_emitter(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Build(slot: i32)"
+            LINE "export mut got: i32 = 0"
+            LINE "async {"
+            LINE "  emit Build(slot: 7)"
+            LINE "}"
+            LINE "async {"
+            LINE "  const e = await Build"
+            LINE "  got = e.slot"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "got")).ptr, 7);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_event_emit_does_not_pause(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Build(slot: i32)"
+            LINE "export mut after: i32 = 0"
+            LINE "async {"
+            LINE "  emit Build(slot: 1)"
+            LINE "  after = 1"
+            LINE "  emit Build(slot: 2)"
+            LINE "  after = 2"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "after")).ptr, 2);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_event_no_listeners(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Build(slot: i32)"
+            LINE "export mut after: i32 = 0"
+            LINE "async {"
+            LINE "  emit Build(slot: 1)"
+            LINE "  after = 1"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "after")).ptr, 1);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_event_queued_in_order(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Build(slot: i32)"
+            LINE "export mut out: i32 = 0"
+            LINE "export mut count: i32 = 0"
+            LINE "async {"
+            LINE "  while true {"
+            LINE "    const e = await Build"
+            LINE "    out = out * 10 + e.slot"
+            LINE "    count += 1"
+            LINE "  }"
+            LINE "}"
+            LINE "async {"
+            LINE "  emit Build(slot: 1)"
+            LINE "  emit Build(slot: 2)"
+            LINE "  emit Build(slot: 3)"
+            LINE "  emit Build(slot: 4)"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    for (int32_t i = 0; i < 6; i ++) {
+        ecs_script_tasks_progress(world);
+    }
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 4);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "out")).ptr, 1234);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_event_busy_block_receives_queued(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Build(slot: i32)"
+            LINE "export mut out: i32 = 0"
+            LINE "async {"
+            LINE "  const r = await fetch(0)"
+            LINE "  while true {"
+            LINE "    const e = await Build"
+            LINE "    out = out * 10 + e.slot"
+            LINE "  }"
+            LINE "}"
+            LINE "async {"
+            LINE "  emit Build(slot: 1)"
+            LINE "  emit Build(slot: 2)"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_script_tasks_progress(world);
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "out")).ptr, 0);
+
+    ecs_value_t v = ecs_value(ecs_i32_t, {0});
+    test_int(ecs_script_future_resolve(ab_futures[0], &v), 0);
+    ecs_script_future_release(ab_futures[0]);
+
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "out")).ptr, 12);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_event_to_template_blocks(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Build(slot: i32)"
+            LINE "export mut total: i32 = 0"
+            LINE "template T {"
+            LINE "  prop factor: i32 = 1"
+            LINE "  mut last: i32 = 0"
+            LINE "  async {"
+            LINE "    const e = await Build"
+            LINE "    total += e.slot * factor"
+            LINE "  }"
+            LINE "}"
+            LINE "T a(factor: 2)"
+            LINE "T b(factor: 3)"
+            LINE "async {"
+            LINE "  emit Build(slot: 5)"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "total")).ptr, 25);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_event_from_template_block(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Build(slot: i32)"
+            LINE "export mut total: i32 = 0"
+            LINE "template T {"
+            LINE "  prop idx: i32 = 1"
+            LINE "  async {"
+            LINE "    emit Build(slot: idx)"
+            LINE "  }"
+            LINE "}"
+            LINE "T a(idx: 2)"
+            LINE "T b(idx: 3)"
+            LINE "async {"
+            LINE "  while true {"
+            LINE "    const e = await Build"
+            LINE "    total += e.slot"
+            LINE "  }"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    for (int32_t i = 0; i < 3; i ++) {
+        ecs_script_tasks_progress(world);
+    }
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "total")).ptr, 5);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_event_string_payload(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Msg(text: string, n: i32)"
+            LINE "export mut out: string = \"\""
+            LINE "async {"
+            LINE "  const a = await Msg"
+            LINE "  const b = await Msg"
+            LINE "  out = b.text"
+            LINE "}"
+            LINE "async {"
+            LINE "  emit Msg(text: \"foo\", n: 1)"
+            LINE "  emit Msg(text: \"bar\", n: 2)"
+            LINE "  emit Msg(text: \"never received\", n: 3)"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    for (int32_t i = 0; i < 4; i ++) {
+        ecs_script_tasks_progress(world);
+    }
+
+    test_str(*(char**)ecs_mut_var_get(world, ecs_lookup(world, "out")).ptr, "bar");
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_event_no_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Ping()"
+            LINE "export mut count: i32 = 0"
+            LINE "async {"
+            LINE "  while true {"
+            LINE "    await Ping"
+            LINE "    count += 1"
+            LINE "  }"
+            LINE "}"
+            LINE "async {"
+            LINE "  emit Ping"
+            LINE "  emit Ping()"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    for (int32_t i = 0; i < 4; i ++) {
+        ecs_script_tasks_progress(world);
+    }
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 2);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_event_self_emit_does_not_hang(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Tick(n: i32)"
+            LINE "export mut count: i32 = 0"
+            LINE "async {"
+            LINE "  emit Tick(n: 0)"
+            LINE "  while true {"
+            LINE "    const e = await Tick"
+            LINE "    count = e.n + 1"
+            LINE "    emit Tick(n: count)"
+            LINE "  }"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 0);
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 1);
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 2);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_event_queue_limit(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_os_zeromem(ab_futures);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Build(slot: i32)"
+            LINE "export mut count: i32 = 0"
+            LINE "export mut sent: i32 = 0"
+            LINE "async {"
+            LINE "  const r = await fetch(0)"
+            LINE "  while true {"
+            LINE "    const e = await Build"
+            LINE "    count += 1"
+            LINE "  }"
+            LINE "}"
+            LINE "async {"
+            LINE "  for i in 0..2000 {"
+            LINE "    emit Build(slot: i)"
+            LINE "    sent += 1"
+            LINE "  }"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "sent")).ptr, 2000);
+
+    ecs_value_t v = ecs_value(ecs_i32_t, {0});
+    test_int(ecs_script_future_resolve(ab_futures[0], &v), 0);
+    ecs_script_future_release(ab_futures[0]);
+
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 1024);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_event_cancel_drops_queue(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Msg(text: string)"
+            LINE "export mut count: i32 = 0"
+            LINE "template T {"
+            LINE "  prop v: i32 = 0"
+            LINE "  async {"
+            LINE "    const r = await fetch(v)"
+            LINE "    while true {"
+            LINE "      const e = await Msg"
+            LINE "      count += 1"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "T a"
+            LINE "async {"
+            LINE "  emit Msg(text: \"queued\")"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 1);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    ecs_entity_t t = ecs_lookup(world, "T");
+    int32_t prop = 1;
+    ecs_set_id(world, a, t, sizeof(prop), &prop);
+    test_int(ab_cancel_count, 1);
+
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 2);
+
+    ecs_value_t v = ecs_value(ecs_i32_t, {0});
+    test_int(ecs_script_future_resolve(ab_futures[1], &v), 0);
+    ecs_script_tasks_progress(world);
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 0);
+
+    ecs_script_future_release(ab_futures[0]);
+    ecs_script_future_release(ab_futures[1]);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_event_cancel_while_waiting(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Msg(text: string)"
+            LINE "export mut count: i32 = 0"
+            LINE "template T {"
+            LINE "  prop v: i32 = 0"
+            LINE "  async {"
+            LINE "    const e = await Msg"
+            LINE "    count += v + 1"
+            LINE "  }"
+            LINE "}"
+            LINE "T a"
+            LINE "async {"
+            LINE "  const r = await Msg"
+            LINE "  emit Msg(text: \"second\")"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    ecs_entity_t t = ecs_lookup(world, "T");
+    int32_t prop = 1;
+    ecs_set_id(world, a, t, sizeof(prop), &prop);
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 0);
+
+    ecs_delete(world, a);
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 0);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_error_event(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    const char *scripts[] = {
+        HEAD "async { emit Unknown(a: 1) }",
+        HEAD "struct S(a: i32)\nasync { emit S(a: 1) }",
+        HEAD "event E(a: i32)\nasync { emit E(b: 1) }",
+        HEAD "event E(a: i32)\nasync { emit E(a: \"foo\") }",
+        HEAD "event NoMembers()\nasync { emit NoMembers(1) }",
+        HEAD "event E(a: i32)\nemit E(a: 1)",
+        HEAD "async { await Unknown }",
+        HEAD "struct S(a: i32)\nasync { await S }",
+        HEAD "event E(a: i32)\nconst x = E()",
+    };
+
+    for (int32_t i = 0; i < 9; i ++) {
+        test_assert(ecs_script_run_w_desc(
+            world, NULL, scripts[i], &ir_desc, NULL) != 0);
+    }
+
+    ecs_fini(world);
+}
