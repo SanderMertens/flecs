@@ -1675,6 +1675,8 @@ async {
 }
 ```
 
+The compound assignment operators `+=`, `-=`, `*=` and `/=` can be used as a shorthand. `score += 10` behaves exactly like `score = score + 10`, including notifying reactive scripts.
+
 ## Control flow
 
 ### If statement

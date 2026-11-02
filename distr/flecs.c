@@ -48317,6 +48317,10 @@ typedef enum ecs_token_kind_t {
     EcsTokRange,
     EcsTokShiftLeft,
     EcsTokShiftRight,
+    EcsTokAddAssign,
+    EcsTokSubAssign,
+    EcsTokMulAssign,
+    EcsTokDivAssign,
     EcsTokHasBracketOpen,
     EcsTokArrow,
     EcsTokIdentifier,
@@ -62674,6 +62678,10 @@ static const struct {
     [EcsTokRange] = {"..", ""},
     [EcsTokShiftLeft] = {"<<", ""},
     [EcsTokShiftRight] = {">>", ""},
+    [EcsTokAddAssign] = {"+=", ""},
+    [EcsTokSubAssign] = {"-=", ""},
+    [EcsTokMulAssign] = {"*=", ""},
+    [EcsTokDivAssign] = {"/=", ""},
     [EcsTokHasBracketOpen] = {"?[", ""},
     [EcsTokKeywordWith] = {"with", "keyword "},
     [EcsTokKeywordUsing] = {"using", "keyword "},
@@ -62709,7 +62717,10 @@ static const struct {
 };
 
 static const ecs_token_kind_t flecs_token_pairs[128][2] = {
-    ['-'] = {EcsTokArrow},
+    ['+'] = {EcsTokAddAssign},
+    ['-'] = {EcsTokArrow, EcsTokSubAssign},
+    ['*'] = {EcsTokMulAssign},
+    ['/'] = {EcsTokDivAssign},
     ['?'] = {EcsTokHasBracketOpen},
     ['.'] = {EcsTokRange},
     ['='] = {EcsTokEq},
@@ -70414,6 +70425,15 @@ identifier: {
             goto identifier_assign;
         }
 
+        // value +=
+        case EcsTokAddAssign:
+        case EcsTokSubAssign:
+        case EcsTokMulAssign:
+        case EcsTokDivAssign: {
+            Consume();
+            goto identifier_compound_assign;
+        }
+
         // Spaceship enterprise
         // Spaceship "enterprise"
         case EcsTokIdentifier:
@@ -70717,6 +70737,34 @@ identifier_assign: {
     // value = expr\n
     Expr({
         stmt->expr = EXPR;
+        EndOfRule;
+    })
+}
+
+// value +=
+identifier_compound_assign: {
+    if (!parser->async_scope) {
+        Error("compound assignment is only allowed in async blocks");
+    }
+
+    ecs_script_assign_t *stmt = flecs_script_insert_assign(parser, Token(0));
+
+    ecs_token_kind_t oper = EcsTokAdd;
+    switch(tokenizer->tokens[1].kind) {
+    case EcsTokSubAssign: oper = EcsTokSub; break;
+    case EcsTokMulAssign: oper = EcsTokMul; break;
+    case EcsTokDivAssign: oper = EcsTokDiv; break;
+    default: break;
+    }
+
+    // value += expr\n
+    Expr({
+        ecs_expr_binary_t *binary = flecs_expr_binary(parser);
+        binary->left = (ecs_expr_node_t*)flecs_expr_identifier(parser, Token(0));
+        binary->right = EXPR;
+        binary->operator = oper;
+        binary->node.end = EXPR->end;
+        stmt->expr = (ecs_expr_node_t*)binary;
         EndOfRule;
     })
 }
