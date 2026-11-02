@@ -6395,3 +6395,119 @@ void AsyncBlock_error_compound_assign_incompatible_type(void) {
 
     ecs_fini(world);
 }
+
+void AsyncBlock_break_for(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "for i in 0..5 {"
+        LINE "  if i == 2 {"
+        LINE "    break"
+        LINE "  }"
+        LINE "  \"e_{i}\" {}"
+        LINE "}"
+        LINE "after {}", &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "e_0") != 0);
+    test_assert(ecs_lookup(world, "e_1") != 0);
+    test_assert(ecs_lookup(world, "e_2") == 0);
+    test_assert(ecs_lookup(world, "e_3") == 0);
+    test_assert(ecs_lookup(world, "after") != 0);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_break_while_in_async(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut m: i32 = 0"
+            LINE "export mut after: i32 = 0"
+            LINE "async {"
+            LINE "  while true {"
+            LINE "    m += 1"
+            LINE "    if m == 3 {"
+            LINE "      break"
+            LINE "    }"
+            LINE "  }"
+            LINE "  after = m * 2"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(
+        world, ecs_lookup(world, "m")).ptr, 3);
+    test_int(*(int32_t*)ecs_mut_var_get(
+        world, ecs_lookup(world, "after")).ptr, 6);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_break_innermost_loop(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut outer: i32 = 0"
+            LINE "export mut inner: i32 = 0"
+            LINE "async {"
+            LINE "  for i in 0..3 {"
+            LINE "    outer += 1"
+            LINE "    for j in 0..10 {"
+            LINE "      if j == 2 {"
+            LINE "        break"
+            LINE "      }"
+            LINE "      inner += 1"
+            LINE "    }"
+            LINE "  }"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(
+        world, ecs_lookup(world, "outer")).ptr, 3);
+    test_int(*(int32_t*)ecs_mut_var_get(
+        world, ecs_lookup(world, "inner")).ptr, 6);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_error_break_outside_loop(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "async {"
+        LINE "  break"
+        LINE "}", &ir_desc, NULL) != 0);
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "break", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_error_break_async_in_loop(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "for i in 0..3 {"
+        LINE "  async {"
+        LINE "    break"
+        LINE "  }"
+        LINE "}", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}

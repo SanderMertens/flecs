@@ -1811,6 +1811,19 @@ for i in 0..5 {
 }
 ```
 
+A `break` statement exits the innermost `for` or `while` loop:
+
+```cpp
+for i in 0..5 {
+  if i == 2 {
+    break
+  }
+
+  // creates entities e_0 and e_1
+  "e_{i}" {}
+}
+```
+
 ## Script header
 The header of a script may contain `module`, `include` and `using` statements. After the first non-header statement, no more header statements may occur. Header statements must always be created in the root scope.
 

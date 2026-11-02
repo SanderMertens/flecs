@@ -707,6 +707,7 @@ static const char* flecs_script_stmt_parse(
         case EcsTokKeywordAwait:      goto await_stmt;
         case EcsTokKeywordTry:        goto try_stmt;
         case EcsTokKeywordContinue:   goto continue_stmt;
+        case EcsTokKeywordBreak:      goto break_stmt;
         case EcsTokKeywordAsync:      goto async_stmt;
         case EcsTokKeywordWhile:      goto while_stmt;
     );
@@ -1007,6 +1008,11 @@ fn_stmt: {
 
 continue_stmt: {
     flecs_script_insert_continue(parser);
+    EndOfRule;
+}
+
+break_stmt: {
+    flecs_script_insert_break(parser);
     EndOfRule;
 }
 

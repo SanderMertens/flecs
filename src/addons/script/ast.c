@@ -328,6 +328,12 @@ ecs_script_continue_t* flecs_script_insert_continue(
     return flecs_ast_insert(parser, ecs_script_continue_t, EcsAstContinue);
 }
 
+ecs_script_break_t* flecs_script_insert_break(
+    ecs_parser_t *parser)
+{
+    return flecs_ast_insert(parser, ecs_script_break_t, EcsAstBreak);
+}
+
 ecs_script_try_t* flecs_script_insert_try(
     ecs_parser_t *parser)
 {

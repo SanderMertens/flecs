@@ -971,6 +971,19 @@ static void flecs_irc_compile_if(
     flecs_irc_emit(c, EcsIrLeave, EcsIrFrameIf, 0, 0, node);
 }
 
+static void flecs_irc_patch_breaks(
+    ecs_script_ir_compiler_t *c,
+    int32_t begin)
+{
+    int32_t i, end = flecs_irc_pc(c);
+    for (i = begin; i < end; i ++) {
+        ecs_script_ir_op_t *op = flecs_irc_op(c, i);
+        if (op->kind == EcsIrBreak && op->a == -1) {
+            op->a = end;
+        }
+    }
+}
+
 static void flecs_irc_compile_for(
     ecs_script_ir_compiler_t *c,
     ecs_script_for_t *node)
@@ -990,6 +1003,7 @@ static void flecs_irc_compile_for(
 
     flecs_irc_emit(c, EcsIrJump, next, 0, 0, node);
     flecs_irc_op(c, next)->a = flecs_irc_pc(c);
+    flecs_irc_patch_breaks(c, next);
     flecs_irc_emit(c, EcsIrLeave, EcsIrFrameFor, 0, 0, node);
     flecs_irc_emit(c, EcsIrExprEnd, 0, 0, 0, node);
 }
@@ -1049,6 +1063,7 @@ static void flecs_irc_compile_while(
 
     flecs_irc_emit(c, EcsIrJump, cond_pc, 0, 0, node);
     flecs_irc_op(c, next)->a = flecs_irc_pc(c);
+    flecs_irc_patch_breaks(c, next);
     flecs_irc_emit(c, EcsIrLeave, EcsIrFrameWhile, 0, 0, node);
 }
 
@@ -1193,6 +1208,9 @@ static void flecs_irc_compile_stmt(
         break;
     case EcsAstContinue:
         flecs_irc_emit(c, EcsIrContinue, 0, 0, 0, node);
+        break;
+    case EcsAstBreak:
+        flecs_irc_emit(c, EcsIrBreak, -1, 0, 0, node);
         break;
     case EcsAstAsync:
         flecs_irc_entry_add(c, node, EcsIrEntryAsync);

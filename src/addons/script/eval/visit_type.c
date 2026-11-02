@@ -2486,6 +2486,7 @@ static int flecs_script_type_node(
         case EcsAstFor:
         case EcsAstWhile:
         case EcsAstContinue:
+        case EcsAstBreak:
         case EcsAstAssign:
             break;
         default:
@@ -2579,6 +2580,13 @@ static int flecs_script_type_node(
         if (!t->for_depth) {
             flecs_script_eval_error(t->v, node,
                 "continue is only allowed inside a loop");
+            return -1;
+        }
+        return 0;
+    case EcsAstBreak:
+        if (!t->for_depth) {
+            flecs_script_eval_error(t->v, node,
+                "break is only allowed inside a loop");
             return -1;
         }
         return 0;
