@@ -1225,7 +1225,7 @@ void Internals_os_memset_n_w_expression_count(void) {
 #define INTERNALS_STR(x) INTERNALS_STR_IMPL(x)
 
 void Internals_noinline_attribute_on_gnu_and_msvc(void) {
-    const char *attr = INTERNALS_STR(FLECS_NOINLINE);
+    const char *attr = "" INTERNALS_STR(FLECS_NOINLINE);
 #if defined(ECS_TARGET_GNU) || defined(ECS_TARGET_MSVC)
     test_assert(strstr(attr, "noinline") != NULL);
 #else
@@ -1234,7 +1234,7 @@ void Internals_noinline_attribute_on_gnu_and_msvc(void) {
 }
 
 void Internals_always_inline_attribute_on_clang_only(void) {
-    const char *attr = INTERNALS_STR(FLECS_ALWAYS_INLINE);
+    const char *attr = "" INTERNALS_STR(FLECS_ALWAYS_INLINE);
 #if defined(ECS_TARGET_CLANG) && !defined(FLECS_NO_ALWAYS_INLINE)
     test_assert(strstr(attr, "always_inline") != NULL);
 #else
