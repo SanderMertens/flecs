@@ -94932,10 +94932,130 @@ error:
 }
 
 #ifdef FLECS_PIPELINE
+typedef struct flecs_script_time_waiter_t {
+    ecs_script_future_t *future;
+    double wake_time;
+    uint64_t wake_frame;
+} flecs_script_time_waiter_t;
+
+typedef struct EcsScriptTimeState {
+    ecs_vec_t waiters; /* vec<flecs_script_time_waiter_t> */
+    double time;
+    uint64_t frame;
+} EcsScriptTimeState;
+
+static ECS_COMPONENT_DECLARE(EcsScriptTimeState);
+
+static ECS_CTOR(EcsScriptTimeState, state, {
+    ecs_os_zeromem(state);
+    ecs_vec_init_t(NULL, &state->waiters, flecs_script_time_waiter_t, 0);
+})
+
+static ECS_MOVE(EcsScriptTimeState, dst, src, {
+    ecs_vec_fini_t(NULL, &dst->waiters, flecs_script_time_waiter_t);
+    *dst = *src;
+    ecs_os_zeromem(src);
+})
+
+static ECS_DTOR(EcsScriptTimeState, state, {
+    flecs_script_time_waiter_t *waiters = ecs_vec_first(&state->waiters);
+    for (int32_t w = 0; w < ecs_vec_count(&state->waiters); w ++) {
+        ecs_script_future_release(waiters[w].future);
+    }
+
+    ecs_vec_fini_t(NULL, &state->waiters, flecs_script_time_waiter_t);
+})
+
+static EcsScriptTimeState* flecs_script_time_state(
+    ecs_world_t *world)
+{
+    if (!ecs_id(EcsScriptTimeState) || ecs_is_fini(world)) {
+        return NULL;
+    }
+
+    return ecs_singleton_get_mut(world, EcsScriptTimeState);
+}
+
+static void flecs_script_time_wait(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_script_future_t *future)
+{
+    EcsScriptTimeState *state = flecs_script_time_state(ctx->world);
+    if (!state) {
+        ecs_script_future_reject(future, "world is shutting down");
+        ecs_script_future_release(future);
+        return;
+    }
+
+    double seconds = argc ? *(double*)argv[0].ptr : 0;
+    ecs_vec_append_t(NULL, &state->waiters, flecs_script_time_waiter_t)[0] =
+        (flecs_script_time_waiter_t){
+            .future = future,
+            .wake_time = state->time + (seconds > 0 ? seconds : 0),
+            .wake_frame = state->frame + 1
+        };
+}
+
+static void flecs_script_time_cancel(
+    const ecs_function_ctx_t *ctx,
+    ecs_script_future_t *future)
+{
+    EcsScriptTimeState *state = flecs_script_time_state(ctx->world);
+    if (!state) {
+        return;
+    }
+
+    flecs_script_time_waiter_t *waiters = ecs_vec_first(&state->waiters);
+    for (int32_t i = 0; i < ecs_vec_count(&state->waiters); i ++) {
+        if (waiters[i].future == future) {
+            ecs_script_future_release(future);
+            ecs_vec_remove_ordered_t(
+                &state->waiters, flecs_script_time_waiter_t, i);
+            return;
+        }
+    }
+}
+
+static void flecs_script_time_update(
+    ecs_world_t *world,
+    ecs_ftime_t delta_time)
+{
+    EcsScriptTimeState *state = flecs_script_time_state(world);
+    if (!state) {
+        return;
+    }
+
+    state->time += (double)delta_time;
+    state->frame ++;
+
+    for (int32_t i = 0; i < ecs_vec_count(&state->waiters); ) {
+        flecs_script_time_waiter_t *waiter = ecs_vec_get_t(
+            &state->waiters, flecs_script_time_waiter_t, i);
+        if (state->frame < waiter->wake_frame ||
+            state->time < waiter->wake_time)
+        {
+            i ++;
+            continue;
+        }
+
+        ecs_script_future_t *future = waiter->future;
+        ecs_vec_remove_ordered_t(
+            &state->waiters, flecs_script_time_waiter_t, i);
+
+        ecs_value_t result = ecs_value(ecs_bool_t, {true});
+        ecs_script_future_resolve(future, &result);
+        ecs_script_future_release(future);
+    }
+}
+
 static void flecs_script_progress_tasks_system(
     ecs_iter_t *it)
 {
     ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(it->world));
+    flecs_script_time_update(world, it->delta_time);
+
     ecs_script_runtime_t *rt = world->stages[0]->runtime;
     if (!rt || !ecs_vec_count(&rt->async_tasks)) {
         return;
@@ -94968,6 +95088,30 @@ void flecs_script_async_import(
         .phase = EcsPreUpdate,
         .callback = flecs_script_progress_tasks_system,
         .immediate = true
+    });
+
+    ECS_COMPONENT_DEFINE(world, EcsScriptTimeState);
+    ecs_set_hooks(world, EcsScriptTimeState, {
+        .ctor = ecs_ctor(EcsScriptTimeState),
+        .move = ecs_move(EcsScriptTimeState),
+        .dtor = ecs_dtor(EcsScriptTimeState),
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
+    });
+    ecs_singleton_add(world, EcsScriptTimeState);
+
+    ecs_async_function(world, {
+        .name = "next_frame",
+        .return_type = ecs_id(ecs_bool_t),
+        .callback = flecs_script_time_wait,
+        .cancel = flecs_script_time_cancel
+    });
+
+    ecs_async_function(world, {
+        .name = "delay",
+        .return_type = ecs_id(ecs_bool_t),
+        .params = {{ .name = "seconds", .type = ecs_id(ecs_f64_t) }},
+        .callback = flecs_script_time_wait,
+        .cancel = flecs_script_time_cancel
     });
 #endif
 
