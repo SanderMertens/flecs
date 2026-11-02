@@ -1231,6 +1231,15 @@ static void flecs_irc_compile_stmt(
     case EcsAstBreak:
         flecs_irc_emit(c, EcsIrBreak, -1, 0, 0, node);
         break;
+    case EcsAstEmit: {
+        ecs_script_emit_t *n = (ecs_script_emit_t*)node;
+        int32_t begin = flecs_irc_expr_begin(c, node);
+        int32_t value = n->has_payload
+            ? flecs_irc_compile_tmp(c, n->expr) : -1;
+        flecs_irc_emit(c, EcsIrEmit, value, 0, 0, node);
+        flecs_irc_expr_end(c, begin, true);
+        break;
+    }
     case EcsAstAsync:
         flecs_irc_entry_add(c, node, EcsIrEntryAsync);
         flecs_irc_emit(c, EcsIrAsync, 0, 0, 0, node);

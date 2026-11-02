@@ -265,6 +265,7 @@ struct ecs_script_function_t {
     void *ctx;
     void *binding_ctx;
     ecs_ctx_free_t binding_ctx_free;
+    bool is_event;
 };
 
 /** Function component.

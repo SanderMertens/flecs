@@ -1165,6 +1165,41 @@ static int flecs_ir_assign(
     return result;
 }
 
+static int flecs_ir_emit_event(
+    ecs_script_ir_vm_t *vm,
+    const ecs_script_ir_op_t *op)
+{
+#ifdef FLECS_SCRIPT_ASYNC
+    ecs_script_eval_visitor_t *v = &vm->v;
+    const ecs_script_emit_t *node = op->node;
+    if (op->a == -1) {
+        bool value = true;
+        flecs_script_event_emit(v->world, node->event, node->eval_type, &value);
+        return 0;
+    }
+
+    ecs_script_ir_reg_t *reg = flecs_ir_reg(vm, op->a);
+    if (reg->value.type == node->eval_type) {
+        flecs_script_event_emit(v->world, node->event, node->eval_type,
+            reg->value.ptr);
+        return 0;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(v->world, node->eval_type);
+    void *tmp = ecs_ptr_new_w_type_info(v->world, ti);
+    int result = flecs_ir_value_to(vm, reg, node->eval_type, tmp, ti);
+    if (!result) {
+        flecs_script_event_emit(v->world, node->event, node->eval_type, tmp);
+    }
+
+    ecs_ptr_free_w_type_info(v->world, ti, tmp);
+    return result;
+#else
+    flecs_ir_error(vm, op->node, "emit requires FLECS_SCRIPT_ASYNC");
+    return -1;
+#endif
+}
+
 static int flecs_ir_load_var(
     ecs_script_ir_vm_t *vm,
     const ecs_script_ir_op_t *op)
@@ -2127,6 +2162,9 @@ static flecs_script_run_status_t flecs_ir_exec(
             break;
         case EcsIrAssign:
             res = flecs_ir_assign(vm, op);
+            break;
+        case EcsIrEmit:
+            res = flecs_ir_emit_event(vm, op);
             break;
         case EcsIrTryEnter: {
 #ifdef FLECS_SCRIPT_ASYNC
