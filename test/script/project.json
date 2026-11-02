@@ -2590,7 +2590,14 @@
                 "id_var_eq_literal",
                 "vector_func_array_of_struct_error_type_name",
                 "partial_initializer",
-                "partial_nested_initializer"
+                "partial_nested_initializer",
+                "conditional",
+                "conditional_nested",
+                "conditional_non_bool_condition",
+                "conditional_evaluates_one_branch",
+                "conditional_unify_types",
+                "error_conditional",
+                "conditional_collection_branches"
             ]
         }, {
             "id": "ExprAst",
