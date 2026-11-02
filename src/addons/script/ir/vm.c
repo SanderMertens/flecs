@@ -1126,6 +1126,22 @@ static int flecs_ir_assign(
     const ecs_type_info_t *ti = ecs_get_type_info(v->world, node->eval_type);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    int64_t indices[FLECS_SCRIPT_ASSIGN_INDEX_MAX];
+    ecs_script_assign_step_t *steps = ecs_vec_first(&node->steps);
+    int32_t i, count = ecs_vec_count(&node->steps), index_count = 0;
+    for (i = 0; i < count; i ++) {
+        if (!steps[i].member && flecs_ir_value_to(vm,
+            flecs_ir_reg(vm, steps[i].reg), ecs_id(ecs_i64_t),
+            &indices[index_count ++], ecs_get_type_info(
+                v->world, ecs_id(ecs_i64_t))))
+        {
+            flecs_ir_expr_error(vm, steps[i].index,
+                "failed to evaluate index for assignment to '%s'",
+                node->name);
+            return -1;
+        }
+    }
+
     const void *src = reg->value.ptr;
     void *tmp = NULL;
     if (reg->value.type != node->eval_type) {
@@ -1141,7 +1157,7 @@ static int flecs_ir_assign(
         src = tmp;
     }
 
-    int result = flecs_script_assign_value(v, node, src);
+    int result = flecs_script_assign_value(v, node, indices, src);
     if (tmp) {
         ecs_ptr_free_w_type_info(v->world, ti, tmp);
     }

@@ -317,6 +317,8 @@ ecs_script_assign_t* flecs_script_insert_assign(
 {
     ecs_script_assign_t *result = flecs_ast_insert(
         parser, ecs_script_assign_t, EcsAstAssign);
+    ecs_vec_init_t(&parser->script->allocator, &result->steps,
+        ecs_script_assign_step_t, 0);
     result->name = name;
     result->sp = -1;
     return result;

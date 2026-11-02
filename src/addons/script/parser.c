@@ -422,6 +422,88 @@ static const char* flecs_script_for_in(
     ParserEnd;
 }
 
+static const char* flecs_script_parse_compound_assign(
+    ecs_parser_t *parser,
+    const char *pos,
+    ecs_script_assign_t *stmt,
+    ecs_token_kind_t assign_oper,
+    ecs_expr_node_t *left)
+{
+    ParserBegin;
+    (void)tokenizer;
+
+    ecs_token_kind_t oper = EcsTokAdd;
+    switch(assign_oper) {
+    case EcsTokSubAssign: oper = EcsTokSub; break;
+    case EcsTokMulAssign: oper = EcsTokMul; break;
+    case EcsTokDivAssign: oper = EcsTokDiv; break;
+    default: break;
+    }
+
+    ecs_expr_binary_t *binary = flecs_expr_binary(parser);
+    binary->left = left;
+    binary->operator = oper;
+    stmt->expr = (ecs_expr_node_t*)binary;
+
+    // value += expr\n
+    Expr({
+        binary->right = EXPR;
+        binary->node.end = EXPR->end;
+        EndOfRule;
+    })
+
+    ParserEnd;
+}
+
+/* Parse assignment target after the first '[': value[expr].member[expr] */
+static const char* flecs_script_parse_assign_target(
+    ecs_parser_t *parser,
+    const char *pos,
+    ecs_script_assign_t *stmt)
+{
+    ParserBegin;
+
+    ecs_allocator_t *a = &parser->script->allocator;
+    bool is_index = true;
+    Loop(
+        if (ecs_vec_count(&stmt->steps) >= (FLECS_SCRIPT_ASSIGN_INDEX_MAX * 2)) {
+            Error("assignment target has too many elements");
+        }
+
+        ecs_script_assign_step_t *step = ecs_vec_append_t(
+            a, &stmt->steps, ecs_script_assign_step_t);
+        ecs_os_zeromem(step);
+
+        if (is_index) {
+            Expr({
+                step = ecs_vec_last_t(&stmt->steps, ecs_script_assign_step_t);
+                step->index = EXPR;
+            })
+
+            Parse_1(']', {});
+        } else {
+            Parse_1(EcsTokIdentifier, {
+                step->member = t->value;
+            })
+        }
+
+        LookAhead(
+            case '[':
+                Consume();
+                is_index = true;
+                continue;
+            case '.':
+                Consume();
+                is_index = false;
+                continue;
+        )
+
+        EndOfRule;
+    )
+
+    ParserEnd;
+}
+
 static const char* flecs_script_parse_var(
     ecs_parser_t *parser,
     const char *pos,
@@ -506,6 +588,30 @@ static const char* flecs_script_parse_var(
         )
 
     var_type: {
+        if (!var->type_is_template) {
+            // const value: i32[
+            LookAhead_1('[',
+                Consume();
+                Parse(
+                    // const value: i32[]
+                    case ']':
+                        var->type_count = -1;
+                        break;
+                    // const value: i32[10]
+                    case EcsTokNumber: {
+                        int64_t count = atoll(t->value);
+                        if (count <= 0 || count > INT32_MAX) {
+                            Error("invalid array size '%s'", t->value);
+                        }
+
+                        var->type_count = flecs_ito(int32_t, count);
+                        Parse_1(']', {});
+                        break;
+                    }
+                )
+            )
+        }
+
         LookAhead(
             case '=': {
                 Consume();
@@ -677,6 +783,8 @@ static const char* flecs_script_stmt_parse(
     const char *pos)
 {
     ParserBegin;
+
+    const char *stmt_start = pos;
 
     const char *component_first = NULL, *component_second = NULL;
     bool component_collection = false;
@@ -1080,26 +1188,49 @@ identifier_compound_assign: {
         Error("compound assignment is only allowed in async blocks");
     }
 
-    ecs_script_assign_t *stmt = flecs_script_insert_assign(parser, Token(0));
+    return flecs_script_parse_compound_assign(parser, pos,
+        flecs_script_insert_assign(parser, Token(0)),
+        tokenizer->tokens[1].kind,
+        (ecs_expr_node_t*)flecs_expr_identifier(parser, Token(0)));
+}
 
-    ecs_token_kind_t oper = EcsTokAdd;
-    switch(tokenizer->tokens[1].kind) {
-    case EcsTokSubAssign: oper = EcsTokSub; break;
-    case EcsTokMulAssign: oper = EcsTokMul; break;
-    case EcsTokDivAssign: oper = EcsTokDiv; break;
-    default: break;
+// value[
+identifier_assign_target: {
+    ecs_script_assign_t *stmt = flecs_script_insert_assign(parser, Token(0));
+    const char *target = stmt_start;
+
+    pos = flecs_script_parse_assign_target(parser, pos, stmt);
+    if (!pos) {
+        goto error;
     }
 
-    // value += expr\n
-    Expr({
-        ecs_expr_binary_t *binary = flecs_expr_binary(parser);
-        binary->left = (ecs_expr_node_t*)flecs_expr_identifier(parser, Token(0));
-        binary->right = EXPR;
-        binary->operator = oper;
-        binary->node.end = EXPR->end;
-        stmt->expr = (ecs_expr_node_t*)binary;
-        EndOfRule;
-    })
+    Parse(
+        // value[0] = expr\n
+        case '=': {
+            Expr({
+                stmt->expr = EXPR;
+                EndOfRule;
+            })
+        }
+
+        // value[0] += expr\n
+        case EcsTokAddAssign:
+        case EcsTokSubAssign:
+        case EcsTokMulAssign:
+        case EcsTokDivAssign: {
+            ecs_expr_node_t *left = NULL;
+            bool significant_newline = parser->significant_newline;
+            parser->significant_newline = false;
+            target = flecs_script_parse_expr(parser, target, 0, &left);
+            parser->significant_newline = significant_newline;
+            if (!target) {
+                goto error;
+            }
+
+            return flecs_script_parse_compound_assign(
+                parser, pos, stmt, t->kind, left);
+        }
+    )
 }
 
 // try
@@ -1265,6 +1396,10 @@ flagged_id: {
 
 // facade[0]
 identifier_index: {
+    if (parser->async_scope) {
+        goto identifier_assign_target;
+    }
+
     component_first = Token(0);
 
     LookAhead(

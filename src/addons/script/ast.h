@@ -191,6 +191,7 @@ typedef struct ecs_script_var_node_t {
     const char *type;
     bool type_is_template;
     bool type_is_vector;
+    int32_t type_count;     /* -1 for vector, >0 for array, 0 for neither */
     ecs_expr_node_t *expr;
     ecs_entity_t eval_type;
     ecs_entity_t eval_interface;
@@ -241,11 +242,24 @@ typedef struct ecs_script_while_t {
     ecs_script_scope_t *scope;
 } ecs_script_while_t;
 
+#define FLECS_SCRIPT_ASSIGN_INDEX_MAX (8)
+
+typedef struct ecs_script_assign_step_t {
+    const char *member;    /* Member path, NULL if step is an index */
+    ecs_expr_node_t *index;
+    int32_t offset;        /* Offset of member(s) in value */
+    int32_t elem_size;
+    int32_t count;         /* Array size, 0 for vectors */
+    int32_t reg;           /* Register with index value, used by IR */
+} ecs_script_assign_step_t;
+
 typedef struct ecs_script_assign_t {
     ecs_script_node_t node;
     const char *name;
+    ecs_vec_t steps;       /* vec<ecs_script_assign_step_t> */
     ecs_expr_node_t *expr;
     ecs_entity_t eval_type;
+    ecs_entity_t root_type;
     ecs_entity_t component;
     ecs_entity_t global;
     int32_t offset;
