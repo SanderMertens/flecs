@@ -1149,6 +1149,16 @@ void AsyncBlock_declare_array_w_type(void);
 void AsyncBlock_struct_reset_w_empty_initializer(void);
 void AsyncBlock_error_assign_target(void);
 void AsyncBlock_assign_template_and_parent_mut_member(void);
+void AsyncBlock_next_frame(void);
+void AsyncBlock_delay(void);
+void AsyncBlock_delay_large_step(void);
+void AsyncBlock_delay_zero_and_negative(void);
+void AsyncBlock_delay_time_scale(void);
+void AsyncBlock_delay_time_scale_speedup(void);
+void AsyncBlock_delay_cancel_on_restart(void);
+void AsyncBlock_delay_cancel_on_delete(void);
+void AsyncBlock_delay_pending_at_fini(void);
+void AsyncBlock_delay_cancel_on_script_delete(void);
 
 // Testsuite 'Input'
 void Input_setup(void);
@@ -8836,6 +8846,46 @@ bake_test_case AsyncBlock_testcases[] = {
     {
         "assign_template_and_parent_mut_member",
         AsyncBlock_assign_template_and_parent_mut_member
+    },
+    {
+        "next_frame",
+        AsyncBlock_next_frame
+    },
+    {
+        "delay",
+        AsyncBlock_delay
+    },
+    {
+        "delay_large_step",
+        AsyncBlock_delay_large_step
+    },
+    {
+        "delay_zero_and_negative",
+        AsyncBlock_delay_zero_and_negative
+    },
+    {
+        "delay_time_scale",
+        AsyncBlock_delay_time_scale
+    },
+    {
+        "delay_time_scale_speedup",
+        AsyncBlock_delay_time_scale_speedup
+    },
+    {
+        "delay_cancel_on_restart",
+        AsyncBlock_delay_cancel_on_restart
+    },
+    {
+        "delay_cancel_on_delete",
+        AsyncBlock_delay_cancel_on_delete
+    },
+    {
+        "delay_pending_at_fini",
+        AsyncBlock_delay_pending_at_fini
+    },
+    {
+        "delay_cancel_on_script_delete",
+        AsyncBlock_delay_cancel_on_script_delete
     }
 };
 
@@ -21383,7 +21433,7 @@ static bake_test_suite suites[] = {
         "AsyncBlock",
         AsyncBlock_setup,
         NULL,
-        132,
+        142,
         AsyncBlock_testcases,
         1,
         AsyncBlock_params

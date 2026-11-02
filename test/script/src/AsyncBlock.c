@@ -7797,3 +7797,333 @@ void AsyncBlock_assign_template_and_parent_mut_member(void) {
 
     ecs_fini(world);
 }
+
+void AsyncBlock_next_frame(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "using flecs.script"
+            LINE "export mut count: i32 = 0"
+            LINE "async {"
+            LINE "  while true {"
+            LINE "    await next_frame()"
+            LINE "    count += 1"
+            LINE "  }"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 0);
+
+    ecs_progress(world, 0.1f);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 0);
+
+    ecs_progress(world, 0.1f);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 1);
+
+    ecs_script_tasks_progress(world);
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 1);
+
+    ecs_progress(world, 0.1f);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 2);
+
+    ecs_progress(world, 0.1f);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 3);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_delay(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "using flecs.script"
+            LINE "export mut done: i32 = 0"
+            LINE "async {"
+            LINE "  await delay(1.5)"
+            LINE "  done = 1"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_progress(world, 0.5f);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "done")).ptr, 0);
+    ecs_progress(world, 0.5f);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "done")).ptr, 0);
+    ecs_progress(world, 0.5f);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "done")).ptr, 0);
+    ecs_progress(world, 0.5f);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "done")).ptr, 1);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_delay_large_step(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "using flecs.script"
+            LINE "export mut done: i32 = 0"
+            LINE "async {"
+            LINE "  await next_frame()"
+            LINE "  await delay(1.5)"
+            LINE "  done = 1"
+            LINE "  await delay(0.25)"
+            LINE "  done = 2"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_progress(world, 0.5f);
+    ecs_progress(world, 0.5f);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "done")).ptr, 0);
+
+    ecs_progress(world, 100);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "done")).ptr, 1);
+
+    ecs_progress(world, 100);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "done")).ptr, 2);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_delay_zero_and_negative(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "using flecs.script"
+            LINE "export mut zero: i32 = 0"
+            LINE "export mut neg: i32 = 0"
+            LINE "async { while true { await delay(0); zero += 1 } }"
+            LINE "async { while true { await delay(-1); neg += 1 } }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_progress(world, 0.5f);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "zero")).ptr, 0);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "neg")).ptr, 0);
+
+    ecs_progress(world, 0.5f);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "zero")).ptr, 1);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "neg")).ptr, 1);
+
+    ecs_progress(world, 0.5f);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "zero")).ptr, 2);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "neg")).ptr, 2);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_delay_time_scale(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "using flecs.script"
+            LINE "export mut done: i32 = 0"
+            LINE "export mut frames: i32 = 0"
+            LINE "async {"
+            LINE "  await delay(1)"
+            LINE "  done = 1"
+            LINE "}"
+            LINE "async {"
+            LINE "  while true {"
+            LINE "    await next_frame()"
+            LINE "    frames += 1"
+            LINE "  }"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_progress(world, 0.5f);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "frames")).ptr, 0);
+
+    ecs_set_time_scale(world, 0);
+    for (int32_t i = 0; i < 10; i ++) {
+        ecs_progress(world, 0.5f);
+    }
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "done")).ptr, 0);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "frames")).ptr, 10);
+
+    ecs_set_time_scale(world, 1);
+    ecs_progress(world, 0.5f);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "done")).ptr, 0);
+    ecs_progress(world, 0.5f);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "done")).ptr, 1);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_delay_time_scale_speedup(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "using flecs.script"
+            LINE "export mut done: i32 = 0"
+            LINE "async {"
+            LINE "  await delay(4)"
+            LINE "  done = 1"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_progress(world, 1);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "done")).ptr, 0);
+
+    ecs_set_time_scale(world, 4);
+    ecs_progress(world, 1);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "done")).ptr, 1);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_delay_cancel_on_restart(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "using flecs.script"
+            LINE "export mut done: i32 = 0"
+            LINE "template T {"
+            LINE "  prop v: i32 = 1"
+            LINE "  async {"
+            LINE "    await delay(v)"
+            LINE "    done += v"
+            LINE "  }"
+            LINE "}"
+            LINE "T e",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t t = ecs_lookup(world, "T");
+
+    ecs_progress(world, 0.5f);
+
+    int32_t v = 2;
+    ecs_set_id(world, e, t, sizeof(v), &v);
+
+    ecs_progress(world, 1);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "done")).ptr, 0);
+
+    ecs_progress(world, 1);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "done")).ptr, 0);
+
+    ecs_progress(world, 1);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "done")).ptr, 2);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_delay_cancel_on_delete(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "using flecs.script"
+            LINE "export mut done: i32 = 0"
+            LINE "template T {"
+            LINE "  async {"
+            LINE "    await next_frame()"
+            LINE "    done = 1"
+            LINE "  }"
+            LINE "  child {"
+            LINE "    async {"
+            LINE "      await delay(1)"
+            LINE "      done = 2"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "T e",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_progress(world, 0.5f);
+
+    ecs_delete(world, ecs_lookup(world, "e"));
+
+    for (int32_t i = 0; i < 5; i ++) {
+        ecs_progress(world, 1);
+    }
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "done")).ptr, 0);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_delay_pending_at_fini(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "using flecs.script"
+            LINE "async {"
+            LINE "  await delay(100)"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_progress(world, 0.5f);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_delay_cancel_on_script_delete(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "using flecs.script"
+            LINE "export mut done: i32 = 0"
+            LINE "async {"
+            LINE "  await delay(1)"
+            LINE "  done = 1"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_progress(world, 0.5f);
+
+    ecs_delete(world, s);
+    ecs_progress(world, 10);
+    ecs_progress(world, 10);
+
+    ecs_fini(world);
+}
