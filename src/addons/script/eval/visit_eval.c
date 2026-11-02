@@ -2160,6 +2160,18 @@ int flecs_script_assign_value(
     const void *src)
 {
     ecs_world_t *world = v->world;
+    if (node->local) {
+        ecs_script_var_t *var = ecs_script_vars_from_sp(v->vars, node->sp);
+        ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (var->value.ptr != src) {
+            const ecs_type_info_t *ti = ecs_get_type_info(world, node->eval_type);
+            ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_ptr_copy_w_type_info(world, ti, var->value.ptr, src);
+        }
+
+        return 0;
+    }
+
     if (node->global) {
         EcsScriptMutVar *mv = NULL;
         if (ecs_is_alive(world, node->global)) {

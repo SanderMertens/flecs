@@ -17483,6 +17483,7 @@ typedef struct ecs_script_var_t {
     int32_t sp;                          /**< Stack pointer. */
     bool is_const;                       /**< Whether the variable is constant. */
     bool owned;                          /**< Whether the scope owns the value storage. */
+    bool is_local_mut;                   /**< Whether the variable is a mut local of an async block. */
 } ecs_script_var_t;
 
 /** Script variable scope. */

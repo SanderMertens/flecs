@@ -1677,6 +1677,21 @@ async {
 
 The compound assignment operators `+=`, `-=`, `*=` and `/=` can be used as a shorthand. `score += 10` behaves exactly like `score = score + 10`, including notifying reactive scripts.
 
+Async blocks can declare local mut variables. A local mut variable belongs to a single task and keeps its value across `await`. It follows normal scoping rules, so a variable declared in a loop body is reset on each iteration. Local mut variables are not reactive: writing one doesn't notify anything.
+
+```cpp
+export mut supply: f64 = 0
+
+async {
+  mut total: f64 = 0
+  for i in 0..10 {
+    const power = await fetch_power(i)
+    total += power
+  }
+  supply = total
+}
+```
+
 ## Control flow
 
 ### If statement

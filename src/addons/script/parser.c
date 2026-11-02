@@ -433,6 +433,10 @@ static const char* flecs_script_parse_var(
         ecs_script_var_node_t *var = flecs_script_insert_var(
             parser, Token(0));
         var->node.kind = kind;
+        if (kind == EcsAstMut && parser->async_scope) {
+            var->node.kind = EcsAstConst;
+            var->is_local_mut = true;
+        }
 
         bool is_prop = kind == EcsAstProp;
         bool is_mut = kind == EcsAstMut || kind == EcsAstExportMut;

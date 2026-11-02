@@ -120,6 +120,7 @@ static inline ecs_script_var_t* flecs_ir_var_declare(
     var->type_info = NULL;
     var->sp = vars->vars.count + vars->sp - 1;
     var->is_const = false;
+    var->is_local_mut = false;
     var->owned = false;
     return var;
 }

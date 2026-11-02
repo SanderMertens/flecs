@@ -1406,7 +1406,8 @@ static int flecs_script_type_const(
         node->node.kind == EcsAstExportMut;
     if (!node->expr) {
         flecs_script_eval_error(t->v, node,
-            "const variable '%s' is missing initializer", node->name);
+            "%s variable '%s' is missing initializer",
+            node->is_local_mut ? "mut" : "const", node->name);
         return -1;
     }
 
@@ -1510,10 +1511,11 @@ static int flecs_script_type_const(
 
     var->value.type = type;
     var->type_info = ecs_get_type_info(t->v->world, type);
-    var->is_const = true;
+    var->is_const = !node->is_local_mut;
+    var->is_local_mut = node->is_local_mut;
     node->sp = var->sp;
 
-    if (node->is_await) {
+    if (node->is_await || node->is_local_mut) {
         return 0;
     }
 
@@ -2371,6 +2373,7 @@ static int flecs_script_type_assign(
     ecs_script_template_t *template = v->template;
     ecs_script_var_t *var = ecs_script_vars_lookup(v->vars, node->name);
     bool qualified = !ecs_os_strncmp(node->name, "parent.", 7);
+    node->local = var && !qualified && var->is_local_mut;
     ecs_entity_t component = 0;
     const ecs_member_t *m = NULL;
     node->parent = false;
@@ -2423,7 +2426,7 @@ static int flecs_script_type_assign(
         }
     }
 
-    if (!m && !node->global) {
+    if (!m && !node->global && !node->local) {
         flecs_script_eval_error(v, node,
             "cannot assign to '%s': only mut variables of a template or "
             "exported mut variables can be assigned", node->name);

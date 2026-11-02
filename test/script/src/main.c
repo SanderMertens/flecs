@@ -1118,6 +1118,13 @@ void AsyncBlock_break_while_in_async(void);
 void AsyncBlock_break_innermost_loop(void);
 void AsyncBlock_error_break_outside_loop(void);
 void AsyncBlock_error_break_async_in_loop(void);
+void AsyncBlock_local_mut(void);
+void AsyncBlock_local_mut_across_await(void);
+void AsyncBlock_local_mut_await_initializer(void);
+void AsyncBlock_local_mut_resets_in_loop(void);
+void AsyncBlock_local_mut_per_task(void);
+void AsyncBlock_local_mut_not_reactive(void);
+void AsyncBlock_error_local_mut_outside_block(void);
 
 // Testsuite 'Input'
 void Input_setup(void);
@@ -8659,6 +8666,34 @@ bake_test_case AsyncBlock_testcases[] = {
     {
         "error_break_async_in_loop",
         AsyncBlock_error_break_async_in_loop
+    },
+    {
+        "local_mut",
+        AsyncBlock_local_mut
+    },
+    {
+        "local_mut_across_await",
+        AsyncBlock_local_mut_across_await
+    },
+    {
+        "local_mut_await_initializer",
+        AsyncBlock_local_mut_await_initializer
+    },
+    {
+        "local_mut_resets_in_loop",
+        AsyncBlock_local_mut_resets_in_loop
+    },
+    {
+        "local_mut_per_task",
+        AsyncBlock_local_mut_per_task
+    },
+    {
+        "local_mut_not_reactive",
+        AsyncBlock_local_mut_not_reactive
+    },
+    {
+        "error_local_mut_outside_block",
+        AsyncBlock_error_local_mut_outside_block
     }
 };
 
@@ -21118,7 +21153,7 @@ static bake_test_suite suites[] = {
         "AsyncBlock",
         AsyncBlock_setup,
         NULL,
-        101,
+        108,
         AsyncBlock_testcases,
         1,
         AsyncBlock_params
