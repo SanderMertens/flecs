@@ -130,6 +130,7 @@ ecs_script_var_t* ecs_script_vars_declare(
     var->type_info = NULL;
     var->sp = ecs_vec_count(&vars->vars) + vars->sp - 1;
     var->is_const = false;
+    var->is_local_mut = false;
     var->owned = false;
 
     if (name) {

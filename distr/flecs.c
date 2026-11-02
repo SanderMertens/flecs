@@ -48877,6 +48877,7 @@ typedef struct ecs_script_var_node_t {
     int32_t computed;
     int32_t base_member;
     bool is_await;
+    bool is_local_mut;
 } ecs_script_var_node_t;
 
 typedef struct ecs_script_await_t {
@@ -48926,6 +48927,7 @@ typedef struct ecs_script_assign_t {
     int32_t offset;
     int32_t sp;
     bool parent;
+    bool local;
 } ecs_script_assign_t;
 
 typedef struct ecs_script_if_t {
@@ -70128,6 +70130,10 @@ static const char* flecs_script_parse_var(
         ecs_script_var_node_t *var = flecs_script_insert_var(
             parser, Token(0));
         var->node.kind = kind;
+        if (kind == EcsAstMut && parser->async_scope) {
+            var->node.kind = EcsAstConst;
+            var->is_local_mut = true;
+        }
 
         bool is_prop = kind == EcsAstProp;
         bool is_mut = kind == EcsAstMut || kind == EcsAstExportMut;
@@ -72783,6 +72789,7 @@ ecs_script_var_t* ecs_script_vars_declare(
     var->type_info = NULL;
     var->sp = ecs_vec_count(&vars->vars) + vars->sp - 1;
     var->is_const = false;
+    var->is_local_mut = false;
     var->owned = false;
 
     if (name) {
@@ -73257,7 +73264,9 @@ const char* flecs_script_node_kind_str(
     case EcsAstTemplate:           return "template";
     case EcsAstProp:               return "prop";
     case EcsAstMut:                return "mut";
-    case EcsAstConst:              return "const";
+    case EcsAstConst:
+        return ((const ecs_script_var_node_t*)node)->is_local_mut
+            ? "mut" : "const";
     case EcsAstExportConst:        return "export const";
     case EcsAstExportMut:          return "export mut";
     case EcsAstEntity:             return "entity";
@@ -97526,6 +97535,18 @@ int flecs_script_assign_value(
     const void *src)
 {
     ecs_world_t *world = v->world;
+    if (node->local) {
+        ecs_script_var_t *var = ecs_script_vars_from_sp(v->vars, node->sp);
+        ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (var->value.ptr != src) {
+            const ecs_type_info_t *ti = ecs_get_type_info(world, node->eval_type);
+            ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_ptr_copy_w_type_info(world, ti, var->value.ptr, src);
+        }
+
+        return 0;
+    }
+
     if (node->global) {
         EcsScriptMutVar *mv = NULL;
         if (ecs_is_alive(world, node->global)) {
@@ -100864,7 +100885,8 @@ static int flecs_script_type_const(
         node->node.kind == EcsAstExportMut;
     if (!node->expr) {
         flecs_script_eval_error(t->v, node,
-            "const variable '%s' is missing initializer", node->name);
+            "%s variable '%s' is missing initializer",
+            node->is_local_mut ? "mut" : "const", node->name);
         return -1;
     }
 
@@ -100968,10 +100990,11 @@ static int flecs_script_type_const(
 
     var->value.type = type;
     var->type_info = ecs_get_type_info(t->v->world, type);
-    var->is_const = true;
+    var->is_const = !node->is_local_mut;
+    var->is_local_mut = node->is_local_mut;
     node->sp = var->sp;
 
-    if (node->is_await) {
+    if (node->is_await || node->is_local_mut) {
         return 0;
     }
 
@@ -101829,6 +101852,7 @@ static int flecs_script_type_assign(
     ecs_script_template_t *template = v->template;
     ecs_script_var_t *var = ecs_script_vars_lookup(v->vars, node->name);
     bool qualified = !ecs_os_strncmp(node->name, "parent.", 7);
+    node->local = var && !qualified && var->is_local_mut;
     ecs_entity_t component = 0;
     const ecs_member_t *m = NULL;
     node->parent = false;
@@ -101881,7 +101905,7 @@ static int flecs_script_type_assign(
         }
     }
 
-    if (!m && !node->global) {
+    if (!m && !node->global && !node->local) {
         flecs_script_eval_error(v, node,
             "cannot assign to '%s': only mut variables of a template or "
             "exported mut variables can be assigned", node->name);
@@ -112142,6 +112166,7 @@ static inline ecs_script_var_t* flecs_ir_var_declare(
     var->type_info = NULL;
     var->sp = vars->vars.count + vars->sp - 1;
     var->is_const = false;
+    var->is_local_mut = false;
     var->owned = false;
     return var;
 }
@@ -122005,7 +122030,7 @@ static int flecs_script_dep_node_impl(
 
         if (node->kind == EcsAstConst) {
             bool computed = ctx->reactive && !ctx->conditional &&
-                !n->is_await && ctx->computed_count < 64;
+                !n->is_await && !n->is_local_mut && ctx->computed_count < 64;
             if (computed) {
                 int32_t slot = ctx->computed_count ++;
                 n->computed = slot + 1;
