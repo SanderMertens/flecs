@@ -2597,7 +2597,15 @@
                 "conditional_evaluates_one_branch",
                 "conditional_unify_types",
                 "error_conditional",
-                "conditional_collection_branches"
+                "conditional_collection_branches",
+                "bitwise_xor",
+                "bitwise_xor_precedence",
+                "bitwise_xor_var",
+                "bitwise_not",
+                "bitwise_not_precedence",
+                "bitwise_not_var",
+                "bitwise_not_literal",
+                "error_bitwise_invalid_type"
             ]
         }, {
             "id": "ExprAst",
