@@ -1042,7 +1042,7 @@
                 "template_outer_capture_restarts_block",
                 "template_mut_string_external_update",
                 "template_sixty_four_muts_manual_restart",
-                "template_unrelated_prop_restarts_all_blocks",
+                "template_unrelated_prop_keeps_blocks_running",
                 "template_prop_change_before_progress",
                 "template_static_ref_restarts_block",
                 "template_dynamic_ref_restarts_block",
@@ -1146,7 +1146,15 @@
                 "local_mut_resets_in_loop",
                 "local_mut_per_task",
                 "local_mut_not_reactive",
-                "error_local_mut_outside_block"
+                "error_local_mut_outside_block",
+                "restart_only_block_reading_prop",
+                "surviving_block_keeps_position",
+                "restart_follows_const_chain",
+                "block_in_removed_if_branch_stops",
+                "block_on_deleted_entity_stops",
+                "block_restarts_for_loop_var",
+                "export_mut_read_does_not_restart",
+                "export_mut_via_template_const_restarts"
             ]
         }, {
             "id": "Input",
@@ -1236,7 +1244,9 @@
                 "get_mouse_state",
                 "listeners",
                 "emit_result",
-                "emit_result_stopped"
+                "emit_result_stopped",
+                "click_not_lost_when_template_input_changes",
+                "click_not_lost_after_native_mut_var_modified"
             ]
         }, {
             "id": "TryCatch",

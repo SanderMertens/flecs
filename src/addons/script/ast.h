@@ -232,6 +232,7 @@ typedef struct ecs_script_try_t {
 typedef struct ecs_script_async_t {
     ecs_script_node_t node;
     ecs_script_scope_t *scope;
+    uint64_t restart_input;
 } ecs_script_async_t;
 
 typedef struct ecs_script_while_t {
