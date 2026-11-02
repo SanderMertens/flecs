@@ -24866,7 +24866,7 @@ void Eval_mut_assign_member_fails(void) {
         HEAD "template T {"
         LINE "  mut m: Position = {1, 2}"
         LINE "  async {"
-        LINE "    m.x = 5"
+        LINE "    m.z = 5"
         LINE "  }"
         LINE "}", &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
