@@ -1189,7 +1189,23 @@
                 "proc_infinite_recursion",
                 "proc_error_stops_caller",
                 "proc_from_template_block",
-                "error_proc"
+                "error_proc",
+                "event_emit_await",
+                "event_listener_after_emitter",
+                "event_emit_does_not_pause",
+                "event_no_listeners",
+                "event_queued_in_order",
+                "event_busy_block_receives_queued",
+                "event_to_template_blocks",
+                "event_from_template_block",
+                "event_string_payload",
+                "event_no_members",
+                "event_self_emit_does_not_hang",
+                "event_from_proc",
+                "event_queue_limit",
+                "event_cancel_drops_queue",
+                "event_cancel_while_waiting",
+                "error_event"
             ]
         }, {
             "id": "Input",

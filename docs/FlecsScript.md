@@ -1776,6 +1776,37 @@ A procedure body allows the same statements as an async block, like assignments,
 
 Procedures can only be called as a statement in an async block or in another procedure. Calling a procedure from a template body or from an expression is an error. A procedure can call itself, up to a depth of 64 nested calls, after which the call fails with an error.
 
+### Events
+Async blocks can send each other messages with events. An `event` statement defines an event type with the same syntax as a struct. `emit` sends an event, and `await` waits for it:
+
+```cpp
+event Build(slot: i32)
+
+template Slot {
+  prop idx: i32 = 0
+
+  async {
+    while true {
+      await on.click(this)
+      emit Build(slot: idx)
+    }
+  }
+}
+
+async {
+  while true {
+    const e = await Build
+    build_at(e.slot)
+  }
+}
+```
+
+`emit` doesn't pause the block that sends the event. Events are delivered to all blocks that `await` the event type anywhere in their body, including blocks in templates. A block receives events from the moment it is started, even if it hasn't reached the `await` statement yet. If a block is busy when an event is sent, the event is queued for that block and the next `await` receives it, so no events are lost when several are sent in one frame. Events are received in the order they were sent. An event without members has no value: `await Ping` then evaluates to `true`.
+
+Each block has a queue with a limit of 1024 events per event type (`FLECS_SCRIPT_EVENT_QUEUE_MAX`). When a queue is full, new events for that block are dropped and an error is logged. Emitting an event that no block listens for does nothing. An event that a block emits while another event is queued for it, or that it emits to itself, is received in the next task pass, so a block can't hang the application by emitting the event it awaits.
+
+Queued events of a block are dropped when the block is cancelled or restarted. A block that restarts is subscribed again as soon as the new block is started, which happens as part of the same template update, and receives all events emitted after that.
+
 ## Control flow
 
 ### If statement

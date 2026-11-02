@@ -20,7 +20,20 @@ typedef EcsScriptTask EcsScriptAsyncTasks;
 
 static ECS_COMPONENT_DECLARE(EcsScriptAsyncTasks);
 
+typedef struct flecs_script_event_value_t {
+    void *ptr;
+    uint64_t pass;
+} flecs_script_event_value_t;
+
+typedef struct flecs_script_event_sub_t {
+    ecs_entity_t event;
+    ecs_entity_t type;
+    ecs_script_future_t *future;
+    ecs_vec_t queue; /* vec<flecs_script_event_value_t> */
+} flecs_script_event_sub_t;
+
 struct ecs_script_task_t {
+    ecs_vec_t event_subs; /* vec<flecs_script_event_sub_t> */
     ecs_script_t *script;
     ecs_script_runner_t *runner;
     ecs_script_ir_vm_t *vm;
@@ -643,6 +656,7 @@ static ecs_script_task_t* flecs_script_task_alloc(
     ecs_size_t offset = ECS_ALIGN(ECS_SIZEOF(ecs_script_task_t), engine_align);
     ecs_script_task_t *result = ecs_os_malloc(offset + engine_size);
     ecs_os_zeromem(result);
+    ecs_vec_init_t(NULL, &result->event_subs, flecs_script_event_sub_t, 0);
     if (impl->ir_enabled) {
         result->vm = ECS_OFFSET(result, offset);
         result->v = &result->vm->v;
@@ -662,10 +676,43 @@ static ecs_script_task_t* flecs_script_task_alloc(
     return result;
 }
 
+static flecs_script_event_sub_t* flecs_script_task_event_subscribe(
+    ecs_script_task_t *task,
+    ecs_entity_t event);
+
+static void flecs_script_task_event_subs_fini(
+    ecs_script_task_t *task)
+{
+    ecs_world_t *world = task->v->world;
+    ecs_script_runtime_t *rt = flecs_script_runtime_get(world);
+    flecs_script_event_sub_t *subs = ecs_vec_first(&task->event_subs);
+    int32_t s, sub_count = ecs_vec_count(&task->event_subs);
+    for (s = 0; s < sub_count; s ++) {
+        flecs_script_event_sub_t *sub = &subs[s];
+        if (sub->future) {
+            ecs_script_future_release(sub->future);
+        }
+
+        const ecs_type_info_t *ti = ecs_get_type_info(world, sub->type);
+        flecs_script_event_value_t *values = ecs_vec_first(&sub->queue);
+        int32_t v, value_count = ecs_vec_count(&sub->queue);
+        for (v = 0; v < value_count; v ++) {
+            ecs_ptr_free_w_type_info(world, ti, values[v].ptr);
+        }
+
+        rt->event_queued -= value_count;
+        ecs_vec_fini_t(NULL, &sub->queue, flecs_script_event_value_t);
+    }
+
+    ecs_vec_fini_t(NULL, &task->event_subs, flecs_script_event_sub_t);
+}
+
 static void flecs_script_task_dealloc(
     ecs_script_task_t *task)
 {
     ecs_script_eval_visitor_t *v = task->v;
+    flecs_script_task_event_subs_fini(task);
+
     while (v->vars) {
         v->vars = ecs_script_vars_pop(v->vars);
     }
@@ -794,6 +841,8 @@ ecs_script_task_status_t ecs_script_task_resume(
     bool prev_error = world_rt->error;
     world_rt->error = false;
     world_rt->eval_depth ++;
+    ecs_script_task_t *prev_task = world_rt->current_task;
+    world_rt->current_task = task;
     flecs_script_run_status_t status;
     if (task->vm) {
         status = flecs_script_ir_vm_run(task->vm, task->entry);
@@ -801,6 +850,7 @@ ecs_script_task_status_t ecs_script_task_resume(
         status = flecs_script_runner_run_scope(task->runner, task->scope);
     }
 
+    world_rt->current_task = prev_task;
     world_rt->eval_depth --;
     bool nested_error = world_rt->error;
     world_rt->error = prev_error;
@@ -1218,6 +1268,12 @@ int flecs_script_async_spawn(
             task;
     }
 
+    ecs_entity_t *events = ecs_vec_first(&node->events);
+    int32_t e, event_count = ecs_vec_count(&node->events);
+    for (e = 0; e < event_count; e ++) {
+        flecs_script_task_event_subscribe(task, events[e]);
+    }
+
     flecs_script_task_sched_add(task);
     return 0;
 }
@@ -1343,6 +1399,219 @@ static void flecs_script_async_tasks_on_remove(
     }
 }
 
+static flecs_script_event_sub_t* flecs_script_task_event_sub(
+    ecs_script_task_t *task,
+    ecs_entity_t event)
+{
+    flecs_script_event_sub_t *subs = ecs_vec_first(&task->event_subs);
+    int32_t i, count = ecs_vec_count(&task->event_subs);
+    for (i = 0; i < count; i ++) {
+        if (subs[i].event == event) {
+            return &subs[i];
+        }
+    }
+
+    return NULL;
+}
+
+static flecs_script_event_sub_t* flecs_script_task_event_subscribe(
+    ecs_script_task_t *task,
+    ecs_entity_t event)
+{
+    flecs_script_event_sub_t *sub = flecs_script_task_event_sub(task, event);
+    if (sub) {
+        return sub;
+    }
+
+    const EcsScriptFunction *f = ecs_get(
+        task->v->world, event, EcsScriptFunction);
+    ecs_assert(f != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    sub = ecs_vec_append_t(
+        NULL, &task->event_subs, flecs_script_event_sub_t);
+    ecs_os_zeromem(sub);
+    sub->event = event;
+    sub->type = f->return_type;
+    ecs_vec_init_t(NULL, &sub->queue, flecs_script_event_value_t, 0);
+    return sub;
+}
+
+static void flecs_script_event_sub_resolve_next(
+    ecs_script_runtime_t *rt,
+    flecs_script_event_sub_t *sub,
+    ecs_script_future_t *future)
+{
+    ecs_world_t *world = future->function_ctx.world;
+    flecs_script_event_value_t value = ecs_vec_first_t(
+        &sub->queue, flecs_script_event_value_t)[0];
+    ecs_vec_remove_ordered_t(&sub->queue, flecs_script_event_value_t, 0);
+    rt->event_queued --;
+
+    ecs_value_t result = { .type = sub->type, .ptr = value.ptr };
+    ecs_script_future_resolve(future, &result);
+    ecs_script_future_release(future);
+    ecs_ptr_free_w_type_info(world,
+        ecs_get_type_info(world, sub->type), value.ptr);
+}
+
+static void flecs_script_event_wait(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_script_future_t *future)
+{
+    (void)argc;
+    (void)argv;
+    ecs_script_runtime_t *rt = flecs_script_runtime_get(ctx->world);
+    ecs_script_task_t *task = rt->current_task;
+    if (!task) {
+        ecs_script_future_reject(future, "events can only be awaited by tasks");
+        ecs_script_future_release(future);
+        return;
+    }
+
+    flecs_script_event_sub_t *sub = flecs_script_task_event_subscribe(
+        task, ctx->function);
+    ecs_assert(sub->future == NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Events emitted during this pass are delivered in the next one, which
+     * prevents a block that emits the event it awaits from never yielding. */
+    if (ecs_vec_count(&sub->queue) && ecs_vec_first_t(&sub->queue,
+        flecs_script_event_value_t)->pass != rt->event_pass)
+    {
+        flecs_script_event_sub_resolve_next(rt, sub, future);
+    } else {
+        sub->future = future;
+    }
+}
+
+static void flecs_script_event_cancel(
+    const ecs_function_ctx_t *ctx,
+    ecs_script_future_t *future)
+{
+    ecs_script_runtime_t *rt = flecs_script_runtime_get(ctx->world);
+    ecs_script_task_t **tasks = ecs_vec_first(&rt->async_tasks);
+    int32_t t, task_count = ecs_vec_count(&rt->async_tasks);
+    for (t = 0; t < task_count; t ++) {
+        if (!tasks[t]) {
+            continue;
+        }
+
+        flecs_script_event_sub_t *sub = flecs_script_task_event_sub(
+            tasks[t], ctx->function);
+        if (sub && sub->future == future) {
+            sub->future = NULL;
+            ecs_script_future_release(future);
+            return;
+        }
+    }
+}
+
+int flecs_script_event_register(
+    ecs_world_t *world,
+    ecs_entity_t event)
+{
+    const char *name = ecs_get_name(world, event);
+    if (!name) {
+        return -1;
+    }
+
+    ecs_entity_t return_type = event;
+    if (!ecs_get_type_info(world, event)) {
+        if (!ecs_struct_init(world, &(ecs_struct_desc_t){ .entity = event })) {
+            return -1;
+        }
+
+        if (!ecs_get_type_info(world, event)) {
+            return_type = ecs_id(ecs_bool_t);
+        }
+    }
+
+    ecs_entity_t prev_scope = ecs_set_scope(world, 0);
+    ecs_entity_t function = ecs_async_function(world, {
+        .name = name,
+        .parent = ecs_get_parent(world, event),
+        .return_type = return_type,
+        .callback = flecs_script_event_wait,
+        .cancel = flecs_script_event_cancel
+    });
+    ecs_set_scope(world, prev_scope);
+    if (function != event) {
+        return -1;
+    }
+
+    ecs_get_mut(world, event, EcsScriptFunction)->is_event = true;
+    return 0;
+}
+
+void flecs_script_event_emit(
+    ecs_world_t *world,
+    ecs_entity_t event,
+    ecs_entity_t type,
+    const void *value)
+{
+    ecs_script_runtime_t *rt = flecs_script_runtime_get(world);
+    const ecs_type_info_t *ti = ecs_get_type_info(world, type);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_script_task_t **tasks = ecs_vec_first(&rt->async_tasks);
+    int32_t t, task_count = ecs_vec_count(&rt->async_tasks);
+    for (t = 0; t < task_count; t ++) {
+        ecs_script_task_t *task = tasks[t];
+        if (!task || task->status != EcsScriptTaskPending) {
+            continue;
+        }
+
+        flecs_script_event_sub_t *sub = flecs_script_task_event_sub(task, event);
+        if (!sub) {
+            continue;
+        }
+
+        if (sub->future && !ecs_vec_count(&sub->queue)) {
+            ecs_value_t result = { .type = type, .ptr = ECS_CONST_CAST(void*, value) };
+            ecs_script_future_resolve(sub->future, &result);
+            ecs_script_future_release(sub->future);
+            sub->future = NULL;
+            continue;
+        }
+
+        if (ecs_vec_count(&sub->queue) >= FLECS_SCRIPT_EVENT_QUEUE_MAX) {
+            ecs_err("event '%s' dropped: queue of async block is full (%d events)",
+                ecs_get_name(world, event), FLECS_SCRIPT_EVENT_QUEUE_MAX);
+            continue;
+        }
+
+        void *copy = ecs_ptr_new_w_type_info(world, ti);
+        ecs_ptr_copy_w_type_info(world, ti, copy, value);
+        ecs_vec_append_t(NULL, &sub->queue, flecs_script_event_value_t)[0] =
+            (flecs_script_event_value_t){ .ptr = copy, .pass = rt->event_pass };
+        rt->event_queued ++;
+    }
+}
+
+static void flecs_script_events_flush(
+    ecs_script_runtime_t *rt)
+{
+    ecs_script_task_t **tasks = ecs_vec_first(&rt->async_tasks);
+    int32_t t, task_count = ecs_vec_count(&rt->async_tasks);
+    for (t = 0; t < task_count; t ++) {
+        if (!tasks[t]) {
+            continue;
+        }
+
+        flecs_script_event_sub_t *subs = ecs_vec_first(&tasks[t]->event_subs);
+        int32_t s, sub_count = ecs_vec_count(&tasks[t]->event_subs);
+        for (s = 0; s < sub_count; s ++) {
+            flecs_script_event_sub_t *sub = &subs[s];
+            if (sub->future && ecs_vec_count(&sub->queue)) {
+                ecs_script_future_t *future = sub->future;
+                sub->future = NULL;
+                flecs_script_event_sub_resolve_next(rt, sub, future);
+            }
+        }
+    }
+}
+
 int32_t ecs_script_tasks_progress(
     ecs_world_t *world)
 {
@@ -1363,6 +1632,10 @@ int32_t ecs_script_tasks_progress(
     }
 
     rt->async_progressing = true;
+    rt->event_pass ++;
+    if (rt->event_queued) {
+        flecs_script_events_flush(rt);
+    }
 
     int32_t i, resumed = 0;
     for (i = 0; i < ecs_vec_count(&rt->async_tasks); i ++) {

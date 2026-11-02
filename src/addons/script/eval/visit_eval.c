@@ -2381,6 +2381,46 @@ static FLECS_SCRIPT_NOINLINE int flecs_script_eval_assign(
     return result;
 }
 
+static FLECS_SCRIPT_NOINLINE int flecs_script_eval_emit(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_emit_t *node)
+{
+#ifdef FLECS_SCRIPT_ASYNC
+    if (!node->has_payload) {
+        bool value = true;
+        flecs_script_event_emit(v->world, node->event, node->eval_type, &value);
+        return 0;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(v->world, node->eval_type);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_value_t value = { .type = node->eval_type };
+    value.ptr = flecs_stack_calloc(&v->r->stack, ti->size, ti->alignment);
+    flecs_type_info_ctor(value.ptr, 1, ti);
+
+    int result = 0;
+    if (flecs_script_eval_expr(v, &node->expr, &value)) {
+        flecs_script_eval_error(v, node,
+            "failed to evaluate value for event '%s'", node->name);
+        result = -1;
+    } else {
+        flecs_script_event_emit(
+            v->world, node->event, node->eval_type, value.ptr);
+    }
+
+    if (ti->hooks.dtor) {
+        flecs_type_info_dtor(value.ptr, 1, ti);
+    }
+
+    flecs_stack_free(value.ptr, ti->size);
+    return result;
+#else
+    flecs_script_eval_error(v, node, "emit requires FLECS_SCRIPT_ASYNC");
+    return -1;
+#endif
+}
+
 static FLECS_SCRIPT_NOINLINE int flecs_script_eval_call(
     ecs_script_eval_visitor_t *v,
     ecs_script_call_t *node)
@@ -2511,6 +2551,8 @@ int flecs_script_eval_node(
 #endif
     case EcsAstCall:
         return flecs_script_eval_call(v, (ecs_script_call_t*)node);
+    case EcsAstEmit:
+        return flecs_script_eval_emit(v, (ecs_script_emit_t*)node);
     case EcsAstAssign:
         return flecs_script_eval_assign(v, (ecs_script_assign_t*)node);
     default:

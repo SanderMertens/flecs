@@ -1088,6 +1088,13 @@ static int flecs_script_dep_node_impl(
             return -1;
         }
         break;
+    case EcsAstEmit:
+        if (flecs_script_dep_expr(ctx,
+            ((ecs_script_emit_t*)node)->expr, node))
+        {
+            return -1;
+        }
+        break;
     case EcsAstAssign: {
         ecs_script_assign_t *n = (ecs_script_assign_t*)node;
         ecs_script_assign_step_t *steps = ecs_vec_first(&n->steps);

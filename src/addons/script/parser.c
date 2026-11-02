@@ -422,6 +422,25 @@ static const char* flecs_script_for_in(
     ParserEnd;
 }
 
+/* 'await Event' is a shorthand for 'await Event()' */
+static ecs_expr_node_t* flecs_script_await_expr(
+    ecs_parser_t *parser,
+    ecs_expr_node_t *expr)
+{
+    if (expr->kind != EcsExprIdentifier) {
+        return expr;
+    }
+
+    ecs_expr_function_t *call = flecs_expr_function(parser);
+    ecs_expr_initializer_t *args = flecs_expr_initializer(parser);
+    args->node.kind = EcsExprEmptyInitializer;
+    call->left = expr;
+    call->args = args;
+    call->node.pos = expr->pos;
+    call->node.end = expr->end;
+    return (ecs_expr_node_t*)call;
+}
+
 static const char* flecs_script_parse_compound_assign(
     ecs_parser_t *parser,
     const char *pos,
@@ -530,7 +549,7 @@ static const char* flecs_script_parse_var(
                     Consume();
                     Expr(
                         var->is_await = true;
-                        var->expr = EXPR;
+                        var->expr = flecs_script_await_expr(parser, EXPR);
                         EndOfRule;
                     )
                 )
@@ -1159,7 +1178,7 @@ break_stmt: {
 await_stmt: {
     Expr({
         ecs_script_await_t *await = flecs_script_insert_await(parser);
-        await->expr = EXPR;
+        await->expr = flecs_script_await_expr(parser, EXPR);
         EndOfRule;
     })
 }
@@ -1208,6 +1227,27 @@ identifier_assign: {
         stmt->expr = EXPR;
         EndOfRule;
     })
+}
+
+// emit Event
+emit_stmt: {
+    ecs_script_emit_t *stmt = flecs_script_insert_emit(parser, Token(1));
+
+    // emit Event(
+    LookAhead_1('(',
+        Consume();
+
+        // emit Event(expr)
+        Initializer(')',
+            stmt->expr = INITIALIZER;
+            EndOfRule;
+        )
+    )
+
+    ecs_expr_initializer_t *empty = flecs_expr_initializer(parser);
+    empty->node.kind = EcsExprEmptyInitializer;
+    stmt->expr = (ecs_expr_node_t*)empty;
+    EndOfRule;
 }
 
 // value(
@@ -1519,6 +1559,10 @@ identifier_colon: {
 
 // Spaceship enterprise
 identifier_identifier: {
+    if (parser->async_scope && !ecs_os_strcmp(Token(0), "emit")) {
+        goto emit_stmt;
+    }
+
     ecs_script_entity_t *entity = flecs_script_insert_entity(
         parser, Token(1));
     if (!entity) {
@@ -1526,6 +1570,12 @@ identifier_identifier: {
     }
 
     entity->kind = Token(0);
+
+    // event Build(
+    if (!ecs_os_strcmp(entity->kind, "event")) {
+        entity->kind = "struct";
+        entity->is_event = true;
+    }
 
     // Spaceship enterprise :
     LookAhead_1(':', 
@@ -1545,7 +1595,7 @@ identifier_identifier_x:
     // Spaceship enterprise(
     LookAhead_1('(',
         Consume();
-        return flecs_script_paren_expr(parser, Token(0), entity, pos);
+        return flecs_script_paren_expr(parser, entity->kind, entity, pos);
     )
 
     // Spaceship enterprise {

@@ -33,6 +33,7 @@ typedef enum ecs_script_node_kind_t {
     EcsAstContinue,
     EcsAstBreak,
     EcsAstCall,
+    EcsAstEmit,
     EcsAstAsync,
     EcsAstWhile,
     EcsAstAssign
@@ -139,6 +140,7 @@ struct ecs_script_entity_t {
     int32_t kind_sp;
     int32_t symbol;
     bool is_type;
+    bool is_event;
 };
 
 typedef struct ecs_script_with_t {
@@ -223,6 +225,15 @@ typedef struct ecs_script_call_t {
     ecs_expr_node_t *expr;
 } ecs_script_call_t;
 
+typedef struct ecs_script_emit_t {
+    ecs_script_node_t node;
+    const char *name;
+    ecs_expr_node_t *expr;
+    ecs_entity_t event;
+    ecs_entity_t eval_type;
+    bool has_payload;
+} ecs_script_emit_t;
+
 typedef struct ecs_script_catch_t {
     const char *error; /* Error entity to catch. NULL for catch-all clause. */
     ecs_script_scope_t *scope;
@@ -240,6 +251,7 @@ typedef struct ecs_script_async_t {
     ecs_script_node_t node;
     ecs_script_scope_t *scope;
     uint64_t restart_input;
+    ecs_vec_t events; /* vec<ecs_entity_t>, events awaited by the block */
 } ecs_script_async_t;
 
 typedef struct ecs_script_while_t {
@@ -370,6 +382,10 @@ ecs_script_break_t* flecs_script_insert_break(
 
 ecs_script_call_t* flecs_script_insert_call(
     ecs_parser_t *parser);
+
+ecs_script_emit_t* flecs_script_insert_emit(
+    ecs_parser_t *parser,
+    const char *name);
 
 ecs_script_try_t* flecs_script_insert_try(
     ecs_parser_t *parser);
