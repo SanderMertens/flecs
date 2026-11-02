@@ -6293,3 +6293,105 @@ void AsyncBlock_error_assign_to_export_const(void) {
 
     ecs_fini(world);
 }
+
+void AsyncBlock_compound_assign_export_mut(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut a: i32 = 10"
+            LINE "export mut b: i32 = 10"
+            LINE "export mut c: i32 = 10"
+            LINE "export mut d: i32 = 10"
+            LINE "async {"
+            LINE "  a += 2 * 3"
+            LINE "  b -= 2 + 3"
+            LINE "  c *= 2 + 3"
+            LINE "  d /= 2"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    const char *names[] = {"a", "b", "c", "d"};
+    int32_t expect[] = {16, 5, 50, 5};
+    for (int32_t i = 0; i < 4; i ++) {
+        ecs_entity_t var = ecs_lookup(world, names[i]);
+        test_assert(var != 0);
+        test_int(*(int32_t*)ecs_mut_var_get(world, var).ptr, expect[i]);
+    }
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_compound_assign_template_mut_notifies(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "template T {"
+            LINE "  mut m: i32 = 1"
+            LINE "  Position: {m, 0}"
+            LINE "  async {"
+            LINE "    m += 4"
+            LINE "  }"
+            LINE "}"
+            LINE "T e",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ab_Position *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+
+    ecs_script_tasks_progress(world);
+    ecs_progress(world, 0);
+
+    p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_int(p->x, 5);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_error_compound_assign_outside_async(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "export mut a: i32 = 10"
+        LINE "a += 1", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_error_compound_assign_incompatible_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "export mut a: string = \"foo\""
+        LINE "async {"
+        LINE "  a += 1"
+        LINE "}", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
