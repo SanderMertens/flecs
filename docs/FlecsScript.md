@@ -479,6 +479,18 @@ const y = match x {
 }
 ```
 
+A case can list multiple patterns, separated by commas:
+
+```cpp
+const x = 2
+
+// y will be assigned with value 10
+const y = match x {
+  1, 2: 10
+  3, 4: 20
+}
+```
+
 The input to a match expression must be matched by one of its cases. If the input is not matched, script execution will fail. Match expressions can include an "any" case, which is selected when none of the other cases match:
 
 ```cpp

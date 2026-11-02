@@ -374,7 +374,11 @@ static int flecs_expr_match_visit_fold(
         }
 
         if (equal) {
-            selected = &elem->expr;
+            while (!elems[i].expr) {
+                i ++;
+            }
+
+            selected = &elems[i].expr;
             break;
         }
     }

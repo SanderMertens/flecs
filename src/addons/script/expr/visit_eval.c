@@ -849,6 +849,10 @@ static FLECS_SCRIPT_NOINLINE int flecs_expr_match_visit_eval(
         }
     }
 
+    while (i < count && !elems[i].expr) {
+        i ++;
+    }
+
     ecs_expr_node_t *branch = i < count ? elems[i].expr : node->any.expr;
     if (!branch) {
         char *str = ecs_ptr_to_str(
