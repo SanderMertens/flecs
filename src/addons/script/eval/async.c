@@ -1204,6 +1204,7 @@ int flecs_script_async_spawn(
             NULL, &root->async_blocks, ecs_script_async_block_t);
         block->entity = entity;
         block->scope = node->scope;
+        block->restart_input = node->restart_input;
         block->scope_slot = v->scope_slot;
         if (entity != owner_instance) {
             EcsScriptAsyncTasks *bound = ecs_ensure(
@@ -1263,6 +1264,39 @@ static void flecs_script_task_detach(
     }
 }
 
+static void flecs_script_async_block_stop(
+    EcsScriptTemplateRoot *root,
+    int32_t index)
+{
+    ecs_script_async_block_t block = ecs_vec_get_t(
+        &root->async_blocks, ecs_script_async_block_t, index)[0];
+    ecs_vec_remove_t(&root->async_blocks, ecs_script_async_block_t, index);
+    for (int32_t t = 0; t < ecs_vec_count(&root->tasks); t ++) {
+        ecs_script_task_t *task = ecs_vec_get_t(
+            &root->tasks, ecs_script_task_t*, t)[0];
+        if (task->entity == block.entity && task->scope == block.scope) {
+            flecs_script_task_detach(task);
+            ecs_script_task_free(task);
+            break;
+        }
+    }
+}
+
+void flecs_script_async_blocks_restart(
+    EcsScriptTemplateRoot *root,
+    uint64_t input)
+{
+    for (int32_t i = 0; i < ecs_vec_count(&root->async_blocks); ) {
+        ecs_script_async_block_t *block = ecs_vec_get_t(
+            &root->async_blocks, ecs_script_async_block_t, i);
+        if (block->restart_input & input) {
+            flecs_script_async_block_stop(root, i);
+        } else {
+            i ++;
+        }
+    }
+}
+
 void flecs_script_async_cleanup(
     ecs_script_eval_visitor_t *v)
 {
@@ -1279,16 +1313,7 @@ void flecs_script_async_cleanup(
             continue;
         }
 
-        ecs_vec_remove_t(&root->async_blocks, ecs_script_async_block_t, i);
-        for (int32_t t = 0; t < ecs_vec_count(&root->tasks); t ++) {
-            ecs_script_task_t *task = ecs_vec_get_t(
-                &root->tasks, ecs_script_task_t*, t)[0];
-            if (task->entity == block.entity && task->scope == block.scope) {
-                flecs_script_task_detach(task);
-                ecs_script_task_free(task);
-                break;
-            }
-        }
+        flecs_script_async_block_stop(root, i);
     }
 }
 

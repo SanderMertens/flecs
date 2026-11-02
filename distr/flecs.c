@@ -48950,6 +48950,7 @@ typedef struct ecs_script_try_t {
 typedef struct ecs_script_async_t {
     ecs_script_node_t node;
     ecs_script_scope_t *scope;
+    uint64_t restart_input;
 } ecs_script_async_t;
 
 typedef struct ecs_script_while_t {
@@ -50971,6 +50972,7 @@ struct ecs_script_template_t {
 typedef struct ecs_script_async_block_t {
     ecs_entity_t entity;
     ecs_script_scope_t *scope;
+    uint64_t restart_input;
     int32_t scope_slot;
 } ecs_script_async_block_t;
 
@@ -50983,6 +50985,14 @@ typedef struct EcsScriptTemplateRoot {
     int32_t generation;
     bool evaluating;
 } EcsScriptTemplateRoot;
+
+#ifdef FLECS_SCRIPT_ASYNC
+/* Stop async blocks that depend on the changed input. Their async statements
+ * are evaluated again as part of the template update, which restarts them. */
+void flecs_script_async_blocks_restart(
+    EcsScriptTemplateRoot *root,
+    uint64_t input);
+#endif
 
 const ecs_member_t* flecs_script_template_parent_member(
     ecs_world_t *world,
@@ -94563,6 +94573,7 @@ int flecs_script_async_spawn(
             NULL, &root->async_blocks, ecs_script_async_block_t);
         block->entity = entity;
         block->scope = node->scope;
+        block->restart_input = node->restart_input;
         block->scope_slot = v->scope_slot;
         if (entity != owner_instance) {
             EcsScriptAsyncTasks *bound = ecs_ensure(
@@ -94622,6 +94633,39 @@ static void flecs_script_task_detach(
     }
 }
 
+static void flecs_script_async_block_stop(
+    EcsScriptTemplateRoot *root,
+    int32_t index)
+{
+    ecs_script_async_block_t block = ecs_vec_get_t(
+        &root->async_blocks, ecs_script_async_block_t, index)[0];
+    ecs_vec_remove_t(&root->async_blocks, ecs_script_async_block_t, index);
+    for (int32_t t = 0; t < ecs_vec_count(&root->tasks); t ++) {
+        ecs_script_task_t *task = ecs_vec_get_t(
+            &root->tasks, ecs_script_task_t*, t)[0];
+        if (task->entity == block.entity && task->scope == block.scope) {
+            flecs_script_task_detach(task);
+            ecs_script_task_free(task);
+            break;
+        }
+    }
+}
+
+void flecs_script_async_blocks_restart(
+    EcsScriptTemplateRoot *root,
+    uint64_t input)
+{
+    for (int32_t i = 0; i < ecs_vec_count(&root->async_blocks); ) {
+        ecs_script_async_block_t *block = ecs_vec_get_t(
+            &root->async_blocks, ecs_script_async_block_t, i);
+        if (block->restart_input & input) {
+            flecs_script_async_block_stop(root, i);
+        } else {
+            i ++;
+        }
+    }
+}
+
 void flecs_script_async_cleanup(
     ecs_script_eval_visitor_t *v)
 {
@@ -94638,16 +94682,7 @@ void flecs_script_async_cleanup(
             continue;
         }
 
-        ecs_vec_remove_t(&root->async_blocks, ecs_script_async_block_t, i);
-        for (int32_t t = 0; t < ecs_vec_count(&root->tasks); t ++) {
-            ecs_script_task_t *task = ecs_vec_get_t(
-                &root->tasks, ecs_script_task_t*, t)[0];
-            if (task->entity == block.entity && task->scope == block.scope) {
-                flecs_script_task_detach(task);
-                ecs_script_task_free(task);
-                break;
-            }
-        }
+        flecs_script_async_block_stop(root, i);
     }
 }
 
@@ -121254,6 +121289,10 @@ typedef struct flecs_script_dep_ctx_t {
     int32_t conditional;
     uint64_t enclosing_input;
     uint64_t enclosing_internal;
+    uint64_t async_enclosing_input;
+    uint64_t async_enclosing_internal;
+    uint64_t computed_input[64];
+    int32_t async_depth;
     ecs_script_entity_t *entity;
     ecs_script_scope_t *scope;
 } flecs_script_dep_ctx_t;
@@ -121797,6 +121836,21 @@ typedef struct flecs_script_dep_expr_ctx_t {
     uint64_t *internal;
 } flecs_script_dep_expr_ctx_t;
 
+static uint64_t flecs_script_dep_computed_input(
+    const flecs_script_dep_ctx_t *ctx,
+    uint64_t internal)
+{
+    uint64_t result = 0;
+    int32_t i;
+    for (i = 0; i < ctx->computed_count; i ++) {
+        if (internal & ((uint64_t)1 << i)) {
+            result |= ctx->computed_input[i];
+        }
+    }
+
+    return result;
+}
+
 static int flecs_script_dep_expr_var(
     ecs_expr_node_t **node_ptr,
     void *ptr)
@@ -121831,6 +121885,10 @@ static int flecs_script_dep_expr_ref(
     flecs_script_dep_expr_ctx_t *expr = ptr;
     flecs_script_dep_ctx_t *ctx = expr->deps;
     if (value->entity) {
+        if (ctx->async_depth && value->component == ecs_id(EcsScriptMutVar)) {
+            return 0;
+        }
+
         ecs_script_ref_t *ref = flecs_script_ref_ensure(ctx->refs, value);
         if (!ref->input && flecs_script_dep_input_new(ctx, &ref->input)) {
             return -1;
@@ -121971,13 +122029,22 @@ static int flecs_script_dep_child(
 {
     uint64_t enclosing_input = ctx->enclosing_input;
     uint64_t enclosing_internal = ctx->enclosing_internal;
+    uint64_t async_enclosing_input = ctx->async_enclosing_input;
+    uint64_t async_enclosing_internal = ctx->async_enclosing_internal;
     ctx->enclosing_input |= node->direct_input;
     ctx->enclosing_internal |= node->direct_internal;
+    if (node->kind != EcsAstIf) {
+        ctx->async_enclosing_input |= node->direct_input;
+        ctx->async_enclosing_internal |= node->direct_internal;
+    }
+
     ctx->conditional += conditional;
     int result = flecs_script_dep_scope(ctx, scope);
     ctx->conditional -= conditional;
     ctx->enclosing_input = enclosing_input;
     ctx->enclosing_internal = enclosing_internal;
+    ctx->async_enclosing_input = async_enclosing_input;
+    ctx->async_enclosing_internal = async_enclosing_internal;
     node->input |= scope->node.input;
     node->internal |= scope->node.internal;
     return result;
@@ -122136,7 +122203,10 @@ static int flecs_script_dep_node_impl(
             bool computed = ctx->reactive && !ctx->conditional &&
                 !n->is_await && !n->is_local_mut && ctx->computed_count < 64;
             if (computed) {
-                int32_t slot = ctx->computed_count ++;
+                int32_t slot = ctx->computed_count;
+                ctx->computed_input[slot] = node->direct_input |
+                    flecs_script_dep_computed_input(ctx, node->direct_internal);
+                ctx->computed_count ++;
                 n->computed = slot + 1;
                 flecs_script_dep_var_set(ctx, n->sp, 0, (uint64_t)1 << slot);
             } else {
@@ -122223,16 +122293,33 @@ static int flecs_script_dep_node_impl(
             return -1;
         }
         break;
-    case EcsAstAsync:
-        if (flecs_script_dep_child(ctx, node,
-            ((ecs_script_async_t*)node)->scope, true))
-        {
+    case EcsAstAsync: {
+        ecs_script_async_t *n = (ecs_script_async_t*)node;
+        uint64_t enclosing_input = ctx->enclosing_input;
+        uint64_t enclosing_internal = ctx->enclosing_internal;
+        ctx->enclosing_input = 0;
+        ctx->enclosing_internal = 0;
+        ctx->async_depth ++;
+        int result = flecs_script_dep_child(ctx, node, n->scope, true);
+        ctx->async_depth --;
+        ctx->enclosing_input = enclosing_input;
+        ctx->enclosing_internal = enclosing_internal;
+        if (result) {
             return -1;
         }
 
-        node->input = ctx->template ? ctx->template->async_input : 0;
+        n->restart_input = 0;
+        if (ctx->template) {
+            n->restart_input = node->input | ctx->async_enclosing_input |
+                flecs_script_dep_computed_input(ctx,
+                    node->internal | ctx->async_enclosing_internal);
+        }
+
+        node->input = ctx->template
+            ? n->restart_input & ctx->template->async_input : 0;
         node->internal = 0;
         break;
+    }
     case EcsAstWhile: {
         ecs_script_while_t *n = (ecs_script_while_t*)node;
         if (flecs_script_dep_expr(ctx, n->expr, node) ||
@@ -124585,10 +124672,15 @@ static int flecs_script_template_instantiate_body(
         goto done;
     }
 
-    if ((run_input == UINT64_MAX || (run_input & template->async_input)) &&
-        ecs_vec_count(&root->async_blocks))
-    {
-        flecs_script_template_root_tasks_free(root);
+    if (ecs_vec_count(&root->async_blocks)) {
+        if (run_input == UINT64_MAX) {
+            flecs_script_template_root_tasks_free(root);
+        } else {
+#ifdef FLECS_SCRIPT_ASYNC
+            flecs_script_async_blocks_restart(
+                root, run_input & template->async_input);
+#endif
+        }
     }
 
     body_ran = true;

@@ -1020,7 +1020,7 @@ void AsyncBlock_setup(void);
 void AsyncBlock_template_outer_capture_restarts_block(void);
 void AsyncBlock_template_mut_string_external_update(void);
 void AsyncBlock_template_sixty_four_muts_manual_restart(void);
-void AsyncBlock_template_unrelated_prop_restarts_all_blocks(void);
+void AsyncBlock_template_unrelated_prop_keeps_blocks_running(void);
 void AsyncBlock_template_prop_change_before_progress(void);
 void AsyncBlock_template_static_ref_restarts_block(void);
 void AsyncBlock_template_dynamic_ref_restarts_block(void);
@@ -1125,6 +1125,14 @@ void AsyncBlock_local_mut_resets_in_loop(void);
 void AsyncBlock_local_mut_per_task(void);
 void AsyncBlock_local_mut_not_reactive(void);
 void AsyncBlock_error_local_mut_outside_block(void);
+void AsyncBlock_restart_only_block_reading_prop(void);
+void AsyncBlock_surviving_block_keeps_position(void);
+void AsyncBlock_restart_follows_const_chain(void);
+void AsyncBlock_block_in_removed_if_branch_stops(void);
+void AsyncBlock_block_on_deleted_entity_stops(void);
+void AsyncBlock_block_restarts_for_loop_var(void);
+void AsyncBlock_export_mut_read_does_not_restart(void);
+void AsyncBlock_export_mut_via_template_const_restarts(void);
 
 // Testsuite 'Input'
 void Input_setup(void);
@@ -1210,6 +1218,8 @@ void Input_get_mouse_state(void);
 void Input_listeners(void);
 void Input_emit_result(void);
 void Input_emit_result_stopped(void);
+void Input_click_not_lost_when_template_input_changes(void);
+void Input_click_not_lost_after_native_mut_var_modified(void);
 
 // Testsuite 'TryCatch'
 void TryCatch_setup(void);
@@ -8288,8 +8298,8 @@ bake_test_case AsyncBlock_testcases[] = {
         AsyncBlock_template_sixty_four_muts_manual_restart
     },
     {
-        "template_unrelated_prop_restarts_all_blocks",
-        AsyncBlock_template_unrelated_prop_restarts_all_blocks
+        "template_unrelated_prop_keeps_blocks_running",
+        AsyncBlock_template_unrelated_prop_keeps_blocks_running
     },
     {
         "template_prop_change_before_progress",
@@ -8706,6 +8716,38 @@ bake_test_case AsyncBlock_testcases[] = {
     {
         "error_local_mut_outside_block",
         AsyncBlock_error_local_mut_outside_block
+    },
+    {
+        "restart_only_block_reading_prop",
+        AsyncBlock_restart_only_block_reading_prop
+    },
+    {
+        "surviving_block_keeps_position",
+        AsyncBlock_surviving_block_keeps_position
+    },
+    {
+        "restart_follows_const_chain",
+        AsyncBlock_restart_follows_const_chain
+    },
+    {
+        "block_in_removed_if_branch_stops",
+        AsyncBlock_block_in_removed_if_branch_stops
+    },
+    {
+        "block_on_deleted_entity_stops",
+        AsyncBlock_block_on_deleted_entity_stops
+    },
+    {
+        "block_restarts_for_loop_var",
+        AsyncBlock_block_restarts_for_loop_var
+    },
+    {
+        "export_mut_read_does_not_restart",
+        AsyncBlock_export_mut_read_does_not_restart
+    },
+    {
+        "export_mut_via_template_const_restarts",
+        AsyncBlock_export_mut_via_template_const_restarts
     }
 };
 
@@ -9037,6 +9079,14 @@ bake_test_case Input_testcases[] = {
     {
         "emit_result_stopped",
         Input_emit_result_stopped
+    },
+    {
+        "click_not_lost_when_template_input_changes",
+        Input_click_not_lost_when_template_input_changes
+    },
+    {
+        "click_not_lost_after_native_mut_var_modified",
+        Input_click_not_lost_after_native_mut_var_modified
     }
 };
 
@@ -21213,7 +21263,7 @@ static bake_test_suite suites[] = {
         "AsyncBlock",
         AsyncBlock_setup,
         NULL,
-        108,
+        116,
         AsyncBlock_testcases,
         1,
         AsyncBlock_params
@@ -21222,7 +21272,7 @@ static bake_test_suite suites[] = {
         "Input",
         Input_setup,
         NULL,
-        82,
+        84,
         Input_testcases,
         1,
         Input_params

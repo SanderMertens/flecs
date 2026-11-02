@@ -1147,10 +1147,15 @@ static int flecs_script_template_instantiate_body(
         goto done;
     }
 
-    if ((run_input == UINT64_MAX || (run_input & template->async_input)) &&
-        ecs_vec_count(&root->async_blocks))
-    {
-        flecs_script_template_root_tasks_free(root);
+    if (ecs_vec_count(&root->async_blocks)) {
+        if (run_input == UINT64_MAX) {
+            flecs_script_template_root_tasks_free(root);
+        } else {
+#ifdef FLECS_SCRIPT_ASYNC
+            flecs_script_async_blocks_restart(
+                root, run_input & template->async_input);
+#endif
+        }
     }
 
     body_ran = true;

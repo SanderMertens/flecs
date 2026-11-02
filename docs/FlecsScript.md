@@ -2415,6 +2415,12 @@ RadioGroup() {
 
 Use `parent.active = label` if a local variable masks `active`. Changes to parent muts update reactive output without restarting the child's async blocks; subsequent reads in those blocks use the current parent state.
 
+An async block restarts only when a value that it depends on changes. A block depends on the props, captured variables and component values it reads, on constants derived from those values, and on the loop variables and entity names of the statements it is nested in. Blocks in the same template that don't depend on the changed value keep running and keep their place between awaits.
+
+Reading a `mut` variable of the template, a parent mut or an exported mut variable does not restart a block. The block sees the current value each time it reads the variable. A constant that is declared outside of the block and derived from such a variable is a captured value, so changes to the variable restart blocks that read the constant.
+
+Events are not queued: an event only reaches blocks that are waiting for it when it is emitted. A block that does depend on a changed value is restarted, and can miss an event that is emitted before the new block reaches its `await`. Move values that change frequently out of the block, for example into a child template, if the block must not miss events.
+
 #### Setting props from native code
 To update template props from native code, mirror the template type with a native type that has the same name, namespace and members. An example:
 
