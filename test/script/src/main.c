@@ -1109,6 +1109,10 @@ void AsyncBlock_assign_export_mut(void);
 void AsyncBlock_assign_export_mut_from_template(void);
 void AsyncBlock_assign_extern_mut_var(void);
 void AsyncBlock_error_assign_to_export_const(void);
+void AsyncBlock_compound_assign_export_mut(void);
+void AsyncBlock_compound_assign_template_mut_notifies(void);
+void AsyncBlock_error_compound_assign_outside_async(void);
+void AsyncBlock_error_compound_assign_incompatible_type(void);
 
 // Testsuite 'Input'
 void Input_setup(void);
@@ -8606,6 +8610,22 @@ bake_test_case AsyncBlock_testcases[] = {
     {
         "error_assign_to_export_const",
         AsyncBlock_error_assign_to_export_const
+    },
+    {
+        "compound_assign_export_mut",
+        AsyncBlock_compound_assign_export_mut
+    },
+    {
+        "compound_assign_template_mut_notifies",
+        AsyncBlock_compound_assign_template_mut_notifies
+    },
+    {
+        "error_compound_assign_outside_async",
+        AsyncBlock_error_compound_assign_outside_async
+    },
+    {
+        "error_compound_assign_incompatible_type",
+        AsyncBlock_error_compound_assign_incompatible_type
     }
 };
 
@@ -21033,7 +21053,7 @@ static bake_test_suite suites[] = {
         "AsyncBlock",
         AsyncBlock_setup,
         NULL,
-        92,
+        96,
         AsyncBlock_testcases,
         1,
         AsyncBlock_params

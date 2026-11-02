@@ -1130,7 +1130,11 @@
                 "assign_export_mut",
                 "assign_export_mut_from_template",
                 "assign_extern_mut_var",
-                "error_assign_to_export_const"
+                "error_assign_to_export_const",
+                "compound_assign_export_mut",
+                "compound_assign_template_mut_notifies",
+                "error_compound_assign_outside_async",
+                "error_compound_assign_incompatible_type"
             ]
         }, {
             "id": "Input",
