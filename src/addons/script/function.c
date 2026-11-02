@@ -512,6 +512,7 @@ static ecs_entity_t flecs_script_function_init(
     ecs_os_memcpy_n(f->vector_callbacks, desc->vector_callbacks, 
         ecs_vector_function_callback_t, FLECS_SCRIPT_VECTOR_FUNCTION_COUNT);
     f->ctx = desc->ctx;
+    f->is_proc = false;
 
     flecs_script_function_parse_args(desc, &f->params);
 

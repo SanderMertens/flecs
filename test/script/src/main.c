@@ -1159,6 +1159,15 @@ void AsyncBlock_delay_cancel_on_restart(void);
 void AsyncBlock_delay_cancel_on_delete(void);
 void AsyncBlock_delay_pending_at_fini(void);
 void AsyncBlock_delay_cancel_on_script_delete(void);
+void AsyncBlock_proc_call(void);
+void AsyncBlock_proc_no_args(void);
+void AsyncBlock_proc_control_flow(void);
+void AsyncBlock_proc_call_proc(void);
+void AsyncBlock_proc_recursion(void);
+void AsyncBlock_proc_infinite_recursion(void);
+void AsyncBlock_proc_error_stops_caller(void);
+void AsyncBlock_proc_from_template_block(void);
+void AsyncBlock_error_proc(void);
 
 // Testsuite 'Input'
 void Input_setup(void);
@@ -8886,6 +8895,42 @@ bake_test_case AsyncBlock_testcases[] = {
     {
         "delay_cancel_on_script_delete",
         AsyncBlock_delay_cancel_on_script_delete
+    },
+    {
+        "proc_call",
+        AsyncBlock_proc_call
+    },
+    {
+        "proc_no_args",
+        AsyncBlock_proc_no_args
+    },
+    {
+        "proc_control_flow",
+        AsyncBlock_proc_control_flow
+    },
+    {
+        "proc_call_proc",
+        AsyncBlock_proc_call_proc
+    },
+    {
+        "proc_recursion",
+        AsyncBlock_proc_recursion
+    },
+    {
+        "proc_infinite_recursion",
+        AsyncBlock_proc_infinite_recursion
+    },
+    {
+        "proc_error_stops_caller",
+        AsyncBlock_proc_error_stops_caller
+    },
+    {
+        "proc_from_template_block",
+        AsyncBlock_proc_from_template_block
+    },
+    {
+        "error_proc",
+        AsyncBlock_error_proc
     }
 };
 
@@ -21433,7 +21478,7 @@ static bake_test_suite suites[] = {
         "AsyncBlock",
         AsyncBlock_setup,
         NULL,
-        142,
+        151,
         AsyncBlock_testcases,
         1,
         AsyncBlock_params

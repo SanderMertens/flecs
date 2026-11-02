@@ -819,6 +819,7 @@ static const char* flecs_script_stmt_parse(
         case EcsTokKeywordTry:        goto try_stmt;
         case EcsTokKeywordContinue:   goto continue_stmt;
         case EcsTokKeywordBreak:      goto break_stmt;
+        case EcsTokKeywordProc:       goto proc_stmt;
         case EcsTokKeywordAsync:      goto async_stmt;
         case EcsTokKeywordWhile:      goto while_stmt;
     );
@@ -1117,6 +1118,34 @@ fn_stmt: {
     })
 }
 
+proc_stmt: {
+    Parse_2(EcsTokIdentifier, '(', {
+        ecs_script_function_node_t *fn = flecs_script_insert_function(
+            parser, Token(1));
+        fn->is_proc = true;
+        fn->return_type = "flecs.meta.bool";
+        fn->return_type_node.pos = parser->pos;
+
+        bool significant_newline = parser->significant_newline;
+        parser->significant_newline = false;
+        pos = flecs_script_fn_params(parser, fn, pos);
+        parser->significant_newline = significant_newline;
+        if (!pos) {
+            goto error;
+        }
+
+        pos = flecs_parser_skip_newlines(parser, pos);
+
+        Parse_1('{', {
+            bool async_scope = parser->async_scope;
+            parser->async_scope = true;
+            pos = flecs_script_scope(parser, fn->body, pos);
+            parser->async_scope = async_scope;
+            return pos;
+        })
+    })
+}
+
 continue_stmt: {
     flecs_script_insert_continue(parser);
     EndOfRule;
@@ -1177,6 +1206,20 @@ identifier_assign: {
     // value = expr\n
     Expr({
         stmt->expr = EXPR;
+        EndOfRule;
+    })
+}
+
+// value(
+identifier_call: {
+    pos = stmt_start;
+    Expr({
+        ecs_script_call_t *stmt = flecs_script_insert_call(parser);
+        stmt->expr = EXPR;
+        if (EXPR->kind == EcsExprFunction) {
+            ((ecs_expr_function_t*)EXPR)->is_proc_call = true;
+        }
+
         EndOfRule;
     })
 }
@@ -1517,6 +1560,10 @@ identifier_identifier_x:
 
 // SpaceShip(
 identifier_paren: {
+    if (parser->async_scope) {
+        goto identifier_call;
+    }
+
     return flecs_script_paren_expr(parser, Token(0),
         flecs_script_insert_entity(parser, NULL), pos);
 }

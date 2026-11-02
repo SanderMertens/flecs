@@ -1231,6 +1231,12 @@ static void flecs_irc_compile_stmt(
     case EcsAstBreak:
         flecs_irc_emit(c, EcsIrBreak, -1, 0, 0, node);
         break;
+    case EcsAstCall: {
+        int32_t begin = flecs_irc_expr_begin(c, node);
+        flecs_irc_compile_tmp(c, ((ecs_script_call_t*)node)->expr);
+        flecs_irc_expr_end(c, begin, true);
+        break;
+    }
     case EcsAstAsync:
         flecs_irc_entry_add(c, node, EcsIrEntryAsync);
         flecs_irc_emit(c, EcsIrAsync, 0, 0, 0, node);
@@ -1325,6 +1331,13 @@ static void flecs_irc_compile_function(
 {
     ecs_script_scope_t *body = node->body;
     body->parent = NULL;
+    if (node->is_proc) {
+        c->force_depth ++;
+        flecs_irc_compile_scope(c, body, 0);
+        c->force_depth --;
+        return;
+    }
+
     c->scope = body;
 
     int32_t i, count = ecs_vec_count(&body->stmts);
