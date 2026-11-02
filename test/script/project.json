@@ -1134,7 +1134,12 @@
                 "compound_assign_export_mut",
                 "compound_assign_template_mut_notifies",
                 "error_compound_assign_outside_async",
-                "error_compound_assign_incompatible_type"
+                "error_compound_assign_incompatible_type",
+                "break_for",
+                "break_while_in_async",
+                "break_innermost_loop",
+                "error_break_outside_loop",
+                "error_break_async_in_loop"
             ]
         }, {
             "id": "Input",

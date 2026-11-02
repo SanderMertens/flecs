@@ -134,6 +134,7 @@ const char* flecs_script_node_kind_str(
     case EcsAstAwait:              return "await";
     case EcsAstTry:                return "try";
     case EcsAstContinue:           return "continue";
+    case EcsAstBreak:              return "break";
     case EcsAstAsync:              return "async";
     case EcsAstWhile:              return "while";
     case EcsAstAssign:             return "assign";
@@ -364,6 +365,7 @@ static void flecs_script_stmt_to_str(
         break;
     }
     case EcsAstContinue:
+    case EcsAstBreak:
         break;
     case EcsAstAsync: {
         ecs_script_async_t *stmt = (ecs_script_async_t*)node;
