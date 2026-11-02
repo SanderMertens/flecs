@@ -2936,6 +2936,9 @@ static int flecs_expr_match_visit_type(
 
     for (i = 0; i < count; i ++) {
         ecs_expr_match_element_t *elem = &elems[i];
+        if (!elem->expr) {
+            continue;
+        }
 
         if (node->node.type) {
             expr_cur = ecs_meta_cursor(script->world, node->node.type, NULL);
@@ -2956,7 +2959,9 @@ static int flecs_expr_match_visit_type(
 
     /* Loop over elements again, cast values to result type */
     for (i = 0; i < count; i ++) {
-        if (flecs_expr_cast_to(script, &elems[i].expr, node->node.type)) {
+        if (elems[i].expr &&
+            flecs_expr_cast_to(script, &elems[i].expr, node->node.type))
+        {
             goto error;
         }
     }
@@ -2985,6 +2990,12 @@ static int flecs_expr_match_visit_type(
             if (i != count - 1) {
                 flecs_expr_visit_error(script, node, 
                     "any (_) must be the last case in match");
+                goto error;
+            }
+
+            if (i && !elems[i - 1].expr) {
+                flecs_expr_visit_error(script, node,
+                    "any (_) cannot be combined with other patterns");
                 goto error;
             }
 

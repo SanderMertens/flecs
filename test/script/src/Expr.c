@@ -14234,3 +14234,116 @@ void Expr_error_bitwise_invalid_type(void) {
 
     ecs_fini(world);
 }
+
+void Expr_match_multiple_patterns(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export mut in_1: i32 = 1"
+    LINE "export mut in_2: i32 = 2"
+    LINE "export mut in_3: i32 = 3"
+    LINE "export mut in_4: i32 = 4"
+    LINE "export mut in_5: i32 = 5"
+    LINE "export mut r_1: i32 = 0"
+    LINE "export mut r_2: i32 = 0"
+    LINE "export mut r_3: i32 = 0"
+    LINE "export mut r_4: i32 = 0"
+    LINE "export mut r_5: i32 = 0"
+    LINE "async {"
+    LINE "  r_1 = match in_1 { 1, 2: 10; 3, 4: 20; _: 30 }"
+    LINE "  r_2 = match in_2 { 1, 2: 10; 3, 4: 20; _: 30 }"
+    LINE "  r_3 = match in_3 { 1, 2: 10; 3, 4: 20; _: 30 }"
+    LINE "  r_4 = match in_4 { 1, 2: 10; 3, 4: 20; _: 30 }"
+    LINE "  r_5 = match in_5 { 1, 2: 10; 3, 4: 20; _: 30 }"
+    LINE "}";
+    ecs_entity_t s = ecs_script(world, { .code = expr, .ir = ir_enabled });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "r_1")).ptr, 10);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "r_2")).ptr, 10);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "r_3")).ptr, 20);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "r_4")).ptr, 20);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "r_5")).ptr, 30);
+
+    ecs_fini(world);
+}
+
+void Expr_match_multiple_patterns_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const a: i32 = match 2 {"
+    LINE "  1, 2, 3: 10"
+    LINE "  4: 20"
+    LINE "}"
+    LINE "export const b: i32 = match 3 {"
+    LINE "  1,"
+    LINE "  2: 10"
+    LINE "  3,"
+    LINE "  4: 20"
+    LINE "}";
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_int(*(int32_t*)ecs_const_var_get(world, ecs_lookup(world, "a")).ptr, 10);
+    test_int(*(int32_t*)ecs_const_var_get(world, ecs_lookup(world, "b")).ptr, 20);
+
+    ecs_fini(world);
+}
+
+void Expr_match_multiple_patterns_enum(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "enum Color(Red, Green, Blue)"
+    LINE "export mut color: Color = Green"
+    LINE "export mut r: i32 = 0"
+    LINE "async {"
+    LINE "  r = match color { Red, Green: 1; Blue: 2 }"
+    LINE "}";
+    ecs_entity_t s = ecs_script(world, { .code = expr, .ir = ir_enabled });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "r")).ptr, 1);
+
+    ecs_fini(world);
+}
+
+void Expr_match_multiple_patterns_no_match(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    const char *expr =
+    HEAD "export mut x: i32 = 5"
+    LINE "export mut r: i32 = 0"
+    LINE "async {"
+    LINE "  r = match x { 1, 2: 10 }"
+    LINE "}";
+    ecs_entity_t s = ecs_script(world, { .code = expr, .ir = ir_enabled });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "r")).ptr, 0);
+
+    ecs_fini(world);
+}
+
+void Expr_error_match_multiple_patterns(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "match 1 { 1, }", &v, &desc) == NULL);
+    test_assert(ecs_expr_run(world, "match 1 { 1, : 2 }", &v, &desc) == NULL);
+    test_assert(ecs_expr_run(world, "match 1 { 1, _: 2 }", &v, &desc) == NULL);
+    test_assert(ecs_expr_run(world, "match 1 { _, 1: 2 }", &v, &desc) == NULL);
+
+    ecs_fini(world);
+}

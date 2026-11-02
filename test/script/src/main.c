@@ -2543,6 +2543,11 @@ void Expr_bitwise_not_precedence(void);
 void Expr_bitwise_not_var(void);
 void Expr_bitwise_not_literal(void);
 void Expr_error_bitwise_invalid_type(void);
+void Expr_match_multiple_patterns(void);
+void Expr_match_multiple_patterns_const(void);
+void Expr_match_multiple_patterns_enum(void);
+void Expr_match_multiple_patterns_no_match(void);
+void Expr_error_match_multiple_patterns(void);
 
 // Testsuite 'ExprAst'
 void ExprAst_setup(void);
@@ -14309,6 +14314,26 @@ bake_test_case Expr_testcases[] = {
     {
         "error_bitwise_invalid_type",
         Expr_error_bitwise_invalid_type
+    },
+    {
+        "match_multiple_patterns",
+        Expr_match_multiple_patterns
+    },
+    {
+        "match_multiple_patterns_const",
+        Expr_match_multiple_patterns_const
+    },
+    {
+        "match_multiple_patterns_enum",
+        Expr_match_multiple_patterns_enum
+    },
+    {
+        "match_multiple_patterns_no_match",
+        Expr_match_multiple_patterns_no_match
+    },
+    {
+        "error_match_multiple_patterns",
+        Expr_error_match_multiple_patterns
     }
 };
 
@@ -21300,7 +21325,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        466,
+        471,
         Expr_testcases,
         2,
         Expr_params

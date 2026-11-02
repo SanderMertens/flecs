@@ -91,6 +91,12 @@ static const char* flecs_script_parse_match_elems(
 
         LookAhead(
             case '}': {
+                if (ecs_vec_count(&node->elements) && !ecs_vec_last_t(
+                    &node->elements, ecs_expr_match_element_t)->expr)
+                {
+                    Error("expected case pattern after ','");
+                }
+
                 Consume();
                 parser->significant_newline = old_significant_newline;
                 EndOfRule;
@@ -104,6 +110,16 @@ static const char* flecs_script_parse_match_elems(
         pos = flecs_script_parse_expr(parser, pos, 0, &elem->compare);
         if (!pos) {
             goto error;
+        }
+
+        bool next_pattern = false;
+        LookAhead_1(',', {
+            Consume();
+            next_pattern = true;
+        })
+
+        if (next_pattern) {
+            continue;
         }
 
         Parse_1(':', {
