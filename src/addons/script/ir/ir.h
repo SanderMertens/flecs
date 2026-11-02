@@ -26,6 +26,7 @@ typedef enum ecs_script_ir_op_kind_t {
     EcsIrForEnter,
     EcsIrForNext,
     EcsIrContinue,
+    EcsIrBreak,
     EcsIrWhileEnter,
     EcsIrWhileNext,
     EcsIrTryEnter,
