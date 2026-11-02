@@ -297,6 +297,7 @@ static bool flecs_expr_oper_is_arithmetic(
     case EcsTokShiftRight:
     case EcsTokBitwiseAnd:
     case EcsTokBitwiseOr:
+    case EcsTokBitwiseXor:
         return true;
     default:
         return false;
@@ -317,6 +318,7 @@ static bool flecs_expr_oper_valid_for_type(
         return flecs_expr_is_type_number(type);
     case EcsTokBitwiseAnd:
     case EcsTokBitwiseOr:
+    case EcsTokBitwiseXor:
         if (ecs_get(world, type, EcsBitmask) != NULL) {
             return true;
         }
@@ -442,6 +444,7 @@ static int flecs_expr_type_for_operator(
     case EcsTokShiftRight:
     case EcsTokBitwiseAnd:
     case EcsTokBitwiseOr:
+    case EcsTokBitwiseXor:
     case EcsTokAdd:
     case EcsTokSub:
     case EcsTokMul:
@@ -1421,7 +1424,16 @@ static int flecs_expr_unary_visit_type(
     }
 
     ecs_entity_t type = ecs_id(ecs_bool_t);
-    if (node->operator == EcsTokSub) {
+    if (node->operator == EcsTokBitwiseNot) {
+        type = node->expr->type;
+        if (!flecs_expr_is_type_integer(type) &&
+            !ecs_has(script->world, type, EcsBitmask))
+        {
+            flecs_expr_visit_error(script, node, "invalid operator ~ for type '%s'",
+                flecs_errstr(ecs_get_path(script->world, type)));
+            goto error;
+        }
+    } else if (node->operator == EcsTokSub) {
         type = node->expr->type;
         if (!flecs_expr_is_type_number(type) && type != ecs_id(ecs_bool_t)) {
             flecs_expr_visit_error(script, node, "invalid operator - for type '%s'",

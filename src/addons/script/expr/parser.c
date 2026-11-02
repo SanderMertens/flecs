@@ -32,6 +32,7 @@ static int flecs_expr_precedence[EcsTokLast] = {
     [EcsTokEq] = 7,
     [EcsTokNeq] = 7,
     [EcsTokBitwiseAnd] = 8,
+    [EcsTokBitwiseXor] = 9,
     [EcsTokBitwiseOr] = 10,
     [EcsTokAnd] = 11,
     [EcsTokOr] = 12,
@@ -656,6 +657,7 @@ static const char* flecs_script_parse_lhs(
         }
 
         case EcsTokNot:
+        case EcsTokBitwiseNot:
         case EcsTokSub: {
             ecs_token_kind_t oper = t->kind;
             if (oper == EcsTokSub && isdigit((unsigned char)pos[0])) {

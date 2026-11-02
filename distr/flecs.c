@@ -48300,6 +48300,8 @@ typedef enum ecs_token_kind_t {
     EcsTokMod = '%',
     EcsTokBitwiseOr = '|',
     EcsTokBitwiseAnd = '&',
+    EcsTokBitwiseXor = '^',
+    EcsTokBitwiseNot = '~',
     EcsTokNot = '!',
     EcsTokOptional = '?',
     EcsTokAnnotation = '@',
@@ -62678,6 +62680,8 @@ static const struct {
     [EcsTokMod] = {"%", ""},
     [EcsTokBitwiseOr] = {"|", ""},
     [EcsTokBitwiseAnd] = {"&", ""},
+    [EcsTokBitwiseXor] = {"^", ""},
+    [EcsTokBitwiseNot] = {"~", ""},
     [EcsTokNot] = {"!", ""},
     [EcsTokOptional] = {"?", ""},
     [EcsTokEq] = {"==", ""},
@@ -103186,6 +103190,7 @@ static int flecs_expr_precedence[EcsTokLast] = {
     [EcsTokEq] = 7,
     [EcsTokNeq] = 7,
     [EcsTokBitwiseAnd] = 8,
+    [EcsTokBitwiseXor] = 9,
     [EcsTokBitwiseOr] = 10,
     [EcsTokAnd] = 11,
     [EcsTokOr] = 12,
@@ -103810,6 +103815,7 @@ static const char* flecs_script_parse_lhs(
         }
 
         case EcsTokNot:
+        case EcsTokBitwiseNot:
         case EcsTokSub: {
             ecs_token_kind_t oper = t->kind;
             if (oper == EcsTokSub && isdigit((unsigned char)pos[0])) {
@@ -104443,6 +104449,24 @@ int flecs_value_unary(
         int64_t zero = 0;
         ecs_value_t left = { .type = expr->type, .ptr = &zero };
         return flecs_value_binary(script, NULL, &left, expr, out, EcsTokSub);
+    } else if (operator == EcsTokBitwiseNot) {
+#define FLECS_VALUE_BITWISE_NOT(T)\
+        if (expr->type == ecs_id(T)) {\
+            *(T*)out->ptr = (T)~*(const T*)expr->ptr;\
+            return 0;\
+        }
+        FLECS_VALUE_BITWISE_NOT(ecs_i8_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_i16_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_i32_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_i64_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_iptr_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_u8_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_u16_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_u32_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_u64_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_uptr_t)
+#undef FLECS_VALUE_BITWISE_NOT
+        *(ecs_u32_t*)out->ptr = ~*(const ecs_u32_t*)expr->ptr;
     } else {
         ecs_abort(ECS_INTERNAL_ERROR, "invalid operator for unary expression");
     }
@@ -104462,6 +104486,7 @@ int flecs_value_unary(
     case EcsTokMod: *(T*)out = (T)(l % r); return 0;\
     case EcsTokBitwiseAnd: *(T*)out = (T)(l & r); return 0;\
     case EcsTokBitwiseOr: *(T*)out = (T)(l | r); return 0;\
+    case EcsTokBitwiseXor: *(T*)out = (T)(l ^ r); return 0;\
     case EcsTokShiftLeft: *(T*)out = (T)(l << r); return 0;\
     case EcsTokShiftRight: *(T*)out = (T)(l >> r); return 0;
 
@@ -104548,7 +104573,7 @@ int flecs_value_binary(
 
     if (operator == EcsTokAdd || operator == EcsTokSub || operator == EcsTokMul ||
         operator == EcsTokDiv || operator == EcsTokMod || operator == EcsTokBitwiseAnd ||
-        operator == EcsTokBitwiseOr || operator == EcsTokShiftLeft || operator == EcsTokShiftRight)
+        operator == EcsTokBitwiseOr || operator == EcsTokBitwiseXor || operator == EcsTokShiftLeft || operator == EcsTokShiftRight)
     {
         ecs_assert(out->type == right->type, ECS_INTERNAL_ERROR, NULL);
     }
@@ -107504,6 +107529,7 @@ static bool flecs_expr_oper_is_arithmetic(
     case EcsTokShiftRight:
     case EcsTokBitwiseAnd:
     case EcsTokBitwiseOr:
+    case EcsTokBitwiseXor:
         return true;
     default:
         return false;
@@ -107524,6 +107550,7 @@ static bool flecs_expr_oper_valid_for_type(
         return flecs_expr_is_type_number(type);
     case EcsTokBitwiseAnd:
     case EcsTokBitwiseOr:
+    case EcsTokBitwiseXor:
         if (ecs_get(world, type, EcsBitmask) != NULL) {
             return true;
         }
@@ -107649,6 +107676,7 @@ static int flecs_expr_type_for_operator(
     case EcsTokShiftRight:
     case EcsTokBitwiseAnd:
     case EcsTokBitwiseOr:
+    case EcsTokBitwiseXor:
     case EcsTokAdd:
     case EcsTokSub:
     case EcsTokMul:
@@ -108628,7 +108656,16 @@ static int flecs_expr_unary_visit_type(
     }
 
     ecs_entity_t type = ecs_id(ecs_bool_t);
-    if (node->operator == EcsTokSub) {
+    if (node->operator == EcsTokBitwiseNot) {
+        type = node->expr->type;
+        if (!flecs_expr_is_type_integer(type) &&
+            !ecs_has(script->world, type, EcsBitmask))
+        {
+            flecs_expr_visit_error(script, node, "invalid operator ~ for type '%s'",
+                flecs_errstr(ecs_get_path(script->world, type)));
+            goto error;
+        }
+    } else if (node->operator == EcsTokSub) {
         type = node->expr->type;
         if (!flecs_expr_is_type_number(type) && type != ecs_id(ecs_bool_t)) {
             flecs_expr_visit_error(script, node, "invalid operator - for type '%s'",
@@ -113415,6 +113452,7 @@ static int flecs_ir_binary(
         *(T*)out = (T)(l % r); return 0;\
     case EcsTokBitwiseAnd: *(T*)out = (T)(l & r); return 0;\
     case EcsTokBitwiseOr: *(T*)out = (T)(l | r); return 0;\
+    case EcsTokBitwiseXor: *(T*)out = (T)(l ^ r); return 0;\
     case EcsTokShiftLeft: *(T*)out = (T)(l << r); return 0;\
     case EcsTokShiftRight: *(T*)out = (T)(l >> r); return 0;
 
