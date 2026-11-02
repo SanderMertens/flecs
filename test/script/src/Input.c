@@ -5123,3 +5123,113 @@ void Input_emit_result_stopped(void) {
 
     ecs_fini(world);
 }
+
+void Input_click_not_lost_when_template_input_changes(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptInput);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "using flecs.script"
+            LINE "struct Label(value: i32)"
+            LINE "export mut score: i32 = 0"
+            LINE "export mut button_clicks: i32 = 0"
+            LINE "button {}"
+            LINE "async {"
+            LINE "  while true {"
+            LINE "    await on.click(button)"
+            LINE "    score = score + 1"
+            LINE "  }"
+            LINE "}"
+            LINE "template Button {"
+            LINE "  Label: {score}"
+            LINE "  async {"
+            LINE "    while true {"
+            LINE "      await on.click(this)"
+            LINE "      button_clicks = button_clicks + 1"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "Button button()",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t button = ecs_lookup(world, "button");
+    test_assert(button != 0);
+
+    for (int32_t i = 0; i < 4; i ++) {
+        ecs_script_tasks_progress(world);
+    }
+
+    for (int32_t i = 1; i <= 3; i ++) {
+        EcsScriptMouseEvent down = { .target = button, .button = 0, .buttons = 1 };
+        EcsScriptMouseEvent up = { .target = button, .button = 0, .buttons = 0 };
+        ecs_script_mouse_event(world, &down);
+        ecs_script_event_result_t r = ecs_script_mouse_event(world, &up);
+        test_int(r.resolved, 2);
+
+        for (int32_t j = 0; j < 4; j ++) {
+            ecs_script_tasks_progress(world);
+        }
+
+        test_int(*(int32_t*)ecs_mut_var_get(
+            world, ecs_lookup(world, "score")).ptr, i);
+        test_int(*(int32_t*)ecs_mut_var_get(
+            world, ecs_lookup(world, "button_clicks")).ptr, i);
+    }
+
+    ecs_fini(world);
+}
+
+void Input_click_not_lost_after_native_mut_var_modified(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptInput);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "using flecs.script"
+            LINE "struct Label(value: i32)"
+            LINE "export mut score: i32 = 0"
+            LINE "export mut button_clicks: i32 = 0"
+            LINE "button {}"
+            LINE "template Button {"
+            LINE "  Label: {score}"
+            LINE "  async {"
+            LINE "    while true {"
+            LINE "      await on.click(this)"
+            LINE "      button_clicks = button_clicks + 1"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "Button button()",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_entity_t button = ecs_lookup(world, "button");
+    ecs_entity_t score = ecs_lookup(world, "score");
+    ecs_script_tasks_progress(world);
+
+    *(int32_t*)ecs_mut_var_get(world, score).ptr = 10;
+    ecs_mut_var_modified(world, score);
+
+    EcsScriptMouseEvent down = { .target = button, .button = 0, .buttons = 1 };
+    EcsScriptMouseEvent up = { .target = button, .button = 0, .buttons = 0 };
+    ecs_script_mouse_event(world, &down);
+    ecs_script_event_result_t r = ecs_script_mouse_event(world, &up);
+    test_int(r.resolved, 1);
+
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(
+        world, ecs_lookup(world, "button_clicks")).ptr, 1);
+
+    const int32_t *label = ecs_get_id(
+        world, button, ecs_lookup(world, "Label"));
+    test_assert(label != NULL);
+    test_int(*label, 10);
+
+    ecs_fini(world);
+}

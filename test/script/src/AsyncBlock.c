@@ -3932,13 +3932,13 @@ ecs_entity_t e = ecs_lookup(world, "e");
     const ab_Position *p = ecs_get_id(world, child, pos);
     test_int(p->x, 9);
 
-    test_int(ab_cancel_count, 2);
-    test_int(ecs_script_tasks_progress(world), 2);
-    test_int(ab_future_count, 4);
-    test_uint(ab_entity_args[2], child);
-    test_int(ab_args[3], 9);
+    test_int(ab_cancel_count, 1);
+    test_int(ecs_script_future_status(ab_futures[0]), EcsScriptFuturePending);
+    test_int(ecs_script_future_status(ab_futures[1]), EcsScriptFutureCancelled);
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 3);
+    test_int(ab_args[2], 9);
     ecs_script_future_release(ab_futures[2]);
-    ecs_script_future_release(ab_futures[3]);
     ecs_script_future_release(ab_futures[0]);
     ecs_script_future_release(ab_futures[1]);
 
@@ -4800,7 +4800,7 @@ void AsyncBlock_template_child_assign_removes_self(void) {
     ecs_fini(world);
 }
 
-void AsyncBlock_template_unrelated_prop_restarts_all_blocks(void) {
+void AsyncBlock_template_unrelated_prop_keeps_blocks_running(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_os_zeromem(ab_futures);
@@ -4856,18 +4856,19 @@ void AsyncBlock_template_unrelated_prop_restarts_all_blocks(void) {
     test_int(ecs_script_tasks_progress(world), 2);
     int32_t props[] = {1, 10};
     ecs_set_id(world, e, t, sizeof(props), props);
-    test_int(ab_cancel_count, 2);
-    test_int(ecs_script_future_status(ab_futures[0]), EcsScriptFutureCancelled);
-    test_int(ecs_script_future_status(ab_futures[1]), EcsScriptFutureCancelled);
-    test_int(ecs_script_tasks_progress(world), 2);
-    test_int(ab_args[2], 2);
-    test_int(ab_args[3], 42);
+    test_int(ab_cancel_count, 0);
+    test_int(ecs_script_future_status(ab_futures[0]), EcsScriptFuturePending);
+    test_int(ecs_script_future_status(ab_futures[1]), EcsScriptFuturePending);
+    test_int(ab_future_count, 2);
     test_uint(ecs_lookup(world, "e.child"), child);
     props[0] = 7;
     ecs_set_id(world, e, t, sizeof(props), props);
-    test_int(ab_cancel_count, 4);
-    test_int(ecs_script_tasks_progress(world), 2);
-    test_int(ab_args[4], 14);
+    test_int(ab_cancel_count, 1);
+    test_int(ecs_script_future_status(ab_futures[0]), EcsScriptFutureCancelled);
+    test_int(ecs_script_future_status(ab_futures[1]), EcsScriptFuturePending);
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 3);
+    test_int(ab_args[2], 14);
     for (int32_t i = 0; i < ab_future_count; i ++) {
         ecs_script_future_release(ab_futures[i]);
     }
@@ -6808,6 +6809,452 @@ void AsyncBlock_error_local_mut_outside_block(void) {
         LINE "  mut x: i32 = 0"
         LINE "  x = \"foo\""
         LINE "}", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_restart_only_block_reading_prop(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ecs_os_zeromem(ab_args);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "template T {"
+            LINE "  prop a: i32 = 1"
+            LINE "  prop b: i32 = 2"
+            LINE "  async { await fetch(a) }"
+            LINE "  async { await fetch(b) }"
+            LINE "}"
+            LINE "T e",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_int(ecs_script_tasks_progress(world), 2);
+    test_int(ab_future_count, 2);
+
+    int32_t props[] = {1, 20};
+    ecs_set_id(world, e, t, sizeof(props), props);
+    test_int(ab_cancel_count, 1);
+    test_int(ecs_script_future_status(ab_futures[0]), EcsScriptFuturePending);
+    test_int(ecs_script_future_status(ab_futures[1]), EcsScriptFutureCancelled);
+
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 3);
+    test_int(ab_args[2], 20);
+
+    for (int32_t i = 0; i < ab_future_count; i ++) {
+        ecs_script_future_release(ab_futures[i]);
+    }
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_surviving_block_keeps_position(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ecs_os_zeromem(ab_args);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "template T {"
+            LINE "  prop a: i32 = 1"
+            LINE "  mut steps: i32 = 0"
+            LINE "  const label = a * 2"
+            LINE "  async {"
+            LINE "    await fetch(1)"
+            LINE "    await fetch(2)"
+            LINE "    await fetch(3)"
+            LINE "  }"
+            LINE "}"
+            LINE "T e",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t t = ecs_lookup(world, "T");
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 1);
+    test_int(ab_args[0], 1);
+
+    ecs_value_t v = ecs_value(ecs_i32_t, {0});
+    test_int(ecs_script_future_resolve(ab_futures[0], &v), 0);
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 2);
+    test_int(ab_args[1], 2);
+
+    int32_t prop = 5;
+    ecs_set_id(world, e, t, sizeof(prop), &prop);
+    test_int(ab_cancel_count, 0);
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 2);
+
+    v = ecs_value(ecs_i32_t, {0});
+    test_int(ecs_script_future_resolve(ab_futures[1], &v), 0);
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 3);
+    test_int(ab_args[2], 3);
+
+    for (int32_t i = 0; i < ab_future_count; i ++) {
+        ecs_script_future_release(ab_futures[i]);
+    }
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_restart_follows_const_chain(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ecs_os_zeromem(ab_args);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "template T {"
+            LINE "  prop v: i32 = 1"
+            LINE "  prop other: i32 = 0"
+            LINE "  const first = v * 2"
+            LINE "  const second = first + 1"
+            LINE "  async { await fetch(second) }"
+            LINE "  async { await fetch(42) }"
+            LINE "}"
+            LINE "T e",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t t = ecs_lookup(world, "T");
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 2);
+
+    int32_t props[] = {1, 9};
+    ecs_set_id(world, e, t, sizeof(props), props);
+    test_int(ab_cancel_count, 0);
+
+    props[0] = 5;
+    ecs_set_id(world, e, t, sizeof(props), props);
+    test_int(ab_cancel_count, 1);
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 3);
+    test_int(ab_args[2], 11);
+
+    for (int32_t i = 0; i < ab_future_count; i ++) {
+        ecs_script_future_release(ab_futures[i]);
+    }
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_block_in_removed_if_branch_stops(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ecs_os_zeromem(ab_args);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "template T {"
+            LINE "  prop on: bool = true"
+            LINE "  if on {"
+            LINE "    child { async { await fetch(1) } }"
+            LINE "  }"
+            LINE "  async { await fetch(2) }"
+            LINE "}"
+            LINE "T e",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t t = ecs_lookup(world, "T");
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 2);
+
+    bool on = false;
+    ecs_set_id(world, e, t, sizeof(on), &on);
+    test_int(ab_cancel_count, 1);
+    test_int(ecs_script_future_status(ab_futures[0]), EcsScriptFutureCancelled);
+    test_int(ecs_script_future_status(ab_futures[1]), EcsScriptFuturePending);
+
+    on = true;
+    ecs_set_id(world, e, t, sizeof(on), &on);
+    test_int(ab_cancel_count, 1);
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 3);
+    test_int(ab_args[2], 1);
+
+    for (int32_t i = 0; i < ab_future_count; i ++) {
+        ecs_script_future_release(ab_futures[i]);
+    }
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_block_on_deleted_entity_stops(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ecs_os_zeromem(ab_args);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "template T {"
+            LINE "  child { async { await fetch(1) } }"
+            LINE "  async { await fetch(2) }"
+            LINE "}"
+            LINE "T e",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 2);
+
+    ecs_delete(world, ecs_lookup(world, "e.child"));
+    test_int(ab_cancel_count, 1);
+
+    for (int32_t i = 0; i < ab_future_count; i ++) {
+        ecs_script_future_release(ab_futures[i]);
+    }
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_block_restarts_for_loop_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ecs_os_zeromem(ab_args);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "template T {"
+            LINE "  prop count: i32 = 1"
+            LINE "  prop other: i32 = 0"
+            LINE "  for i in 0..count {"
+            LINE "    \"c_{i}\" {"
+            LINE "      async { await fetch(i) }"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "T e",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t t = ecs_lookup(world, "T");
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 1);
+
+    int32_t props[] = {1, 5};
+    ecs_set_id(world, e, t, sizeof(props), props);
+    test_int(ab_cancel_count, 0);
+
+    props[0] = 2;
+    ecs_set_id(world, e, t, sizeof(props), props);
+    test_int(ab_cancel_count, 1);
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 3);
+
+    for (int32_t i = 0; i < ab_future_count; i ++) {
+        ecs_script_future_release(ab_futures[i]);
+    }
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_export_mut_read_does_not_restart(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ecs_os_zeromem(ab_args);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut g: i32 = 1"
+            LINE "export mut seen: i32 = 0"
+            LINE "fn get() -> i32 { g * 10 }"
+            LINE "template T {"
+            LINE "  async {"
+            LINE "    const a = await fetch(g)"
+            LINE "    const b = await fetch(get())"
+            LINE "    seen = g"
+            LINE "  }"
+            LINE "}"
+            LINE "T e",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t g = ecs_lookup(world, "g");
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 1);
+    test_int(ab_args[0], 1);
+
+    *(int32_t*)ecs_mut_var_get(world, g).ptr = 2;
+    ecs_mut_var_modified(world, g);
+    test_int(ab_cancel_count, 0);
+
+    ecs_value_t v = ecs_value(ecs_i32_t, {0});
+    test_int(ecs_script_future_resolve(ab_futures[0], &v), 0);
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 2);
+    test_int(ab_args[1], 20);
+
+    *(int32_t*)ecs_mut_var_get(world, g).ptr = 3;
+    ecs_mut_var_modified(world, g);
+    test_int(ab_cancel_count, 0);
+
+    v = ecs_value(ecs_i32_t, {0});
+    test_int(ecs_script_future_resolve(ab_futures[1], &v), 0);
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(
+        world, ecs_lookup(world, "seen")).ptr, 3);
+
+    for (int32_t i = 0; i < ab_future_count; i ++) {
+        ecs_script_future_release(ab_futures[i]);
+    }
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_export_mut_via_template_const_restarts(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ecs_os_zeromem(ab_args);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut g: i32 = 1"
+            LINE "template T {"
+            LINE "  const captured = g * 2"
+            LINE "  async { await fetch(captured) }"
+            LINE "}"
+            LINE "T e",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t g = ecs_lookup(world, "g");
+    ecs_script_tasks_progress(world);
+    test_int(ab_args[0], 2);
+
+    *(int32_t*)ecs_mut_var_get(world, g).ptr = 5;
+    ecs_mut_var_modified(world, g);
+    test_int(ab_cancel_count, 1);
+
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 2);
+    test_int(ab_args[1], 10);
+
+    for (int32_t i = 0; i < ab_future_count; i ++) {
+        ecs_script_future_release(ab_futures[i]);
+    }
 
     ecs_fini(world);
 }
