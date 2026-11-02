@@ -200,6 +200,7 @@ typedef struct ecs_script_var_node_t {
     int32_t computed;
     int32_t base_member;
     bool is_await;
+    bool is_local_mut;
 } ecs_script_var_node_t;
 
 typedef struct ecs_script_await_t {
@@ -249,6 +250,7 @@ typedef struct ecs_script_assign_t {
     int32_t offset;
     int32_t sp;
     bool parent;
+    bool local;
 } ecs_script_assign_t;
 
 typedef struct ecs_script_if_t {

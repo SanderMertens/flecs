@@ -1139,7 +1139,14 @@
                 "break_while_in_async",
                 "break_innermost_loop",
                 "error_break_outside_loop",
-                "error_break_async_in_loop"
+                "error_break_async_in_loop",
+                "local_mut",
+                "local_mut_across_await",
+                "local_mut_await_initializer",
+                "local_mut_resets_in_loop",
+                "local_mut_per_task",
+                "local_mut_not_reactive",
+                "error_local_mut_outside_block"
             ]
         }, {
             "id": "Input",

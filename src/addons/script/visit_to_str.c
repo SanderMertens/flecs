@@ -122,7 +122,9 @@ const char* flecs_script_node_kind_str(
     case EcsAstTemplate:           return "template";
     case EcsAstProp:               return "prop";
     case EcsAstMut:                return "mut";
-    case EcsAstConst:              return "const";
+    case EcsAstConst:
+        return ((const ecs_script_var_node_t*)node)->is_local_mut
+            ? "mut" : "const";
     case EcsAstExportConst:        return "export const";
     case EcsAstExportMut:          return "export mut";
     case EcsAstEntity:             return "entity";
