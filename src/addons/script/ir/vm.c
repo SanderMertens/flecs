@@ -2090,6 +2090,15 @@ static flecs_script_run_status_t flecs_ir_exec(
                 res = -1;
             }
             break;
+        case EcsIrBreak:
+            if (flecs_ir_continue(vm)) {
+                vm->pc = op->a;
+            } else {
+                flecs_ir_error(vm, op->node,
+                    "break is only allowed inside a loop");
+                res = -1;
+            }
+            break;
         case EcsIrWhileEnter:
             flecs_ir_frame_push(vm, EcsIrFrameWhile, vm->pc);
             break;

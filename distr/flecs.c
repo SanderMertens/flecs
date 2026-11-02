@@ -48346,6 +48346,7 @@ typedef enum ecs_token_kind_t {
     EcsTokKeywordTry,
     EcsTokKeywordCatch,
     EcsTokKeywordContinue,
+    EcsTokKeywordBreak,
     EcsTokKeywordAsync,
     EcsTokKeywordWhile,
     EcsTokKeywordScript,
@@ -48707,6 +48708,7 @@ typedef enum ecs_script_node_kind_t {
     EcsAstAwait,
     EcsAstTry,
     EcsAstContinue,
+    EcsAstBreak,
     EcsAstAsync,
     EcsAstWhile,
     EcsAstAssign
@@ -48886,6 +48888,10 @@ typedef struct ecs_script_continue_t {
     ecs_script_node_t node;
 } ecs_script_continue_t;
 
+typedef struct ecs_script_break_t {
+    ecs_script_node_t node;
+} ecs_script_break_t;
+
 typedef struct ecs_script_catch_t {
     const char *error; /* Error entity to catch. NULL for catch-all clause. */
     ecs_script_scope_t *scope;
@@ -49009,6 +49015,9 @@ ecs_script_await_t* flecs_script_insert_await(
     ecs_parser_t *parser);
 
 ecs_script_continue_t* flecs_script_insert_continue(
+    ecs_parser_t *parser);
+
+ecs_script_break_t* flecs_script_insert_break(
     ecs_parser_t *parser);
 
 ecs_script_try_t* flecs_script_insert_try(
@@ -51040,6 +51049,7 @@ typedef enum ecs_script_ir_op_kind_t {
     EcsIrForEnter,
     EcsIrForNext,
     EcsIrContinue,
+    EcsIrBreak,
     EcsIrWhileEnter,
     EcsIrWhileNext,
     EcsIrTryEnter,
@@ -62195,7 +62205,8 @@ void ecs_set_os_api_impl(void) {
     case EcsTokKeywordTemplate: case EcsTokKeywordModule:\
     case EcsTokKeywordInclude: case EcsTokKeywordFn: case EcsTokKeywordAwait:\
     case EcsTokKeywordTry: case EcsTokKeywordCatch: case EcsTokKeywordAsync:\
-    case EcsTokKeywordContinue: case EcsTokKeywordWhile: case EcsTokKeywordScript
+    case EcsTokKeywordContinue: case EcsTokKeywordBreak:\
+    case EcsTokKeywordWhile: case EcsTokKeywordScript
 
 /* Definitions for parser functions */
 #define ParserBegin\
@@ -62703,6 +62714,7 @@ static const struct {
     [EcsTokKeywordTry] = {"try", "keyword "},
     [EcsTokKeywordCatch] = {"catch", "keyword "},
     [EcsTokKeywordContinue] = {"continue", "keyword "},
+    [EcsTokKeywordBreak] = {"break", "keyword "},
     [EcsTokKeywordAsync] = {"async", "keyword "},
     [EcsTokKeywordWhile] = {"while", "keyword "},
     [EcsTokKeywordScript] = {"script", "keyword "},
@@ -66655,6 +66667,12 @@ ecs_script_continue_t* flecs_script_insert_continue(
     return flecs_ast_insert(parser, ecs_script_continue_t, EcsAstContinue);
 }
 
+ecs_script_break_t* flecs_script_insert_break(
+    ecs_parser_t *parser)
+{
+    return flecs_ast_insert(parser, ecs_script_break_t, EcsAstBreak);
+}
+
 ecs_script_try_t* flecs_script_insert_try(
     ecs_parser_t *parser)
 {
@@ -70384,6 +70402,7 @@ static const char* flecs_script_stmt_parse(
         case EcsTokKeywordAwait:      goto await_stmt;
         case EcsTokKeywordTry:        goto try_stmt;
         case EcsTokKeywordContinue:   goto continue_stmt;
+        case EcsTokKeywordBreak:      goto break_stmt;
         case EcsTokKeywordAsync:      goto async_stmt;
         case EcsTokKeywordWhile:      goto while_stmt;
     );
@@ -70684,6 +70703,11 @@ fn_stmt: {
 
 continue_stmt: {
     flecs_script_insert_continue(parser);
+    EndOfRule;
+}
+
+break_stmt: {
+    flecs_script_insert_break(parser);
     EndOfRule;
 }
 
@@ -73245,6 +73269,7 @@ const char* flecs_script_node_kind_str(
     case EcsAstAwait:              return "await";
     case EcsAstTry:                return "try";
     case EcsAstContinue:           return "continue";
+    case EcsAstBreak:              return "break";
     case EcsAstAsync:              return "async";
     case EcsAstWhile:              return "while";
     case EcsAstAssign:             return "assign";
@@ -73475,6 +73500,7 @@ static void flecs_script_stmt_to_str(
         break;
     }
     case EcsAstContinue:
+    case EcsAstBreak:
         break;
     case EcsAstAsync: {
         ecs_script_async_t *stmt = (ecs_script_async_t*)node;
@@ -97905,6 +97931,11 @@ static int flecs_script_step_scope(
             return 2;
         }
 
+        if (stmt->kind == EcsAstBreak) {
+            v->base.nodes[v->base.depth] = stmt;
+            return 3;
+        }
+
         if (stmt->kind == EcsAstScope) {
             frame->pc ++;
             flecs_script_scope_push(r, (ecs_script_scope_t*)stmt);
@@ -98187,6 +98218,17 @@ static flecs_script_run_status_t flecs_script_runner_exec(
             if (!flecs_script_runner_continue(r)) {
                 flecs_script_eval_error(&r->v, frame->node,
                     "continue is only allowed inside a loop");
+                if (!flecs_script_runner_unwind(r)) {
+                    return FlecsScriptRunError;
+                }
+            }
+        } else if (res == 3) {
+            if (flecs_script_runner_continue(r)) {
+                flecs_script_frame_leave(r,
+                    flecs_script_frame_at(r, r->frame_count - 1));
+            } else {
+                flecs_script_eval_error(&r->v, frame->node,
+                    "break is only allowed inside a loop");
                 if (!flecs_script_runner_unwind(r)) {
                     return FlecsScriptRunError;
                 }
@@ -101902,6 +101944,7 @@ static int flecs_script_type_node(
         case EcsAstFor:
         case EcsAstWhile:
         case EcsAstContinue:
+        case EcsAstBreak:
         case EcsAstAssign:
             break;
         default:
@@ -101995,6 +102038,13 @@ static int flecs_script_type_node(
         if (!t->for_depth) {
             flecs_script_eval_error(t->v, node,
                 "continue is only allowed inside a loop");
+            return -1;
+        }
+        return 0;
+    case EcsAstBreak:
+        if (!t->for_depth) {
+            flecs_script_eval_error(t->v, node,
+                "break is only allowed inside a loop");
             return -1;
         }
         return 0;
@@ -111220,6 +111270,19 @@ static void flecs_irc_compile_if(
     flecs_irc_emit(c, EcsIrLeave, EcsIrFrameIf, 0, 0, node);
 }
 
+static void flecs_irc_patch_breaks(
+    ecs_script_ir_compiler_t *c,
+    int32_t begin)
+{
+    int32_t i, end = flecs_irc_pc(c);
+    for (i = begin; i < end; i ++) {
+        ecs_script_ir_op_t *op = flecs_irc_op(c, i);
+        if (op->kind == EcsIrBreak && op->a == -1) {
+            op->a = end;
+        }
+    }
+}
+
 static void flecs_irc_compile_for(
     ecs_script_ir_compiler_t *c,
     ecs_script_for_t *node)
@@ -111239,6 +111302,7 @@ static void flecs_irc_compile_for(
 
     flecs_irc_emit(c, EcsIrJump, next, 0, 0, node);
     flecs_irc_op(c, next)->a = flecs_irc_pc(c);
+    flecs_irc_patch_breaks(c, next);
     flecs_irc_emit(c, EcsIrLeave, EcsIrFrameFor, 0, 0, node);
     flecs_irc_emit(c, EcsIrExprEnd, 0, 0, 0, node);
 }
@@ -111298,6 +111362,7 @@ static void flecs_irc_compile_while(
 
     flecs_irc_emit(c, EcsIrJump, cond_pc, 0, 0, node);
     flecs_irc_op(c, next)->a = flecs_irc_pc(c);
+    flecs_irc_patch_breaks(c, next);
     flecs_irc_emit(c, EcsIrLeave, EcsIrFrameWhile, 0, 0, node);
 }
 
@@ -111442,6 +111507,9 @@ static void flecs_irc_compile_stmt(
         break;
     case EcsAstContinue:
         flecs_irc_emit(c, EcsIrContinue, 0, 0, 0, node);
+        break;
+    case EcsAstBreak:
+        flecs_irc_emit(c, EcsIrBreak, -1, 0, 0, node);
         break;
     case EcsAstAsync:
         flecs_irc_entry_add(c, node, EcsIrEntryAsync);
@@ -111694,6 +111762,7 @@ static const struct {
     [EcsIrForEnter] = {"ForEnter", {"from", "to"}},
     [EcsIrForNext] = {"ForNext", {"end"}},
     [EcsIrContinue] = {"Continue", {NULL}},
+    [EcsIrBreak] = {"Break", {"end"}},
     [EcsIrWhileEnter] = {"WhileEnter", {NULL}},
     [EcsIrWhileNext] = {"WhileNext", {"end"}},
     [EcsIrTryEnter] = {"TryEnter", {"catches", "count", "end"}},
@@ -114040,6 +114109,15 @@ static flecs_script_run_status_t flecs_ir_exec(
             if (!flecs_ir_continue(vm)) {
                 flecs_ir_error(vm, op->node,
                     "continue is only allowed inside a loop");
+                res = -1;
+            }
+            break;
+        case EcsIrBreak:
+            if (flecs_ir_continue(vm)) {
+                vm->pc = op->a;
+            } else {
+                flecs_ir_error(vm, op->node,
+                    "break is only allowed inside a loop");
                 res = -1;
             }
             break;
@@ -121856,6 +121934,7 @@ static int flecs_script_dep_node_impl(
     case EcsAstAnnotation:
     case EcsAstInclude:
     case EcsAstContinue:
+    case EcsAstBreak:
         break;
     case EcsAstModule:
         flecs_script_dep_symbol_scope(ctx,

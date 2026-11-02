@@ -850,6 +850,7 @@ static int flecs_script_dep_node_impl(
     case EcsAstAnnotation:
     case EcsAstInclude:
     case EcsAstContinue:
+    case EcsAstBreak:
         break;
     case EcsAstModule:
         flecs_script_dep_symbol_scope(ctx,

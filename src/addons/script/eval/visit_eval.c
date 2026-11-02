@@ -2565,6 +2565,11 @@ static int flecs_script_step_scope(
             return 2;
         }
 
+        if (stmt->kind == EcsAstBreak) {
+            v->base.nodes[v->base.depth] = stmt;
+            return 3;
+        }
+
         if (stmt->kind == EcsAstScope) {
             frame->pc ++;
             flecs_script_scope_push(r, (ecs_script_scope_t*)stmt);
@@ -2847,6 +2852,17 @@ static flecs_script_run_status_t flecs_script_runner_exec(
             if (!flecs_script_runner_continue(r)) {
                 flecs_script_eval_error(&r->v, frame->node,
                     "continue is only allowed inside a loop");
+                if (!flecs_script_runner_unwind(r)) {
+                    return FlecsScriptRunError;
+                }
+            }
+        } else if (res == 3) {
+            if (flecs_script_runner_continue(r)) {
+                flecs_script_frame_leave(r,
+                    flecs_script_frame_at(r, r->frame_count - 1));
+            } else {
+                flecs_script_eval_error(&r->v, frame->node,
+                    "break is only allowed inside a loop");
                 if (!flecs_script_runner_unwind(r)) {
                     return FlecsScriptRunError;
                 }

@@ -78,6 +78,7 @@ typedef enum ecs_token_kind_t {
     EcsTokKeywordTry,
     EcsTokKeywordCatch,
     EcsTokKeywordContinue,
+    EcsTokKeywordBreak,
     EcsTokKeywordAsync,
     EcsTokKeywordWhile,
     EcsTokKeywordScript,

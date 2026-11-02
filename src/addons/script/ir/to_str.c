@@ -31,6 +31,7 @@ static const struct {
     [EcsIrForEnter] = {"ForEnter", {"from", "to"}},
     [EcsIrForNext] = {"ForNext", {"end"}},
     [EcsIrContinue] = {"Continue", {NULL}},
+    [EcsIrBreak] = {"Break", {"end"}},
     [EcsIrWhileEnter] = {"WhileEnter", {NULL}},
     [EcsIrWhileNext] = {"WhileNext", {"end"}},
     [EcsIrTryEnter] = {"TryEnter", {"catches", "count", "end"}},

@@ -32,7 +32,8 @@
     case EcsTokKeywordTemplate: case EcsTokKeywordModule:\
     case EcsTokKeywordInclude: case EcsTokKeywordFn: case EcsTokKeywordAwait:\
     case EcsTokKeywordTry: case EcsTokKeywordCatch: case EcsTokKeywordAsync:\
-    case EcsTokKeywordContinue: case EcsTokKeywordWhile: case EcsTokKeywordScript
+    case EcsTokKeywordContinue: case EcsTokKeywordBreak:\
+    case EcsTokKeywordWhile: case EcsTokKeywordScript
 
 /* Definitions for parser functions */
 #define ParserBegin\

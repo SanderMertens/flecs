@@ -1113,6 +1113,11 @@ void AsyncBlock_compound_assign_export_mut(void);
 void AsyncBlock_compound_assign_template_mut_notifies(void);
 void AsyncBlock_error_compound_assign_outside_async(void);
 void AsyncBlock_error_compound_assign_incompatible_type(void);
+void AsyncBlock_break_for(void);
+void AsyncBlock_break_while_in_async(void);
+void AsyncBlock_break_innermost_loop(void);
+void AsyncBlock_error_break_outside_loop(void);
+void AsyncBlock_error_break_async_in_loop(void);
 
 // Testsuite 'Input'
 void Input_setup(void);
@@ -8634,6 +8639,26 @@ bake_test_case AsyncBlock_testcases[] = {
     {
         "error_compound_assign_incompatible_type",
         AsyncBlock_error_compound_assign_incompatible_type
+    },
+    {
+        "break_for",
+        AsyncBlock_break_for
+    },
+    {
+        "break_while_in_async",
+        AsyncBlock_break_while_in_async
+    },
+    {
+        "break_innermost_loop",
+        AsyncBlock_break_innermost_loop
+    },
+    {
+        "error_break_outside_loop",
+        AsyncBlock_error_break_outside_loop
+    },
+    {
+        "error_break_async_in_loop",
+        AsyncBlock_error_break_async_in_loop
     }
 };
 
@@ -21093,7 +21118,7 @@ static bake_test_suite suites[] = {
         "AsyncBlock",
         AsyncBlock_setup,
         NULL,
-        96,
+        101,
         AsyncBlock_testcases,
         1,
         AsyncBlock_params
