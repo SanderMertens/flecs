@@ -49,6 +49,7 @@ static const struct {
     [EcsIrMutCheck] = {"MutCheck", {NULL}},
     [EcsIrAsync] = {"Async", {NULL}},
     [EcsIrAssign] = {"Assign", {"value"}},
+    [EcsIrEmit] = {"Emit", {"value"}},
     [EcsIrConstEnd] = {"ConstEnd", {"value"}},
     [EcsIrConstCached] = {"ConstCached", {"slot", "else"}},
     [EcsIrExprBegin] = {"ExprBegin", {"first", "count"}},

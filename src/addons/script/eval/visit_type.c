@@ -1398,6 +1398,10 @@ static int flecs_script_type_annot(
     return result;
 }
 
+static void flecs_script_type_await_event(
+    ecs_script_type_visitor_t *t,
+    const ecs_expr_node_t *expr);
+
 static int flecs_script_type_const(
     ecs_script_type_visitor_t *t,
     ecs_script_var_node_t *node)
@@ -1521,6 +1525,10 @@ static int flecs_script_type_const(
     var->is_const = !node->is_local_mut;
     var->is_local_mut = node->is_local_mut;
     node->sp = var->sp;
+
+    if (node->is_await) {
+        flecs_script_type_await_event(t, node->expr);
+    }
 
     if (node->is_await || node->is_local_mut) {
         return 0;
@@ -2171,6 +2179,16 @@ static int flecs_script_type_entity(
         if (node->symbol != -1) {
             flecs_script_symbol_set(t->v, node->symbol, out);
         }
+
+#ifdef FLECS_SCRIPT_ASYNC
+        if (node->is_event &&
+            flecs_script_event_register(t->v->world, out))
+        {
+            flecs_script_eval_error(t->v, node,
+                "failed to register event '%s'", node->name);
+            return -1;
+        }
+#endif
     }
 
     return 0;
@@ -2329,8 +2347,11 @@ static int flecs_script_type_async(
     int32_t old_for_depth = t->for_depth;
     t->for_depth = 0;
     t->async_scope = true;
+    t->async_node = node;
+    ecs_vec_clear(&node->events);
     int result = flecs_script_type_control_scope(t, node->scope);
     t->async_scope = false;
+    t->async_node = NULL;
     t->for_depth = old_for_depth;
     if (in_template) {
         v->vars = ecs_script_vars_pop(v->vars);
@@ -2381,6 +2402,78 @@ static bool flecs_script_type_is_number(
     const EcsPrimitive *p = ecs_get(world, type, EcsPrimitive);
     return p && p->kind != EcsString && p->kind != EcsEntity &&
         p->kind != EcsId;
+}
+
+/* Blocks subscribe to the events they await when they are started, so that they
+ * don't miss events before they reach the await statement. */
+static void flecs_script_type_await_event(
+    ecs_script_type_visitor_t *t,
+    const ecs_expr_node_t *expr)
+{
+    if (!t->async_node || expr->kind != EcsExprFunction) {
+        return;
+    }
+
+    ecs_entity_t event = ((const ecs_expr_function_t*)expr)->calldata.function;
+    const EcsScriptFunction *f = ecs_get(t->v->world, event, EcsScriptFunction);
+    if (!f || !f->is_event) {
+        return;
+    }
+
+    ecs_vec_t *events = &t->async_node->events;
+    ecs_entity_t *array = ecs_vec_first(events);
+    int32_t i, count = ecs_vec_count(events);
+    for (i = 0; i < count; i ++) {
+        if (array[i] == event) {
+            return;
+        }
+    }
+
+    ecs_vec_append_t(&t->v->base.script->allocator, events, ecs_entity_t)[0] =
+        event;
+}
+
+static int flecs_script_type_emit(
+    ecs_script_type_visitor_t *t,
+    ecs_script_emit_t *node)
+{
+    ecs_world_t *world = t->v->world;
+    flecs_script_symbol_t symbol = {0};
+    const EcsScriptFunction *f = NULL;
+    if (!flecs_script_type_lookup(
+        t, 0, node->name, FlecsScriptLookupAll, NULL, &symbol) && symbol.entity)
+    {
+        f = ecs_get(world, symbol.entity, EcsScriptFunction);
+    }
+
+    if (!f || !f->is_event) {
+        flecs_script_eval_error(t->v, node,
+            "cannot emit '%s': not an event", node->name);
+        return -1;
+    }
+
+    node->event = symbol.entity;
+    node->eval_type = f->return_type;
+    node->has_payload = node->eval_type == symbol.entity;
+    if (!node->has_payload) {
+        if (node->expr->kind != EcsExprEmptyInitializer) {
+            flecs_script_eval_error(t->v, node,
+                "cannot emit '%s' with a value: event has no members",
+                node->name);
+            return -1;
+        }
+
+        return 0;
+    }
+
+    ecs_entity_t type = node->eval_type;
+    int result = flecs_script_type_check_expr(t, &node->expr, &type);
+    if (result == 1) {
+        node->node.skip = true;
+        return 0;
+    }
+
+    return result;
 }
 
 typedef struct flecs_script_assign_root_t {
@@ -2672,6 +2765,7 @@ static int flecs_script_type_node(
         case EcsAstContinue:
         case EcsAstBreak:
         case EcsAstCall:
+        case EcsAstEmit:
         case EcsAstAssign:
             break;
         default:
@@ -2756,9 +2850,17 @@ static int flecs_script_type_node(
     case EcsAstFunction:
         return flecs_script_type_function(
             t, (ecs_script_function_node_t*)node);
-    case EcsAstAwait:
-        return flecs_script_type_check_expr(t,
+    case EcsAstAwait: {
+        int result = flecs_script_type_check_expr(t,
             &((ecs_script_await_t*)node)->expr, NULL);
+        if (!result) {
+            flecs_script_type_await_event(t, ((ecs_script_await_t*)node)->expr);
+        }
+
+        return result;
+    }
+    case EcsAstEmit:
+        return flecs_script_type_emit(t, (ecs_script_emit_t*)node);
     case EcsAstTry:
         return flecs_script_type_try(t, (ecs_script_try_t*)node);
     case EcsAstContinue:

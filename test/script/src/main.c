@@ -1168,6 +1168,22 @@ void AsyncBlock_proc_infinite_recursion(void);
 void AsyncBlock_proc_error_stops_caller(void);
 void AsyncBlock_proc_from_template_block(void);
 void AsyncBlock_error_proc(void);
+void AsyncBlock_event_emit_await(void);
+void AsyncBlock_event_listener_after_emitter(void);
+void AsyncBlock_event_emit_does_not_pause(void);
+void AsyncBlock_event_no_listeners(void);
+void AsyncBlock_event_queued_in_order(void);
+void AsyncBlock_event_busy_block_receives_queued(void);
+void AsyncBlock_event_to_template_blocks(void);
+void AsyncBlock_event_from_template_block(void);
+void AsyncBlock_event_string_payload(void);
+void AsyncBlock_event_no_members(void);
+void AsyncBlock_event_self_emit_does_not_hang(void);
+void AsyncBlock_event_from_proc(void);
+void AsyncBlock_event_queue_limit(void);
+void AsyncBlock_event_cancel_drops_queue(void);
+void AsyncBlock_event_cancel_while_waiting(void);
+void AsyncBlock_error_event(void);
 
 // Testsuite 'Input'
 void Input_setup(void);
@@ -8923,6 +8939,70 @@ bake_test_case AsyncBlock_testcases[] = {
     {
         "error_proc",
         AsyncBlock_error_proc
+    },
+    {
+        "event_emit_await",
+        AsyncBlock_event_emit_await
+    },
+    {
+        "event_listener_after_emitter",
+        AsyncBlock_event_listener_after_emitter
+    },
+    {
+        "event_emit_does_not_pause",
+        AsyncBlock_event_emit_does_not_pause
+    },
+    {
+        "event_no_listeners",
+        AsyncBlock_event_no_listeners
+    },
+    {
+        "event_queued_in_order",
+        AsyncBlock_event_queued_in_order
+    },
+    {
+        "event_busy_block_receives_queued",
+        AsyncBlock_event_busy_block_receives_queued
+    },
+    {
+        "event_to_template_blocks",
+        AsyncBlock_event_to_template_blocks
+    },
+    {
+        "event_from_template_block",
+        AsyncBlock_event_from_template_block
+    },
+    {
+        "event_string_payload",
+        AsyncBlock_event_string_payload
+    },
+    {
+        "event_no_members",
+        AsyncBlock_event_no_members
+    },
+    {
+        "event_self_emit_does_not_hang",
+        AsyncBlock_event_self_emit_does_not_hang
+    },
+    {
+        "event_from_proc",
+        AsyncBlock_event_from_proc
+    },
+    {
+        "event_queue_limit",
+        AsyncBlock_event_queue_limit
+    },
+    {
+        "event_cancel_drops_queue",
+        AsyncBlock_event_cancel_drops_queue
+    },
+    {
+        "event_cancel_while_waiting",
+        AsyncBlock_event_cancel_while_waiting
+    },
+    {
+        "error_event",
+        AsyncBlock_error_event
     }
 };
 
@@ -21438,7 +21518,7 @@ static bake_test_suite suites[] = {
         "AsyncBlock",
         AsyncBlock_setup,
         NULL,
-        151,
+        167,
         AsyncBlock_testcases,
         1,
         AsyncBlock_params

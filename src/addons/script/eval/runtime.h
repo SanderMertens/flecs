@@ -33,6 +33,11 @@ struct ecs_script_runtime_t {
     /* Tasks created by async blocks. Only used by the world runtime, and
      * advanced by ecs_script_tasks_progress(). */
     ecs_vec_t async_tasks;
+#ifdef FLECS_SCRIPT_ASYNC
+    ecs_script_task_t *current_task;
+    uint64_t event_pass;
+    int32_t event_queued;
+#endif
     bool async_progressing;
 
     /* Tag added to entities created by the currently evaluating managed
