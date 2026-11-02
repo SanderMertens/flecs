@@ -2535,6 +2535,14 @@ void Expr_conditional_evaluates_one_branch(void);
 void Expr_conditional_unify_types(void);
 void Expr_error_conditional(void);
 void Expr_conditional_collection_branches(void);
+void Expr_bitwise_xor(void);
+void Expr_bitwise_xor_precedence(void);
+void Expr_bitwise_xor_var(void);
+void Expr_bitwise_not(void);
+void Expr_bitwise_not_precedence(void);
+void Expr_bitwise_not_var(void);
+void Expr_bitwise_not_literal(void);
+void Expr_error_bitwise_invalid_type(void);
 
 // Testsuite 'ExprAst'
 void ExprAst_setup(void);
@@ -14261,6 +14269,38 @@ bake_test_case Expr_testcases[] = {
     {
         "conditional_collection_branches",
         Expr_conditional_collection_branches
+    },
+    {
+        "bitwise_xor",
+        Expr_bitwise_xor
+    },
+    {
+        "bitwise_xor_precedence",
+        Expr_bitwise_xor_precedence
+    },
+    {
+        "bitwise_xor_var",
+        Expr_bitwise_xor_var
+    },
+    {
+        "bitwise_not",
+        Expr_bitwise_not
+    },
+    {
+        "bitwise_not_precedence",
+        Expr_bitwise_not_precedence
+    },
+    {
+        "bitwise_not_var",
+        Expr_bitwise_not_var
+    },
+    {
+        "bitwise_not_literal",
+        Expr_bitwise_not_literal
+    },
+    {
+        "error_bitwise_invalid_type",
+        Expr_error_bitwise_invalid_type
     }
 };
 
@@ -21220,7 +21260,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        458,
+        466,
         Expr_testcases,
         2,
         Expr_params

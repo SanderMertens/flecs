@@ -32,6 +32,8 @@ typedef enum ecs_token_kind_t {
     EcsTokMod = '%',
     EcsTokBitwiseOr = '|',
     EcsTokBitwiseAnd = '&',
+    EcsTokBitwiseXor = '^',
+    EcsTokBitwiseNot = '~',
     EcsTokNot = '!',
     EcsTokOptional = '?',
     EcsTokAnnotation = '@',

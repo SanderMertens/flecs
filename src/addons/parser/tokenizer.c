@@ -49,6 +49,8 @@ static const struct {
     [EcsTokMod] = {"%", ""},
     [EcsTokBitwiseOr] = {"|", ""},
     [EcsTokBitwiseAnd] = {"&", ""},
+    [EcsTokBitwiseXor] = {"^", ""},
+    [EcsTokBitwiseNot] = {"~", ""},
     [EcsTokNot] = {"!", ""},
     [EcsTokOptional] = {"?", ""},
     [EcsTokEq] = {"==", ""},

@@ -362,6 +362,7 @@ The following operators are supported in expressions, in order of precedence:
 | **Symbol** | **Description**        | **Example**            |
 |------------|------------------------|------------------------|
 | `!`        | Logical NOT            | `!10`                  |
+| `~`        | Bitwise NOT            | `~10`                  |
 | `*`        | Multiplication         | `10 * 20`              |
 | `/`        | Division               | `10 / 20`              |
 | `%`        | Modulus                | `10 % 3`               |
@@ -376,6 +377,7 @@ The following operators are supported in expressions, in order of precedence:
 | `==`       | Equality               | `10 == 20`             |
 | `!=`       | Not equal              | `10 != 20`             |
 | `&`        | Bitwise AND            | `2 & 6`                |
+| `^`        | Bitwise XOR            | `2 ^ 6`                |
 | `\|`       | Bitwise OR             | `2 \| 4`               |
 | `&&`       | Logical AND            | `true && false`        |
 | `\|\|`     | Logical OR             | `true \|\| false`      |
@@ -726,6 +728,7 @@ Unary expressions have a single operand, with the operator preceding it. The fol
 | **Operator** | **Expression Type**     |
 |--------------|-------------------------|
 | `!`          | `bool`                  |
+| `~`          | Same as operand.        |
 | `-`          | Same as operand.        |
 
 #### Binary expressions
@@ -747,6 +750,7 @@ Binary expressions have two operands. The following table shows the different bi
 | `==`       | `bool`               | Values               |
 | `!=`       | `bool`               | Values               |
 | `&`        | other (see below)    | Integers             |
+| `^`        | other (see below)    | Integers             |
 | `\|`       | other (see below)    | Integers             |
 | `&&`       | `bool`               | `bool`               |
 | `\|\|`     | `bool`               | `bool`               |
