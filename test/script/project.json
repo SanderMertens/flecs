@@ -2605,7 +2605,12 @@
                 "bitwise_not_precedence",
                 "bitwise_not_var",
                 "bitwise_not_literal",
-                "error_bitwise_invalid_type"
+                "error_bitwise_invalid_type",
+                "match_multiple_patterns",
+                "match_multiple_patterns_const",
+                "match_multiple_patterns_enum",
+                "match_multiple_patterns_no_match",
+                "error_match_multiple_patterns"
             ]
         }, {
             "id": "ExprAst",

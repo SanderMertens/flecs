@@ -405,14 +405,24 @@ static void flecs_irc_compile_match(
 {
     int32_t value = flecs_irc_compile_tmp(c, node->expr);
 
-    ecs_vec_t jumps;
+    ecs_vec_t jumps, pattern_jumps;
     ecs_vec_init_t(NULL, &jumps, int32_t, 0);
+    ecs_vec_init_t(NULL, &pattern_jumps, int32_t, 0);
 
     int32_t i, count = ecs_vec_count(&node->elements);
     ecs_expr_match_element_t *elems = ecs_vec_first(&node->elements);
     for (i = 0; i < count; i ++) {
         int32_t compare = flecs_irc_compile_tmp(c, elems[i].compare);
         int32_t cmp = flecs_irc_emit(c, EcsIrMatchCmp, value, compare, 0, node);
+        if (!elems[i].expr) {
+            ecs_vec_append_t(NULL, &pattern_jumps, int32_t)[0] =
+                flecs_irc_emit(c, EcsIrJump, 0, 0, 0, node);
+            flecs_irc_op(c, cmp)->c = flecs_irc_pc(c);
+            continue;
+        }
+
+        flecs_irc_patch_jumps(c, &pattern_jumps);
+        ecs_vec_init_t(NULL, &pattern_jumps, int32_t, 0);
         flecs_irc_compile_expr(c, elems[i].expr, dst, in_place);
         ecs_vec_append_t(NULL, &jumps, int32_t)[0] =
             flecs_irc_emit(c, EcsIrJump, 0, 0, 0, node);
@@ -425,6 +435,7 @@ static void flecs_irc_compile_match(
         flecs_irc_emit(c, EcsIrMatchFail, value, 0, 0, node);
     }
 
+    ecs_vec_fini_t(NULL, &pattern_jumps, int32_t);
     flecs_irc_patch_jumps(c, &jumps);
 }
 
@@ -695,7 +706,7 @@ static bool flecs_irc_expr_borrows(
         int32_t i, count = ecs_vec_count(&m->elements);
         ecs_expr_match_element_t *elems = ecs_vec_first(&m->elements);
         for (i = 0; i < count; i ++) {
-            if (flecs_irc_expr_borrows(elems[i].expr)) {
+            if (elems[i].expr && flecs_irc_expr_borrows(elems[i].expr)) {
                 return true;
             }
         }
