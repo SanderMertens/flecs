@@ -1285,6 +1285,7 @@ static int flecs_ir_binary(
         *(T*)out = (T)(l % r); return 0;\
     case EcsTokBitwiseAnd: *(T*)out = (T)(l & r); return 0;\
     case EcsTokBitwiseOr: *(T*)out = (T)(l | r); return 0;\
+    case EcsTokBitwiseXor: *(T*)out = (T)(l ^ r); return 0;\
     case EcsTokShiftLeft: *(T*)out = (T)(l << r); return 0;\
     case EcsTokShiftRight: *(T*)out = (T)(l >> r); return 0;
 

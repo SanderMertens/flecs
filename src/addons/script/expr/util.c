@@ -176,6 +176,24 @@ int flecs_value_unary(
         int64_t zero = 0;
         ecs_value_t left = { .type = expr->type, .ptr = &zero };
         return flecs_value_binary(script, NULL, &left, expr, out, EcsTokSub);
+    } else if (operator == EcsTokBitwiseNot) {
+#define FLECS_VALUE_BITWISE_NOT(T)\
+        if (expr->type == ecs_id(T)) {\
+            *(T*)out->ptr = (T)~*(const T*)expr->ptr;\
+            return 0;\
+        }
+        FLECS_VALUE_BITWISE_NOT(ecs_i8_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_i16_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_i32_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_i64_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_iptr_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_u8_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_u16_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_u32_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_u64_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_uptr_t)
+#undef FLECS_VALUE_BITWISE_NOT
+        *(ecs_u32_t*)out->ptr = ~*(const ecs_u32_t*)expr->ptr;
     } else {
         ecs_abort(ECS_INTERNAL_ERROR, "invalid operator for unary expression");
     }
@@ -195,6 +213,7 @@ int flecs_value_unary(
     case EcsTokMod: *(T*)out = (T)(l % r); return 0;\
     case EcsTokBitwiseAnd: *(T*)out = (T)(l & r); return 0;\
     case EcsTokBitwiseOr: *(T*)out = (T)(l | r); return 0;\
+    case EcsTokBitwiseXor: *(T*)out = (T)(l ^ r); return 0;\
     case EcsTokShiftLeft: *(T*)out = (T)(l << r); return 0;\
     case EcsTokShiftRight: *(T*)out = (T)(l >> r); return 0;
 
@@ -281,7 +300,7 @@ int flecs_value_binary(
 
     if (operator == EcsTokAdd || operator == EcsTokSub || operator == EcsTokMul ||
         operator == EcsTokDiv || operator == EcsTokMod || operator == EcsTokBitwiseAnd ||
-        operator == EcsTokBitwiseOr || operator == EcsTokShiftLeft || operator == EcsTokShiftRight)
+        operator == EcsTokBitwiseOr || operator == EcsTokBitwiseXor || operator == EcsTokShiftLeft || operator == EcsTokShiftRight)
     {
         ecs_assert(out->type == right->type, ECS_INTERNAL_ERROR, NULL);
     }
