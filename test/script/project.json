@@ -1170,7 +1170,17 @@
                 "declare_array_w_type",
                 "struct_reset_w_empty_initializer",
                 "error_assign_target",
-                "assign_template_and_parent_mut_member"
+                "assign_template_and_parent_mut_member",
+                "next_frame",
+                "delay",
+                "delay_large_step",
+                "delay_zero_and_negative",
+                "delay_time_scale",
+                "delay_time_scale_speedup",
+                "delay_cancel_on_restart",
+                "delay_cancel_on_delete",
+                "delay_pending_at_fini",
+                "delay_cancel_on_script_delete"
             ]
         }, {
             "id": "Input",
