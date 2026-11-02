@@ -379,6 +379,7 @@ The following operators are supported in expressions, in order of precedence:
 | `\|`       | Bitwise OR             | `2 \| 4`               |
 | `&&`       | Logical AND            | `true && false`        |
 | `\|\|`     | Logical OR             | `true \|\| false`      |
+| `? :`      | Conditional            | `true ? 10 : 20`       |
 
 ### Values
 The following table lists the different kinds of values that are supported in expressions:
@@ -448,6 +449,19 @@ Tree: {color: color, height: height}
 // Shorthand notation
 Tree: {color: $, height: $}
 ```
+
+### Conditional expressions
+A conditional expression selects one of two values. Only the selected branch is evaluated. The condition is cast to `bool`, and the branches follow the same type rules as the cases of a match expression:
+
+```cpp
+const people = 100
+const crowded = people > 50
+
+// leak will be assigned with value 10
+const leak = crowded ? people * 0.1 : 0
+```
+
+Conditional expressions have the lowest precedence of all operators and are right associative. Add a space between `?` and a collection value, as `?[` is the token that checks if an entity has a component.
 
 ### Match expressions
 Match expressions can be used to conditionally assign a value. An example:

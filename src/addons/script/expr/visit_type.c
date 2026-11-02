@@ -2904,6 +2904,12 @@ static int flecs_expr_match_visit_type(
         goto error;
     }
 
+    if (node->is_conditional &&
+        flecs_expr_cast_to(script, &node->expr, ecs_id(ecs_bool_t)))
+    {
+        goto error;
+    }
+
     int32_t i, count = ecs_vec_count(&node->elements);
     ecs_expr_match_element_t *elems = ecs_vec_first(&node->elements);
 

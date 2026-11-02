@@ -187,6 +187,7 @@ typedef struct ecs_expr_match_t {
     ecs_expr_node_t *expr;
     ecs_vec_t elements;
     ecs_expr_match_element_t any;
+    bool is_conditional;
 } ecs_expr_match_t;
 
 typedef struct ecs_expr_range_t {

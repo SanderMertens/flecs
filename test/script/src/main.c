@@ -2528,6 +2528,13 @@ void Expr_id_var_eq_literal(void);
 void Expr_vector_func_array_of_struct_error_type_name(void);
 void Expr_partial_initializer(void);
 void Expr_partial_nested_initializer(void);
+void Expr_conditional(void);
+void Expr_conditional_nested(void);
+void Expr_conditional_non_bool_condition(void);
+void Expr_conditional_evaluates_one_branch(void);
+void Expr_conditional_unify_types(void);
+void Expr_error_conditional(void);
+void Expr_conditional_collection_branches(void);
 
 // Testsuite 'ExprAst'
 void ExprAst_setup(void);
@@ -14226,6 +14233,34 @@ bake_test_case Expr_testcases[] = {
     {
         "partial_nested_initializer",
         Expr_partial_nested_initializer
+    },
+    {
+        "conditional",
+        Expr_conditional
+    },
+    {
+        "conditional_nested",
+        Expr_conditional_nested
+    },
+    {
+        "conditional_non_bool_condition",
+        Expr_conditional_non_bool_condition
+    },
+    {
+        "conditional_evaluates_one_branch",
+        Expr_conditional_evaluates_one_branch
+    },
+    {
+        "conditional_unify_types",
+        Expr_conditional_unify_types
+    },
+    {
+        "error_conditional",
+        Expr_error_conditional
+    },
+    {
+        "conditional_collection_branches",
+        Expr_conditional_collection_branches
     }
 };
 
@@ -21185,7 +21220,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        451,
+        458,
         Expr_testcases,
         2,
         Expr_params
