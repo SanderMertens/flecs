@@ -1707,6 +1707,21 @@ async {
 
 The compound assignment operators `+=`, `-=`, `*=` and `/=` can be used as a shorthand. `score += 10` behaves exactly like `score = score + 10`, including notifying reactive scripts.
 
+Assignments can target struct members and collection elements, in any combination. Mut variables can be declared with an array type (`T[N]`) or vector type (`T[]`):
+
+```cpp
+struct Ship(state: i32, timer: i32)
+
+export mut ships: Ship[10] = {}
+
+async {
+  ships[2].state = 1
+  ships[2].timer -= 1
+}
+```
+
+Indices are evaluated before the assigned value. Assigning to an index that is out of range is a script error and doesn't change the variable. A write to an exported or template mut variable notifies everything that reads the variable, as if the entire variable was assigned. Compound assignments behave like the long form, so `v[f()] += 1` evaluates `f()` twice, just like `v[f()] = v[f()] + 1`. Elements can't be added to a vector with an index assignment.
+
 Async blocks can declare local mut variables. A local mut variable belongs to a single task and keeps its value across `await`. It follows normal scoping rules, so a variable declared in a loop body is reset on each iteration. Local mut variables are not reactive: writing one doesn't notify anything.
 
 ```cpp

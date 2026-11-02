@@ -1083,6 +1083,14 @@ static void flecs_irc_compile_assign(
     ecs_script_assign_t *node)
 {
     int32_t begin = flecs_irc_expr_begin(c, node);
+    ecs_script_assign_step_t *steps = ecs_vec_first(&node->steps);
+    int32_t i, count = ecs_vec_count(&node->steps);
+    for (i = 0; i < count; i ++) {
+        if (!steps[i].member) {
+            steps[i].reg = flecs_irc_compile_tmp(c, steps[i].index);
+        }
+    }
+
     int32_t value = flecs_irc_compile_tmp(c, node->expr);
     flecs_irc_emit(c, EcsIrAssign, value, 0, 0, node);
     flecs_irc_expr_end(c, begin, true);

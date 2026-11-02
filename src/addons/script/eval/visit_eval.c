@@ -2154,19 +2154,65 @@ int flecs_script_eval_function(
     return 0;
 }
 
+static void* flecs_script_assign_target(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_assign_t *node,
+    void *base,
+    const int64_t *indices)
+{
+    void *ptr = ECS_OFFSET(base, node->offset);
+    ecs_script_assign_step_t *steps = ecs_vec_first(&node->steps);
+    int32_t i, count = ecs_vec_count(&node->steps), index = 0;
+    for (i = 0; i < count; i ++) {
+        ecs_script_assign_step_t *step = &steps[i];
+        if (step->member) {
+            ptr = ECS_OFFSET(ptr, step->offset);
+            continue;
+        }
+
+        void *array = ptr;
+        int32_t elem_count = step->count;
+        if (!elem_count) {
+            array = ecs_vec_first((ecs_vec_t*)ptr);
+            elem_count = ecs_vec_count((ecs_vec_t*)ptr);
+        }
+
+        int64_t elem = indices[index ++];
+        if (elem < 0 || elem >= elem_count) {
+            flecs_script_eval_error(v, node,
+                "cannot assign to '%s': index %d is out of range for "
+                "collection with %d elements",
+                node->name, (int)elem, elem_count);
+            return NULL;
+        }
+
+        ptr = ECS_ELEM(array, step->elem_size, (int32_t)elem);
+    }
+
+    return ptr;
+}
+
 int flecs_script_assign_value(
     ecs_script_eval_visitor_t *v,
     ecs_script_assign_t *node,
+    const int64_t *indices,
     const void *src)
 {
     ecs_world_t *world = v->world;
+    const ecs_type_info_t *ti = ecs_get_type_info(world, node->eval_type);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (node->local) {
         ecs_script_var_t *var = ecs_script_vars_from_sp(v->vars, node->sp);
         ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (var->value.ptr != src) {
-            const ecs_type_info_t *ti = ecs_get_type_info(world, node->eval_type);
-            ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_ptr_copy_w_type_info(world, ti, var->value.ptr, src);
+        void *dst = flecs_script_assign_target(
+            v, node, var->value.ptr, indices);
+        if (!dst) {
+            return -1;
+        }
+
+        if (dst != src) {
+            ecs_ptr_copy_w_type_info(world, ti, dst, src);
         }
 
         return 0;
@@ -2178,16 +2224,23 @@ int flecs_script_assign_value(
             mv = ecs_get_mut(world, node->global, EcsScriptMutVar);
         }
 
-        if (!mv || mv->value.type != node->eval_type) {
+        if (!mv || mv->value.type != node->root_type) {
             flecs_script_eval_error(v, node,
                 "cannot assign to '%s': mut variable is no longer alive",
                 node->name);
             return -1;
         }
 
-        const ecs_type_info_t *ti = ecs_get_type_info(world, node->eval_type);
-        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_ptr_copy_w_type_info(world, ti, mv->value.ptr, src);
+        void *dst = flecs_script_assign_target(
+            v, node, mv->value.ptr, indices);
+        if (!dst) {
+            return -1;
+        }
+
+        if (dst != src) {
+            ecs_ptr_copy_w_type_info(world, ti, dst, src);
+        }
+
         ecs_modified(world, node->global, EcsScriptMutVar);
         return 0;
     }
@@ -2209,8 +2262,6 @@ int flecs_script_assign_value(
     ecs_id_t component = node->component;
     ecs_search(world, ecs_get_table(world, instance), component, &component);
 
-    const ecs_type_info_t *ti = ecs_get_type_info(world, node->eval_type);
-    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
     const ecs_type_info_t *comp_ti = ecs_get_type_info(world, component);
     ecs_assert(comp_ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -2218,12 +2269,18 @@ int flecs_script_assign_value(
     ecs_assert(cur != NULL, ECS_INTERNAL_ERROR, NULL);
     void *copy = ecs_ptr_new_w_type_info(world, comp_ti);
     ecs_ptr_copy_w_type_info(world, comp_ti, copy, cur);
-    ecs_ptr_copy_w_type_info(world, ti, ECS_OFFSET(copy, node->offset), src);
-    ecs_set_id(world, instance, component,
-        flecs_ito(size_t, comp_ti->size), copy);
-    ecs_ptr_free_w_type_info(world, comp_ti, copy);
 
-    return 0;
+    int result = -1;
+    void *dst = flecs_script_assign_target(v, node, copy, indices);
+    if (dst) {
+        ecs_ptr_copy_w_type_info(world, ti, dst, src);
+        ecs_set_id(world, instance, component,
+            flecs_ito(size_t, comp_ti->size), copy);
+        result = 0;
+    }
+
+    ecs_ptr_free_w_type_info(world, comp_ti, copy);
+    return result;
 }
 
 static FLECS_SCRIPT_NOINLINE int flecs_script_eval_assign(
@@ -2234,6 +2291,24 @@ static FLECS_SCRIPT_NOINLINE int flecs_script_eval_assign(
     ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
     const ecs_type_info_t *ti = ecs_get_type_info(v->world, type);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int64_t indices[FLECS_SCRIPT_ASSIGN_INDEX_MAX];
+    ecs_script_assign_step_t *steps = ecs_vec_first(&node->steps);
+    int32_t i, count = ecs_vec_count(&node->steps), index_count = 0;
+    for (i = 0; i < count; i ++) {
+        if (steps[i].member) {
+            continue;
+        }
+
+        ecs_value_t index = {
+            .type = ecs_id(ecs_i64_t), .ptr = &indices[index_count ++] };
+        if (flecs_script_eval_expr(v, &steps[i].index, &index)) {
+            flecs_script_eval_error(v, node,
+                "failed to evaluate index for assignment to '%s'",
+                node->name);
+            return -1;
+        }
+    }
 
     ecs_value_t value = { .type = type };
     value.ptr = flecs_stack_calloc(&v->r->stack, ti->size, ti->alignment);
@@ -2246,7 +2321,7 @@ static FLECS_SCRIPT_NOINLINE int flecs_script_eval_assign(
             node->name);
         result = -1;
     } else {
-        result = flecs_script_assign_value(v, node, value.ptr);
+        result = flecs_script_assign_value(v, node, indices, value.ptr);
     }
 
     if (ti->hooks.dtor) {

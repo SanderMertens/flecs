@@ -1154,7 +1154,23 @@
                 "block_on_deleted_entity_stops",
                 "block_restarts_for_loop_var",
                 "export_mut_read_does_not_restart",
-                "export_mut_via_template_const_restarts"
+                "export_mut_via_template_const_restarts",
+                "assign_struct_member",
+                "assign_nested_struct_member",
+                "assign_array_element",
+                "assign_vector_element",
+                "assign_element_member",
+                "assign_member_element_member",
+                "assign_template_mut_element_notifies",
+                "assign_export_mut_element_notifies",
+                "assign_local_mut_element",
+                "assign_index_evaluated_before_value",
+                "assign_index_out_of_range",
+                "assign_string_element",
+                "declare_array_w_type",
+                "struct_reset_w_empty_initializer",
+                "error_assign_target",
+                "assign_template_and_parent_mut_member"
             ]
         }, {
             "id": "Input",
