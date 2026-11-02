@@ -63,6 +63,10 @@ static const struct {
     [EcsTokRange] = {"..", ""},
     [EcsTokShiftLeft] = {"<<", ""},
     [EcsTokShiftRight] = {">>", ""},
+    [EcsTokAddAssign] = {"+=", ""},
+    [EcsTokSubAssign] = {"-=", ""},
+    [EcsTokMulAssign] = {"*=", ""},
+    [EcsTokDivAssign] = {"/=", ""},
     [EcsTokHasBracketOpen] = {"?[", ""},
     [EcsTokKeywordWith] = {"with", "keyword "},
     [EcsTokKeywordUsing] = {"using", "keyword "},
@@ -98,7 +102,10 @@ static const struct {
 };
 
 static const ecs_token_kind_t flecs_token_pairs[128][2] = {
-    ['-'] = {EcsTokArrow},
+    ['+'] = {EcsTokAddAssign},
+    ['-'] = {EcsTokArrow, EcsTokSubAssign},
+    ['*'] = {EcsTokMulAssign},
+    ['/'] = {EcsTokDivAssign},
     ['?'] = {EcsTokHasBracketOpen},
     ['.'] = {EcsTokRange},
     ['='] = {EcsTokEq},
