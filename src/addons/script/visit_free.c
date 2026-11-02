@@ -88,9 +88,18 @@ int flecs_script_visit_free_node(
     case EcsAstWhile:
         flecs_expr_visit_free(script, ((ecs_script_while_t*)node)->expr);
         break;
-    case EcsAstAssign:
-        flecs_expr_visit_free(script, ((ecs_script_assign_t*)node)->expr);
+    case EcsAstAssign: {
+        ecs_script_assign_t *assign = (ecs_script_assign_t*)node;
+        ecs_script_assign_step_t *steps = ecs_vec_first(&assign->steps);
+        int32_t i, count = ecs_vec_count(&assign->steps);
+        for (i = 0; i < count; i ++) {
+            flecs_expr_visit_free(script, steps[i].index);
+        }
+
+        ecs_vec_fini_t(a, &assign->steps, ecs_script_assign_step_t);
+        flecs_expr_visit_free(script, assign->expr);
         break;
+    }
     case EcsAstTry:
         ecs_vec_fini_t(a, &((ecs_script_try_t*)node)->catches, ecs_script_catch_t);
         break;

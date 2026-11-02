@@ -1133,6 +1133,22 @@ void AsyncBlock_block_on_deleted_entity_stops(void);
 void AsyncBlock_block_restarts_for_loop_var(void);
 void AsyncBlock_export_mut_read_does_not_restart(void);
 void AsyncBlock_export_mut_via_template_const_restarts(void);
+void AsyncBlock_assign_struct_member(void);
+void AsyncBlock_assign_nested_struct_member(void);
+void AsyncBlock_assign_array_element(void);
+void AsyncBlock_assign_vector_element(void);
+void AsyncBlock_assign_element_member(void);
+void AsyncBlock_assign_member_element_member(void);
+void AsyncBlock_assign_template_mut_element_notifies(void);
+void AsyncBlock_assign_export_mut_element_notifies(void);
+void AsyncBlock_assign_local_mut_element(void);
+void AsyncBlock_assign_index_evaluated_before_value(void);
+void AsyncBlock_assign_index_out_of_range(void);
+void AsyncBlock_assign_string_element(void);
+void AsyncBlock_declare_array_w_type(void);
+void AsyncBlock_struct_reset_w_empty_initializer(void);
+void AsyncBlock_error_assign_target(void);
+void AsyncBlock_assign_template_and_parent_mut_member(void);
 
 // Testsuite 'Input'
 void Input_setup(void);
@@ -8748,6 +8764,70 @@ bake_test_case AsyncBlock_testcases[] = {
     {
         "export_mut_via_template_const_restarts",
         AsyncBlock_export_mut_via_template_const_restarts
+    },
+    {
+        "assign_struct_member",
+        AsyncBlock_assign_struct_member
+    },
+    {
+        "assign_nested_struct_member",
+        AsyncBlock_assign_nested_struct_member
+    },
+    {
+        "assign_array_element",
+        AsyncBlock_assign_array_element
+    },
+    {
+        "assign_vector_element",
+        AsyncBlock_assign_vector_element
+    },
+    {
+        "assign_element_member",
+        AsyncBlock_assign_element_member
+    },
+    {
+        "assign_member_element_member",
+        AsyncBlock_assign_member_element_member
+    },
+    {
+        "assign_template_mut_element_notifies",
+        AsyncBlock_assign_template_mut_element_notifies
+    },
+    {
+        "assign_export_mut_element_notifies",
+        AsyncBlock_assign_export_mut_element_notifies
+    },
+    {
+        "assign_local_mut_element",
+        AsyncBlock_assign_local_mut_element
+    },
+    {
+        "assign_index_evaluated_before_value",
+        AsyncBlock_assign_index_evaluated_before_value
+    },
+    {
+        "assign_index_out_of_range",
+        AsyncBlock_assign_index_out_of_range
+    },
+    {
+        "assign_string_element",
+        AsyncBlock_assign_string_element
+    },
+    {
+        "declare_array_w_type",
+        AsyncBlock_declare_array_w_type
+    },
+    {
+        "struct_reset_w_empty_initializer",
+        AsyncBlock_struct_reset_w_empty_initializer
+    },
+    {
+        "error_assign_target",
+        AsyncBlock_error_assign_target
+    },
+    {
+        "assign_template_and_parent_mut_member",
+        AsyncBlock_assign_template_and_parent_mut_member
     }
 };
 
@@ -21263,7 +21343,7 @@ static bake_test_suite suites[] = {
         "AsyncBlock",
         AsyncBlock_setup,
         NULL,
-        116,
+        132,
         AsyncBlock_testcases,
         1,
         AsyncBlock_params

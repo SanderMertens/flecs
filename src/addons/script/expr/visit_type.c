@@ -916,7 +916,8 @@ static int flecs_expr_initializer_collection_check(
             }
 
             if (!node->is_collection && kind != EcsStructType &&
-                kind != EcsValueType)
+                kind != EcsValueType && !(kind == EcsArrayType &&
+                    node->node.kind == EcsExprEmptyInitializer))
             {
                 flecs_expr_visit_error(script, node,
                     "invalid object literal for type '%s'",

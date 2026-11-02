@@ -1081,13 +1081,21 @@ static int flecs_script_dep_node_impl(
         }
         break;
     }
-    case EcsAstAssign:
-        if (flecs_script_dep_expr(ctx,
-            ((ecs_script_assign_t*)node)->expr, node))
-        {
+    case EcsAstAssign: {
+        ecs_script_assign_t *n = (ecs_script_assign_t*)node;
+        ecs_script_assign_step_t *steps = ecs_vec_first(&n->steps);
+        int32_t i, count = ecs_vec_count(&n->steps);
+        for (i = 0; i < count; i ++) {
+            if (flecs_script_dep_expr(ctx, steps[i].index, node)) {
+                return -1;
+            }
+        }
+
+        if (flecs_script_dep_expr(ctx, n->expr, node)) {
             return -1;
         }
         break;
+    }
     case EcsAstTry: {
         ecs_script_try_t *n = (ecs_script_try_t*)node;
         if (flecs_script_dep_child(ctx, node, n->try_scope, true)) {

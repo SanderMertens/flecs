@@ -383,7 +383,20 @@ static void flecs_script_stmt_to_str(
     }
     case EcsAstAssign: {
         ecs_script_assign_t *stmt = (ecs_script_assign_t*)node;
-        flecs_scriptbuf_append(v, "%s = ", stmt->name);
+        flecs_scriptbuf_append(v, "%s", stmt->name);
+        ecs_script_assign_step_t *steps = ecs_vec_first(&stmt->steps);
+        int32_t i, count = ecs_vec_count(&stmt->steps);
+        for (i = 0; i < count; i ++) {
+            if (steps[i].member) {
+                flecs_scriptbuf_append(v, ".%s", steps[i].member);
+            } else {
+                flecs_scriptbuf_appendstr(v, "[");
+                flecs_expr_to_str(v, steps[i].index);
+                flecs_scriptbuf_appendstr(v, "]");
+            }
+        }
+
+        flecs_scriptbuf_appendstr(v, " = ");
         flecs_expr_to_str(v, stmt->expr);
         break;
     }
