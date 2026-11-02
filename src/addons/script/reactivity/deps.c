@@ -921,7 +921,7 @@ static int flecs_script_dep_node_impl(
 
         if (node->kind == EcsAstConst) {
             bool computed = ctx->reactive && !ctx->conditional &&
-                !n->is_await && ctx->computed_count < 64;
+                !n->is_await && !n->is_local_mut && ctx->computed_count < 64;
             if (computed) {
                 int32_t slot = ctx->computed_count ++;
                 n->computed = slot + 1;

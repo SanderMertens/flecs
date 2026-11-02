@@ -3205,7 +3205,7 @@ void AsyncBlock_error_mut_in_async(void) {
     test_assert(ecs_script_run_w_desc(world, NULL,
         HEAD "template T {"
         LINE "  async {"
-        LINE "    mut m = 1"
+        LINE "    export mut m = 1"
         LINE "  }"
         LINE "}", &ir_desc, NULL) != 0);
 
@@ -6507,6 +6507,306 @@ void AsyncBlock_error_break_async_in_loop(void) {
         LINE "  async {"
         LINE "    break"
         LINE "  }"
+        LINE "}", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_local_mut(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut out: f64 = 0"
+            LINE "async {"
+            LINE "  mut total: f64 = 1"
+            LINE "  for i in 0..4 {"
+            LINE "    const before = total"
+            LINE "    total += i"
+            LINE "    total = total + (total - before)"
+            LINE "  }"
+            LINE "  out = total"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_flt(*(double*)ecs_mut_var_get(
+        world, ecs_lookup(world, "out")).ptr, 13);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_local_mut_across_await(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut out: i32 = 0"
+            LINE "async {"
+            LINE "  mut total: i32 = 100"
+            LINE "  mut name: string = \"a\""
+            LINE "  const a = await fetch(1)"
+            LINE "  total += a"
+            LINE "  name = \"b\""
+            LINE "  const b = await fetch(2)"
+            LINE "  total += b"
+            LINE "  if name == \"b\" {"
+            LINE "    out = total"
+            LINE "  }"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 1);
+
+    ecs_value_t v = ecs_value(ecs_i32_t, {10});
+    test_int(ecs_script_future_resolve(ab_futures[0], &v), 0);
+    ecs_script_future_release(ab_futures[0]);
+
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 2);
+
+    v = ecs_value(ecs_i32_t, {20});
+    test_int(ecs_script_future_resolve(ab_futures[1], &v), 0);
+    ecs_script_future_release(ab_futures[1]);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(
+        world, ecs_lookup(world, "out")).ptr, 130);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_local_mut_await_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut out: i32 = 0"
+            LINE "async {"
+            LINE "  mut value = await fetch(1)"
+            LINE "  value += 1"
+            LINE "  out = value"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 1);
+
+    ecs_value_t v = ecs_value(ecs_i32_t, {41});
+    test_int(ecs_script_future_resolve(ab_futures[0], &v), 0);
+    ecs_script_future_release(ab_futures[0]);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(
+        world, ecs_lookup(world, "out")).ptr, 42);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_local_mut_resets_in_loop(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut out: i32 = 0"
+            LINE "async {"
+            LINE "  for i in 0..3 {"
+            LINE "    mut local: i32 = 1"
+            LINE "    local += i"
+            LINE "    out += local"
+            LINE "  }"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(
+        world, ecs_lookup(world, "out")).ptr, 6);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_local_mut_per_task(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "template T {"
+            LINE "  prop start: i32 = 0"
+            LINE "  mut out: i32 = 0"
+            LINE "  Position: {out, 0}"
+            LINE "  async {"
+            LINE "    mut local: i32 = start"
+            LINE "    const v = await fetch(0)"
+            LINE "    local += v"
+            LINE "    out = local"
+            LINE "  }"
+            LINE "}"
+            LINE "T a(start: 10)"
+            LINE "T b(start: 20)",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+    test_int(ab_future_count, 2);
+
+    for (int32_t i = 0; i < 2; i ++) {
+        ecs_value_t v = ecs_value(ecs_i32_t, {1});
+        test_int(ecs_script_future_resolve(ab_futures[i], &v), 0);
+        ecs_script_future_release(ab_futures[i]);
+    }
+
+    ecs_script_tasks_progress(world);
+    ecs_progress(world, 0);
+
+    const ab_Position *a = ecs_get_id(world, ecs_lookup(world, "a"), position);
+    const ab_Position *b = ecs_get_id(world, ecs_lookup(world, "b"), position);
+    test_assert(a != NULL);
+    test_assert(b != NULL);
+    test_int(a->x, 11);
+    test_int(b->x, 21);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_local_mut_not_reactive(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "template T {"
+            LINE "  mut count: i32 = 7"
+            LINE "  Position: {count, 0}"
+            LINE "  async {"
+            LINE "    mut count: i32 = 0"
+            LINE "    count = 100"
+            LINE "  }"
+            LINE "}"
+            LINE "T e",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+    ecs_progress(world, 0);
+
+    const ab_Position *p = ecs_get_id(world, ecs_lookup(world, "e"), position);
+    test_assert(p != NULL);
+    test_int(p->x, 7);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_error_local_mut_outside_block(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "mut x = 0", &ir_desc, NULL) != 0);
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "e {"
+        LINE "  mut x = 0"
+        LINE "}", &ir_desc, NULL) != 0);
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "async {"
+        LINE "  mut x: i32"
+        LINE "}", &ir_desc, NULL) != 0);
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "async {"
+        LINE "  mut x: i32 = 0"
+        LINE "  mut x: i32 = 1"
+        LINE "}", &ir_desc, NULL) != 0);
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "async {"
+        LINE "  const x: i32 = 0"
+        LINE "  x = 1"
+        LINE "}", &ir_desc, NULL) != 0);
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "async {"
+        LINE "  mut x: i32 = 0"
+        LINE "  x = \"foo\""
         LINE "}", &ir_desc, NULL) != 0);
 
     ecs_fini(world);
