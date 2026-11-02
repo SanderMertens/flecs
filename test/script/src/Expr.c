@@ -13957,3 +13957,147 @@ void Expr_partial_nested_initializer(void) {
 
     ecs_fini(world);
 }
+
+void Expr_conditional(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const a: i32 = true ? 1 : 2"
+    LINE "const b: i32 = false ? 1 : 2"
+    LINE "const c: f64 = 2 > 1 ? 1.5 : 2"
+    LINE "const d: i32 = 1 + 2 == 3 ? 3 * 3 : 2 * 2"
+    LINE "const e: string = false ? \"foo\" : \"bar\""
+    LINE "export const r_a = a"
+    LINE "export const r_b = b"
+    LINE "export const r_c = c"
+    LINE "export const r_d = d"
+    LINE "export const r_e = e";
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_int(*(int32_t*)ecs_const_var_get(world, ecs_lookup(world, "r_a")).ptr, 1);
+    test_int(*(int32_t*)ecs_const_var_get(world, ecs_lookup(world, "r_b")).ptr, 2);
+    test_flt(*(double*)ecs_const_var_get(world, ecs_lookup(world, "r_c")).ptr, 1.5);
+    test_int(*(int32_t*)ecs_const_var_get(world, ecs_lookup(world, "r_d")).ptr, 9);
+    test_str(*(char**)ecs_const_var_get(world, ecs_lookup(world, "r_e")).ptr, "bar");
+
+    ecs_fini(world);
+}
+
+void Expr_conditional_nested(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "false ? 1 : false ? 2 : 3", &v, &desc) != NULL);
+    test_uint(*(uint64_t*)v.ptr, 3);
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    v = (ecs_value_t){0};
+    test_assert(ecs_expr_run(world, "true ? false ? 1 : 2 : 3", &v, &desc) != NULL);
+    test_uint(*(uint64_t*)v.ptr, 2);
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    v = (ecs_value_t){0};
+    test_assert(ecs_expr_run(world, "(true ? 1 : 2) + 1", &v, &desc) != NULL);
+    test_uint(*(uint64_t*)v.ptr, 2);
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_conditional_non_bool_condition(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "5 ? 1 : 2", &v, &desc) != NULL);
+    test_uint(*(uint64_t*)v.ptr, 1);
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    v = (ecs_value_t){0};
+    test_assert(ecs_expr_run(world, "0 ? 1 : 2", &v, &desc) != NULL);
+    test_uint(*(uint64_t*)v.ptr, 2);
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+static int32_t expr_conditional_count = 0;
+
+static void expr_conditional_func(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)ctx;
+    (void)argc;
+    expr_conditional_count ++;
+    *(int32_t*)result->ptr = *(int32_t*)argv[0].ptr;
+}
+
+void Expr_conditional_evaluates_one_branch(void) {
+    ecs_world_t *world = ecs_init();
+
+    expr_conditional_count = 0;
+
+    ecs_function(world, {
+        .name = "count_call",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = expr_conditional_func
+    });
+
+    const char *expr =
+    HEAD "export mut flag: bool = true"
+    LINE "export const a: i32 = flag ? count_call(1) : count_call(2)";
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_int(*(int32_t*)ecs_const_var_get(world, ecs_lookup(world, "a")).ptr, 1);
+    test_int(expr_conditional_count, 1);
+
+    ecs_fini(world);
+}
+
+void Expr_conditional_collection_branches(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct P(x: i32)"
+    LINE "const flag: bool = false"
+    LINE "const v = flag ? [1, 2] : [3, 4]"
+    LINE "e { P: {v[1]} }";
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    const int32_t *r = ecs_get_id(world,
+        ecs_lookup(world, "e"), ecs_lookup(world, "P"));
+    test_assert(r != NULL);
+    test_int(*r, 4);
+
+    ecs_fini(world);
+}
+
+void Expr_conditional_unify_types(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "true ? 1 : 2.5", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_f64_t));
+    test_flt(*(double*)v.ptr, 1);
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_error_conditional(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "true ? 1", &v, &desc) == NULL);
+    test_assert(ecs_expr_run(world, "true ? : 1", &v, &desc) == NULL);
+    test_assert(ecs_expr_run(world, "true ? 1 :", &v, &desc) == NULL);
+
+    ecs_fini(world);
+}

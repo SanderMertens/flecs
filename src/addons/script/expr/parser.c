@@ -35,6 +35,7 @@ static int flecs_expr_precedence[EcsTokLast] = {
     [EcsTokBitwiseOr] = 10,
     [EcsTokAnd] = 11,
     [EcsTokOr] = 12,
+    [EcsTokOptional] = 13,
 };
 
 static const char* flecs_script_parse_lhs(
@@ -358,6 +359,48 @@ static ecs_expr_node_t* flecs_script_parse_number(
     return (ecs_expr_node_t*)flecs_expr_int(parser, (int64_t)(0 - v));
 }
 
+/* A '?' followed by a '[' is only a conditional expression if the closing ']'
+ * is followed by a ':'. If it isn't the expression ends before the '?'. */
+static bool flecs_script_is_conditional(
+    const char *pos)
+{
+    while (isspace((unsigned char)pos[0])) {
+        pos ++;
+    }
+
+    if (pos[0] != '[') {
+        return true;
+    }
+
+    int32_t depth = 0;
+    char quote = 0;
+    for (; pos[0]; pos ++) {
+        if (quote) {
+            if (pos[0] == '\\' && pos[1]) {
+                pos ++;
+            } else if (pos[0] == quote) {
+                quote = 0;
+            }
+        } else if (pos[0] == '"' || pos[0] == '\'' || pos[0] == '`') {
+            quote = pos[0];
+        } else if (pos[0] == '[' || pos[0] == '(' || pos[0] == '{') {
+            depth ++;
+        } else if (pos[0] == ']' || pos[0] == ')' || pos[0] == '}') {
+            depth --;
+            if (!depth) {
+                pos ++;
+                break;
+            }
+        }
+    }
+
+    while (isspace((unsigned char)pos[0])) {
+        pos ++;
+    }
+
+    return pos[0] == ':';
+}
+
 static const char* flecs_script_parse_rhs(
     ecs_parser_t *parser,
     const char *pos,
@@ -396,6 +439,10 @@ static const char* flecs_script_parse_rhs(
         if (elem_end && (oper == EcsTokBracketOpen ||
             (oper == EcsTokSub && isdigit((unsigned char)lookahead[0]))))
         {
+            is_oper = false;
+        }
+
+        if (oper == EcsTokOptional && !flecs_script_is_conditional(lookahead)) {
             is_oper = false;
         }
 
@@ -473,6 +520,36 @@ static const char* flecs_script_parse_rhs(
 
                     break;
                 });
+
+                break;
+            }
+
+            case EcsTokOptional: {
+                ecs_expr_match_t *result = flecs_expr_match(parser);
+                ecs_allocator_t *a = &parser->script->allocator;
+                result->expr = *out;
+                result->is_conditional = true;
+                *out = (ecs_expr_node_t*)result;
+
+                ecs_vec_init_t(a, &result->elements,
+                    ecs_expr_match_element_t, 2);
+                ecs_expr_match_element_t *elems = ecs_vec_grow_t(
+                    a, &result->elements, ecs_expr_match_element_t, 2);
+                ecs_os_memset_n(elems, 0, ecs_expr_match_element_t, 2);
+                elems[0].compare = (ecs_expr_node_t*)flecs_expr_bool(parser, true);
+                elems[1].compare = (ecs_expr_node_t*)flecs_expr_identifier(parser, "_");
+
+                pos = flecs_script_parse_expr(parser, pos, 0, &elems[0].expr);
+                if (!pos) {
+                    goto error;
+                }
+
+                Parse_1(':', {});
+
+                pos = flecs_script_parse_expr(parser, pos, 0, &elems[1].expr);
+                if (!pos) {
+                    goto error;
+                }
 
                 break;
             }
