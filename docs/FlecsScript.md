@@ -1737,6 +1737,24 @@ async {
 }
 ```
 
+Async blocks can wait for time to pass with the `next_frame` and `delay` functions in the `flecs.script` module:
+
+```cpp
+using flecs.script
+
+async {
+  while true {
+    await delay(1.5)
+    tick()
+    await next_frame()
+  }
+}
+```
+
+`next_frame()` resolves once per `ecs_progress` call. `delay(seconds)` resolves on the first frame at or after the specified amount of time has passed. A zero or negative duration resolves on the next frame, never in the same frame, so `while true { await delay(0) }` doesn't hang the application.
+
+Delays use scaled world time, so `ecs_set_time_scale` speeds up delays, and a time scale of 0 pauses them. `next_frame()` isn't affected by the time scale. Both functions are resolved by a system in the `EcsPreUpdate` phase of the default pipeline, and are not available in builds without the pipeline addon. Calling `ecs_script_tasks_progress` without `ecs_progress` doesn't advance time.
+
 ## Control flow
 
 ### If statement
