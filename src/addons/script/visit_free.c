@@ -88,6 +88,9 @@ int flecs_script_visit_free_node(
     case EcsAstWhile:
         flecs_expr_visit_free(script, ((ecs_script_while_t*)node)->expr);
         break;
+    case EcsAstCall:
+        flecs_expr_visit_free(script, ((ecs_script_call_t*)node)->expr);
+        break;
     case EcsAstAssign: {
         ecs_script_assign_t *assign = (ecs_script_assign_t*)node;
         ecs_script_assign_step_t *steps = ecs_vec_first(&assign->steps);

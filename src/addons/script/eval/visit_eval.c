@@ -2013,6 +2013,35 @@ void flecs_script_user_function_bind(
     }
 }
 
+static void flecs_script_proc_call(
+    ecs_world_t *world,
+    const ecs_script_user_function_t *uf,
+    int32_t argc,
+    const ecs_value_t *argv)
+{
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+    ecs_script_eval_desc_t desc = {
+        .runtime = flecs_script_runtime_acquire_call(runtime)
+    };
+
+    ecs_script_runner_t runner;
+    flecs_script_eval_visit_init(flecs_script_impl(uf->script), &runner.v, &desc);
+    flecs_script_user_function_bind(&runner.v, uf, argc, argv, true);
+    runner.v.force = true;
+    flecs_script_runner_init(&runner, &runner.v);
+
+    bool failed = flecs_script_runner_run_scope(
+        &runner, uf->node->body) != FlecsScriptRunDone;
+
+    runner.v.vars = ecs_script_vars_pop(runner.v.vars);
+    flecs_script_runner_fini(&runner, &desc);
+    flecs_script_runtime_release_call(runtime, desc.runtime);
+
+    if (failed) {
+        flecs_script_runtime_get(world)->error = true;
+    }
+}
+
 void flecs_script_user_function_callback(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
@@ -2035,14 +2064,34 @@ void flecs_script_user_function_callback(
     ecs_script_user_function_t *uf = fcomp->binding_ctx;
     ecs_script_function_node_t *node = uf->node;
     ecs_script_impl_t *impl = flecs_script_impl(uf->script);
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+
+    if (node->is_proc) {
+        if (runtime->proc_depth >= FLECS_SCRIPT_PROC_DEPTH_MAX) {
+            ecs_err("too many nested calls to procedure '%s', "
+                "does the procedure call itself?", node->name);
+            runtime->error = true;
+            return;
+        }
+
+        runtime->proc_depth ++;
+    }
 
     if (impl->ir_enabled) {
         flecs_script_ir_call_function(ctx, uf, argc, argv, result);
+    } else if (node->is_proc) {
+        flecs_script_proc_call(world, uf, argc, argv);
+    }
+
+    if (node->is_proc) {
+        runtime->proc_depth --;
+    }
+
+    if (impl->ir_enabled || node->is_proc) {
         return;
     }
 
     ecs_script_eval_visitor_t v;
-    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
     ecs_script_eval_desc_t desc = {
         .runtime = flecs_script_runtime_acquire_call(runtime)
     };
@@ -2112,7 +2161,7 @@ int flecs_script_eval_function(
     ecs_vec_t fn_refs;
     ecs_vec_init_t(NULL, &fn_refs, ecs_script_ref_t, 0);
 
-    int32_t stmt_count = ecs_vec_count(&node->body->stmts);
+    int32_t stmt_count = node->is_proc ? 0 : ecs_vec_count(&node->body->stmts);
     ecs_script_node_t **stmts = ecs_vec_first(&node->body->stmts);
     for (int32_t i = 0; i < stmt_count; i ++) {
         ecs_script_var_node_t *var = (ecs_script_var_node_t*)stmts[i];
@@ -2332,6 +2381,20 @@ static FLECS_SCRIPT_NOINLINE int flecs_script_eval_assign(
     return result;
 }
 
+static FLECS_SCRIPT_NOINLINE int flecs_script_eval_call(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_call_t *node)
+{
+    bool result = false;
+    ecs_value_t value = { .type = ecs_id(ecs_bool_t), .ptr = &result };
+    if (flecs_script_eval_expr(v, &node->expr, &value)) {
+        flecs_script_eval_error(v, node, "procedure call failed");
+        return -1;
+    }
+
+    return 0;
+}
+
 int flecs_script_value_to_bool(
     ecs_script_eval_visitor_t *v,
     const void *node,
@@ -2446,6 +2509,8 @@ int flecs_script_eval_node(
             "async blocks require FLECS_SCRIPT_ASYNC");
         return -1;
 #endif
+    case EcsAstCall:
+        return flecs_script_eval_call(v, (ecs_script_call_t*)node);
     case EcsAstAssign:
         return flecs_script_eval_assign(v, (ecs_script_assign_t*)node);
     default:

@@ -54,6 +54,7 @@ struct ecs_script_runtime_t {
 
     bool resolving;
     bool error;
+    int32_t proc_depth;
 };
 
 ecs_script_runtime_t* flecs_script_runtime_get(

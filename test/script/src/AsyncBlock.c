@@ -8127,3 +8127,261 @@ void AsyncBlock_delay_cancel_on_script_delete(void) {
 
     ecs_fini(world);
 }
+
+void AsyncBlock_proc_call(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut text: string = \"\""
+            LINE "export mut count: i32 = 0"
+            LINE "proc alert(message: string, n: i32) {"
+            LINE "  text = message"
+            LINE "  count += n"
+            LINE "}"
+            LINE "async {"
+            LINE "  alert(\"foo\", 1)"
+            LINE "  alert(\"bar\", 2)"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_str(*(char**)ecs_mut_var_get(world, ecs_lookup(world, "text")).ptr, "bar");
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 3);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_proc_no_args(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut count: i32 = 0"
+            LINE "proc tick() { count += 1 }"
+            LINE "async { tick(); tick() }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 2);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_proc_control_flow(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut out: i32 = 0"
+            LINE "proc sum(limit: i32) {"
+            LINE "  const start = 1"
+            LINE "  mut total: i32 = start"
+            LINE "  for i in 0..10 {"
+            LINE "    if i == limit {"
+            LINE "      break"
+            LINE "    }"
+            LINE "    if i == 1 {"
+            LINE "      continue"
+            LINE "    }"
+            LINE "    total += i"
+            LINE "  }"
+            LINE "  mut n: i32 = 0"
+            LINE "  while n < 2 {"
+            LINE "    n += 1"
+            LINE "    total *= 2"
+            LINE "  }"
+            LINE "  out = total"
+            LINE "}"
+            LINE "async { sum(4) }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "out")).ptr, 24);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_proc_call_proc(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut out: i32 = 0"
+            LINE "proc add(v: i32) { out += v }"
+            LINE "proc add_twice(v: i32) {"
+            LINE "  add(v)"
+            LINE "  add(v * 2)"
+            LINE "}"
+            LINE "async { add_twice(3) }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "out")).ptr, 9);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_proc_recursion(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut out: i32 = 0"
+            LINE "proc count(n: i32) {"
+            LINE "  if n > 0 {"
+            LINE "    out += 1"
+            LINE "    count(n - 1)"
+            LINE "  }"
+            LINE "}"
+            LINE "async { count(10) }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "out")).ptr, 10);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_proc_infinite_recursion(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut out: i32 = 0"
+            LINE "export mut after: i32 = 0"
+            LINE "proc loop() {"
+            LINE "  out += 1"
+            LINE "  loop()"
+            LINE "}"
+            LINE "async {"
+            LINE "  loop()"
+            LINE "  after = 1"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "out")).ptr, 64);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "after")).ptr, 0);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_proc_error_stops_caller(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut v: i32[2] = {}"
+            LINE "export mut after: i32 = 0"
+            LINE "proc write(i: i32) {"
+            LINE "  v[i] = 1"
+            LINE "}"
+            LINE "async {"
+            LINE "  write(5)"
+            LINE "  after = 1"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "after")).ptr, 0);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_proc_from_template_block(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut out: i32 = 0"
+            LINE "proc add(v: i32) { out += v }"
+            LINE "template T {"
+            LINE "  prop p: i32 = 0"
+            LINE "  async {"
+            LINE "    add(p)"
+            LINE "  }"
+            LINE "}"
+            LINE "T a(p: 2)"
+            LINE "T b(p: 3)",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "out")).ptr, 5);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_error_proc(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    const char *scripts[] = {
+        HEAD "proc p() { await fetch(1) }",
+        HEAD "proc p() { const x = await fetch(1) }",
+        HEAD "proc p() { try { } catch { } }",
+        HEAD "proc p() { }\nexport const x: bool = p()",
+        HEAD "export mut m: i32 = 0\nproc p() { }\nasync { m = p() }",
+        HEAD "proc p() { }\np()",
+        HEAD "proc p() { }\ntemplate T { p() }",
+        HEAD "proc p() { }\ntemplate T { const x: bool = p() }",
+        HEAD "fn f() -> i32 { 1 }\nasync { f() }",
+        HEAD "async { unknown_proc() }",
+        HEAD "proc p(a: i32) { }\nasync { p() }",
+        HEAD "proc p(a: i32) { }\nasync { p(1, 2) }",
+        HEAD "proc p() { }\nasync { p() + 1 }",
+        HEAD "proc p() { continue }",
+        HEAD "proc p(a: i32) { a = 1 }",
+        HEAD "template T { proc p() { } }",
+    };
+
+    for (int32_t i = 0; i < 16; i ++) {
+        test_assert(ecs_script_run_w_desc(
+            world, NULL, scripts[i], &ir_desc, NULL) != 0);
+    }
+
+    ecs_fini(world);
+}

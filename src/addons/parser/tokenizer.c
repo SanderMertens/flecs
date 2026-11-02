@@ -91,6 +91,7 @@ static const struct {
     [EcsTokKeywordCatch] = {"catch", "keyword "},
     [EcsTokKeywordContinue] = {"continue", "keyword "},
     [EcsTokKeywordBreak] = {"break", "keyword "},
+    [EcsTokKeywordProc] = {"proc", "keyword "},
     [EcsTokKeywordAsync] = {"async", "keyword "},
     [EcsTokKeywordWhile] = {"while", "keyword "},
     [EcsTokKeywordScript] = {"script", "keyword "},

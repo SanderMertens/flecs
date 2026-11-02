@@ -48388,6 +48388,7 @@ typedef enum ecs_token_kind_t {
     EcsTokKeywordCatch,
     EcsTokKeywordContinue,
     EcsTokKeywordBreak,
+    EcsTokKeywordProc,
     EcsTokKeywordAsync,
     EcsTokKeywordWhile,
     EcsTokKeywordScript,
@@ -48750,6 +48751,7 @@ typedef enum ecs_script_node_kind_t {
     EcsAstTry,
     EcsAstContinue,
     EcsAstBreak,
+    EcsAstCall,
     EcsAstAsync,
     EcsAstWhile,
     EcsAstAssign
@@ -48935,6 +48937,11 @@ typedef struct ecs_script_break_t {
     ecs_script_node_t node;
 } ecs_script_break_t;
 
+typedef struct ecs_script_call_t {
+    ecs_script_node_t node;
+    ecs_expr_node_t *expr;
+} ecs_script_call_t;
+
 typedef struct ecs_script_catch_t {
     const char *error; /* Error entity to catch. NULL for catch-all clause. */
     ecs_script_scope_t *scope;
@@ -48961,6 +48968,7 @@ typedef struct ecs_script_while_t {
 } ecs_script_while_t;
 
 #define FLECS_SCRIPT_ASSIGN_INDEX_MAX (8)
+#define FLECS_SCRIPT_PROC_DEPTH_MAX (64)
 
 typedef struct ecs_script_assign_step_t {
     const char *member;    /* Member path, NULL if step is an index */
@@ -49028,6 +49036,7 @@ typedef struct ecs_script_function_node_t {
     ecs_expr_node_t *return_expr;
     ecs_entity_t eval_return_type;
     int32_t symbol;
+    bool is_proc;
 } ecs_script_function_node_t;
 
 bool flecs_scope_is_empty(
@@ -49076,6 +49085,9 @@ ecs_script_continue_t* flecs_script_insert_continue(
     ecs_parser_t *parser);
 
 ecs_script_break_t* flecs_script_insert_break(
+    ecs_parser_t *parser);
+
+ecs_script_call_t* flecs_script_insert_call(
     ecs_parser_t *parser);
 
 ecs_script_try_t* flecs_script_insert_try(
@@ -49338,6 +49350,7 @@ typedef struct ecs_expr_function_t {
     ecs_expr_initializer_t *args;
     const char *function_name;
     ecs_function_calldata_t calldata;
+    bool is_proc_call;
 } ecs_expr_function_t;
 
 typedef struct ecs_expr_element_t {
@@ -49863,6 +49876,7 @@ struct ecs_script_runtime_t {
 
     bool resolving;
     bool error;
+    int32_t proc_depth;
 };
 
 ecs_script_runtime_t* flecs_script_runtime_get(
@@ -50598,6 +50612,7 @@ typedef struct ecs_script_type_visitor_t {
     bool template_scope;
     bool function_scope;
     bool async_scope;
+    bool proc_scope;
     ecs_script_entity_t *reopened;
     bool for_static;
     bool for_entity;
@@ -62275,6 +62290,7 @@ void ecs_set_os_api_impl(void) {
     case EcsTokKeywordInclude: case EcsTokKeywordFn: case EcsTokKeywordAwait:\
     case EcsTokKeywordTry: case EcsTokKeywordCatch: case EcsTokKeywordAsync:\
     case EcsTokKeywordContinue: case EcsTokKeywordBreak:\
+    case EcsTokKeywordProc:\
     case EcsTokKeywordWhile: case EcsTokKeywordScript
 
 /* Definitions for parser functions */
@@ -62786,6 +62802,7 @@ static const struct {
     [EcsTokKeywordCatch] = {"catch", "keyword "},
     [EcsTokKeywordContinue] = {"continue", "keyword "},
     [EcsTokKeywordBreak] = {"break", "keyword "},
+    [EcsTokKeywordProc] = {"proc", "keyword "},
     [EcsTokKeywordAsync] = {"async", "keyword "},
     [EcsTokKeywordWhile] = {"while", "keyword "},
     [EcsTokKeywordScript] = {"script", "keyword "},
@@ -66740,6 +66757,12 @@ ecs_script_continue_t* flecs_script_insert_continue(
     return flecs_ast_insert(parser, ecs_script_continue_t, EcsAstContinue);
 }
 
+ecs_script_call_t* flecs_script_insert_call(
+    ecs_parser_t *parser)
+{
+    return flecs_ast_insert(parser, ecs_script_call_t, EcsAstCall);
+}
+
 ecs_script_break_t* flecs_script_insert_break(
     ecs_parser_t *parser)
 {
@@ -69178,6 +69201,7 @@ static ecs_entity_t flecs_script_function_init(
     ecs_os_memcpy_n(f->vector_callbacks, desc->vector_callbacks, 
         ecs_vector_function_callback_t, FLECS_SCRIPT_VECTOR_FUNCTION_COUNT);
     f->ctx = desc->ctx;
+    f->is_proc = false;
 
     flecs_script_function_parse_args(desc, &f->params);
 
@@ -70587,6 +70611,7 @@ static const char* flecs_script_stmt_parse(
         case EcsTokKeywordTry:        goto try_stmt;
         case EcsTokKeywordContinue:   goto continue_stmt;
         case EcsTokKeywordBreak:      goto break_stmt;
+        case EcsTokKeywordProc:       goto proc_stmt;
         case EcsTokKeywordAsync:      goto async_stmt;
         case EcsTokKeywordWhile:      goto while_stmt;
     );
@@ -70885,6 +70910,34 @@ fn_stmt: {
     })
 }
 
+proc_stmt: {
+    Parse_2(EcsTokIdentifier, '(', {
+        ecs_script_function_node_t *fn = flecs_script_insert_function(
+            parser, Token(1));
+        fn->is_proc = true;
+        fn->return_type = "flecs.meta.bool";
+        fn->return_type_node.pos = parser->pos;
+
+        bool significant_newline = parser->significant_newline;
+        parser->significant_newline = false;
+        pos = flecs_script_fn_params(parser, fn, pos);
+        parser->significant_newline = significant_newline;
+        if (!pos) {
+            goto error;
+        }
+
+        pos = flecs_parser_skip_newlines(parser, pos);
+
+        Parse_1('{', {
+            bool async_scope = parser->async_scope;
+            parser->async_scope = true;
+            pos = flecs_script_scope(parser, fn->body, pos);
+            parser->async_scope = async_scope;
+            return pos;
+        })
+    })
+}
+
 continue_stmt: {
     flecs_script_insert_continue(parser);
     EndOfRule;
@@ -70945,6 +70998,20 @@ identifier_assign: {
     // value = expr\n
     Expr({
         stmt->expr = EXPR;
+        EndOfRule;
+    })
+}
+
+// value(
+identifier_call: {
+    pos = stmt_start;
+    Expr({
+        ecs_script_call_t *stmt = flecs_script_insert_call(parser);
+        stmt->expr = EXPR;
+        if (EXPR->kind == EcsExprFunction) {
+            ((ecs_expr_function_t*)EXPR)->is_proc_call = true;
+        }
+
         EndOfRule;
     })
 }
@@ -71285,6 +71352,10 @@ identifier_identifier_x:
 
 // SpaceShip(
 identifier_paren: {
+    if (parser->async_scope) {
+        goto identifier_call;
+    }
+
     return flecs_script_paren_expr(parser, Token(0),
         flecs_script_insert_entity(parser, NULL), pos);
 }
@@ -73311,6 +73382,9 @@ int flecs_script_visit_free_node(
     case EcsAstWhile:
         flecs_expr_visit_free(script, ((ecs_script_while_t*)node)->expr);
         break;
+    case EcsAstCall:
+        flecs_expr_visit_free(script, ((ecs_script_call_t*)node)->expr);
+        break;
     case EcsAstAssign: {
         ecs_script_assign_t *assign = (ecs_script_assign_t*)node;
         ecs_script_assign_step_t *steps = ecs_vec_first(&assign->steps);
@@ -73484,6 +73558,7 @@ const char* flecs_script_node_kind_str(
     case EcsAstTry:                return "try";
     case EcsAstContinue:           return "continue";
     case EcsAstBreak:              return "break";
+    case EcsAstCall:               return "call";
     case EcsAstAsync:              return "async";
     case EcsAstWhile:              return "while";
     case EcsAstAssign:             return "assign";
@@ -73728,6 +73803,9 @@ static void flecs_script_stmt_to_str(
         wrap = true;
         break;
     }
+    case EcsAstCall:
+        flecs_expr_to_str(v, ((ecs_script_call_t*)node)->expr);
+        break;
     case EcsAstAssign: {
         ecs_script_assign_t *stmt = (ecs_script_assign_t*)node;
         flecs_scriptbuf_append(v, "%s", stmt->name);
@@ -73784,7 +73862,12 @@ static void flecs_script_stmt_to_str(
                 params[i].name, params[i].type);
         }
 
-        flecs_scriptbuf_append(v, ") -> %s ", fn->return_type);
+        if (fn->is_proc) {
+            flecs_scriptbuf_appendstr(v, ") ");
+        } else {
+            flecs_scriptbuf_append(v, ") -> %s ", fn->return_type);
+        }
+
         flecs_script_scope_to_str(v, fn->body);
         if (fn->return_expr) {
             flecs_expr_to_str(v, fn->return_expr);
@@ -97775,6 +97858,35 @@ void flecs_script_user_function_bind(
     }
 }
 
+static void flecs_script_proc_call(
+    ecs_world_t *world,
+    const ecs_script_user_function_t *uf,
+    int32_t argc,
+    const ecs_value_t *argv)
+{
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+    ecs_script_eval_desc_t desc = {
+        .runtime = flecs_script_runtime_acquire_call(runtime)
+    };
+
+    ecs_script_runner_t runner;
+    flecs_script_eval_visit_init(flecs_script_impl(uf->script), &runner.v, &desc);
+    flecs_script_user_function_bind(&runner.v, uf, argc, argv, true);
+    runner.v.force = true;
+    flecs_script_runner_init(&runner, &runner.v);
+
+    bool failed = flecs_script_runner_run_scope(
+        &runner, uf->node->body) != FlecsScriptRunDone;
+
+    runner.v.vars = ecs_script_vars_pop(runner.v.vars);
+    flecs_script_runner_fini(&runner, &desc);
+    flecs_script_runtime_release_call(runtime, desc.runtime);
+
+    if (failed) {
+        flecs_script_runtime_get(world)->error = true;
+    }
+}
+
 void flecs_script_user_function_callback(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
@@ -97797,14 +97909,34 @@ void flecs_script_user_function_callback(
     ecs_script_user_function_t *uf = fcomp->binding_ctx;
     ecs_script_function_node_t *node = uf->node;
     ecs_script_impl_t *impl = flecs_script_impl(uf->script);
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+
+    if (node->is_proc) {
+        if (runtime->proc_depth >= FLECS_SCRIPT_PROC_DEPTH_MAX) {
+            ecs_err("too many nested calls to procedure '%s', "
+                "does the procedure call itself?", node->name);
+            runtime->error = true;
+            return;
+        }
+
+        runtime->proc_depth ++;
+    }
 
     if (impl->ir_enabled) {
         flecs_script_ir_call_function(ctx, uf, argc, argv, result);
+    } else if (node->is_proc) {
+        flecs_script_proc_call(world, uf, argc, argv);
+    }
+
+    if (node->is_proc) {
+        runtime->proc_depth --;
+    }
+
+    if (impl->ir_enabled || node->is_proc) {
         return;
     }
 
     ecs_script_eval_visitor_t v;
-    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
     ecs_script_eval_desc_t desc = {
         .runtime = flecs_script_runtime_acquire_call(runtime)
     };
@@ -97874,7 +98006,7 @@ int flecs_script_eval_function(
     ecs_vec_t fn_refs;
     ecs_vec_init_t(NULL, &fn_refs, ecs_script_ref_t, 0);
 
-    int32_t stmt_count = ecs_vec_count(&node->body->stmts);
+    int32_t stmt_count = node->is_proc ? 0 : ecs_vec_count(&node->body->stmts);
     ecs_script_node_t **stmts = ecs_vec_first(&node->body->stmts);
     for (int32_t i = 0; i < stmt_count; i ++) {
         ecs_script_var_node_t *var = (ecs_script_var_node_t*)stmts[i];
@@ -98094,6 +98226,20 @@ static FLECS_SCRIPT_NOINLINE int flecs_script_eval_assign(
     return result;
 }
 
+static FLECS_SCRIPT_NOINLINE int flecs_script_eval_call(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_call_t *node)
+{
+    bool result = false;
+    ecs_value_t value = { .type = ecs_id(ecs_bool_t), .ptr = &result };
+    if (flecs_script_eval_expr(v, &node->expr, &value)) {
+        flecs_script_eval_error(v, node, "procedure call failed");
+        return -1;
+    }
+
+    return 0;
+}
+
 int flecs_script_value_to_bool(
     ecs_script_eval_visitor_t *v,
     const void *node,
@@ -98208,6 +98354,8 @@ int flecs_script_eval_node(
             "async blocks require FLECS_SCRIPT_ASYNC");
         return -1;
 #endif
+    case EcsAstCall:
+        return flecs_script_eval_call(v, (ecs_script_call_t*)node);
     case EcsAstAssign:
         return flecs_script_eval_assign(v, (ecs_script_assign_t*)node);
     default:
@@ -101863,6 +102011,9 @@ static int flecs_script_type_function(
         goto done;
     }
 
+    ecs_get_mut(t->v->world, fn_entity, EcsScriptFunction)->is_proc =
+        node->is_proc;
+
     flecs_script_symbol_set(t->v, node->symbol, fn_entity);
     if (flecs_script_type_ensure_entities(t)) {
         goto done;
@@ -101874,7 +102025,12 @@ static int flecs_script_type_function(
         &t->v->base.script->unresolved_refs);
     int32_t prev_skip_count = t->skip_count;
     bool old_function_scope = t->function_scope;
-    t->function_scope = true;
+    bool old_async_scope = t->async_scope, old_proc_scope = t->proc_scope;
+    int32_t old_for_depth = t->for_depth;
+    t->function_scope = !node->is_proc;
+    t->async_scope = node->is_proc;
+    t->proc_scope = node->is_proc;
+    t->for_depth = 0;
     result = flecs_script_type_scope(t, node->body, table, false, false);
     if (!result && node->return_expr) {
         ecs_entity_t return_type = node->eval_return_type;
@@ -101883,6 +102039,9 @@ static int flecs_script_type_function(
     }
 
     t->function_scope = old_function_scope;
+    t->async_scope = old_async_scope;
+    t->proc_scope = old_proc_scope;
+    t->for_depth = old_for_depth;
     if (!result && t->skip_count == prev_skip_count &&
         ecs_vec_count(&t->v->base.script->unresolved_refs) == prev_unresolved)
     {
@@ -102580,6 +102739,16 @@ static int flecs_script_type_node(
         return -1;
     }
 
+    if (t->proc_scope && (node->kind == EcsAstAwait ||
+        node->kind == EcsAstTry || (node->kind == EcsAstConst &&
+            ((ecs_script_var_node_t*)node)->is_await)))
+    {
+        flecs_script_eval_error(t->v, node,
+            "%s is not allowed in proc body",
+            node->kind == EcsAstTry ? "try" : "await");
+        return -1;
+    }
+
     if (t->async_scope) {
         switch(node->kind) {
         case EcsAstScope:
@@ -102591,6 +102760,7 @@ static int flecs_script_type_node(
         case EcsAstWhile:
         case EcsAstContinue:
         case EcsAstBreak:
+        case EcsAstCall:
         case EcsAstAssign:
             break;
         default:
@@ -102698,6 +102868,15 @@ static int flecs_script_type_node(
         return flecs_script_type_async(t, (ecs_script_async_t*)node);
     case EcsAstWhile:
         return flecs_script_type_while(t, (ecs_script_while_t*)node);
+    case EcsAstCall:
+        if (((ecs_script_call_t*)node)->expr->kind != EcsExprFunction) {
+            flecs_script_eval_error(t->v, node,
+                "expected procedure call");
+            return -1;
+        }
+
+        return flecs_script_type_check_expr(t,
+            &((ecs_script_call_t*)node)->expr, NULL);
     case EcsAstAssign:
         return flecs_script_type_assign(t, (ecs_script_assign_t*)node);
     }
@@ -110262,6 +110441,14 @@ try_function:
         goto error;
     }
 
+    if (func_data->is_proc != node->is_proc_call) {
+        flecs_expr_visit_error(script, node, func_data->is_proc
+            ? "procedure '%s' can only be called as a statement"
+            : "'%s' is not a procedure and cannot be called as a statement",
+            node->function_name);
+        goto error;
+    }
+
     node->node.type = func_data->return_type;
     node->calldata.function = func;
     node->calldata.is.callback = func_data->callback;
@@ -112335,6 +112522,12 @@ static void flecs_irc_compile_stmt(
     case EcsAstBreak:
         flecs_irc_emit(c, EcsIrBreak, -1, 0, 0, node);
         break;
+    case EcsAstCall: {
+        int32_t begin = flecs_irc_expr_begin(c, node);
+        flecs_irc_compile_tmp(c, ((ecs_script_call_t*)node)->expr);
+        flecs_irc_expr_end(c, begin, true);
+        break;
+    }
     case EcsAstAsync:
         flecs_irc_entry_add(c, node, EcsIrEntryAsync);
         flecs_irc_emit(c, EcsIrAsync, 0, 0, 0, node);
@@ -112429,6 +112622,13 @@ static void flecs_irc_compile_function(
 {
     ecs_script_scope_t *body = node->body;
     body->parent = NULL;
+    if (node->is_proc) {
+        c->force_depth ++;
+        flecs_irc_compile_scope(c, body, 0);
+        c->force_depth --;
+        return;
+    }
+
     c->scope = body;
 
     int32_t i, count = ecs_vec_count(&body->stmts);
@@ -122906,6 +123106,13 @@ static int flecs_script_dep_node_impl(
         }
         break;
     }
+    case EcsAstCall:
+        if (flecs_script_dep_expr(ctx,
+            ((ecs_script_call_t*)node)->expr, node))
+        {
+            return -1;
+        }
+        break;
     case EcsAstAssign: {
         ecs_script_assign_t *n = (ecs_script_assign_t*)node;
         ecs_script_assign_step_t *steps = ecs_vec_first(&n->steps);

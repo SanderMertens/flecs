@@ -149,6 +149,7 @@ typedef struct ecs_expr_function_t {
     ecs_expr_initializer_t *args;
     const char *function_name;
     ecs_function_calldata_t calldata;
+    bool is_proc_call;
 } ecs_expr_function_t;
 
 typedef struct ecs_expr_element_t {

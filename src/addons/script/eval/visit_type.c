@@ -1922,6 +1922,9 @@ static int flecs_script_type_function(
         goto done;
     }
 
+    ecs_get_mut(t->v->world, fn_entity, EcsScriptFunction)->is_proc =
+        node->is_proc;
+
     flecs_script_symbol_set(t->v, node->symbol, fn_entity);
     if (flecs_script_type_ensure_entities(t)) {
         goto done;
@@ -1933,7 +1936,12 @@ static int flecs_script_type_function(
         &t->v->base.script->unresolved_refs);
     int32_t prev_skip_count = t->skip_count;
     bool old_function_scope = t->function_scope;
-    t->function_scope = true;
+    bool old_async_scope = t->async_scope, old_proc_scope = t->proc_scope;
+    int32_t old_for_depth = t->for_depth;
+    t->function_scope = !node->is_proc;
+    t->async_scope = node->is_proc;
+    t->proc_scope = node->is_proc;
+    t->for_depth = 0;
     result = flecs_script_type_scope(t, node->body, table, false, false);
     if (!result && node->return_expr) {
         ecs_entity_t return_type = node->eval_return_type;
@@ -1942,6 +1950,9 @@ static int flecs_script_type_function(
     }
 
     t->function_scope = old_function_scope;
+    t->async_scope = old_async_scope;
+    t->proc_scope = old_proc_scope;
+    t->for_depth = old_for_depth;
     if (!result && t->skip_count == prev_skip_count &&
         ecs_vec_count(&t->v->base.script->unresolved_refs) == prev_unresolved)
     {
@@ -2639,6 +2650,16 @@ static int flecs_script_type_node(
         return -1;
     }
 
+    if (t->proc_scope && (node->kind == EcsAstAwait ||
+        node->kind == EcsAstTry || (node->kind == EcsAstConst &&
+            ((ecs_script_var_node_t*)node)->is_await)))
+    {
+        flecs_script_eval_error(t->v, node,
+            "%s is not allowed in proc body",
+            node->kind == EcsAstTry ? "try" : "await");
+        return -1;
+    }
+
     if (t->async_scope) {
         switch(node->kind) {
         case EcsAstScope:
@@ -2650,6 +2671,7 @@ static int flecs_script_type_node(
         case EcsAstWhile:
         case EcsAstContinue:
         case EcsAstBreak:
+        case EcsAstCall:
         case EcsAstAssign:
             break;
         default:
@@ -2757,6 +2779,15 @@ static int flecs_script_type_node(
         return flecs_script_type_async(t, (ecs_script_async_t*)node);
     case EcsAstWhile:
         return flecs_script_type_while(t, (ecs_script_while_t*)node);
+    case EcsAstCall:
+        if (((ecs_script_call_t*)node)->expr->kind != EcsExprFunction) {
+            flecs_script_eval_error(t->v, node,
+                "expected procedure call");
+            return -1;
+        }
+
+        return flecs_script_type_check_expr(t,
+            &((ecs_script_call_t*)node)->expr, NULL);
     case EcsAstAssign:
         return flecs_script_type_assign(t, (ecs_script_assign_t*)node);
     }

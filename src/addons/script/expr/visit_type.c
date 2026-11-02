@@ -2382,6 +2382,14 @@ try_function:
         goto error;
     }
 
+    if (func_data->is_proc != node->is_proc_call) {
+        flecs_expr_visit_error(script, node, func_data->is_proc
+            ? "procedure '%s' can only be called as a statement"
+            : "'%s' is not a procedure and cannot be called as a statement",
+            node->function_name);
+        goto error;
+    }
+
     node->node.type = func_data->return_type;
     node->calldata.function = func;
     node->calldata.is.callback = func_data->callback;

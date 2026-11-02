@@ -32,6 +32,7 @@ typedef enum ecs_script_node_kind_t {
     EcsAstTry,
     EcsAstContinue,
     EcsAstBreak,
+    EcsAstCall,
     EcsAstAsync,
     EcsAstWhile,
     EcsAstAssign
@@ -217,6 +218,11 @@ typedef struct ecs_script_break_t {
     ecs_script_node_t node;
 } ecs_script_break_t;
 
+typedef struct ecs_script_call_t {
+    ecs_script_node_t node;
+    ecs_expr_node_t *expr;
+} ecs_script_call_t;
+
 typedef struct ecs_script_catch_t {
     const char *error; /* Error entity to catch. NULL for catch-all clause. */
     ecs_script_scope_t *scope;
@@ -243,6 +249,7 @@ typedef struct ecs_script_while_t {
 } ecs_script_while_t;
 
 #define FLECS_SCRIPT_ASSIGN_INDEX_MAX (8)
+#define FLECS_SCRIPT_PROC_DEPTH_MAX (64)
 
 typedef struct ecs_script_assign_step_t {
     const char *member;    /* Member path, NULL if step is an index */
@@ -310,6 +317,7 @@ typedef struct ecs_script_function_node_t {
     ecs_expr_node_t *return_expr;
     ecs_entity_t eval_return_type;
     int32_t symbol;
+    bool is_proc;
 } ecs_script_function_node_t;
 
 bool flecs_scope_is_empty(
@@ -358,6 +366,9 @@ ecs_script_continue_t* flecs_script_insert_continue(
     ecs_parser_t *parser);
 
 ecs_script_break_t* flecs_script_insert_break(
+    ecs_parser_t *parser);
+
+ecs_script_call_t* flecs_script_insert_call(
     ecs_parser_t *parser);
 
 ecs_script_try_t* flecs_script_insert_try(

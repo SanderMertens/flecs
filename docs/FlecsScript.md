@@ -1616,6 +1616,27 @@ async {
 
 Delays use scaled world time, so `ecs_set_time_scale` speeds up delays, and a time scale of 0 pauses them. `next_frame()` isn't affected by the time scale. Both functions are resolved by a system in the `EcsPreUpdate` phase of the default pipeline, and are not available in builds without the pipeline addon. Calling `ecs_script_tasks_progress` without `ecs_progress` doesn't advance time.
 
+### Procedures
+A procedure is a reusable block of statements that can be called from async blocks and from other procedures:
+
+```cpp
+export mut alert_text: string = ""
+export mut alert_time: f64 = 0
+
+proc alert(message: string, seconds: f64) {
+  alert_text = message
+  alert_time = seconds
+}
+
+async {
+  alert("A freighter docked", 4)
+}
+```
+
+A procedure body allows the same statements as an async block, like assignments, `if`, `for`, `while`, `const` and local `mut` variables, except for `await` and `try`. Arguments are passed by value. A procedure can read and assign exported mut variables, but not the variables of the block that calls it.
+
+Procedures can only be called as a statement in an async block or in another procedure. Calling a procedure from a template body or from an expression is an error. A procedure can call itself, up to a depth of 64 nested calls, after which the call fails with an error.
+
 ## Control flow
 
 ### If statement
