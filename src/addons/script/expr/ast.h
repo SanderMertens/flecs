@@ -179,7 +179,7 @@ typedef struct ecs_expr_cast_t {
 
 typedef struct ecs_expr_match_element_t {
     ecs_expr_node_t *compare;
-    ecs_expr_node_t *expr;
+    ecs_expr_node_t *expr; /* NULL if pattern shares expr with next element */
 } ecs_expr_match_element_t;
 
 typedef struct ecs_expr_match_t {
