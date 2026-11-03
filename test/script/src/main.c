@@ -934,6 +934,17 @@ void Collection_range_literal_iterate(void);
 void Collection_range_literal_typed_vector(void);
 void Collection_range_literal_typed_float_vector(void);
 void Collection_range_literal_non_vector_type(void);
+void Collection_vector_init_from_vector(void);
+void Collection_vector_init_from_vector_in_async(void);
+void Collection_vector_assign_from_vector(void);
+void Collection_struct_vector_init_from_vector(void);
+void Collection_struct_vector_assign_from_vector(void);
+void Collection_struct_vector_assign_from_untyped_vector(void);
+void Collection_string_vector_assign_no_leak(void);
+void Collection_map_init_from_map(void);
+void Collection_map_assign_from_map(void);
+void Collection_map_assign_from_map_literal(void);
+void Collection_string_map_assign_no_leak(void);
 
 // Testsuite 'Await'
 void Await_setup(void);
@@ -8020,6 +8031,50 @@ bake_test_case Collection_testcases[] = {
     {
         "range_literal_non_vector_type",
         Collection_range_literal_non_vector_type
+    },
+    {
+        "vector_init_from_vector",
+        Collection_vector_init_from_vector
+    },
+    {
+        "vector_init_from_vector_in_async",
+        Collection_vector_init_from_vector_in_async
+    },
+    {
+        "vector_assign_from_vector",
+        Collection_vector_assign_from_vector
+    },
+    {
+        "struct_vector_init_from_vector",
+        Collection_struct_vector_init_from_vector
+    },
+    {
+        "struct_vector_assign_from_vector",
+        Collection_struct_vector_assign_from_vector
+    },
+    {
+        "struct_vector_assign_from_untyped_vector",
+        Collection_struct_vector_assign_from_untyped_vector
+    },
+    {
+        "string_vector_assign_no_leak",
+        Collection_string_vector_assign_no_leak
+    },
+    {
+        "map_init_from_map",
+        Collection_map_init_from_map
+    },
+    {
+        "map_assign_from_map",
+        Collection_map_assign_from_map
+    },
+    {
+        "map_assign_from_map_literal",
+        Collection_map_assign_from_map_literal
+    },
+    {
+        "string_map_assign_no_leak",
+        Collection_string_map_assign_no_leak
     }
 };
 
@@ -21495,7 +21550,7 @@ static bake_test_suite suites[] = {
         "Collection",
         Collection_setup,
         NULL,
-        103,
+        114,
         Collection_testcases,
         1,
         Collection_params

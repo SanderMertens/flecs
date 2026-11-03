@@ -3562,3 +3562,428 @@ void Collection_vector_member_w_string_elems(void) {
 
     ecs_fini(world);
 }
+
+void Collection_vector_init_from_vector(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut a: i32[] = [1, 2, 3]"
+            LINE "export mut b: i32[] = a"
+            LINE "async {"
+            LINE "  b[0] = 10"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    ecs_value_t a = ecs_mut_var_get(world, ecs_lookup(world, "a"));
+    ecs_value_t b = ecs_mut_var_get(world, ecs_lookup(world, "b"));
+    test_assert(a.type == b.type);
+
+    ecs_vec_t *va = a.ptr;
+    test_int(ecs_vec_count(va), 3);
+    test_int(ecs_vec_get_t(va, int32_t, 0)[0], 1);
+    test_int(ecs_vec_get_t(va, int32_t, 1)[0], 2);
+    test_int(ecs_vec_get_t(va, int32_t, 2)[0], 3);
+
+    ecs_vec_t *vb = b.ptr;
+    test_int(ecs_vec_count(vb), 3);
+    test_int(ecs_vec_get_t(vb, int32_t, 0)[0], 10);
+    test_int(ecs_vec_get_t(vb, int32_t, 1)[0], 2);
+    test_int(ecs_vec_get_t(vb, int32_t, 2)[0], 3);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_init_from_vector_in_async(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut a: i32[] = [1, 2, 3]"
+            LINE "export mut out: i32 = 0"
+            LINE "async {"
+            LINE "  mut b: i32[] = a"
+            LINE "  b[0] = 10"
+            LINE "  out = b[0] + b[1] + b[2]"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(
+        world, ecs_lookup(world, "out")).ptr, 15);
+
+    ecs_vec_t *va = ecs_mut_var_get(world, ecs_lookup(world, "a")).ptr;
+    test_int(ecs_vec_count(va), 3);
+    test_int(ecs_vec_get_t(va, int32_t, 0)[0], 1);
+    test_int(ecs_vec_get_t(va, int32_t, 1)[0], 2);
+    test_int(ecs_vec_get_t(va, int32_t, 2)[0], 3);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_assign_from_vector(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut a: i32[] = [1, 2, 3]"
+            LINE "export mut b: i32[] = [4]"
+            LINE "async {"
+            LINE "  b = a"
+            LINE "  b[0] = 10"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    ecs_vec_t *va = ecs_mut_var_get(world, ecs_lookup(world, "a")).ptr;
+    test_int(ecs_vec_count(va), 3);
+    test_int(ecs_vec_get_t(va, int32_t, 0)[0], 1);
+    test_int(ecs_vec_get_t(va, int32_t, 1)[0], 2);
+    test_int(ecs_vec_get_t(va, int32_t, 2)[0], 3);
+
+    ecs_vec_t *vb = ecs_mut_var_get(world, ecs_lookup(world, "b")).ptr;
+    test_int(ecs_vec_count(vb), 3);
+    test_int(ecs_vec_get_t(vb, int32_t, 0)[0], 10);
+    test_int(ecs_vec_get_t(vb, int32_t, 1)[0], 2);
+    test_int(ecs_vec_get_t(vb, int32_t, 2)[0], 3);
+
+    ecs_fini(world);
+}
+
+void Collection_struct_vector_init_from_vector(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "struct Position(x: f32, y: f32)"
+            LINE "export mut a: Position[] = [{1, 2}, {3, 4}]"
+            LINE "export mut b: Position[] = a"
+            LINE "async {"
+            LINE "  b[0].x = 10"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    ecs_vec_t *va = ecs_mut_var_get(world, ecs_lookup(world, "a")).ptr;
+    test_int(ecs_vec_count(va), 2);
+    Position *pa = ecs_vec_first(va);
+    test_flt(pa[0].x, 1);
+    test_flt(pa[0].y, 2);
+    test_flt(pa[1].x, 3);
+    test_flt(pa[1].y, 4);
+
+    ecs_vec_t *vb = ecs_mut_var_get(world, ecs_lookup(world, "b")).ptr;
+    test_int(ecs_vec_count(vb), 2);
+    Position *pb = ecs_vec_first(vb);
+    test_flt(pb[0].x, 10);
+    test_flt(pb[0].y, 2);
+    test_flt(pb[1].x, 3);
+    test_flt(pb[1].y, 4);
+
+    ecs_fini(world);
+}
+
+void Collection_struct_vector_assign_from_vector(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "struct Position(x: f32, y: f32)"
+            LINE "export mut a: Position[] = [{1, 2}, {3, 4}]"
+            LINE "export mut b: Position[] = []"
+            LINE "async {"
+            LINE "  b = a"
+            LINE "  b[1].y = 20"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    ecs_vec_t *va = ecs_mut_var_get(world, ecs_lookup(world, "a")).ptr;
+    test_int(ecs_vec_count(va), 2);
+    Position *pa = ecs_vec_first(va);
+    test_flt(pa[0].x, 1);
+    test_flt(pa[0].y, 2);
+    test_flt(pa[1].x, 3);
+    test_flt(pa[1].y, 4);
+
+    ecs_vec_t *vb = ecs_mut_var_get(world, ecs_lookup(world, "b")).ptr;
+    test_int(ecs_vec_count(vb), 2);
+    Position *pb = ecs_vec_first(vb);
+    test_flt(pb[0].x, 1);
+    test_flt(pb[0].y, 2);
+    test_flt(pb[1].x, 3);
+    test_flt(pb[1].y, 20);
+
+    ecs_fini(world);
+}
+
+void Collection_struct_vector_assign_from_untyped_vector(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "struct Position(x: f32, y: f32)"
+            LINE "const p: Position = {1, 2}"
+            LINE "const q: Position = {3, 4}"
+            LINE "const u = [p, q]"
+            LINE "export mut b: Position[] = []"
+            LINE "async {"
+            LINE "  b = u"
+            LINE "  b[0].x = 10"
+            LINE "  mut c: Position[] = u"
+            LINE "  b[1].y = c[1].y + c[0].y"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    ecs_vec_t *vb = ecs_mut_var_get(world, ecs_lookup(world, "b")).ptr;
+    test_int(ecs_vec_count(vb), 2);
+    Position *pb = ecs_vec_first(vb);
+    test_flt(pb[0].x, 10);
+    test_flt(pb[0].y, 2);
+    test_flt(pb[1].x, 3);
+    test_flt(pb[1].y, 6);
+
+    ecs_fini(world);
+}
+
+void Collection_string_vector_assign_no_leak(void) {
+    const char *expr =
+    HEAD "export mut a: string[] = [\"foo\", \"bar\"]"
+    LINE "export mut b: string[] = a"
+    LINE "export mut c: string[] = []"
+    LINE "async {"
+    LINE "  c = a"
+    LINE "  b[0] = \"hello\""
+    LINE "  c[1] = \"world\""
+    LINE "  a = [\"x\"]"
+    LINE "}";
+
+    int64_t balance_before = 0;
+    int32_t i;
+    for (i = 0; i < 2; i ++) {
+        if (i == 1) {
+            balance_before = (ecs_os_api_malloc_count +
+                ecs_os_api_calloc_count) - ecs_os_api_free_count;
+        }
+
+        ecs_world_t *world = ecs_init();
+
+        ecs_entity_t s = ecs_script(world, { .code = expr, .ir = ir_enabled });
+        test_assert(s != 0);
+        const EcsScript *comp = ecs_get(world, s, EcsScript);
+        test_assert(comp != NULL);
+        test_assert(comp->error == NULL);
+
+        ecs_script_tasks_progress(world);
+
+        ecs_vec_t *va = ecs_mut_var_get(world, ecs_lookup(world, "a")).ptr;
+        test_int(ecs_vec_count(va), 1);
+        test_str(ecs_vec_get_t(va, char*, 0)[0], "x");
+
+        ecs_vec_t *vb = ecs_mut_var_get(world, ecs_lookup(world, "b")).ptr;
+        test_int(ecs_vec_count(vb), 2);
+        test_str(ecs_vec_get_t(vb, char*, 0)[0], "hello");
+        test_str(ecs_vec_get_t(vb, char*, 1)[0], "bar");
+
+        ecs_vec_t *vc = ecs_mut_var_get(world, ecs_lookup(world, "c")).ptr;
+        test_int(ecs_vec_count(vc), 2);
+        test_str(ecs_vec_get_t(vc, char*, 0)[0], "foo");
+        test_str(ecs_vec_get_t(vc, char*, 1)[0], "world");
+
+        ecs_fini(world);
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+}
+
+void Collection_map_init_from_map(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_i32_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut a: Map = [1: 10, 2: 20]"
+            LINE "export mut b: Map = a",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_map_t *ma = ecs_mut_var_get(world, ecs_lookup(world, "a")).ptr;
+    ecs_map_t *mb = ecs_mut_var_get(world, ecs_lookup(world, "b")).ptr;
+    test_assert(ma != mb);
+    test_int(ecs_map_count(mb), 2);
+    test_int(*(int32_t*)ecs_map_get(mb, 1), 10);
+    test_int(*(int32_t*)ecs_map_get(mb, 2), 20);
+
+    *(int32_t*)ecs_map_get(ma, 1) = 30;
+    test_int(*(int32_t*)ecs_map_get(mb, 1), 10);
+
+    ecs_fini(world);
+}
+
+void Collection_map_assign_from_map(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_i32_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut a: Map = [1: 10, 2: 20]"
+            LINE "export mut b: Map = [3: 30]"
+            LINE "async {"
+            LINE "  b = a"
+            LINE "  a = [4: 40]"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    ecs_map_t *ma = ecs_mut_var_get(world, ecs_lookup(world, "a")).ptr;
+    test_int(ecs_map_count(ma), 1);
+    test_int(*(int32_t*)ecs_map_get(ma, 4), 40);
+
+    ecs_map_t *mb = ecs_mut_var_get(world, ecs_lookup(world, "b")).ptr;
+    test_int(ecs_map_count(mb), 2);
+    test_int(*(int32_t*)ecs_map_get(mb, 1), 10);
+    test_int(*(int32_t*)ecs_map_get(mb, 2), 20);
+    test_assert(ecs_map_get(mb, 3) == NULL);
+
+    ecs_fini(world);
+}
+
+void Collection_map_assign_from_map_literal(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_i32_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut a: Map = [1: 10]"
+            LINE "async {"
+            LINE "  a = [2: 20, 3: 30]"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    ecs_map_t *ma = ecs_mut_var_get(world, ecs_lookup(world, "a")).ptr;
+    test_int(ecs_map_count(ma), 2);
+    test_assert(ecs_map_get(ma, 1) == NULL);
+    test_int(*(int32_t*)ecs_map_get(ma, 2), 20);
+    test_int(*(int32_t*)ecs_map_get(ma, 3), 30);
+
+    ecs_fini(world);
+}
+
+void Collection_string_map_assign_no_leak(void) {
+    const char *expr =
+    HEAD "export mut a: Map = [1: \"foo\", 2: \"bar\"]"
+    LINE "export mut b: Map = a"
+    LINE "export mut c: Map = []"
+    LINE "async {"
+    LINE "  c = a"
+    LINE "  a = [3: \"hello\"]"
+    LINE "}";
+
+    int64_t balance_before = 0;
+    int32_t i;
+    for (i = 0; i < 2; i ++) {
+        if (i == 1) {
+            balance_before = (ecs_os_api_malloc_count +
+                ecs_os_api_calloc_count) - ecs_os_api_free_count;
+        }
+
+        ecs_world_t *world = ecs_init();
+
+        ecs_map_type(world, {
+            .entity = ecs_entity(world, { .name = "Map" }),
+            .key_type = ecs_id(ecs_i32_t),
+            .type = ecs_id(ecs_string_t)
+        });
+
+        ecs_entity_t s = ecs_script(world, { .code = expr, .ir = ir_enabled });
+        test_assert(s != 0);
+        const EcsScript *comp = ecs_get(world, s, EcsScript);
+        test_assert(comp != NULL);
+        test_assert(comp->error == NULL);
+
+        ecs_script_tasks_progress(world);
+
+        ecs_map_t *ma = ecs_mut_var_get(world, ecs_lookup(world, "a")).ptr;
+        test_int(ecs_map_count(ma), 1);
+        test_str(*(char**)ecs_map_get(ma, 3), "hello");
+
+        ecs_map_t *mb = ecs_mut_var_get(world, ecs_lookup(world, "b")).ptr;
+        test_int(ecs_map_count(mb), 2);
+        test_str(*(char**)ecs_map_get(mb, 1), "foo");
+        test_str(*(char**)ecs_map_get(mb, 2), "bar");
+
+        ecs_map_t *mc = ecs_mut_var_get(world, ecs_lookup(world, "c")).ptr;
+        test_int(ecs_map_count(mc), 2);
+        test_str(*(char**)ecs_map_get(mc, 1), "foo");
+        test_str(*(char**)ecs_map_get(mc, 2), "bar");
+
+        ecs_fini(world);
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+}
