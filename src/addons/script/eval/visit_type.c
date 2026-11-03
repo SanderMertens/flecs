@@ -2699,6 +2699,20 @@ static int flecs_script_type_assign(
     }
 
     if (type != target_type &&
+        flecs_expr_is_type_collection(v->world, type) &&
+        flecs_expr_is_type_collection(v->world, target_type))
+    {
+        ecs_expr_cast_t *cast = flecs_expr_cast(
+            &v->base.script->pub, node->expr, target_type);
+        if (!cast) {
+            goto done;
+        }
+
+        node->expr = (ecs_expr_node_t*)cast;
+        type = target_type;
+    }
+
+    if (type != target_type &&
         (!flecs_script_type_is_number(v->world, target_type) ||
          !flecs_script_type_is_number(v->world, type)))
     {

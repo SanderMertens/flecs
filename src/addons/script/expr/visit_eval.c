@@ -555,6 +555,16 @@ static int flecs_expr_cast_visit_eval(
         return -1;
     }
 
+    int32_t src_count, dst_count;
+    if (flecs_value_array_count_mismatch(ctx->world, out->value.type,
+        &expr->value, &src_count, &dst_count))
+    {
+        flecs_expr_visit_error(ctx->script, node,
+            "cannot assign %d elements to array of %d elements",
+            src_count, dst_count);
+        return -1;
+    }
+
     if (flecs_value_copy_to(ctx->world, &out->value, expr)) {
         flecs_expr_visit_error(ctx->script, node, "failed to cast value");
         return -1;

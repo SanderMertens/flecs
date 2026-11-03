@@ -945,6 +945,20 @@ void Collection_map_init_from_map(void);
 void Collection_map_assign_from_map(void);
 void Collection_map_assign_from_map_literal(void);
 void Collection_string_map_assign_no_leak(void);
+void Collection_untyped_vector_to_vector_const(void);
+void Collection_untyped_vector_to_array_const(void);
+void Collection_untyped_vector_to_vector_mut(void);
+void Collection_untyped_vector_to_array_mut(void);
+void Collection_untyped_vector_to_typed_local_const(void);
+void Collection_untyped_vector_to_vector_in_async(void);
+void Collection_untyped_vector_to_array_in_async(void);
+void Collection_untyped_vector_to_float_vector(void);
+void Collection_untyped_vector_to_array_no_leak(void);
+void Collection_vector_assign_from_untyped_vector(void);
+void Collection_error_untyped_vector_to_vector_elem_type(void);
+void Collection_error_untyped_vector_to_array_size(void);
+void Collection_error_vector_to_array_size_in_async(void);
+void Collection_error_array_to_array_size(void);
 
 // Testsuite 'Await'
 void Await_setup(void);
@@ -8075,6 +8089,62 @@ bake_test_case Collection_testcases[] = {
     {
         "string_map_assign_no_leak",
         Collection_string_map_assign_no_leak
+    },
+    {
+        "untyped_vector_to_vector_const",
+        Collection_untyped_vector_to_vector_const
+    },
+    {
+        "untyped_vector_to_array_const",
+        Collection_untyped_vector_to_array_const
+    },
+    {
+        "untyped_vector_to_vector_mut",
+        Collection_untyped_vector_to_vector_mut
+    },
+    {
+        "untyped_vector_to_array_mut",
+        Collection_untyped_vector_to_array_mut
+    },
+    {
+        "untyped_vector_to_typed_local_const",
+        Collection_untyped_vector_to_typed_local_const
+    },
+    {
+        "untyped_vector_to_vector_in_async",
+        Collection_untyped_vector_to_vector_in_async
+    },
+    {
+        "untyped_vector_to_array_in_async",
+        Collection_untyped_vector_to_array_in_async
+    },
+    {
+        "untyped_vector_to_float_vector",
+        Collection_untyped_vector_to_float_vector
+    },
+    {
+        "untyped_vector_to_array_no_leak",
+        Collection_untyped_vector_to_array_no_leak
+    },
+    {
+        "vector_assign_from_untyped_vector",
+        Collection_vector_assign_from_untyped_vector
+    },
+    {
+        "error_untyped_vector_to_vector_elem_type",
+        Collection_error_untyped_vector_to_vector_elem_type
+    },
+    {
+        "error_untyped_vector_to_array_size",
+        Collection_error_untyped_vector_to_array_size
+    },
+    {
+        "error_vector_to_array_size_in_async",
+        Collection_error_vector_to_array_size_in_async
+    },
+    {
+        "error_array_to_array_size",
+        Collection_error_array_to_array_size
     }
 };
 
@@ -21550,7 +21620,7 @@ static bake_test_suite suites[] = {
         "Collection",
         Collection_setup,
         NULL,
-        114,
+        128,
         Collection_testcases,
         1,
         Collection_params

@@ -49553,6 +49553,17 @@ int flecs_value_copy_to(
     ecs_value_t *dst,
     const ecs_expr_value_t *src);
 
+bool flecs_expr_is_type_collection(
+    const ecs_world_t *world,
+    ecs_entity_t type);
+
+bool flecs_value_array_count_mismatch(
+    const ecs_world_t *world,
+    ecs_entity_t dst_type,
+    const ecs_value_t *src,
+    int32_t *src_count,
+    int32_t *dst_count);
+
 int flecs_value_binary(
     const ecs_script_t *script,
     const ecs_expr_node_t *node,
@@ -103038,6 +103049,20 @@ static int flecs_script_type_assign(
     }
 
     if (type != target_type &&
+        flecs_expr_is_type_collection(v->world, type) &&
+        flecs_expr_is_type_collection(v->world, target_type))
+    {
+        ecs_expr_cast_t *cast = flecs_expr_cast(
+            &v->base.script->pub, node->expr, target_type);
+        if (!cast) {
+            goto done;
+        }
+
+        node->expr = (ecs_expr_node_t*)cast;
+        type = target_type;
+    }
+
+    if (type != target_type &&
         (!flecs_script_type_is_number(v->world, target_type) ||
          !flecs_script_type_is_number(v->world, type)))
     {
@@ -103684,6 +103709,49 @@ ecs_expr_script_t* flecs_expr_script(
     return result;
 }
 
+static bool flecs_expr_collection_elem_type(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_entity_t *elem_type,
+    int32_t *count)
+{
+    const EcsArray *array = ecs_get(world, type, EcsArray);
+    if (array) {
+        *elem_type = array->type;
+        *count = array->count;
+        return true;
+    }
+
+    const EcsVector *vector = ecs_get(world, type, EcsVector);
+    if (vector) {
+        *elem_type = vector->type;
+        *count = -1;
+        return true;
+    }
+
+    return false;
+}
+
+static bool flecs_expr_collection_cast_allowed(
+    ecs_world_t *world,
+    ecs_entity_t from,
+    ecs_entity_t to)
+{
+    ecs_entity_t from_elem, to_elem;
+    int32_t from_count, to_count;
+    if (!flecs_expr_collection_elem_type(world, from, &from_elem, &from_count) ||
+        !flecs_expr_collection_elem_type(world, to, &to_elem, &to_count))
+    {
+        return false;
+    }
+
+    if (from_count != -1 && to_count != -1 && from_count != to_count) {
+        return false;
+    }
+
+    return flecs_expr_explicit_cast_allowed(world, from_elem, to_elem);
+}
+
 bool flecs_expr_explicit_cast_allowed(
     ecs_world_t *world,
     ecs_entity_t from,
@@ -103753,6 +103821,14 @@ bool flecs_expr_explicit_cast_allowed(
             to_type->kind == EcsStructType)
         {
             return flecs_struct_is_derived_from(world, from, to);
+        }
+
+        if ((from_type->kind == EcsArrayType ||
+            from_type->kind == EcsVectorType) &&
+            (to_type->kind == EcsArrayType ||
+            to_type->kind == EcsVectorType))
+        {
+            return flecs_expr_collection_cast_allowed(world, from, to);
         }
 
         /* Cannot cast complex types that are not the same */
@@ -105523,6 +105599,114 @@ flecs_expr_cast_t flecs_expr_cast_handler(
 #undef FLECS_EXPR_CAST_ENTRY
 #undef FLECS_EXPR_CAST_TARGETS
 
+bool flecs_expr_is_type_collection(
+    const ecs_world_t *world,
+    ecs_entity_t type)
+{
+    const EcsType *t = ecs_get(world, type, EcsType);
+    return t && (t->kind == EcsArrayType || t->kind == EcsVectorType);
+}
+
+static bool flecs_value_collection_elems(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *ptr,
+    ecs_entity_t *elem_type,
+    const void **elems,
+    int32_t *count)
+{
+    const EcsArray *array = ecs_get(world, type, EcsArray);
+    if (array) {
+        *elem_type = array->type;
+        *elems = ptr;
+        *count = array->count;
+        return true;
+    }
+
+    const EcsVector *vector = ecs_get(world, type, EcsVector);
+    if (vector) {
+        const ecs_vec_t *vec = ptr;
+        *elem_type = vector->type;
+        *elems = vec ? vec->array : NULL;
+        *count = vec ? vec->count : 0;
+        return true;
+    }
+
+    return false;
+}
+
+bool flecs_value_array_count_mismatch(
+    const ecs_world_t *world,
+    ecs_entity_t dst_type,
+    const ecs_value_t *src,
+    int32_t *src_count,
+    int32_t *dst_count)
+{
+    const EcsArray *array = ecs_get(world, dst_type, EcsArray);
+    if (!array || src->type == dst_type) {
+        return false;
+    }
+
+    ecs_entity_t elem_type;
+    const void *elems;
+    if (!flecs_value_collection_elems(
+        world, src->type, src->ptr, &elem_type, &elems, src_count))
+    {
+        return false;
+    }
+
+    *dst_count = array->count;
+    return *src_count != *dst_count;
+}
+
+static int flecs_value_copy_collection(
+    ecs_world_t *world,
+    ecs_value_t *dst,
+    const ecs_value_t *src)
+{
+    ecs_entity_t elem_type;
+    const void *elems;
+    int32_t i, count;
+    if (!flecs_value_collection_elems(
+        world, src->type, src->ptr, &elem_type, &elems, &count))
+    {
+        return -1;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, elem_type);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, dst->type, dst->ptr);
+    if (ecs_meta_push(&cur)) {
+        return -1;
+    }
+
+    for (i = 0; i < count; i ++) {
+        if (i && ecs_meta_next(&cur)) {
+            return -1;
+        }
+
+        ecs_value_t dst_elem = {
+            .type = ecs_meta_get_type(&cur),
+            .ptr = ecs_meta_get_ptr(&cur)
+        };
+
+        ecs_expr_value_t src_elem = {
+            .value = {
+                .type = elem_type,
+                .ptr = ECS_CONST_CAST(void*, ECS_ELEM(elems, ti->size, i))
+            },
+            .type_info = ti
+        };
+
+        if (flecs_value_copy_to(world, &dst_elem, &src_elem)) {
+            return -1;
+        }
+    }
+
+    return ecs_meta_pop(&cur);
+}
+
 int flecs_value_copy_to(
     ecs_world_t *world,
     ecs_value_t *dst,
@@ -105550,11 +105734,18 @@ int flecs_value_copy_to(
             ecs_ptr_copy_w_type_info(world, ti, dst->ptr, defaults);
             ecs_ptr_free(world, type, defaults);
         }
-    } else if (src->value.type == ecs_id(ecs_bool_t) &&
+    } else if ((src->value.type == ecs_id(ecs_bool_t) ||
+        flecs_expr_is_type_number(src->value.type)) &&
         flecs_expr_is_type_number(dst->type))
     {
         flecs_expr_cast_handler(src->value.type, dst->type)(
             dst->ptr, src->value.ptr);
+    } else if (flecs_expr_is_type_collection(world, src->value.type) &&
+        flecs_expr_is_type_collection(world, dst->type))
+    {
+        if (flecs_value_copy_collection(world, dst, &src->value)) {
+            goto error;
+        }
     } else {
         /* Cast value to desired output type */
         ecs_meta_cursor_t cur = ecs_meta_cursor(world, dst->type, dst->ptr);
@@ -106620,6 +106811,16 @@ static int flecs_expr_cast_visit_eval(
     ecs_expr_value_t *expr = flecs_expr_eval_result(
         ctx, node->expr, &(ecs_expr_value_t){0});
     if (!expr) {
+        return -1;
+    }
+
+    int32_t src_count, dst_count;
+    if (flecs_value_array_count_mismatch(ctx->world, out->value.type,
+        &expr->value, &src_count, &dst_count))
+    {
+        flecs_expr_visit_error(ctx->script, node,
+            "cannot assign %d elements to array of %d elements",
+            src_count, dst_count);
         return -1;
     }
 
@@ -109593,7 +109794,13 @@ static int flecs_expr_initializer_visit_type(
                 goto error;
             }
 
-            if (elem->value->type == type) {
+            if (elem->value->type == type || flecs_expr_is_type_collection(
+                script->world, elem->value->type))
+            {
+                if (flecs_expr_cast_to(script, &elem->value, type)) {
+                    goto error;
+                }
+
                 if (ecs_meta_pop(cur)) {
                     goto error;
                 }
@@ -114826,6 +115033,16 @@ static int flecs_ir_cast(
         .type_info = src->ti,
         .owned = src->owned
     };
+    int32_t src_count, dst_count;
+    if (flecs_value_array_count_mismatch(vm->v.world, dst->value.type,
+        &src->value, &src_count, &dst_count))
+    {
+        flecs_ir_expr_error(vm, node,
+            "cannot assign %d elements to array of %d elements",
+            src_count, dst_count);
+        return -1;
+    }
+
     if (flecs_value_copy_to(vm->v.world, &dst->value, &expr)) {
         flecs_ir_expr_error(vm, node, "failed to cast value");
         return -1;

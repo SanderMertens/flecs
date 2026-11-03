@@ -15,6 +15,17 @@ int flecs_value_copy_to(
     ecs_value_t *dst,
     const ecs_expr_value_t *src);
 
+bool flecs_expr_is_type_collection(
+    const ecs_world_t *world,
+    ecs_entity_t type);
+
+bool flecs_value_array_count_mismatch(
+    const ecs_world_t *world,
+    ecs_entity_t dst_type,
+    const ecs_value_t *src,
+    int32_t *src_count,
+    int32_t *dst_count);
+
 int flecs_value_binary(
     const ecs_script_t *script,
     const ecs_expr_node_t *node,
