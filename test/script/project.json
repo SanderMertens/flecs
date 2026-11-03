@@ -945,7 +945,18 @@
                 "range_literal_iterate",
                 "range_literal_typed_vector",
                 "range_literal_typed_float_vector",
-                "range_literal_non_vector_type"
+                "range_literal_non_vector_type",
+                "vector_init_from_vector",
+                "vector_init_from_vector_in_async",
+                "vector_assign_from_vector",
+                "struct_vector_init_from_vector",
+                "struct_vector_assign_from_vector",
+                "struct_vector_assign_from_untyped_vector",
+                "string_vector_assign_no_leak",
+                "map_init_from_map",
+                "map_assign_from_map",
+                "map_assign_from_map_literal",
+                "string_map_assign_no_leak"
             ]
         }, {
             "id": "Await",
