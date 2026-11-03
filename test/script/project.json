@@ -834,7 +834,11 @@
                 "named_child_in_for_loop_warns",
                 "interpolated_name_in_for_loop_no_warn",
                 "child_of_interpolated_name_in_for_loop_no_warn",
-                "named_entity_w_tag_in_for_loop_no_warn"
+                "named_entity_w_tag_in_for_loop_no_warn",
+                "scoped_prefab_inherit_from_prev_script",
+                "scoped_entity_ref_from_prev_script",
+                "scoped_component_from_prev_script",
+                "nested_scope_component_from_prev_script"
             ]
         }, {
             "id": "Collection",

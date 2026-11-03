@@ -45,6 +45,8 @@ typedef struct ecs_script_type_visitor_t {
     ecs_script_entity_t *reopened;
     bool for_static;
     bool for_entity;
+    bool parent_missing; /* v->parent is not the world entity of the current
+                          * entity scope (it does not exist (yet)) */
 } ecs_script_type_visitor_t;
 
 int flecs_script_type_scope(

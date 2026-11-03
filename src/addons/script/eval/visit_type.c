@@ -1979,6 +1979,43 @@ static bool flecs_script_type_entity_name_ref(
     return true;
 }
 
+/* Set v->parent to the world entity of an entity scope before typing it, like
+ * evaluation does, so that names are looked up from the same scope chain as
+ * during evaluation. This resolves entities that exist in the world, but are
+ * not symbols of this script (such as entities created by another script).
+ *
+ * If the entity does not exist yet, v->parent is kept: evaluation creates it
+ * without children, so a recursive lookup from it is the same as a lookup from
+ * its parent. Its descendants do not exist either, so lookups for nested
+ * scopes stay at the last existing parent. */
+static void flecs_script_type_push_parent(
+    ecs_script_type_visitor_t *t,
+    ecs_script_entity_t *node)
+{
+    if (t->parent_missing) {
+        return;
+    }
+
+    ecs_world_t *world = t->v->world;
+    ecs_entity_t e = flecs_script_type_node_entity(t, node);
+    if (e && !ecs_is_alive(world, e)) {
+        e = 0;
+    }
+
+    if (!e && node->name && !node->name_expr &&
+        ecs_os_strcmp(node->name, "_"))
+    {
+        e = ecs_lookup_path_w_sep(
+            world, t->v->parent, node->name, ".", NULL, false);
+    }
+
+    if (e) {
+        t->v->parent = e;
+    } else {
+        t->parent_missing = true;
+    }
+}
+
 static int flecs_script_type_entity(
     ecs_script_type_visitor_t *t,
     ecs_script_entity_t *node,
@@ -2099,8 +2136,13 @@ static int flecs_script_type_entity(
 
     int32_t prev_unresolved = ecs_vec_count(
         &t->v->base.script->unresolved_refs);
+    ecs_entity_t old_parent = t->v->parent;
+    bool old_parent_missing = t->parent_missing;
+    flecs_script_type_push_parent(t, node);
     int result = flecs_script_type_scope(
         t, node->scope, child_table, true, true);
+    t->v->parent = old_parent;
+    t->parent_missing = old_parent_missing;
     t->v->entity = old_entity;
     t->v->is_with_scope = old_with;
     t->for_static = old_for_static;

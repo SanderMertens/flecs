@@ -9983,8 +9983,6 @@ void Eval_const_w_component_expr_in_module(void) {
 }
 
 void Eval_const_w_component_in_scope_expr_in_scope(void) {
-    ecs_log_set_level(-4);
-
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
@@ -10009,13 +10007,15 @@ void Eval_const_w_component_in_scope_expr_in_scope(void) {
     LINE "  }"
     LINE "}";
 
-    ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
-    test_assert(result.error != NULL);
-    test_assert(strstr(result.error, "unresolved reference 'Position'") != NULL);
-    ecs_os_free(result.error);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_assert(ecs_lookup(world, "parent.foo") == 0);
+    ecs_entity_t foo = ecs_lookup(world, "parent.foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 
     ecs_fini(world);
 }
@@ -10059,8 +10059,6 @@ void Eval_const_w_component_in_scope_expr_in_module(void) {
 }
 
 void Eval_const_w_component_and_entity_in_scope_expr_in_scope(void) {
-    ecs_log_set_level(-4);
-
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
@@ -10085,13 +10083,15 @@ void Eval_const_w_component_and_entity_in_scope_expr_in_scope(void) {
     LINE "  }"
     LINE "}";
 
-    ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
-    test_assert(result.error != NULL);
-    test_assert(strstr(result.error, "unresolved reference") != NULL);
-    ecs_os_free(result.error);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_assert(ecs_lookup(world, "parent.foo") == 0);
+    ecs_entity_t foo = ecs_lookup(world, "parent.foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 
     ecs_fini(world);
 }
@@ -26334,4 +26334,130 @@ void Eval_named_entity_w_tag_in_for_loop_no_warn(void) {
 
     ecs_os_set_api_defaults();
     ecs_log_set_level(-1);
+}
+
+void Eval_scoped_prefab_inherit_from_prev_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    const char *pieces =
+    HEAD "structure {"
+    LINE "  prefabs {"
+    LINE "    Prefab steel { Foo }"
+    LINE "  }"
+    LINE "}";
+
+    const char *kinds =
+    HEAD "structure {"
+    LINE "  prefabs {"
+    LINE "    Prefab steel_a992 : steel {}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, "pieces", pieces, &ir_desc, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, "kinds", kinds, &ir_desc, NULL) == 0);
+
+    ecs_entity_t steel = ecs_lookup(world, "structure.prefabs.steel");
+    ecs_entity_t a992 = ecs_lookup(world, "structure.prefabs.steel_a992");
+    test_assert(steel != 0);
+    test_assert(a992 != 0);
+    test_assert(ecs_has_pair(world, a992, EcsIsA, steel));
+    test_assert(ecs_has_id(world, a992, EcsPrefab));
+    test_assert(ecs_has(world, a992, Foo));
+
+    ecs_fini(world);
+}
+
+void Eval_scoped_entity_ref_from_prev_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, MadeOf);
+
+    const char *pieces =
+    HEAD "structure {"
+    LINE "  materials {"
+    LINE "    steel {}"
+    LINE "  }"
+    LINE "}";
+
+    const char *kinds =
+    HEAD "structure {"
+    LINE "  materials {"
+    LINE "    beam { (MadeOf, steel) }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, "pieces", pieces, &ir_desc, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, "kinds", kinds, &ir_desc, NULL) == 0);
+
+    ecs_entity_t steel = ecs_lookup(world, "structure.materials.steel");
+    ecs_entity_t beam = ecs_lookup(world, "structure.materials.beam");
+    test_assert(steel != 0);
+    test_assert(beam != 0);
+    test_assert(ecs_has_pair(world, beam, MadeOf, steel));
+
+    ecs_fini(world);
+}
+
+void Eval_scoped_component_from_prev_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *pieces =
+    HEAD "structure {"
+    LINE "  components {"
+    LINE "    struct Profile(width: f32, depth: f32)"
+    LINE "  }"
+    LINE "}";
+
+    const char *kinds =
+    HEAD "structure {"
+    LINE "  components {"
+    LINE "    mullion { Profile: {width: 65, depth: 200} }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, "pieces", pieces, &ir_desc, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, "kinds", kinds, &ir_desc, NULL) == 0);
+
+    ecs_entity_t profile = ecs_lookup(world, "structure.components.Profile");
+    ecs_entity_t mullion = ecs_lookup(world, "structure.components.mullion");
+    test_assert(profile != 0);
+    test_assert(mullion != 0);
+    const float *p = ecs_get_id(world, mullion, profile);
+    test_assert(p != NULL);
+    test_int(p[0], 65);
+    test_int(p[1], 200);
+
+    ecs_fini(world);
+}
+
+void Eval_nested_scope_component_from_prev_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *pieces =
+    HEAD "structure {"
+    LINE "  struct Profile(width: f32, depth: f32)"
+    LINE "}";
+
+    const char *kinds =
+    HEAD "structure {"
+    LINE "  prefabs {"
+    LINE "    Prefab mullion { Profile: {width: 65, depth: 200} }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, "pieces", pieces, &ir_desc, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, "kinds", kinds, &ir_desc, NULL) == 0);
+
+    ecs_entity_t profile = ecs_lookup(world, "structure.Profile");
+    ecs_entity_t mullion = ecs_lookup(world, "structure.prefabs.mullion");
+    test_assert(profile != 0);
+    test_assert(mullion != 0);
+    const float *p = ecs_get_id(world, mullion, profile);
+    test_assert(p != NULL);
+    test_int(p[0], 65);
+    test_int(p[1], 200);
+
+    ecs_fini(world);
 }
