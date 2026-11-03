@@ -103930,6 +103930,28 @@ static bool flecs_expr_collection_cast_allowed(
     return flecs_expr_explicit_cast_allowed(world, from_elem, to_elem);
 }
 
+static bool flecs_expr_map_cast_allowed(
+    ecs_world_t *world,
+    ecs_entity_t from,
+    ecs_entity_t to)
+{
+    const EcsMap *from_map = ecs_get(world, from, EcsMap);
+    const EcsMap *to_map = ecs_get(world, to, EcsMap);
+    if (!from_map || !to_map) {
+        return false;
+    }
+
+    if (from_map->key_type != to_map->key_type &&
+        (!flecs_expr_is_type_integer(from_map->key_type) ||
+         !flecs_expr_is_type_integer(to_map->key_type)))
+    {
+        return false;
+    }
+
+    return flecs_expr_explicit_cast_allowed(
+        world, from_map->type, to_map->type);
+}
+
 bool flecs_expr_explicit_cast_allowed(
     ecs_world_t *world,
     ecs_entity_t from,
@@ -104007,6 +104029,10 @@ bool flecs_expr_explicit_cast_allowed(
             to_type->kind == EcsVectorType))
         {
             return flecs_expr_collection_cast_allowed(world, from, to);
+        }
+
+        if (from_type->kind == EcsMapType && to_type->kind == EcsMapType) {
+            return flecs_expr_map_cast_allowed(world, from, to);
         }
 
         /* Cannot cast complex types that are not the same */
@@ -105782,7 +105808,8 @@ bool flecs_expr_is_type_collection(
     ecs_entity_t type)
 {
     const EcsType *t = ecs_get(world, type, EcsType);
-    return t && (t->kind == EcsArrayType || t->kind == EcsVectorType);
+    return t && (t->kind == EcsArrayType || t->kind == EcsVectorType ||
+        t->kind == EcsMapType);
 }
 
 static bool flecs_value_collection_elems(
@@ -105837,11 +105864,88 @@ bool flecs_value_array_count_mismatch(
     return *src_count != *dst_count;
 }
 
+static int flecs_value_copy_elem(
+    ecs_world_t *world,
+    ecs_meta_cursor_t *cur,
+    ecs_entity_t type,
+    const ecs_type_info_t *ti,
+    const void *ptr)
+{
+    ecs_value_t dst = {
+        .type = ecs_meta_get_type(cur),
+        .ptr = ecs_meta_get_ptr(cur)
+    };
+
+    ecs_expr_value_t src = {
+        .value = { .type = type, .ptr = ECS_CONST_CAST(void*, ptr) },
+        .type_info = ti
+    };
+
+    return flecs_value_copy_to(world, &dst, &src);
+}
+
+static int flecs_value_copy_map(
+    ecs_world_t *world,
+    ecs_value_t *dst,
+    const ecs_value_t *src)
+{
+    const EcsMap *src_type = ecs_get(world, src->type, EcsMap);
+    const EcsMap *dst_type = ecs_get(world, dst->type, EcsMap);
+    if (!src_type || !dst_type) {
+        return -1;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, src_type->type);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    bool is_alloc = ti->size > ECS_SIZEOF(ecs_map_val_t);
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, dst->type, dst->ptr);
+    if (ecs_meta_push(&cur)) {
+        return -1;
+    }
+
+    const ecs_map_t *map = src->ptr;
+    if (ecs_map_is_init(map)) {
+        int32_t i = 0;
+        ecs_map_iter_t it = ecs_map_iter(map);
+        while (ecs_map_next(&it)) {
+            if (i ++ && ecs_meta_next(&cur)) {
+                return -1;
+            }
+
+            ecs_map_key_t src_key = ecs_map_key(&it), key = src_key;
+            if (src_type->key_type != dst_type->key_type) {
+                key = 0;
+                flecs_expr_cast_handler(src_type->key_type,
+                    dst_type->key_type)(&key, &src_key);
+            }
+
+            ecs_value_t key_value = { .type = dst_type->key_type, .ptr = &key };
+            if (ecs_meta_key(&cur, &key_value)) {
+                return -1;
+            }
+
+            const void *value = is_alloc ? ecs_map_ptr(&it) : &it.res[1];
+            if (flecs_value_copy_elem(
+                world, &cur, src_type->type, ti, value))
+            {
+                return -1;
+            }
+        }
+    }
+
+    return ecs_meta_pop(&cur);
+}
+
 static int flecs_value_copy_collection(
     ecs_world_t *world,
     ecs_value_t *dst,
     const ecs_value_t *src)
 {
+    if (ecs_has(world, src->type, EcsMap)) {
+        return flecs_value_copy_map(world, dst, src);
+    }
+
     ecs_entity_t elem_type;
     const void *elems;
     int32_t i, count;
@@ -105864,20 +105968,9 @@ static int flecs_value_copy_collection(
             return -1;
         }
 
-        ecs_value_t dst_elem = {
-            .type = ecs_meta_get_type(&cur),
-            .ptr = ecs_meta_get_ptr(&cur)
-        };
-
-        ecs_expr_value_t src_elem = {
-            .value = {
-                .type = elem_type,
-                .ptr = ECS_CONST_CAST(void*, ECS_ELEM(elems, ti->size, i))
-            },
-            .type_info = ti
-        };
-
-        if (flecs_value_copy_to(world, &dst_elem, &src_elem)) {
+        if (flecs_value_copy_elem(world, &cur, elem_type, ti,
+            ECS_ELEM(elems, ti->size, i)))
+        {
             return -1;
         }
     }

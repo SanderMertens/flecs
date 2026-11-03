@@ -4388,3 +4388,262 @@ void Collection_error_map_to_vector(void) {
 
     ecs_fini(world);
 }
+
+void Collection_map_init_from_other_map_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_i32_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "FloatMap" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_f32_t)
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut a: Map = [1: 10, 2: 20]"
+            LINE "export mut b: FloatMap = a",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_value_t b = ecs_mut_var_get(world, ecs_lookup(world, "b"));
+    test_uint(b.type, ecs_lookup(world, "FloatMap"));
+
+    ecs_map_t *mb = b.ptr;
+    test_int(ecs_map_count(mb), 2);
+    test_flt(*(float*)ecs_map_get(mb, 1), 10);
+    test_flt(*(float*)ecs_map_get(mb, 2), 20);
+
+    ecs_map_t *ma = ecs_mut_var_get(world, ecs_lookup(world, "a")).ptr;
+    test_int(ecs_map_count(ma), 2);
+    test_int(*(int32_t*)ecs_map_get(ma, 1), 10);
+    test_int(*(int32_t*)ecs_map_get(ma, 2), 20);
+
+    ecs_fini(world);
+}
+
+void Collection_map_assign_from_other_map_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_i32_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "FloatMap" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_f32_t)
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut a: Map = [1: 10, 2: 20]"
+            LINE "export mut b: FloatMap = [3: 30]"
+            LINE "async {"
+            LINE "  b = a"
+            LINE "  a = [4: 40]"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    ecs_map_t *mb = ecs_mut_var_get(world, ecs_lookup(world, "b")).ptr;
+    test_int(ecs_map_count(mb), 2);
+    test_flt(*(float*)ecs_map_get(mb, 1), 10);
+    test_flt(*(float*)ecs_map_get(mb, 2), 20);
+    test_assert(ecs_map_get(mb, 3) == NULL);
+
+    ecs_map_t *ma = ecs_mut_var_get(world, ecs_lookup(world, "a")).ptr;
+    test_int(ecs_map_count(ma), 1);
+    test_int(*(int32_t*)ecs_map_get(ma, 4), 40);
+
+    ecs_fini(world);
+}
+
+void Collection_map_init_from_other_map_type_in_async(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_i32_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "FloatMap" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_f32_t)
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut a: Map = [1: 10, 2: 20]"
+            LINE "export mut out: f32 = 0"
+            LINE "async {"
+            LINE "  mut b: FloatMap = a"
+            LINE "  const c: FloatMap = a"
+            LINE "  out = b[1] + c[2]"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_flt(*(float*)ecs_mut_var_get(
+        world, ecs_lookup(world, "out")).ptr, 30);
+
+    ecs_fini(world);
+}
+
+void Collection_string_map_from_other_map_type_no_leak(void) {
+    const char *expr =
+    HEAD "export mut a: Map = [1: \"foo\", 2: \"bar\"]"
+    LINE "export mut b: OtherMap = a"
+    LINE "export mut c: OtherMap = []"
+    LINE "async {"
+    LINE "  c = a"
+    LINE "  a = [3: \"hello\"]"
+    LINE "}";
+
+    int64_t balance_before = 0;
+    int32_t i;
+    for (i = 0; i < 2; i ++) {
+        if (i == 1) {
+            balance_before = (ecs_os_api_malloc_count +
+                ecs_os_api_calloc_count) - ecs_os_api_free_count;
+        }
+
+        ecs_world_t *world = ecs_init();
+
+        ecs_map_type(world, {
+            .entity = ecs_entity(world, { .name = "Map" }),
+            .key_type = ecs_id(ecs_i32_t),
+            .type = ecs_id(ecs_string_t)
+        });
+
+        ecs_map_type(world, {
+            .entity = ecs_entity(world, { .name = "OtherMap" }),
+            .key_type = ecs_id(ecs_u8_t),
+            .type = ecs_id(ecs_string_t)
+        });
+
+        ecs_entity_t s = ecs_script(world, { .code = expr, .ir = ir_enabled });
+        test_assert(s != 0);
+        const EcsScript *comp = ecs_get(world, s, EcsScript);
+        test_assert(comp != NULL);
+        test_assert(comp->error == NULL);
+
+        ecs_script_tasks_progress(world);
+
+        ecs_map_t *ma = ecs_mut_var_get(world, ecs_lookup(world, "a")).ptr;
+        test_int(ecs_map_count(ma), 1);
+        test_str(*(char**)ecs_map_get(ma, 3), "hello");
+
+        ecs_map_t *mb = ecs_mut_var_get(world, ecs_lookup(world, "b")).ptr;
+        test_int(ecs_map_count(mb), 2);
+        test_str(*(char**)ecs_map_get(mb, 1), "foo");
+        test_str(*(char**)ecs_map_get(mb, 2), "bar");
+
+        ecs_map_t *mc = ecs_mut_var_get(world, ecs_lookup(world, "c")).ptr;
+        test_int(ecs_map_count(mc), 2);
+        test_str(*(char**)ecs_map_get(mc, 1), "foo");
+        test_str(*(char**)ecs_map_get(mc, 2), "bar");
+
+        ecs_fini(world);
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+}
+
+void Collection_error_map_value_type_mismatch(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "PositionMap" }),
+        .key_type = ecs_id(ecs_i32_t),
+        .type = ecs_lookup(world, "Position")
+    });
+
+    ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_i32_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_log_set_level(-4);
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut a: PositionMap = [1: {1, 2}]"
+            LINE "export mut b: Map = a",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error != NULL);
+    test_assert(strstr(comp->error,
+        "invalid cast from PositionMap to Map") != NULL);
+
+    ecs_fini(world);
+}
+
+void Collection_error_map_key_type_mismatch(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "EntityMap" }),
+        .key_type = ecs_id(ecs_entity_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_i32_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_log_set_level(-4);
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "e {}"
+            LINE "export mut a: EntityMap = [e: 10]"
+            LINE "export mut b: Map = [1: 10]"
+            LINE "async {"
+            LINE "  b = a"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error != NULL);
+    test_assert(strstr(comp->error,
+        "invalid cast from EntityMap to Map") != NULL);
+
+    ecs_fini(world);
+}
