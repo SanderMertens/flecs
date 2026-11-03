@@ -4359,3 +4359,31 @@ void Collection_error_array_to_array_size(void) {
 
     ecs_fini(world);
 }
+
+void Collection_error_map_to_vector(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_i32_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_log_set_level(-4);
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut a: Map = [1: 10]"
+            LINE "export mut b: i32[] = []"
+            LINE "async {"
+            LINE "  b = a"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error != NULL);
+    test_assert(strstr(comp->error, "Map") != NULL);
+    test_assert(strstr(comp->error, "vector<i32>") != NULL);
+
+    ecs_fini(world);
+}
