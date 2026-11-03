@@ -959,6 +959,7 @@ void Collection_error_untyped_vector_to_vector_elem_type(void);
 void Collection_error_untyped_vector_to_array_size(void);
 void Collection_error_vector_to_array_size_in_async(void);
 void Collection_error_array_to_array_size(void);
+void Collection_error_map_to_vector(void);
 
 // Testsuite 'Await'
 void Await_setup(void);
@@ -8145,6 +8146,10 @@ bake_test_case Collection_testcases[] = {
     {
         "error_array_to_array_size",
         Collection_error_array_to_array_size
+    },
+    {
+        "error_map_to_vector",
+        Collection_error_map_to_vector
     }
 };
 
@@ -21620,7 +21625,7 @@ static bake_test_suite suites[] = {
         "Collection",
         Collection_setup,
         NULL,
-        128,
+        129,
         Collection_testcases,
         1,
         Collection_params

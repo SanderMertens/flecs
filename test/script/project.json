@@ -970,7 +970,8 @@
                 "error_untyped_vector_to_vector_elem_type",
                 "error_untyped_vector_to_array_size",
                 "error_vector_to_array_size_in_async",
-                "error_array_to_array_size"
+                "error_array_to_array_size",
+                "error_map_to_vector"
             ]
         }, {
             "id": "Await",
