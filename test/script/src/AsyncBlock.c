@@ -6775,6 +6775,36 @@ void AsyncBlock_local_mut_not_reactive(void) {
     ecs_fini(world);
 }
 
+void AsyncBlock_local_mut_array_from_array(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut kind: i32[3] = [1, 2, 3]"
+            LINE "export mut out: i32 = 0"
+            LINE "async {"
+            LINE "  mut k: i32[3] = kind"
+            LINE "  k[1] = 10"
+            LINE "  out = k[0] + k[1] + k[2]"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "out")).ptr, 14);
+
+    int32_t *kind = ecs_mut_var_get(world, ecs_lookup(world, "kind")).ptr;
+    test_int(kind[0], 1);
+    test_int(kind[1], 2);
+    test_int(kind[2], 3);
+
+    ecs_fini(world);
+}
+
 void AsyncBlock_error_local_mut_outside_block(void) {
     ecs_world_t *world = ecs_init();
 
