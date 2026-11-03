@@ -828,6 +828,15 @@ void Eval_named_child_in_for_loop_warns(void);
 void Eval_interpolated_name_in_for_loop_no_warn(void);
 void Eval_child_of_interpolated_name_in_for_loop_no_warn(void);
 void Eval_named_entity_w_tag_in_for_loop_no_warn(void);
+void Eval_2_components_same_line_wo_semicolon(void);
+void Eval_component_and_tag_same_line_wo_semicolon(void);
+void Eval_component_and_pair_same_line_wo_semicolon(void);
+void Eval_pair_and_component_same_line_wo_semicolon(void);
+void Eval_pair_and_child_same_line_wo_semicolon(void);
+void Eval_3_entities_same_line_wo_semicolon(void);
+void Eval_kind_entity_after_scope_same_line_wo_semicolon(void);
+void Eval_pair_after_scope_same_line_wo_semicolon(void);
+void Eval_const_after_pair_same_line_wo_semicolon(void);
 
 // Testsuite 'Collection'
 void Collection_setup(void);
@@ -1648,11 +1657,7 @@ void Mut_typed_mut_w_semicolon(void);
 
 // Testsuite 'Error'
 void Error_setup(void);
-void Error_missing_separator_between_components(void);
 void Error_unexpected_mod_token(void);
-void Error_missing_separator_between_component_and_tag(void);
-void Error_missing_separator_between_component_and_pair(void);
-void Error_missing_separator_after_scope(void);
 void Error_missing_separator_between_const(void);
 void Error_long_binary_expression(void);
 void Error_deeply_chained_else_if(void);
@@ -1907,6 +1912,12 @@ void Error_pair_scope_unresolved_first(void);
 void Error_pair_scope_unresolved_second(void);
 void Error_compare_vector_types(void);
 void Error_divide_strings(void);
+void Error_missing_separator_between_scalar_component_and_tag(void);
+void Error_missing_separator_between_const_and_tag(void);
+void Error_missing_separator_between_tags_after_kind(void);
+void Error_missing_separator_between_pairs(void);
+void Error_missing_separator_between_component_and_anonymous_entity(void);
+void Error_missing_separator_between_scope_and_annotation(void);
 
 // Testsuite 'Format'
 void Format_setup(void);
@@ -7512,6 +7523,42 @@ bake_test_case Eval_testcases[] = {
     {
         "named_entity_w_tag_in_for_loop_no_warn",
         Eval_named_entity_w_tag_in_for_loop_no_warn
+    },
+    {
+        "2_components_same_line_wo_semicolon",
+        Eval_2_components_same_line_wo_semicolon
+    },
+    {
+        "component_and_tag_same_line_wo_semicolon",
+        Eval_component_and_tag_same_line_wo_semicolon
+    },
+    {
+        "component_and_pair_same_line_wo_semicolon",
+        Eval_component_and_pair_same_line_wo_semicolon
+    },
+    {
+        "pair_and_component_same_line_wo_semicolon",
+        Eval_pair_and_component_same_line_wo_semicolon
+    },
+    {
+        "pair_and_child_same_line_wo_semicolon",
+        Eval_pair_and_child_same_line_wo_semicolon
+    },
+    {
+        "3_entities_same_line_wo_semicolon",
+        Eval_3_entities_same_line_wo_semicolon
+    },
+    {
+        "kind_entity_after_scope_same_line_wo_semicolon",
+        Eval_kind_entity_after_scope_same_line_wo_semicolon
+    },
+    {
+        "pair_after_scope_same_line_wo_semicolon",
+        Eval_pair_after_scope_same_line_wo_semicolon
+    },
+    {
+        "const_after_pair_same_line_wo_semicolon",
+        Eval_const_after_pair_same_line_wo_semicolon
     }
 };
 
@@ -10713,24 +10760,8 @@ bake_test_case Mut_testcases[] = {
 
 bake_test_case Error_testcases[] = {
     {
-        "missing_separator_between_components",
-        Error_missing_separator_between_components
-    },
-    {
         "unexpected_mod_token",
         Error_unexpected_mod_token
-    },
-    {
-        "missing_separator_between_component_and_tag",
-        Error_missing_separator_between_component_and_tag
-    },
-    {
-        "missing_separator_between_component_and_pair",
-        Error_missing_separator_between_component_and_pair
-    },
-    {
-        "missing_separator_after_scope",
-        Error_missing_separator_after_scope
     },
     {
         "missing_separator_between_const",
@@ -11747,6 +11778,30 @@ bake_test_case Error_testcases[] = {
     {
         "divide_strings",
         Error_divide_strings
+    },
+    {
+        "missing_separator_between_scalar_component_and_tag",
+        Error_missing_separator_between_scalar_component_and_tag
+    },
+    {
+        "missing_separator_between_const_and_tag",
+        Error_missing_separator_between_const_and_tag
+    },
+    {
+        "missing_separator_between_tags_after_kind",
+        Error_missing_separator_between_tags_after_kind
+    },
+    {
+        "missing_separator_between_pairs",
+        Error_missing_separator_between_pairs
+    },
+    {
+        "missing_separator_between_component_and_anonymous_entity",
+        Error_missing_separator_between_component_and_anonymous_entity
+    },
+    {
+        "missing_separator_between_scope_and_annotation",
+        Error_missing_separator_between_scope_and_annotation
     }
 };
 
@@ -21021,7 +21076,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        818,
+        827,
         Eval_testcases,
         1,
         Eval_params
@@ -21102,7 +21157,7 @@ static bake_test_suite suites[] = {
         "Error",
         Error_setup,
         NULL,
-        259,
+        261,
         Error_testcases,
         1,
         Error_params

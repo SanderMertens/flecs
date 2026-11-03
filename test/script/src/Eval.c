@@ -26335,3 +26335,383 @@ void Eval_named_entity_w_tag_in_for_loop_no_warn(void) {
     ecs_os_set_api_defaults();
     ecs_log_set_level(-1);
 }
+
+void Eval_2_components_same_line_wo_semicolon(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Apples);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e { Position: {10, 20} Velocity: {1, 2} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        const Velocity *v = ecs_get(world, e, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_component_and_tag_same_line_wo_semicolon(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Apples);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e { Position: {10, 20} Foo }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    test_assert(ecs_has(world, e, Foo));
+
+    ecs_fini(world);
+}
+
+void Eval_component_and_pair_same_line_wo_semicolon(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Apples);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e { Position: {10, 20} (Likes, Apples) }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    test_assert(ecs_has_pair(world, e, Likes, Apples));
+
+    ecs_fini(world);
+}
+
+void Eval_pair_and_component_same_line_wo_semicolon(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Apples);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Prefab e { (Likes, Apples)  Position: {x: 10, y: 20} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    test_assert(ecs_has_id(world, e, EcsPrefab));
+    test_assert(ecs_has_pair(world, e, Likes, Apples));
+
+    ecs_fini(world);
+}
+
+void Eval_pair_and_child_same_line_wo_semicolon(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Apples);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e { (Likes, Apples) child { Foo } }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, Likes, Apples));
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    test_assert(child != 0);
+    test_assert(ecs_has(world, child, Foo));
+
+    ecs_fini(world);
+}
+
+void Eval_3_entities_same_line_wo_semicolon(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Apples);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "a {} b { Foo } c {}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_has(world, ecs_lookup(world, "b"), Foo));
+    test_assert(ecs_lookup(world, "c") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_kind_entity_after_scope_same_line_wo_semicolon(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Apples);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "a { Foo } Prefab e { Position: {10, 20} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    test_assert(ecs_has_id(world, e, EcsPrefab));
+    test_assert(ecs_has(world, ecs_lookup(world, "a"), Foo));
+
+    ecs_fini(world);
+}
+
+void Eval_pair_after_scope_same_line_wo_semicolon(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Apples);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e { child {} (Likes, Apples) }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, Likes, Apples));
+    test_assert(ecs_lookup(world, "e.child") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_const_after_pair_same_line_wo_semicolon(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Apples);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e { (Likes, Apples) const x = 10; Position: {$x, 20} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    test_assert(ecs_has_pair(world, e, Likes, Apples));
+
+    ecs_fini(world);
+}

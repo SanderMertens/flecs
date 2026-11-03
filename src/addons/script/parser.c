@@ -1387,8 +1387,54 @@ const char* flecs_script_stmt(
     return pos;
 }
 
+/* Can a statement whose last token ends with 'last' be directly followed on
+ * the same line by a statement that starts with token 'next'? This is only the
+ * case when the previous statement ends with a closing delimiter, and the next
+ * token starts a statement but cannot continue an expression or initializer:
+ *
+ *   Prefab p { (MadeOf, Steel) Position: {10, 20} }
+ *
+ * A '(' may only follow a '}' or ']', as 'X(...) (...)' reads as an
+ * initializer, like in 'with (A, B) (expr)'. */
+static bool flecs_script_stmt_can_juxtapose(
+    char last,
+    ecs_token_kind_t next)
+{
+    if (last != ')' && last != '}' && last != ']') {
+        return false;
+    }
+
+    switch(next) {
+    case EcsTokIdentifier:
+    case EcsTokString:
+    case EcsTokKeywordWith:
+    case EcsTokKeywordModule:
+    case EcsTokKeywordUsing:
+    case EcsTokKeywordTemplate:
+    case EcsTokKeywordProp:
+    case EcsTokKeywordMut:
+    case EcsTokKeywordConst:
+    case EcsTokKeywordExport:
+    case EcsTokKeywordIf:
+    case EcsTokKeywordFor:
+    case EcsTokKeywordInclude:
+    case EcsTokKeywordFn:
+    case EcsTokKeywordAwait:
+    case EcsTokKeywordTry:
+    case EcsTokKeywordContinue:
+    case EcsTokKeywordAsync:
+    case EcsTokKeywordWhile:
+        return true;
+    case EcsTokParenOpen:
+        return last != ')';
+    default:
+        return false;
+    }
+}
+
 /* Parse a single statement, and verify that it is followed by a statement
- * separator (';', newline, end of scope or end of script). */
+ * separator (';', newline, end of scope or end of script), or by a statement
+ * that may follow it on the same line (see flecs_script_stmt_can_juxtapose). */
 const char* flecs_script_stmt_w_separator(
     ecs_parser_t *parser,
     const char *pos)
@@ -1412,8 +1458,14 @@ const char* flecs_script_stmt_w_separator(
         return lookahead;
     case EcsTokScopeClose:
         return pos;
-    default:
+    default: {
+        const char *end = flecs_parser_stmt_end(parser, pos);
+        char last = end > parser->code ? end[-1] : '\0';
+        if (flecs_script_stmt_can_juxtapose(last, token.kind)) {
+            return pos;
+        }
         break;
+    }
     }
 
     ecs_parser_error(parser->name, parser->code,

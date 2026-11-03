@@ -295,6 +295,16 @@ Newlines after opening a scope (`{`) or before closing a scope (`}`) are not man
 e { Position: {10, 20}; Velocity: {1, 2} }
 ```
 
+A statement that ends with a closing `)`, `}` or `]` may be followed by another statement on the same line without a `;`, if that statement starts with an identifier, a string or a keyword (such as `const` or `with`). A statement that starts with `(` may follow a statement that ends with `}` or `]`:
+
+```cpp
+Prefab mullion { (MadeOf, Aluminium)  Profile: {width: 65, depth: 200} }
+e { Position: {10, 20} Velocity: {1, 2} (Likes, Apples) }
+a {} b {} c {}
+```
+
+In all other cases a `;` or newline is required. `Foo Bar` still declares entity `Bar` with kind `Foo`, a value such as `Mass: 10` must be followed by a separator, and `(A, B) (C, D)` or `Position: {10, 20} {}` remain errors, as `(` after `)` and `{` read as an initializer or scope of the previous statement.
+
 #### Builtin kinds
 Applications can specify the following builtin kinds which provide convenience shortcuts to commonly used features:
 

@@ -834,7 +834,16 @@
                 "named_child_in_for_loop_warns",
                 "interpolated_name_in_for_loop_no_warn",
                 "child_of_interpolated_name_in_for_loop_no_warn",
-                "named_entity_w_tag_in_for_loop_no_warn"
+                "named_entity_w_tag_in_for_loop_no_warn",
+                "2_components_same_line_wo_semicolon",
+                "component_and_tag_same_line_wo_semicolon",
+                "component_and_pair_same_line_wo_semicolon",
+                "pair_and_component_same_line_wo_semicolon",
+                "pair_and_child_same_line_wo_semicolon",
+                "3_entities_same_line_wo_semicolon",
+                "kind_entity_after_scope_same_line_wo_semicolon",
+                "pair_after_scope_same_line_wo_semicolon",
+                "const_after_pair_same_line_wo_semicolon"
             ]
         }, {
             "id": "Collection",
@@ -1700,11 +1709,7 @@
             },
             "setup": true,
             "testcases": [
-                "missing_separator_between_components",
                 "unexpected_mod_token",
-                "missing_separator_between_component_and_tag",
-                "missing_separator_between_component_and_pair",
-                "missing_separator_after_scope",
                 "missing_separator_between_const",
                 "long_binary_expression",
                 "deeply_chained_else_if",
@@ -1958,7 +1963,13 @@
                 "pair_scope_unresolved_first",
                 "pair_scope_unresolved_second",
                 "compare_vector_types",
-                "divide_strings"
+                "divide_strings",
+                "missing_separator_between_scalar_component_and_tag",
+                "missing_separator_between_const_and_tag",
+                "missing_separator_between_tags_after_kind",
+                "missing_separator_between_pairs",
+                "missing_separator_between_component_and_anonymous_entity",
+                "missing_separator_between_scope_and_annotation"
             ]
         }, {
             "id": "Format",

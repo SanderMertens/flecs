@@ -4971,22 +4971,6 @@ void Error_parse_error_in_large_script_reports_position(void) {
     ecs_os_free(code);
 }
 
-void Error_missing_separator_between_components(void) {
-    ecs_log_set_level(-4);
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "e { Position: {10, 20} Velocity: {1, 2} }";
-
-    ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
-    test_assert(result.error != NULL);
-    test_assert(strstr(result.error, "missing ; or newline") != NULL);
-    test_int(result.line, 1);
-    ecs_os_free(result.error);
-
-    ecs_fini(world);
-}
 
 void Error_unexpected_mod_token(void) {
     ecs_log_set_level(-4);
@@ -5006,57 +4990,8 @@ void Error_unexpected_mod_token(void) {
     ecs_fini(world);
 }
 
-void Error_missing_separator_between_component_and_tag(void) {
-    ecs_log_set_level(-4);
-    ecs_world_t *world = ecs_init();
 
-    const char *expr =
-    HEAD "e { Position: {10, 20} Foo }";
 
-    ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
-    test_assert(result.error != NULL);
-    test_assert(strstr(result.error, "missing ; or newline") != NULL);
-    test_int(result.line, 1);
-    ecs_os_free(result.error);
-
-    ecs_fini(world);
-}
-
-void Error_missing_separator_between_component_and_pair(void) {
-    ecs_log_set_level(-4);
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "e { Position: {10, 20} (Likes, Apples) }";
-
-    ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
-    test_assert(result.error != NULL);
-    test_assert(strstr(result.error, "missing ; or newline") != NULL);
-    test_int(result.line, 1);
-    ecs_os_free(result.error);
-
-    ecs_fini(world);
-}
-
-void Error_missing_separator_after_scope(void) {
-    ecs_log_set_level(-4);
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "foo {}"
-    LINE "bar {} baz {}";
-
-    ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
-    test_assert(result.error != NULL);
-    test_assert(strstr(result.error, "missing ; or newline") != NULL);
-    test_int(result.line, 2);
-    ecs_os_free(result.error);
-
-    ecs_fini(world);
-}
 
 void Error_missing_separator_between_const(void) {
     ecs_log_set_level(-4);
@@ -6195,6 +6130,108 @@ void Error_divide_strings(void) {
         "const x = \"a\" / \"b\"", &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "division by zero") == NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_missing_separator_between_scalar_component_and_tag(void) {
+    ecs_log_set_level(-4);
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e { Position: {10, 20}; Mass: 10 Foo }";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "missing ; or newline") != NULL);
+    test_int(result.line, 1);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_missing_separator_between_const_and_tag(void) {
+    ecs_log_set_level(-4);
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e { const x = 10 Foo }";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "missing ; or newline") != NULL);
+    test_int(result.line, 1);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_missing_separator_between_tags_after_kind(void) {
+    ecs_log_set_level(-4);
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e { Foo Bar Baz }";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "missing ; or newline") != NULL);
+    test_int(result.line, 1);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_missing_separator_between_pairs(void) {
+    ecs_log_set_level(-4);
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e { (Likes, Apples) (Likes, Pears) }";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "missing ; or newline") != NULL);
+    test_int(result.line, 1);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_missing_separator_between_component_and_anonymous_entity(void) {
+    ecs_log_set_level(-4);
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e { Position: {10, 20} {} }";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "missing ; or newline") != NULL);
+    test_int(result.line, 1);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_missing_separator_between_scope_and_annotation(void) {
+    ecs_log_set_level(-4);
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e { Foo {} @brief hello }";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "missing ; or newline") != NULL);
+    test_int(result.line, 1);
     ecs_os_free(result.error);
 
     ecs_fini(world);
