@@ -361,6 +361,28 @@ static bool flecs_expr_collection_cast_allowed(
     return flecs_expr_explicit_cast_allowed(world, from_elem, to_elem);
 }
 
+static bool flecs_expr_map_cast_allowed(
+    ecs_world_t *world,
+    ecs_entity_t from,
+    ecs_entity_t to)
+{
+    const EcsMap *from_map = ecs_get(world, from, EcsMap);
+    const EcsMap *to_map = ecs_get(world, to, EcsMap);
+    if (!from_map || !to_map) {
+        return false;
+    }
+
+    if (from_map->key_type != to_map->key_type &&
+        (!flecs_expr_is_type_integer(from_map->key_type) ||
+         !flecs_expr_is_type_integer(to_map->key_type)))
+    {
+        return false;
+    }
+
+    return flecs_expr_explicit_cast_allowed(
+        world, from_map->type, to_map->type);
+}
+
 bool flecs_expr_explicit_cast_allowed(
     ecs_world_t *world,
     ecs_entity_t from,
@@ -438,6 +460,10 @@ bool flecs_expr_explicit_cast_allowed(
             to_type->kind == EcsVectorType))
         {
             return flecs_expr_collection_cast_allowed(world, from, to);
+        }
+
+        if (from_type->kind == EcsMapType && to_type->kind == EcsMapType) {
+            return flecs_expr_map_cast_allowed(world, from, to);
         }
 
         /* Cannot cast complex types that are not the same */

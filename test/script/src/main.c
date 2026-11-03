@@ -960,6 +960,12 @@ void Collection_error_untyped_vector_to_array_size(void);
 void Collection_error_vector_to_array_size_in_async(void);
 void Collection_error_array_to_array_size(void);
 void Collection_error_map_to_vector(void);
+void Collection_map_init_from_other_map_type(void);
+void Collection_map_assign_from_other_map_type(void);
+void Collection_map_init_from_other_map_type_in_async(void);
+void Collection_string_map_from_other_map_type_no_leak(void);
+void Collection_error_map_value_type_mismatch(void);
+void Collection_error_map_key_type_mismatch(void);
 
 // Testsuite 'Await'
 void Await_setup(void);
@@ -8150,6 +8156,30 @@ bake_test_case Collection_testcases[] = {
     {
         "error_map_to_vector",
         Collection_error_map_to_vector
+    },
+    {
+        "map_init_from_other_map_type",
+        Collection_map_init_from_other_map_type
+    },
+    {
+        "map_assign_from_other_map_type",
+        Collection_map_assign_from_other_map_type
+    },
+    {
+        "map_init_from_other_map_type_in_async",
+        Collection_map_init_from_other_map_type_in_async
+    },
+    {
+        "string_map_from_other_map_type_no_leak",
+        Collection_string_map_from_other_map_type_no_leak
+    },
+    {
+        "error_map_value_type_mismatch",
+        Collection_error_map_value_type_mismatch
+    },
+    {
+        "error_map_key_type_mismatch",
+        Collection_error_map_key_type_mismatch
     }
 };
 
@@ -21625,7 +21655,7 @@ static bake_test_suite suites[] = {
         "Collection",
         Collection_setup,
         NULL,
-        129,
+        135,
         Collection_testcases,
         1,
         Collection_params

@@ -971,7 +971,13 @@
                 "error_untyped_vector_to_array_size",
                 "error_vector_to_array_size_in_async",
                 "error_array_to_array_size",
-                "error_map_to_vector"
+                "error_map_to_vector",
+                "map_init_from_other_map_type",
+                "map_assign_from_other_map_type",
+                "map_init_from_other_map_type_in_async",
+                "string_map_from_other_map_type_no_leak",
+                "error_map_value_type_mismatch",
+                "error_map_key_type_mismatch"
             ]
         }, {
             "id": "Await",
