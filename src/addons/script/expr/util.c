@@ -117,6 +117,114 @@ flecs_expr_cast_t flecs_expr_cast_handler(
 #undef FLECS_EXPR_CAST_ENTRY
 #undef FLECS_EXPR_CAST_TARGETS
 
+bool flecs_expr_is_type_collection(
+    const ecs_world_t *world,
+    ecs_entity_t type)
+{
+    const EcsType *t = ecs_get(world, type, EcsType);
+    return t && (t->kind == EcsArrayType || t->kind == EcsVectorType);
+}
+
+static bool flecs_value_collection_elems(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *ptr,
+    ecs_entity_t *elem_type,
+    const void **elems,
+    int32_t *count)
+{
+    const EcsArray *array = ecs_get(world, type, EcsArray);
+    if (array) {
+        *elem_type = array->type;
+        *elems = ptr;
+        *count = array->count;
+        return true;
+    }
+
+    const EcsVector *vector = ecs_get(world, type, EcsVector);
+    if (vector) {
+        const ecs_vec_t *vec = ptr;
+        *elem_type = vector->type;
+        *elems = vec ? vec->array : NULL;
+        *count = vec ? vec->count : 0;
+        return true;
+    }
+
+    return false;
+}
+
+bool flecs_value_array_count_mismatch(
+    const ecs_world_t *world,
+    ecs_entity_t dst_type,
+    const ecs_value_t *src,
+    int32_t *src_count,
+    int32_t *dst_count)
+{
+    const EcsArray *array = ecs_get(world, dst_type, EcsArray);
+    if (!array || src->type == dst_type) {
+        return false;
+    }
+
+    ecs_entity_t elem_type;
+    const void *elems;
+    if (!flecs_value_collection_elems(
+        world, src->type, src->ptr, &elem_type, &elems, src_count))
+    {
+        return false;
+    }
+
+    *dst_count = array->count;
+    return *src_count != *dst_count;
+}
+
+static int flecs_value_copy_collection(
+    ecs_world_t *world,
+    ecs_value_t *dst,
+    const ecs_value_t *src)
+{
+    ecs_entity_t elem_type;
+    const void *elems;
+    int32_t i, count;
+    if (!flecs_value_collection_elems(
+        world, src->type, src->ptr, &elem_type, &elems, &count))
+    {
+        return -1;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, elem_type);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, dst->type, dst->ptr);
+    if (ecs_meta_push(&cur)) {
+        return -1;
+    }
+
+    for (i = 0; i < count; i ++) {
+        if (i && ecs_meta_next(&cur)) {
+            return -1;
+        }
+
+        ecs_value_t dst_elem = {
+            .type = ecs_meta_get_type(&cur),
+            .ptr = ecs_meta_get_ptr(&cur)
+        };
+
+        ecs_expr_value_t src_elem = {
+            .value = {
+                .type = elem_type,
+                .ptr = ECS_CONST_CAST(void*, ECS_ELEM(elems, ti->size, i))
+            },
+            .type_info = ti
+        };
+
+        if (flecs_value_copy_to(world, &dst_elem, &src_elem)) {
+            return -1;
+        }
+    }
+
+    return ecs_meta_pop(&cur);
+}
+
 int flecs_value_copy_to(
     ecs_world_t *world,
     ecs_value_t *dst,
@@ -144,11 +252,18 @@ int flecs_value_copy_to(
             ecs_ptr_copy_w_type_info(world, ti, dst->ptr, defaults);
             ecs_ptr_free(world, type, defaults);
         }
-    } else if (src->value.type == ecs_id(ecs_bool_t) &&
+    } else if ((src->value.type == ecs_id(ecs_bool_t) ||
+        flecs_expr_is_type_number(src->value.type)) &&
         flecs_expr_is_type_number(dst->type))
     {
         flecs_expr_cast_handler(src->value.type, dst->type)(
             dst->ptr, src->value.ptr);
+    } else if (flecs_expr_is_type_collection(world, src->value.type) &&
+        flecs_expr_is_type_collection(world, dst->type))
+    {
+        if (flecs_value_copy_collection(world, dst, &src->value)) {
+            goto error;
+        }
     } else {
         /* Cast value to desired output type */
         ecs_meta_cursor_t cur = ecs_meta_cursor(world, dst->type, dst->ptr);

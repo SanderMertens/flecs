@@ -3987,3 +3987,375 @@ void Collection_string_map_assign_no_leak(void) {
         ecs_os_api_calloc_count) - ecs_os_api_free_count;
     test_int(0, balance_after - balance_before);
 }
+
+void Collection_untyped_vector_to_vector_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "export const kind = [1, 2, 3]"
+        LINE "export const k: i32[] = kind",
+        &ir_desc, NULL) == 0);
+
+    ecs_value_t k = ecs_const_var_get(world, ecs_lookup(world, "k"));
+    const EcsVector *type = ecs_get(world, k.type, EcsVector);
+    test_assert(type != NULL);
+    test_uint(type->type, ecs_id(ecs_i32_t));
+
+    ecs_vec_t *v = k.ptr;
+    test_int(ecs_vec_count(v), 3);
+    test_int(ecs_vec_get_t(v, int32_t, 0)[0], 1);
+    test_int(ecs_vec_get_t(v, int32_t, 1)[0], 2);
+    test_int(ecs_vec_get_t(v, int32_t, 2)[0], 3);
+
+    ecs_fini(world);
+}
+
+void Collection_untyped_vector_to_array_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "export const kind = [1, 2, 3]"
+        LINE "export const k: i32[3] = kind",
+        &ir_desc, NULL) == 0);
+
+    ecs_value_t k = ecs_const_var_get(world, ecs_lookup(world, "k"));
+    const EcsArray *type = ecs_get(world, k.type, EcsArray);
+    test_assert(type != NULL);
+    test_uint(type->type, ecs_id(ecs_i32_t));
+    test_int(type->count, 3);
+
+    int32_t *a = k.ptr;
+    test_int(a[0], 1);
+    test_int(a[1], 2);
+    test_int(a[2], 3);
+
+    ecs_fini(world);
+}
+
+void Collection_untyped_vector_to_vector_mut(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "export const kind = [1, 2, 3]"
+        LINE "export mut k: i32[] = kind",
+        &ir_desc, NULL) == 0);
+
+    ecs_value_t k = ecs_mut_var_get(world, ecs_lookup(world, "k"));
+    const EcsVector *type = ecs_get(world, k.type, EcsVector);
+    test_assert(type != NULL);
+    test_uint(type->type, ecs_id(ecs_i32_t));
+
+    ecs_vec_t *v = k.ptr;
+    test_int(ecs_vec_count(v), 3);
+    test_int(ecs_vec_get_t(v, int32_t, 0)[0], 1);
+    test_int(ecs_vec_get_t(v, int32_t, 1)[0], 2);
+    test_int(ecs_vec_get_t(v, int32_t, 2)[0], 3);
+
+    ecs_fini(world);
+}
+
+void Collection_untyped_vector_to_array_mut(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "export const kind = [1, 2, 3]"
+        LINE "export mut k: i32[3] = kind",
+        &ir_desc, NULL) == 0);
+
+    ecs_value_t k = ecs_mut_var_get(world, ecs_lookup(world, "k"));
+    const EcsArray *type = ecs_get(world, k.type, EcsArray);
+    test_assert(type != NULL);
+    test_uint(type->type, ecs_id(ecs_i32_t));
+    test_int(type->count, 3);
+
+    int32_t *a = k.ptr;
+    test_int(a[0], 1);
+    test_int(a[1], 2);
+    test_int(a[2], 3);
+
+    ecs_fini(world);
+}
+
+void Collection_untyped_vector_to_typed_local_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const kind = [1, 2, 3]"
+        LINE "const k: i32[] = kind"
+        LINE "const l: i32[3] = kind"
+        LINE "for x in k {"
+        LINE "  \"e_{x}\" {}"
+        LINE "}"
+        LINE "for x in l {"
+        LINE "  \"f_{x * 10}\" {}"
+        LINE "}",
+        &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "e_1") != 0);
+    test_assert(ecs_lookup(world, "e_2") != 0);
+    test_assert(ecs_lookup(world, "e_3") != 0);
+    test_assert(ecs_lookup(world, "f_10") != 0);
+    test_assert(ecs_lookup(world, "f_20") != 0);
+    test_assert(ecs_lookup(world, "f_30") != 0);
+
+    ecs_fini(world);
+}
+
+void Collection_untyped_vector_to_vector_in_async(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "const kind = [1, 2, 3]"
+            LINE "export mut out: i32 = 0"
+            LINE "export mut res: i32[] = []"
+            LINE "async {"
+            LINE "  const c: i32[] = kind"
+            LINE "  mut k: i32[] = kind"
+            LINE "  k[0] = 10"
+            LINE "  out = c[0] + k[0] + k[2]"
+            LINE "  res = kind"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(
+        world, ecs_lookup(world, "out")).ptr, 14);
+
+    ecs_vec_t *v = ecs_mut_var_get(world, ecs_lookup(world, "res")).ptr;
+    test_int(ecs_vec_count(v), 3);
+    test_int(ecs_vec_get_t(v, int32_t, 0)[0], 1);
+    test_int(ecs_vec_get_t(v, int32_t, 1)[0], 2);
+    test_int(ecs_vec_get_t(v, int32_t, 2)[0], 3);
+
+    ecs_fini(world);
+}
+
+void Collection_untyped_vector_to_array_in_async(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export const kind = [1, 2, 3]"
+            LINE "export mut out: i32 = 0"
+            LINE "export mut res: i32[3] = {}"
+            LINE "async {"
+            LINE "  const c: i32[3] = kind"
+            LINE "  mut k: i32[3] = kind"
+            LINE "  k[1] = 10"
+            LINE "  out = c[1] + k[0] + k[1] + k[2]"
+            LINE "  res = kind"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(
+        world, ecs_lookup(world, "out")).ptr, 16);
+
+    int32_t *a = ecs_mut_var_get(world, ecs_lookup(world, "res")).ptr;
+    test_int(a[0], 1);
+    test_int(a[1], 2);
+    test_int(a[2], 3);
+
+    ecs_fini(world);
+}
+
+void Collection_untyped_vector_to_float_vector(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "export const kind = [1, 2, 3]"
+        LINE "export const k: f32[] = kind",
+        &ir_desc, NULL) == 0);
+
+    ecs_value_t k = ecs_const_var_get(world, ecs_lookup(world, "k"));
+    const EcsVector *type = ecs_get(world, k.type, EcsVector);
+    test_assert(type != NULL);
+    test_uint(type->type, ecs_id(ecs_f32_t));
+
+    ecs_vec_t *v = k.ptr;
+    test_int(ecs_vec_count(v), 3);
+    test_flt(ecs_vec_get_t(v, float, 0)[0], 1);
+    test_flt(ecs_vec_get_t(v, float, 1)[0], 2);
+    test_flt(ecs_vec_get_t(v, float, 2)[0], 3);
+
+    ecs_fini(world);
+}
+
+void Collection_untyped_vector_to_array_no_leak(void) {
+    const char *expr =
+    HEAD "export const kind = [\"foo\", \"bar\"]"
+    LINE "export mut a: string[2] = kind"
+    LINE "export mut b: string[2] = {}"
+    LINE "async {"
+    LINE "  b = kind"
+    LINE "  b[0] = \"hello\""
+    LINE "  mut c: string[2] = kind"
+    LINE "  c[1] = \"world\""
+    LINE "  a[1] = c[1]"
+    LINE "}";
+
+    int64_t balance_before = 0;
+    int32_t i;
+    for (i = 0; i < 2; i ++) {
+        if (i == 1) {
+            balance_before = (ecs_os_api_malloc_count +
+                ecs_os_api_calloc_count) - ecs_os_api_free_count;
+        }
+
+        ecs_world_t *world = ecs_init();
+
+        ecs_entity_t s = ecs_script(world, { .code = expr, .ir = ir_enabled });
+        test_assert(s != 0);
+        const EcsScript *comp = ecs_get(world, s, EcsScript);
+        test_assert(comp != NULL);
+        test_assert(comp->error == NULL);
+
+        ecs_script_tasks_progress(world);
+
+        char **a = ecs_mut_var_get(world, ecs_lookup(world, "a")).ptr;
+        test_str(a[0], "foo");
+        test_str(a[1], "world");
+
+        char **b = ecs_mut_var_get(world, ecs_lookup(world, "b")).ptr;
+        test_str(b[0], "hello");
+        test_str(b[1], "bar");
+
+        ecs_vec_t *kind = ecs_const_var_get(
+            world, ecs_lookup(world, "kind")).ptr;
+        test_int(ecs_vec_count(kind), 2);
+        test_str(ecs_vec_get_t(kind, char*, 0)[0], "foo");
+        test_str(ecs_vec_get_t(kind, char*, 1)[0], "bar");
+
+        ecs_fini(world);
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+}
+
+void Collection_vector_assign_from_untyped_vector(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "const u = [1, 2, 3]"
+            LINE "export mut b: i32[] = [4]"
+            LINE "async {"
+            LINE "  b = u"
+            LINE "  b[0] = 10"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    ecs_vec_t *vb = ecs_mut_var_get(world, ecs_lookup(world, "b")).ptr;
+    test_int(ecs_vec_count(vb), 3);
+    test_int(ecs_vec_get_t(vb, int32_t, 0)[0], 10);
+    test_int(ecs_vec_get_t(vb, int32_t, 1)[0], 2);
+    test_int(ecs_vec_get_t(vb, int32_t, 2)[0], 3);
+
+    ecs_fini(world);
+}
+
+void Collection_error_untyped_vector_to_vector_elem_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "struct Position(x: f32, y: f32)"
+            LINE "const p: Position = {1, 2}"
+            LINE "const kind = [p, p]"
+            LINE "const k: i32[] = kind",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error != NULL);
+    test_assert(strstr(comp->error, "invalid cast from") != NULL);
+
+    ecs_fini(world);
+}
+
+void Collection_error_untyped_vector_to_array_size(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "const kind = [1, 2]"
+            LINE "const k: i32[3] = kind",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error != NULL);
+    test_assert(strstr(comp->error,
+        "cannot assign 2 elements to array of 3 elements") != NULL);
+
+    ecs_fini(world);
+}
+
+void Collection_error_vector_to_array_size_in_async(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut src: i32[] = [1, 2, 3, 4]"
+            LINE "export mut k: i32[3] = [7, 8, 9]"
+            LINE "export mut after: i32 = 0"
+            LINE "async { k = src; after = 1 }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(
+        world, ecs_lookup(world, "after")).ptr, 0);
+
+    int32_t *a = ecs_mut_var_get(world, ecs_lookup(world, "k")).ptr;
+    test_int(a[0], 7);
+    test_int(a[1], 8);
+    test_int(a[2], 9);
+
+    ecs_fini(world);
+}
+
+void Collection_error_array_to_array_size(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "const a: i32[2] = [1, 2]"
+            LINE "const k: i32[3] = a",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error != NULL);
+    test_assert(strstr(comp->error, "invalid cast from") != NULL);
+
+    ecs_fini(world);
+}

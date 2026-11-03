@@ -1213,7 +1213,13 @@ static int flecs_expr_initializer_visit_type(
                 goto error;
             }
 
-            if (elem->value->type == type) {
+            if (elem->value->type == type || flecs_expr_is_type_collection(
+                script->world, elem->value->type))
+            {
+                if (flecs_expr_cast_to(script, &elem->value, type)) {
+                    goto error;
+                }
+
                 if (ecs_meta_pop(cur)) {
                     goto error;
                 }

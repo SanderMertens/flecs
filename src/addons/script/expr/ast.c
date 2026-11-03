@@ -318,6 +318,49 @@ ecs_expr_script_t* flecs_expr_script(
     return result;
 }
 
+static bool flecs_expr_collection_elem_type(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_entity_t *elem_type,
+    int32_t *count)
+{
+    const EcsArray *array = ecs_get(world, type, EcsArray);
+    if (array) {
+        *elem_type = array->type;
+        *count = array->count;
+        return true;
+    }
+
+    const EcsVector *vector = ecs_get(world, type, EcsVector);
+    if (vector) {
+        *elem_type = vector->type;
+        *count = -1;
+        return true;
+    }
+
+    return false;
+}
+
+static bool flecs_expr_collection_cast_allowed(
+    ecs_world_t *world,
+    ecs_entity_t from,
+    ecs_entity_t to)
+{
+    ecs_entity_t from_elem, to_elem;
+    int32_t from_count, to_count;
+    if (!flecs_expr_collection_elem_type(world, from, &from_elem, &from_count) ||
+        !flecs_expr_collection_elem_type(world, to, &to_elem, &to_count))
+    {
+        return false;
+    }
+
+    if (from_count != -1 && to_count != -1 && from_count != to_count) {
+        return false;
+    }
+
+    return flecs_expr_explicit_cast_allowed(world, from_elem, to_elem);
+}
+
 bool flecs_expr_explicit_cast_allowed(
     ecs_world_t *world,
     ecs_entity_t from,
@@ -387,6 +430,14 @@ bool flecs_expr_explicit_cast_allowed(
             to_type->kind == EcsStructType)
         {
             return flecs_struct_is_derived_from(world, from, to);
+        }
+
+        if ((from_type->kind == EcsArrayType ||
+            from_type->kind == EcsVectorType) &&
+            (to_type->kind == EcsArrayType ||
+            to_type->kind == EcsVectorType))
+        {
+            return flecs_expr_collection_cast_allowed(world, from, to);
         }
 
         /* Cannot cast complex types that are not the same */
