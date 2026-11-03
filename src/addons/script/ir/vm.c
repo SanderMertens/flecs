@@ -1443,6 +1443,16 @@ static int flecs_ir_cast(
         .type_info = src->ti,
         .owned = src->owned
     };
+    int32_t src_count, dst_count;
+    if (flecs_value_array_count_mismatch(vm->v.world, dst->value.type,
+        &src->value, &src_count, &dst_count))
+    {
+        flecs_ir_expr_error(vm, node,
+            "cannot assign %d elements to array of %d elements",
+            src_count, dst_count);
+        return -1;
+    }
+
     if (flecs_value_copy_to(vm->v.world, &dst->value, &expr)) {
         flecs_ir_expr_error(vm, node, "failed to cast value");
         return -1;

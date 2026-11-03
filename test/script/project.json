@@ -956,7 +956,21 @@
                 "map_init_from_map",
                 "map_assign_from_map",
                 "map_assign_from_map_literal",
-                "string_map_assign_no_leak"
+                "string_map_assign_no_leak",
+                "untyped_vector_to_vector_const",
+                "untyped_vector_to_array_const",
+                "untyped_vector_to_vector_mut",
+                "untyped_vector_to_array_mut",
+                "untyped_vector_to_typed_local_const",
+                "untyped_vector_to_vector_in_async",
+                "untyped_vector_to_array_in_proc",
+                "untyped_vector_to_float_vector",
+                "untyped_vector_to_array_no_leak",
+                "vector_assign_from_untyped_vector",
+                "error_untyped_vector_to_vector_elem_type",
+                "error_untyped_vector_to_array_size",
+                "error_vector_to_array_size_in_async",
+                "error_array_to_array_size"
             ]
         }, {
             "id": "Await",
