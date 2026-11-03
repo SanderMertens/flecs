@@ -1124,6 +1124,7 @@ void AsyncBlock_local_mut_await_initializer(void);
 void AsyncBlock_local_mut_resets_in_loop(void);
 void AsyncBlock_local_mut_per_task(void);
 void AsyncBlock_local_mut_not_reactive(void);
+void AsyncBlock_local_mut_array_from_array(void);
 void AsyncBlock_error_local_mut_outside_block(void);
 void AsyncBlock_restart_only_block_reading_prop(void);
 void AsyncBlock_surviving_block_keeps_position(void);
@@ -8771,6 +8772,10 @@ bake_test_case AsyncBlock_testcases[] = {
     {
         "local_mut_not_reactive",
         AsyncBlock_local_mut_not_reactive
+    },
+    {
+        "local_mut_array_from_array",
+        AsyncBlock_local_mut_array_from_array
     },
     {
         "error_local_mut_outside_block",
@@ -21558,7 +21563,7 @@ static bake_test_suite suites[] = {
         "AsyncBlock",
         AsyncBlock_setup,
         NULL,
-        167,
+        168,
         AsyncBlock_testcases,
         1,
         AsyncBlock_params

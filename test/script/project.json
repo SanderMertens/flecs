@@ -1146,6 +1146,7 @@
                 "local_mut_resets_in_loop",
                 "local_mut_per_task",
                 "local_mut_not_reactive",
+                "local_mut_array_from_array",
                 "error_local_mut_outside_block",
                 "restart_only_block_reading_prop",
                 "surviving_block_keeps_position",

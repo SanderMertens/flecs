@@ -1199,6 +1199,33 @@ static int flecs_expr_initializer_visit_type(
         goto error;
     }
 
+    if (!node->is_collection && ecs_vec_count(&node->elements) == 1 &&
+        (ecs_meta_is_collection(cur) || ecs_meta_is_map(cur)))
+    {
+        ecs_expr_initializer_element_t *elem =
+            ecs_vec_first(&node->elements);
+        if (!elem->member && !elem->key && elem->value) {
+            ecs_meta_cursor_t value_cur = ecs_meta_cursor(
+                script->world, type, NULL);
+            if (flecs_expr_visit_type_priv(
+                script, &elem->value, &value_cur, desc))
+            {
+                goto error;
+            }
+
+            if (elem->value->type == type) {
+                if (ecs_meta_pop(cur)) {
+                    goto error;
+                }
+
+                *node_ptr = elem->value;
+                elem->value = NULL;
+                flecs_expr_visit_free(script, (ecs_expr_node_t*)node);
+                return 0;
+            }
+        }
+    }
+
     if (flecs_expr_initializer_collection_check(script, node, cur, type)) {
         goto error;
     }
