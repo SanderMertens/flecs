@@ -12,7 +12,7 @@
 
 DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = Flecs
-PROJECT_NUMBER         = v4.1
+PROJECT_NUMBER         = v4.2
 PROJECT_BRIEF          = "A fast entity component system (ECS) for C & C++"
 PROJECT_ICON           = docs/img/logo_small.png
 OUTPUT_DIRECTORY       = docs
