@@ -240,12 +240,13 @@ void flecs_non_fragmenting_childof_move(
             world, ecs_childof(p));
         ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        /* The parent can already be deleted when it was cleaned up earlier in
-         * the same delete operation, for example when its table was cleared
-         * for another marked id. Its ChildOf record is then marked for delete
-         * and kept alive until the operation finishes. */
-        bool parent_alive = flecs_entities_is_alive(world, p);
-        ecs_assert(parent_alive || (cr->flags & EcsIdMarkedForDelete),
+        /* The parent (or one of its parents) can already be deleted when it
+         * was cleaned up earlier in the same delete operation, for example
+         * when its table was cleared for another marked id. Its ChildOf record
+         * is then marked for delete and kept alive until the operation
+         * finishes. */
+        bool parent_deleting = (cr->flags & EcsIdMarkedForDelete) != 0;
+        ecs_assert(parent_deleting || flecs_entities_is_alive(world, p),
             ECS_INTERNAL_ERROR, NULL);
 
         flecs_non_fragmenting_childof_count(world, cr, src, -1);
@@ -257,7 +258,7 @@ void flecs_non_fragmenting_childof_move(
 
         flecs_ordered_entities_remove(world, cr, e);
 
-        if (parent_alive) {
+        if (!parent_deleting) {
             flecs_tree_spawner_assert_not_instantiated(world, p);
         }
 

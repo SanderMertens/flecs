@@ -8858,3 +8858,33 @@ void NonFragmentingChildOf_delete_parent_w_ordered_children_w_table_cleared_befo
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_delete_parent_w_prefab_child_w_table_cleared_before_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t root = ecs_new(world);
+    ecs_entity_t p_1 = ecs_new_w_pair(world, EcsChildOf, root);
+    ecs_entity_t p_2 = ecs_new_w_pair(world, EcsChildOf, root);
+    ecs_add_pair(world, p_2, Rel, p_1);
+    ecs_add(world, p_1, Foo);
+
+    ecs_entity_t child = ecs_new_w_parent(world, p_2, NULL);
+    ecs_add_id(world, child, EcsPrefab);
+    ecs_entity_t grandchild = ecs_new_w_parent(world, child, NULL);
+    ecs_entity_t e = ecs_new_w_pair(world, Rel, p_2);
+    ecs_add_pair(world, e, Rel, child);
+
+    ecs_delete(world, root);
+
+    test_assert(!ecs_is_alive(world, p_2));
+    test_assert(!ecs_is_alive(world, child));
+    test_assert(!ecs_is_alive(world, grandchild));
+    test_assert(ecs_is_alive(world, e));
+    test_assert(!ecs_has_pair(world, e, Rel, EcsWildcard));
+    test_int(world->non_fragmenting_child_count, 0);
+
+    ecs_fini(world);
+}
