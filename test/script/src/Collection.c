@@ -4646,3 +4646,161 @@ void Collection_error_map_key_type_mismatch(void) {
 
     ecs_fini(world);
 }
+
+void Collection_const_vector_to_component_vector_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "using flecs.meta"
+            LINE "struct Seg(x: f32, y: f32)"
+            LINE "vector SegVec(type: Seg)"
+            LINE "struct Path(segments: SegVec)"
+            LINE "export const P: Seg[] = [{1, 2}, {3, 4}]"
+            LINE "e { Path: {segments: P} }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t path = ecs_lookup(world, "Path");
+    test_assert(e != 0);
+    test_assert(path != 0);
+    const ecs_vec_t *segments = ecs_get_id(world, e, path);
+    test_assert(segments != NULL);
+    test_int(ecs_vec_count(segments), 2);
+    const float *seg = ecs_vec_first(segments);
+    test_flt(seg[0], 1);
+    test_flt(seg[1], 2);
+    test_flt(seg[2], 3);
+    test_flt(seg[3], 4);
+
+    ecs_fini(world);
+}
+
+void Collection_untyped_const_vector_to_component_vector_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "using flecs.meta"
+            LINE "struct Seg(x: f32, y: f32)"
+            LINE "vector SegVec(type: Seg)"
+            LINE "struct Path(segments: SegVec)"
+            LINE "const a: Seg = {1, 2}"
+            LINE "const b: Seg = {3, 4}"
+            LINE "const P = [a, b]"
+            LINE "e { Path: {segments: P} }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t path = ecs_lookup(world, "Path");
+    test_assert(e != 0);
+    test_assert(path != 0);
+    const ecs_vec_t *segments = ecs_get_id(world, e, path);
+    test_assert(segments != NULL);
+    test_int(ecs_vec_count(segments), 2);
+    const float *seg = ecs_vec_first(segments);
+    test_flt(seg[0], 1);
+    test_flt(seg[1], 2);
+    test_flt(seg[2], 3);
+    test_flt(seg[3], 4);
+
+    ecs_fini(world);
+}
+
+void Collection_const_vector_to_c_component_vector_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t seg_t = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Seg" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t segs_t = ecs_vector_init(world, &(ecs_vector_desc_t){
+        .type = seg_t
+    });
+    ecs_entity_t path = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Path" }),
+        .members = {
+            {"segments", segs_t}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export const P: Seg[] = [{1, 2}, {3, 4}]"
+            LINE "e { Path: {segments: P} }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    const ecs_vec_t *segments = ecs_get_id(world, e, path);
+    test_assert(segments != NULL);
+    test_int(ecs_vec_count(segments), 2);
+    const float *seg = ecs_vec_first(segments);
+    test_flt(seg[0], 1);
+    test_flt(seg[1], 2);
+    test_flt(seg[2], 3);
+    test_flt(seg[3], 4);
+
+    ecs_fini(world);
+}
+
+void Collection_untyped_const_vector_to_c_component_vector_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t seg_t = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Seg" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t segs_t = ecs_vector_init(world, &(ecs_vector_desc_t){
+        .type = seg_t
+    });
+    ecs_entity_t path = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Path" }),
+        .members = {
+            {"segments", segs_t}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "const a: Seg = {1, 2}"
+            LINE "const b: Seg = {3, 4}"
+            LINE "const P = [a, b]"
+            LINE "e { Path: {segments: P} }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    const ecs_vec_t *segments = ecs_get_id(world, e, path);
+    test_assert(segments != NULL);
+    test_int(ecs_vec_count(segments), 2);
+    const float *seg = ecs_vec_first(segments);
+    test_flt(seg[0], 1);
+    test_flt(seg[1], 2);
+    test_flt(seg[2], 3);
+    test_flt(seg[3], 4);
+
+    ecs_fini(world);
+}
