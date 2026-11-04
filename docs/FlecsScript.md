@@ -516,6 +516,18 @@ tiles {
 }
 ```
 
+### Has expressions
+The `?[` operator checks whether an entity has a component, tag or pair:
+
+```cpp
+const burning = Player?[OnFire]
+const likes = Player?[(Likes, Pizza)]
+
+if !Player?[Position] {
+  // ...
+}
+```
+
 ### New expressions
 A new expression is the `new` keyword followed by an entity statement. New expressions can be used to create entities inside of expressions. The following are examples of valid new expressions:
 
@@ -1147,14 +1159,17 @@ void lerp_f32(
 
 In the function documentation below the type of vector parameters is written as `[]`.
 
-### Builtin functions and constants
-The following table lists builtin core functions in the `flecs.script.core` namespace:
+## Modules
+Script functions, methods and constants are provided by modules.
+
+### Core
+The core module is always available. The following table lists the functions in the `flecs.script.core` namespace:
 
 | **Function Name** | **Description**                          | **Return Type**  | **Arguments**        |
 |-------------------|------------------------------------------|------------------|----------------------|
 | `pair`            | Returns a pair identifier                | `id`             | (`entity`, `entity`) |
 
-The following table lists builtin methods on the `flecs.meta.entity` type:
+The following table lists the methods on the `flecs.meta.entity` type:
 
 | **Method Name**   | **Description**                          | **Return Type**  | **Arguments**     |
 |-------------------|------------------------------------------|------------------|-------------------|
@@ -1162,10 +1177,19 @@ The following table lists builtin methods on the `flecs.meta.entity` type:
 | `path`            | Returns entity path                      | `string`         | `()`              |
 | `parent`          | Returns entity parent                    | `entity`         | `()`              |
 | `has`             | Returns whether entity has component     | `bool`           | `(id)`            |
+| `lookup`          | Returns child entity at a relative path  | `entity`         | `(string)`        |
 
-The following table lists doc methods on the `flecs.meta.entity` type:
+Vectors and arrays have a `count` method, which returns the number of elements:
 
-| **Method Name**  | **Description**                           | **Return Type**  | **Arguments**     |
+```cpp
+const items = [10, 20, 30]
+const n = items.count() // 3
+```
+
+### Doc
+The doc module is available when Flecs is built with the `FLECS_DOC` addon (enabled by default). The following table lists the doc methods on the `flecs.meta.entity` type:
+
+| **Method Name**   | **Description**                          | **Return Type**  | **Arguments**     |
 |-------------------|------------------------------------------|------------------|-------------------|
 | `doc_name`        | Returns entity doc name                  | `string`         | `()`              |
 | `doc_uuid`        | Returns entity doc uuid                  | `string`         | `()`              |
@@ -1174,9 +1198,8 @@ The following table lists doc methods on the `flecs.meta.entity` type:
 | `doc_link`        | Returns entity doc link                  | `string`         | `()`              |
 | `doc_color`       | Returns entity doc color                 | `string`         | `()`              |
 
-To use the doc functions, make sure to use a Flecs build compiled with `FLECS_DOC` (enabled by default).
-
-The following table lists math functions in the `flecs.script.math` namespace:
+### Math
+The math module is available when Flecs is built with the `FLECS_SCRIPT_MATH` addon. The following table lists math functions in the `flecs.script.math` namespace:
 
 | **Function Name** | **Description**                          | **Return Type** | **Arguments**       |
 |-------------------|------------------------------------------|-----------------|---------------------|
@@ -1238,13 +1261,9 @@ const rng: flecs.script.math.Rng = {}
 const x = rng.f(1.0)
 ```
 
-To use the math functions, make sure to use a Flecs build compiled with the `FLECS_SCRIPT_MATH` addon (disabled by default) and that the module is imported:
 
-```cpp
-ECS_IMPORT(world, FlecsScriptMath);
-```
-
-### Platform constants
+### Platform
+The platform module is available when Flecs is built with the `FLECS_SCRIPT_PLATFORM` addon.
 The script platform addon exposes constants in the `flecs.script.platform` namespace that describe the operating system and compiler that the application was built with. This makes it possible to write scripts that conditionally load assets or configuration based on the platform.
 
 The following table lists the string constants in the `flecs.script.platform` namespace:
@@ -1285,6 +1304,126 @@ To use the platform constants, make sure to use a Flecs build compiled with the 
 ```cpp
 ECS_IMPORT(world, FlecsScriptPlatform);
 ```
+
+### Input
+The input module is available if flecs is built with the `FLECS_SCRIPT_INPUT` addon. The input addon provides functions for keyboard and mouse events.
+
+
+The application tells the module what happened by forwarding its input with `ecs_script_mouse_event` and `ecs_script_keyboard_event`. For mouse events, the application provides the entity under the pointer. Scripts wait for events with the async functions in the `flecs.script.on` namespace, which take the entity to listen on and resolve when an event happens (see [Async](#async)):
+
+```cpp
+using flecs.script
+
+template Button {
+  mut pressed = false
+
+  async {
+    while true {
+      await on.press(this)
+      pressed = true
+      await on.release(this)
+      pressed = false
+    }
+  }
+}
+```
+
+The following table lists the events in the `flecs.script.on` namespace:
+
+| **Function**   | **Resolves when**                                                      | **Event type**    |
+|----------------|------------------------------------------------------------------------|-------------------|
+| `press`        | A mouse button goes down on the entity                                 | `MouseEvent`      |
+| `release`      | A mouse button that was pressed on the entity goes up                  | `MouseEvent`      |
+| `click`        | A mouse button is pressed and released on the entity                   | `MouseEvent`      |
+| `drag`         | The pointer moves while a button that was pressed on the entity is held | `MouseEvent`     |
+| `move`         | The pointer moves over the entity without buttons held                 | `MouseEvent`      |
+| `enter`        | The pointer moves onto the entity                                      | `MouseEvent`      |
+| `leave`        | The pointer moves off the entity                                       | `MouseEvent`      |
+| `key_down`     | A key goes down while the entity has the focus                         | `KeyboardEvent`   |
+| `key_up`       | A key goes up while the entity has the focus                           | `KeyboardEvent`   |
+| `focus`        | The entity gains the focus                                             | `FocusEvent`      |
+| `blur`         | The entity loses the focus                                             | `FocusEvent`      |
+| `activate`     | The entity is clicked, or Enter or Space is pressed while it has the focus | `ActivateEvent` |
+
+The awaited value is the event, which can be stored in a variable:
+
+```cpp
+async {
+  while true {
+    const e = await on.key_down(this)
+    if e.key == "ArrowLeft" {
+      // ...
+    }
+  }
+}
+```
+
+The following table lists the most useful event members:
+
+| **Event type**    | **Members**                                                                         |
+|-------------------|-------------------------------------------------------------------------------------|
+| `MouseEvent`      | `target`, `screen_x`, `screen_y`, `local_x`, `local_y`, `delta_x`, `delta_y`, `button` (0=left, 1=middle, 2=right), `buttons` (bitmask of held buttons) |
+| `KeyboardEvent`   | `key` (for example `"a"`, `"Enter"` or `"ArrowLeft"`), `down`, `repeat`              |
+| `FocusEvent`      | `target`, `related` (the other entity of the focus change)                          |
+| `ActivateEvent`   | `target`, `keyboard` (`false` for a click), `local_x`, `local_y`                    |
+
+All mouse, keyboard and activate events also have the `ctrl`, `shift`, `alt` and `meta` modifier keys.
+
+Events are first delivered to the entity they happened on, and then to its parents. This allows a parent to handle events for all of its children. To prevent parents from seeing an event, call `stop_propagation()` on it. This is an async method, so it must be awaited:
+
+```cpp
+const e = await on.click(this)
+await e.stop_propagation()
+```
+
+The entity with the focus receives keyboard events. When a mouse button goes down the focus moves to the entity under the pointer. A script can also move the focus with `await flecs.script.focus(entity)`, and the application can use `ecs_script_set_focus`.
+
+### Shell
+The shell module is available if flecs is built with the `FLECS_SCRIPT_SHELL` addon. It provides a command line interface for inspecting and editing a world, with commands like `ls`, `cat` and `set`. Tools can run these commands against a running application through the REST API.
+
+A command line is a command name followed by arguments separated by whitespace. Multiple commands can be separated by `;`:
+
+```
+cd game; ls; cat player
+set player Position {10, 20}
+eval player[Position].x * 2
+```
+
+Commands run in a session, which keeps track of the current scope (like a working directory) and a history of commands with their results. An application can create a session and run commands from C:
+
+```c
+ecs_entity_t session = ecs_shell_session_init(world, NULL);
+ecs_shell_result_t result = ecs_shell_run(world, session, "ls");
+// ...
+ecs_shell_result_fini(world, &result);
+```
+
+The following table lists the most commonly used builtin commands. Run `help` to get the full list, or `help <command>` for its parameters:
+
+| **Command**       | **Description**                                                  |
+|-------------------|------------------------------------------------------------------|
+| `help`            | List commands, or describe a single command                      |
+| `ls`, `tree`      | List children, or all descendants of a scope                     |
+| `cd`, `pwd`       | Set or show the session scope                                    |
+| `cat`             | Show an entity with its components and values                    |
+| `get`, `set`      | Get or set a component value                                     |
+| `add`, `rm`       | Add a component, or remove a component or delete an entity       |
+| `new`, `mv`       | Create, move or rename an entity                                 |
+| `find`, `grep`    | Search entities by name, or by name and component values         |
+| `query`           | Run a query                                                      |
+| `eval`            | Evaluate an expression                                           |
+| `schema`          | Show a type as script code                                       |
+| `man`             | Show the documentation of an entity                              |
+| `scripts`         | List scripts                                                     |
+| `script_read`     | Show the code of a script                                        |
+| `script_write`    | Replace the code of a script                                     |
+| `script_replace`, `script_patch` | Edit the code of a script                         |
+| `script_errors`   | List scripts with errors                                         |
+| `script_diff`     | Show changes since a script was loaded or saved                  |
+| `script_save`, `script_reload`, `script_undo` | Save, reload or undo changes to a script |
+| `click`, `key`, `type` | Simulate input events (see [Input](#input))                 |
+
+Commands are regular script functions. The builtin commands live in the `flecs.script.shell.commands` namespace. Applications can add their own commands by creating functions in a scope and adding that scope to the `command_paths` member of the `EcsScriptShell` singleton.
 
 ## Variables
 Scripts can contain variables, which are useful for often repeated values. Variables are created with the `const` keyword. Example:
@@ -1526,7 +1665,7 @@ world.set_mut_var("difficulty", 2.0f);
 </ul>
 </div>
 
-Mut variables can also be assigned from async blocks. This notifies reactive scripts in the same way:
+Mut variables can also be assigned from async blocks (see [Async](#async)). This notifies reactive scripts in the same way:
 
 ```cpp
 export mut score = 0
@@ -2527,6 +2666,129 @@ template Forest {
 
 Forest my_forest
 ```
+
+## Async
+Most script code runs from start to finish in one go. Async code can pause, wait for something to happen, and continue later. This is useful for behavior that plays out over time, like responding to user input or waiting for a resource to load. Async support is provided by the `FLECS_SCRIPT_ASYNC` addon.
+
+### Async blocks
+An `async` block contains code that can pause. Async blocks can be added to the root of a managed script, to the body of a template, or to a child entity in a template:
+
+```cpp
+template Button {
+  mut hover = false
+
+  async {
+    while true {
+      await on.enter(this)
+      hover = true
+      await on.leave(this)
+      hover = false
+    }
+  }
+}
+```
+
+Async blocks don't run immediately when the script runs or the template is instantiated. They start and resume during `ecs_progress`. Applications that don't use `ecs_progress` can run them with `ecs_script_tasks_progress`. An async block stops when it reaches the end, when its script is updated or deleted, or when the template instance is deleted. When a prop of the template instance changes, its async blocks restart from the beginning.
+
+Async blocks can't create entities or assign components. Instead they assign `mut` variables, and the rest of the script reacts to those changes (see [Reactivity](#reactivity)). Async blocks can contain `const` variables, `if`, `for`, `while`, `try`/`catch`, `await` and assignments. They can't be nested, and can't be placed inside an `if` or a regular entity scope.
+
+### Await
+The `await` keyword calls an async function and pauses the block until the function completes. An await can be used as a statement, or to store the result in a variable:
+
+```cpp
+async {
+  await load_level("forest")
+  const score = await fetch_score()
+}
+```
+
+Instead of returning a value, an async function receives a future which it completes later with `ecs_script_future_resolve` or `ecs_script_future_reject`:
+
+```c
+void fetch_score(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_script_future_t *future)
+{
+    // Store future, complete it later (from any thread):
+    // int32_t score = 100;
+    // ecs_script_future_resolve(future, &ecs_value(ecs_i32_t, {score}));
+    // ecs_script_future_release(future);
+}
+
+ecs_async_function(world, {
+    .name = "fetch_score",
+    .return_type = ecs_id(ecs_i32_t),
+    .callback = fetch_score
+});
+```
+
+The future must be released with `ecs_script_future_release` after it is completed.
+
+An await can also be used outside of an async block when the script is run as a task with `ecs_script_task_new`. The task pauses at each await, and continues when `ecs_script_task_resume` is called after the future is completed.
+
+### While statement
+A `while` loop repeats its body as long as its condition is true. A `while true` loop runs until its async block is stopped, which is a common way to handle events that can happen any number of times:
+
+```cpp
+async {
+  while true {
+    await on.click(this)
+    clicks = clicks + 1
+  }
+}
+```
+
+`continue` skips to the next iteration of the loop. While loops can only be used in async blocks.
+
+### Assignments
+Inside an async block, `name = value` assigns a new value to a `mut` variable. Anything that depends on the variable is updated automatically:
+
+```cpp
+template Counter {
+  mut count = 0
+
+  Label: {"{count}"}
+
+  async {
+    while true {
+      await on.click(this)
+      count = count + 1
+    }
+  }
+}
+```
+
+Only `mut` variables can be assigned. Assigning a `const` or `prop` variable is an error. Assignments can only be used in async blocks.
+
+### Try/catch
+When an awaited function fails, the async block stops with an error. A `try` block catches the error, and runs a `catch` block instead:
+
+```cpp
+async {
+  try {
+    const score = await fetch_score()
+    best = score
+  } catch {
+    best = 0
+  }
+}
+```
+
+A catch block can be limited to a specific kind of error by adding the name of an error entity. An application raises such an error by rejecting a future with `ecs_script_future_reject_id`. Catch blocks are checked in order, and the first one that matches runs. A catch block without a name catches all errors:
+
+```cpp
+try {
+  await connect()
+} catch(ConnectionLost) {
+  status = "offline"
+} catch {
+  status = "error"
+}
+```
+
+Try/catch only catches errors from async functions. Other errors, like a type error or a missing component, still stop the block.
 
 ## With statement
 When you're building a scene or asset you may find yourself often repeating the same components for multiple entities. To avoid this, a `with` statement can be used. For example:
