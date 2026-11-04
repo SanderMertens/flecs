@@ -934,7 +934,7 @@ void ComponentLifecycle_emplace_defer_use_move_ctor(void) {
         auto e = ecs.entity();
 
         flecs::world stage_1 = ecs.get_stage(0);
-        e.mut(stage_1).emplace<CountNoDefaultCtor>(10);
+        e.stage(stage_1).emplace<CountNoDefaultCtor>(10);
         test_assert(!e.has<CountNoDefaultCtor>());
         test_int(CountNoDefaultCtor::ctor_invoked, 1);
         test_int(CountNoDefaultCtor::dtor_invoked, 0);
@@ -1905,7 +1905,7 @@ void ComponentLifecycle_defer_emplace(void) {
     flecs::entity e = ecs.entity();
 
     flecs::world stage_1 = ecs.get_stage(0);
-    e.mut(stage_1).emplace<DeferEmplaceTest>(10.0, 20.0);
+    e.stage(stage_1).emplace<DeferEmplaceTest>(10.0, 20.0);
     test_assert(!e.has<DeferEmplaceTest>());
     stage_1.merge();
     test_assert(e.has<DeferEmplaceTest>());
@@ -2035,7 +2035,7 @@ void ComponentLifecycle_dtor_after_defer_set(void) {
         auto e = ecs.entity();
 
         flecs::world stage_1 = ecs.get_stage(0);
-        e.mut(stage_1).set<Pod>({10});
+        e.stage(stage_1).set<Pod>({10});
         test_assert(!e.has<Pod>());
         test_int(Pod::ctor_invoked, 2);
         test_int(Pod::dtor_invoked, 1);
@@ -2961,7 +2961,7 @@ void ComponentLifecycle_delete_w_on_remove_hook_removing_other_w_world(void) {
 
     ecs.component<Position>().on_remove(
         [](flecs::iter& it, size_t i, Position&) {
-            it.entity(i).mut(it.world()).remove<Velocity>();
+            it.entity(i).stage(it.world()).remove<Velocity>();
         });
 
     flecs::entity e = ecs.entity().add<Position>().add<Velocity>();

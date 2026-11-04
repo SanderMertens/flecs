@@ -41,10 +41,10 @@ int main(int, char *[]) {
     flecs::world stage_1 = ecs.get_stage(0);
 
     // Emit the Click event
-    widget.mut(stage_1).enqueue<Click>();
+    widget.stage(stage_1).enqueue<Click>();
 
     // Emit the Resize event
-    widget.mut(stage_1).enqueue<Resize>({100, 200});
+    widget.stage(stage_1).enqueue<Resize>({100, 200});
 
     std::cout << "Events enqueued!\n";
 

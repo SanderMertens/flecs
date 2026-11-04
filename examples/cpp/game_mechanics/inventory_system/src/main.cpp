@@ -165,7 +165,7 @@ void transfer_items(flecs::entity dst, flecs::entity src) {
     src = get_container(src);
 
     for_each_item(src, [&](flecs::entity item) {
-        transfer_item(dst.mut(stage), item.mut(stage));
+        transfer_item(dst.stage(stage), item.stage(stage));
     });
     stage.merge();
 }

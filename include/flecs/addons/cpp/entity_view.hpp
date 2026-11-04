@@ -7,7 +7,7 @@
  * the actual world vs. a stage. The constructors of this class will never 
  * create a new entity.
  *
- * To obtain a mutable handle to the entity, use the mut() function.
+ * To obtain a mutable handle to the entity, use the stage() function.
  */
 
 #pragma once
@@ -513,18 +513,18 @@ struct entity_view : public id {
      * @param stage The current stage.
      * @return An entity handle that allows for mutations in the current stage.
      */
-    flecs::entity mut(const flecs::world& stage) const;
+    flecs::entity stage(const flecs::world& stage) const;
 
-    /** Same as mut(world), but for an iterator.
+    /** Same as stage(world), but for an iterator.
      * This operation allows for the construction of a mutable entity handle
      * from an iterator.
      *
      * @param it An iterator that contains a reference to the world or stage.
      * @return An entity handle that allows for mutations in the current stage.
      */
-    flecs::entity mut(const flecs::iter& it) const;
+    flecs::entity stage(const flecs::iter& it) const;
 
-    /** Same as mut(world), but for an entity.
+    /** Same as stage(world), but for an entity.
      * This operation allows for the construction of a mutable entity handle
      * from another entity. This is useful in each() functions, which only 
      * provide a handle to the entity being iterated over.
@@ -532,7 +532,16 @@ struct entity_view : public id {
      * @param e Another mutable entity.
      * @return An entity handle that allows for mutations in the current stage.
      */
-    flecs::entity mut(const flecs::entity_view& e) const;
+    flecs::entity stage(const flecs::entity_view& e) const;
+
+    /** Same as stage(world), but for the default stage.
+     * If the entity handle already uses a stage, the returned handle uses the
+     * same stage. Otherwise the returned handle uses the default stage
+     * (stage 0) of the world.
+     *
+     * @return An entity handle that allows for mutations in the stage.
+     */
+    flecs::entity stage() const;
 
 #   ifdef FLECS_JSON
 #   include "mixins/json/entity_view.inl"

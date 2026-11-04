@@ -866,7 +866,7 @@ void Observer_on_set_w_defer_set(void) {
     test_int(count, 0);
 
     flecs::world stage_1 = world.get_stage(0);
-    e.mut(stage_1).set<Position>({10, 20});
+    e.stage(stage_1).set<Position>({10, 20});
 
     test_int(count, 0);
     stage_1.merge();
@@ -1962,7 +1962,7 @@ void Observer_delete_w_on_remove_removing_other_w_world(void) {
     ecs.observer<Position>()
         .event(flecs::OnRemove)
         .each([](flecs::iter& it, size_t i, Position&) {
-            it.entity(i).mut(it.world()).remove<Velocity>();
+            it.entity(i).stage(it.world()).remove<Velocity>();
         });
 
     flecs::entity e = ecs.entity().add<Position>().add<Velocity>();
@@ -1995,7 +1995,7 @@ void Observer_clear_w_on_remove_removing_other_w_world(void) {
     ecs.observer<Position>()
         .event(flecs::OnRemove)
         .each([](flecs::iter& it, size_t i, Position&) {
-            it.entity(i).mut(it.world()).remove<Velocity>();
+            it.entity(i).stage(it.world()).remove<Velocity>();
         });
 
     flecs::entity e = ecs.entity().add<Position>().add<Velocity>();
@@ -2030,7 +2030,7 @@ void Observer_delete_with_w_on_remove_removing_other_w_world(void) {
     ecs.observer<Position>()
         .event(flecs::OnRemove)
         .each([](flecs::iter& it, size_t i, Position&) {
-            it.entity(i).mut(it.world()).remove<Velocity>();
+            it.entity(i).stage(it.world()).remove<Velocity>();
         });
 
     ecs.entity().add<Tag>().add<Position>().add<Velocity>();
@@ -2073,7 +2073,7 @@ void Observer_remove_all_w_on_remove_removing_other_w_world(void) {
     ecs.observer<Position>()
         .event(flecs::OnRemove)
         .each([](flecs::iter& it, size_t i, Position&) {
-            it.entity(i).mut(it.world()).remove<Velocity>();
+            it.entity(i).stage(it.world()).remove<Velocity>();
         });
 
     ecs.entity().add<Position>().add<Velocity>();
@@ -2118,7 +2118,7 @@ void Observer_delete_parent_w_on_remove_removing_other_from_child_w_world(void) 
     ecs.observer<Position>()
         .event(flecs::OnRemove)
         .each([](flecs::iter& it, size_t i, Position&) {
-            it.entity(i).mut(it.world()).remove<Velocity>();
+            it.entity(i).stage(it.world()).remove<Velocity>();
         });
 
     flecs::entity parent = ecs.entity();
@@ -2155,7 +2155,7 @@ void Observer_remove_w_on_remove_removing_other_w_world(void) {
     ecs.observer<Position>()
         .event(flecs::OnRemove)
         .each([](flecs::iter& it, size_t i, Position&) {
-            it.entity(i).mut(it.world()).remove<Velocity>();
+            it.entity(i).stage(it.world()).remove<Velocity>();
         });
 
     flecs::entity e = ecs.entity().add<Position>().add<Velocity>();
@@ -2190,7 +2190,7 @@ void Observer_set_w_on_add_adding_other_w_world(void) {
     ecs.observer<Position>()
         .event(flecs::OnAdd)
         .each([](flecs::iter& it, size_t i, Position&) {
-            it.entity(i).mut(it.world()).add<Velocity>();
+            it.entity(i).stage(it.world()).add<Velocity>();
         });
 
     flecs::entity e = ecs.entity();

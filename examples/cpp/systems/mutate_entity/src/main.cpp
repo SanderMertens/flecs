@@ -22,7 +22,7 @@ int main(int, char *[]) {
                 // queue and executed when it's safe to do so.
 
                 // When the entity to be mutated is not the same as the entity
-                // provided by the system, an additional mut() call is required.
+                // provided by the system, an additional stage() call is required.
                 // See the mutate_entity_handle example.
                 flecs::entity e = it.entity(index);
                 e.destruct();

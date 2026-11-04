@@ -1300,7 +1300,7 @@ void AssignPlate(ecs_iter_t *it) {
 }
 ```
 
-The C++ equivalents are `it.stage()` and `it.world()`. Entity handles returned by the iterator use its stage; use `entity.mut(it.world())` for an immediate operation.
+The C++ equivalents are `it.stage()` and `it.world()`. Entity handles returned by the iterator use its stage; use `entity.stage(it.world())` for an immediate operation.
 
 ### Threading
 Systems in Flecs can be multithreaded. This requires both the system to be created as a multithreaded system, as well as configuring the world to have a number of worker threads. To create worker threads, use the `set_threads` function:

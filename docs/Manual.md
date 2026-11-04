@@ -329,7 +329,7 @@ ecs_merge(stage);
 
 The queued changes become visible when the stage is merged. `ecs_readonly_end` merges all managed stages after leaving readonly mode. Each application thread must use its own stage.
 
-Observer and system iterators expose `it->stage` for queued operations and `it->world` for access to the actual world. World operations require writable storage. In C++, use `it.stage()` and `it.world()`, and use `entity.mut(stage)` to obtain an entity handle that queues mutations.
+Observer and system iterators expose `it->stage` for queued operations and `it->world` for access to the actual world. World operations require writable storage. In C++, use `it.stage()` and `it.world()`, and use `entity.stage(stage)` to obtain an entity handle that queues mutations.
 
 Tables are locked while OnAdd, OnRemove and OnSet observers for those tables run. An observer can assign components that an entity already has through `it->world`, but operations that add, remove or move entities in a locked table must go through `it->stage`.
 

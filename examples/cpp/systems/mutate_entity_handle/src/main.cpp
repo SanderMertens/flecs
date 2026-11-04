@@ -23,7 +23,7 @@ int main(int, char *[]) {
 
                 // To make sure the delete operation is enqueued (see 
                 // mutate_entity example for more details) we need to provide it
-                // with a mutable context (stage) using the mut() function. If
+                // with a mutable context (stage) using the stage() function. If
                 // we don't provide a mutable context, the operation will be
                 // attempted on the context stored in the flecs::entity object,
                 // which would throw a readonly error.
@@ -31,14 +31,14 @@ int main(int, char *[]) {
                 // To catch these errors at compile time, replace the type of
                 // to_delete with flecs::entity_view. This class does not have 
                 // any methods for mutating the entity, which forces the code to
-                // first call mut().
+                // first call stage().
 
                 // The current entity can also be used to provide context. This 
                 // is useful for functions that accept a flecs::entity:
-                //   t.to_delete.mut(it.entity(index)).destruct();
+                //   t.to_delete.stage(it.entity(index)).destruct();
                 //
                 // A shortcut is to use the iterator directly:
-                t.to_delete.mut(it).destruct();
+                t.to_delete.stage(it).destruct();
                 std::cout << "Expire: " << t.to_delete.name() << " deleted!\n";
             }
         });

@@ -773,7 +773,7 @@ void System_add_from_each_world_handle(void) {
 
     world.system<const Entity>()
         .each([](flecs::entity e, const Entity& c) {
-            c.e.mut(e).add<Position>();
+            c.e.stage(e).add<Position>();
         });
 
     world.progress();
@@ -869,7 +869,7 @@ void System_add_from_iter_world_handle(void) {
             while (it.next()) {
                 auto c = it.field<const Entity>(0);
                 for (auto i : it) {
-                    c[i].e.mut(it).add<Position>();
+                    c[i].e.stage(it).add<Position>();
                 }
             }
         });
