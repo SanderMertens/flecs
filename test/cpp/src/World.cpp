@@ -651,7 +651,7 @@ void World_async_stage_add(void) {
     auto e = ecs.entity();
 
     flecs::world async = ecs.async_stage();
-    e.mut(async).add<Position>();
+    e.stage(async).add<Position>();
     test_assert(!e.has<Position>());
     async.merge();
     test_assert(e.has<Position>());

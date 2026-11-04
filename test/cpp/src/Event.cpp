@@ -711,7 +711,7 @@ void Event_enqueue_entity_event(void) {
 
     flecs::world stage_1 = ecs.get_stage(0);
 
-    e1.mut(stage_1).enqueue(evt);
+    e1.stage(stage_1).enqueue(evt);
 
     test_int(count, 0);
 
@@ -769,7 +769,7 @@ void Event_enqueue_entity_event_w_payload(void) {
 
     flecs::world stage_1 = ecs.get_stage(0);
 
-    e1.mut(stage_1).enqueue<Position>({10, 20});
+    e1.stage(stage_1).enqueue<Position>({10, 20});
 
     test_int(count, 0);
 
@@ -793,7 +793,7 @@ void Event_enqueue_entity_from_readonly_world(void) {
 
     ecs.readonly_begin();
 
-    e1.mut(ecs.get_stage(0)).enqueue(evt);
+    e1.stage(ecs.get_stage(0)).enqueue(evt);
 
     test_int(count, 0);
 
@@ -818,7 +818,7 @@ void Event_enqueue_entity_w_payload_from_readonly_world(void) {
 
     ecs.readonly_begin();
 
-    e1.mut(ecs.get_stage(0)).enqueue<Position>({10, 20});
+    e1.stage(ecs.get_stage(0)).enqueue<Position>({10, 20});
 
     test_int(count, 0);
 

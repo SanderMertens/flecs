@@ -3237,7 +3237,7 @@ void Query_not_w_write(void) {
     int32_t count = 0;
     flecs::world stage_1 = ecs.get_stage(0);
     q.each([&](flecs::entity e) {
-        e.mut(stage_1).add<B>();
+        e.stage(stage_1).add<B>();
         count ++;
     });
     stage_1.merge();

@@ -203,6 +203,9 @@ void Entity_implicit_type_str_to_char(void);
 void Entity_entity_to_entity_view(void);
 void Entity_entity_view_to_entity_world(void);
 void Entity_entity_view_to_entity_stage(void);
+void Entity_entity_view_to_entity_default_stage(void);
+void Entity_entity_to_entity_default_stage(void);
+void Entity_entity_to_entity_non_default_stage(void);
 void Entity_create_entity_view_from_stage(void);
 void Entity_set_template(void);
 void Entity_get_1_component_w_callback(void);
@@ -2550,6 +2553,18 @@ bake_test_case Entity_testcases[] = {
     {
         "entity_view_to_entity_stage",
         Entity_entity_view_to_entity_stage
+    },
+    {
+        "entity_view_to_entity_default_stage",
+        Entity_entity_view_to_entity_default_stage
+    },
+    {
+        "entity_to_entity_default_stage",
+        Entity_entity_to_entity_default_stage
+    },
+    {
+        "entity_to_entity_non_default_stage",
+        Entity_entity_to_entity_non_default_stage
     },
     {
         "create_entity_view_from_stage",
@@ -8783,7 +8798,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        399,
+        402,
         Entity_testcases
     },
     {

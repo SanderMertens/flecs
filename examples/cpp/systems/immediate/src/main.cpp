@@ -39,7 +39,7 @@ int main(int, char *[]) {
             // Find an available waiter
             flecs::entity waiter = q_waiter.first();
             if (waiter) {
-                waiter.mut(it.world()).add<Plate>(plate);
+                waiter.stage(it.world()).add<Plate>(plate);
 
                 plate.add<Waiter>(waiter);
 

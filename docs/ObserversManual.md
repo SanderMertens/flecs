@@ -2195,7 +2195,7 @@ world.observer<Position>()
 e.set(Position{10, 20});
 
 auto stage = world.get_stage(0);
-e.mut(stage).set(Position{20, 30});
+e.stage(stage).set(Position{20, 30});
 // Operation is delayed until here, observer is also invoked here
 stage.merge();
 ```
