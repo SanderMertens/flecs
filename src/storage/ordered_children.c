@@ -57,7 +57,14 @@ void flecs_ordered_children_clear(
 {
     ecs_assert(cr->flags & EcsIdOrderedChildren, ECS_INTERNAL_ERROR, NULL);
 
-    if (!(cr->flags & EcsIdMarkedForDelete)) {
+    if (cr->flags & EcsIdMarkedForDelete) {
+        if (cr->pair->non_fragmenting_child_count) {
+            /* The parent is being deleted before its children. Keep the
+             * children and the flag, so that cleanup can still find and
+             * delete the children that use the Parent component. */
+            return;
+        }
+    } else {
         ecs_assert(!cr->pair->non_fragmenting_child_count,
             ECS_UNSUPPORTED,
             "cannot remove OrderedChildren trait from parent that has "

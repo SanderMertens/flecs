@@ -8798,3 +8798,63 @@ void NonFragmentingChildOf_delete_parent_used_as_target_w_observer_reparenting_s
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_delete_parent_w_table_cleared_before_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Rel);
+
+    /* Create table of p_2 before table of p_1, so that deleting root marks p_2
+     * before p_1, and the table of p_2 gets cleared for (*, p_1) before the
+     * children of p_2 are deleted. */
+    ecs_entity_t root = ecs_new(world);
+    ecs_entity_t p_1 = ecs_new_w_pair(world, EcsChildOf, root);
+    ecs_entity_t p_2 = ecs_new_w_pair(world, EcsChildOf, root);
+    ecs_add_pair(world, p_2, Rel, p_1);
+    ecs_add(world, p_1, Foo);
+
+    ecs_entity_t child = ecs_new_w_parent(world, p_2, NULL);
+    ecs_entity_t e = ecs_new_w_pair(world, Rel, p_2);
+
+    ecs_delete(world, root);
+
+    test_assert(!ecs_is_alive(world, root));
+    test_assert(!ecs_is_alive(world, p_1));
+    test_assert(!ecs_is_alive(world, p_2));
+    test_assert(!ecs_is_alive(world, child));
+    test_assert(ecs_is_alive(world, e));
+    test_assert(!ecs_has_pair(world, e, Rel, EcsWildcard));
+    test_int(world->non_fragmenting_child_count, 0);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_delete_parent_w_ordered_children_w_table_cleared_before_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t root = ecs_new(world);
+    ecs_entity_t p_1 = ecs_new_w_pair(world, EcsChildOf, root);
+    ecs_entity_t p_2 = ecs_new_w_pair(world, EcsChildOf, root);
+    ecs_add_id(world, p_2, EcsOrderedChildren);
+    ecs_add_pair(world, p_2, Rel, p_1);
+    ecs_add(world, p_1, Foo);
+
+    ecs_entity_t child = ecs_new_w_parent(world, p_2, NULL);
+    ecs_entity_t e = ecs_new_w_pair(world, Rel, p_2);
+
+    ecs_delete(world, root);
+
+    test_assert(!ecs_is_alive(world, root));
+    test_assert(!ecs_is_alive(world, p_1));
+    test_assert(!ecs_is_alive(world, p_2));
+    test_assert(!ecs_is_alive(world, child));
+    test_assert(ecs_is_alive(world, e));
+    test_assert(!ecs_has_pair(world, e, Rel, EcsWildcard));
+    test_int(world->non_fragmenting_child_count, 0);
+
+    ecs_fini(world);
+}

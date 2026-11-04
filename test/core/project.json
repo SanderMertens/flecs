@@ -1160,7 +1160,9 @@
                 "delete_parent_w_observer_deleting_sibling",
                 "delete_parent_w_observer_reparenting_sibling",
                 "delete_parent_used_as_target_w_observer_deleting_sibling",
-                "delete_parent_used_as_target_w_observer_reparenting_sibling"
+                "delete_parent_used_as_target_w_observer_reparenting_sibling",
+                "delete_parent_w_table_cleared_before_children",
+                "delete_parent_w_ordered_children_w_table_cleared_before_children"
             ]
         }, {
             "id": "Hierarchies",
