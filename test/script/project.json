@@ -977,7 +977,11 @@
                 "map_init_from_other_map_type_in_async",
                 "string_map_from_other_map_type_no_leak",
                 "error_map_value_type_mismatch",
-                "error_map_key_type_mismatch"
+                "error_map_key_type_mismatch",
+                "const_vector_to_component_vector_member",
+                "untyped_const_vector_to_component_vector_member",
+                "const_vector_to_c_component_vector_member",
+                "untyped_const_vector_to_c_component_vector_member"
             ]
         }, {
             "id": "Await",
@@ -3585,7 +3589,18 @@
                 "template_first_instantiation_error_from_c",
                 "script_reeval_error_in_other_script_eval",
                 "if_else_switch_keeps_component_w_fewer_members",
-                "partial_after_conditional_owner_reapplied"
+                "partial_after_conditional_owner_reapplied",
+                "component_in_literal_and_interpolated_named_children_w_disjoint_range",
+                "component_in_literal_and_interpolated_named_children_w_overlapping_range_fails",
+                "component_in_same_literal_named_children_fails",
+                "template_instance_scope_assigns_template_component_fails",
+                "template_instance_scope_assigns_template_component_w_const_prop_fails",
+                "template_instance_scope_assigns_template_component_after_template_fails",
+                "template_instance_scope_assigns_template_component_before_template_fails",
+                "template_instance_scope_assigns_base_template_component_fails",
+                "template_instance_scope_partial_assigns_template_component",
+                "template_instance_scope_assigns_other_component",
+                "template_instance_scope_assigns_template_component_from_other_script_fails"
             ]
         }, {
             "id": "ConstVar",

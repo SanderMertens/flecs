@@ -62,6 +62,8 @@ struct ecs_script_template_t {
     /* Statically known component references used in the template body */
     ecs_vec_t refs;
 
+    ecs_vec_t owned_ids;
+
     uint64_t async_input;
     int32_t symbol_offset;
     int32_t symbol_count;
