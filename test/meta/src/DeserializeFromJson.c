@@ -8738,3 +8738,43 @@ void DeserializeFromJson_entity_wildcard_component(void) {
 
     ecs_fini(world);
 }
+
+void DeserializeFromJson_entity_pair_target_childof(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_entity(world, { .name = "Rel" });
+
+    ecs_log_set_level(-4);
+    const char *result = ecs_entity_from_json(world, e,
+        "{\"pairs\":{\"Rel\":\"flecs.core.ChildOf\"}}", NULL);
+    test_assert(result == NULL);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_entity_id_max_then_new_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_entity(world, { .name = "Rel" });
+
+    ecs_log_set_level(-4);
+    ecs_entity_from_json(world, e,
+        "{\"tags\":[\"#4294967295\"], \"pairs\":{\"Rel\":\"new_entity\"}}", NULL);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_entity_component_w_on_replace(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_entity(world, { .name = "p" });
+
+    ecs_log_set_level(-4);
+    ecs_entity_from_json(world, e,
+        "{\"components\":{\"flecs.core.Parent\":{\"value\":\"p\"}}}", NULL);
+
+    ecs_fini(world);
+}

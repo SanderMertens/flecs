@@ -860,6 +860,19 @@ void flecs_component_update_childof_w_depth(
     ecs_component_record_t *cr,
     int32_t depth);
 
+int32_t flecs_component_check_constraints(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    char **err);
+
+int32_t flecs_component_check_value(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    const void *value,
+    char **err);
+
 #endif
 
 #ifndef FLECS_TABLE_H
@@ -2908,7 +2921,8 @@ void flecs_register_flag_for_trait(
 
 #define flecs_get_oneof(world, e) ((void)(world), (void)(e), 0)
 #define flecs_bootstrap_constraint_traits(world) (void)world
-#define flecs_check_constraint_traits(world, cr, rel, tgt) (0)
+#define flecs_constraint_traits_error(world, id, rel, tgt) (NULL)
+#define flecs_singleton_constraint_error(world, entity, id) (NULL)
 
 #define flecs_bootstrap_trait(world, name)\
     flecs_bootstrap_tag(world, name)
@@ -8343,6 +8357,27 @@ error:
 }
 #endif
 
+#if !defined(FLECS_NDEBUG) || defined(FLECS_KEEP_ASSERT)
+static int flecs_set_check_value(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t component,
+    const void *ptr)
+{
+    char *err = NULL;
+    int32_t code = flecs_component_check_value(
+        world, entity, component, ptr, &err);
+    if (code) {
+        ecs_throw(code, "%s", err);
+    }
+
+    return 0;
+error:
+    ecs_os_free(err);
+    return -1;
+}
+#endif
+
 void* ecs_get_mut_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -8689,12 +8724,13 @@ void ecs_set_id(
             flecs_errstr(ecs_id_str(world, component)),
             flecs_errstr_1(ecs_id_str(world, entity)));
 
-    if (component == ecs_id(EcsParent)) {
-        ecs_check(((const EcsParent*)ptr)->value != 0 &&
-            ecs_is_alive(world, ((const EcsParent*)ptr)->value),
-            ECS_INVALID_OPERATION,
-            "cannot set Parent component to 0 or to entity that is not alive");
+#if !defined(FLECS_NDEBUG) || defined(FLECS_KEEP_ASSERT)
+    if (component == ecs_id(EcsParent) &&
+        flecs_set_check_value(world, entity, component, ptr))
+    {
+        goto error;
     }
+#endif
 
     bool deferred = ecs_is_stage(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
@@ -9119,6 +9155,10 @@ ecs_entity_t ecs_get_parent(
         ecs_assert(column > 0, ECS_INTERNAL_ERROR, NULL);
         EcsParent *p = ecs_table_get_column(
             table, column - 1, ECS_RECORD_TO_ROW(r->row));
+        if (!p->value) {
+            return 0;
+        }
+
         ecs_assert(ecs_is_valid(world, p->value), ECS_INVALID_OPERATION, 
             "Parent component points to invalid parent %u",
                 p->value, entity);
@@ -26746,6 +26786,52 @@ ecs_flags32_t flecs_component_get_flags(
     return flecs_component_get_flags_intern(world, id, rel, tgt, ti);
 }
 
+static int32_t flecs_component_check_id(
+    const ecs_world_t *world,
+    ecs_id_t id,
+    ecs_entity_t rel,
+    ecs_entity_t tgt,
+    char **err)
+{
+    (void)world;
+    (void)tgt;
+
+    if (ECS_HAS_ID_FLAG(id, PAIR) && !ECS_IS_PAIR(id)) {
+        return 0;
+    }
+
+    /* Internal flag records use (EcsFlag, X). These should not be
+     * validated as regular relationship/target pairs. */
+    if (ECS_IS_PAIR(id) && rel == EcsFlag) {
+        return 0;
+    }
+
+    *err = flecs_constraint_traits_error(world, id, rel, tgt);
+    if (*err) {
+        return ECS_CONSTRAINT_VIOLATED;
+    }
+
+#ifdef FLECS_DEBUG
+    if (ECS_IS_PAIR(id) && tgt && !ecs_id_is_wildcard(tgt) && rel == EcsIsA) {
+        if (flecs_component_is_trait_locked(
+            ECS_CONST_CAST(ecs_world_t*, world), tgt))
+        {
+            if (!ecs_has_id(world, tgt, EcsInheritable) &&
+                !ecs_has_pair(world, tgt, EcsIsA, EcsWildcard))
+            {
+                *err = flecs_asprintf(
+                    "cannot add '(IsA, %s)': '%s' is already queried for",
+                        flecs_errstr(ecs_get_path(world, tgt)),
+                        flecs_errstr_1(ecs_get_path(world, tgt)));
+                return ECS_INVALID_OPERATION;
+            }
+        }
+    }
+#endif
+
+    return 0;
+}
+
 static void flecs_component_record_check_constraints(
     ecs_world_t *world,
     ecs_component_record_t *cr,
@@ -26758,34 +26844,134 @@ static void flecs_component_record_check_constraints(
     (void)tgt;
 
 #ifdef FLECS_DEBUG
-    if (ECS_HAS_ID_FLAG(cr->id, PAIR) && !ECS_IS_PAIR(cr->id)) {
-        return;
-    }
-
-    if (ECS_IS_PAIR(cr->id)) {
-        /* Internal flag records use (EcsFlag, X). These should not be
-         * validated as regular relationship/target pairs. */
-        if (rel == EcsFlag) {
-            return;
-        }
-
-        if (tgt && !ecs_id_is_wildcard(tgt)) {
-            if (rel == EcsIsA) {
-                if (flecs_component_is_trait_locked(world, tgt)) {
-                    if (!ecs_has_id(world, tgt, EcsInheritable) && !ecs_has_pair(world, tgt, EcsIsA, EcsWildcard)) {
-                        ecs_throw(ECS_INVALID_OPERATION, 
-                            "cannot add '(IsA, %s)': '%s' is already queried for",
-                                    flecs_errstr(ecs_get_path(world, tgt)),
-                                    flecs_errstr_1(ecs_get_path(world, tgt)));
-                    }
-                }
-            }
-        }
+    char *err = NULL;
+    int32_t code = flecs_component_check_id(world, cr->id, rel, tgt, &err);
+    if (code) {
+        ecs_throw(code, "%s", err);
     }
 
 error:
-    return;
+    ecs_os_free(err);
 #endif
+}
+
+static bool flecs_component_is_hierarchy_cycle(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t parent)
+{
+    int32_t depth = 0;
+    while (parent) {
+        if (parent == entity || depth ++ > FLECS_DAG_DEPTH_MAX) {
+            return true;
+        }
+
+        parent = ecs_get_parent(world, parent);
+    }
+
+    return false;
+}
+
+int32_t flecs_component_check_constraints(
+    const ecs_world_t *stage,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    char **err)
+{
+    const ecs_world_t *world = ecs_get_world(stage);
+    if (ECS_HAS_ID_FLAG(id, PAIR)) {
+        id &= ECS_COMPONENT_MASK | ECS_PAIR;
+    } else {
+        id &= ECS_COMPONENT_MASK;
+    }
+
+    ecs_entity_t rel, tgt = 0;
+    if (ECS_IS_PAIR(id)) {
+        rel = flecs_entities_get_alive(world, ECS_PAIR_FIRST(id));
+        tgt = flecs_entities_get_alive(world, ECS_PAIR_SECOND(id));
+        if (!tgt) {
+            return 0;
+        }
+    } else {
+        rel = flecs_entities_get_alive(world, id);
+    }
+
+    if (!rel) {
+        return 0;
+    }
+
+    if (rel == EcsChildOf && tgt && !ecs_id_is_wildcard(tgt)) {
+        const EcsParent *parent = ecs_get_id(world, tgt, ecs_id(EcsParent));
+        if (parent && !parent->value) {
+            *err = flecs_asprintf(
+                "cannot add child to '%s': Parent component of '%s' has no "
+                "value",
+                    flecs_errstr(ecs_get_path(world, tgt)),
+                    flecs_errstr_1(ecs_get_path(world, tgt)));
+            return ECS_INVALID_OPERATION;
+        }
+
+        if (entity && flecs_component_is_hierarchy_cycle(world, entity, tgt)) {
+            *err = flecs_asprintf(
+                "cannot add '(ChildOf, %s)' to '%s': would create a cycle in "
+                "the hierarchy",
+                    flecs_errstr(ecs_get_path(world, tgt)),
+                    flecs_errstr_1(ecs_get_path(world, entity)));
+            return ECS_INVALID_OPERATION;
+        }
+    }
+
+    if (entity) {
+        *err = flecs_singleton_constraint_error(world, entity, id);
+        if (*err) {
+            return ECS_CONSTRAINT_VIOLATED;
+        }
+    }
+
+    if (flecs_components_get(world, id)) {
+        return 0;
+    }
+
+    return flecs_component_check_id(world, id, rel, tgt, err);
+}
+
+int32_t flecs_component_check_value(
+    const ecs_world_t *stage,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    const void *value,
+    char **err)
+{
+    const ecs_world_t *world = ecs_get_world(stage);
+    if (id == ecs_id(EcsParent)) {
+        if (!value) {
+            *err = flecs_asprintf(
+                "Parent component cannot be added without value (set to valid "
+                "parent)");
+            return ECS_INVALID_OPERATION;
+        }
+
+        ecs_entity_t parent = ((const EcsParent*)value)->value;
+        if (!parent || !ecs_is_alive(world, parent)) {
+            *err = flecs_asprintf(
+                "cannot set Parent component to 0 or to entity that is not "
+                "alive");
+            return ECS_INVALID_OPERATION;
+        }
+
+        if (entity && flecs_component_is_hierarchy_cycle(
+            world, entity, parent))
+        {
+            *err = flecs_asprintf(
+                "cannot set Parent component of '%s' to '%s': would create a "
+                "cycle in the hierarchy",
+                    flecs_errstr(ecs_get_path(world, entity)),
+                    flecs_errstr_1(ecs_get_path(world, parent)));
+            return ECS_INVALID_OPERATION;
+        }
+    }
+
+    return 0;
 }
 
 static ecs_component_record_t* flecs_component_new(

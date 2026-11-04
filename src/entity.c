@@ -1649,6 +1649,27 @@ error:
 }
 #endif
 
+#if !defined(FLECS_NDEBUG) || defined(FLECS_KEEP_ASSERT)
+static int flecs_set_check_value(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t component,
+    const void *ptr)
+{
+    char *err = NULL;
+    int32_t code = flecs_component_check_value(
+        world, entity, component, ptr, &err);
+    if (code) {
+        ecs_throw(code, "%s", err);
+    }
+
+    return 0;
+error:
+    ecs_os_free(err);
+    return -1;
+}
+#endif
+
 void* ecs_get_mut_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -1995,12 +2016,13 @@ void ecs_set_id(
             flecs_errstr(ecs_id_str(world, component)),
             flecs_errstr_1(ecs_id_str(world, entity)));
 
-    if (component == ecs_id(EcsParent)) {
-        ecs_check(((const EcsParent*)ptr)->value != 0 &&
-            ecs_is_alive(world, ((const EcsParent*)ptr)->value),
-            ECS_INVALID_OPERATION,
-            "cannot set Parent component to 0 or to entity that is not alive");
+#if !defined(FLECS_NDEBUG) || defined(FLECS_KEEP_ASSERT)
+    if (component == ecs_id(EcsParent) &&
+        flecs_set_check_value(world, entity, component, ptr))
+    {
+        goto error;
     }
+#endif
 
     bool deferred = ecs_is_stage(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
@@ -2434,6 +2456,10 @@ ecs_entity_t ecs_get_parent(
         ecs_assert(column > 0, ECS_INTERNAL_ERROR, NULL);
         EcsParent *p = ecs_table_get_column(
             table, column - 1, ECS_RECORD_TO_ROW(r->row));
+        if (!p->value) {
+            return 0;
+        }
+
         ecs_assert(ecs_is_valid(world, p->value), ECS_INVALID_OPERATION, 
             "Parent component points to invalid parent %u",
                 p->value, entity);

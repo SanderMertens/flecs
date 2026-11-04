@@ -896,6 +896,19 @@ static int flecs_script_type_ensure_entities(
     return 0;
 }
 
+static int flecs_script_type_check_id(
+    ecs_script_type_visitor_t *t,
+    void *node,
+    const ecs_script_id_t *id,
+    bool w_value)
+{
+    if (!id->eval || id->dynamic || id->interface) {
+        return 0;
+    }
+
+    return flecs_script_eval_check_id(t->v, node, 0, id->eval, w_value);
+}
+
 static int flecs_script_type_tag(
     ecs_script_type_visitor_t *t,
     ecs_script_tag_t *node)
@@ -925,7 +938,7 @@ static int flecs_script_type_tag(
         return -1;
     }
 
-    return 0;
+    return flecs_script_type_check_id(t, node, &node->id, false);
 }
 
 static ecs_entity_t flecs_script_type_component_type(
@@ -1193,8 +1206,16 @@ static int flecs_script_type_with_component(
     ecs_script_component_t *node)
 {
     int result = flecs_script_type_id(t, node, &node->id);
-    if (result || !node->expr) {
+    if (result) {
         return result;
+    }
+
+    if (flecs_script_type_check_id(t, node, &node->id, node->expr != NULL)) {
+        return -1;
+    }
+
+    if (!node->expr) {
+        return 0;
     }
 
     if (flecs_script_type_untyped_template_check(t, node)) {
@@ -1274,6 +1295,10 @@ static int flecs_script_type_component(
     if (t->v->is_with_scope) {
         flecs_script_eval_error(t->v, node,
             "invalid component in with scope");
+        return -1;
+    }
+
+    if (flecs_script_type_check_id(t, node, &node->id, node->expr != NULL)) {
         return -1;
     }
 
@@ -2069,6 +2094,12 @@ static int flecs_script_type_entity(
     {
         flecs_script_eval_error(t->v, node,
             "type definitions are only allowed in entity scopes");
+        return -1;
+    }
+
+    if (node->eval_kind && !node->is_type && node->kind_symbol == -1 &&
+        flecs_script_eval_check_id(t->v, node, 0, node->eval_kind, true))
+    {
         return -1;
     }
 

@@ -23,21 +23,23 @@ ecs_entity_t flecs_get_oneof(
 void flecs_bootstrap_constraint_traits(
     ecs_world_t *world);
 
-#ifdef FLECS_DEBUG
-int flecs_check_constraint_traits(
-    ecs_world_t *world,
-    ecs_component_record_t *cr,
+char* flecs_constraint_traits_error(
+    const ecs_world_t *world,
+    ecs_id_t id,
     ecs_entity_t rel,
     ecs_entity_t tgt);
-#else
-#define flecs_check_constraint_traits(world, cr, rel, tgt) (0)
-#endif
+
+char* flecs_singleton_constraint_error(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id);
 
 #else
 
 #define flecs_get_oneof(world, e) ((void)(world), (void)(e), 0)
 #define flecs_bootstrap_constraint_traits(world) (void)world
-#define flecs_check_constraint_traits(world, cr, rel, tgt) (0)
+#define flecs_constraint_traits_error(world, id, rel, tgt) (NULL)
+#define flecs_singleton_constraint_error(world, entity, id) (NULL)
 
 #endif
 

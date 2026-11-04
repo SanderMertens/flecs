@@ -85,6 +85,7 @@ typedef struct ecs_script_template_t ecs_script_template_t;
 typedef struct ecs_script_template_ref_t {
     ecs_entity_t type;
     void *value;
+    const ecs_type_info_t *ti;
 } ecs_script_template_ref_t;
 
 FLECS_API

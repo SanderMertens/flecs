@@ -3128,7 +3128,17 @@
                 "export_const_new_w_unresolved_var",
                 "export_mut_new_w_unresolved_var",
                 "export_const_new_w_unresolved_var_in_child",
-                "export_const_new_w_unresolved_pair_var"
+                "export_const_new_w_unresolved_pair_var",
+                "childof_self",
+                "tag_w_relationship_trait",
+                "entity_kind_w_relationship_trait",
+                "inherit_from_prefab_tag",
+                "add_singleton_to_entity",
+                "set_parent_component_empty",
+                "entity_kind_parent_w_child",
+                "enum_w_member_cycle",
+                "nested_mut_shadow_assign_in_async",
+                "managed_script_template_ref_after_error"
             ]
         }, {
             "id": "Refs",
