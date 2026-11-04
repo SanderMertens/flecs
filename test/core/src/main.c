@@ -964,6 +964,7 @@ void NonFragmentingChildOf_instantiate_w_isa(void);
 void NonFragmentingChildOf_instantiate_tree_twice(void);
 void NonFragmentingChildOf_instantiate_tree_twice_different_table(void);
 void NonFragmentingChildOf_instantiate_tree_at_depth_1_w_parent(void);
+void NonFragmentingChildOf_bulk_init_w_parent(void);
 void NonFragmentingChildOf_instantiate_tree_at_depth_2_w_parent(void);
 void NonFragmentingChildOf_instantiate_tree_at_depth_n_w_parent(void);
 void NonFragmentingChildOf_instantiate_tree_at_depth_1_w_childof(void);
@@ -7499,6 +7500,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "instantiate_tree_at_depth_1_w_parent",
         NonFragmentingChildOf_instantiate_tree_at_depth_1_w_parent
+    },
+    {
+        "bulk_init_w_parent",
+        NonFragmentingChildOf_bulk_init_w_parent
     },
     {
         "instantiate_tree_at_depth_2_w_parent",
