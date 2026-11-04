@@ -9934,3 +9934,408 @@ void Reactivity_partial_after_conditional_owner_reapplied(void) {
 
     ecs_fini(world);
 }
+
+void Reactivity_component_in_literal_and_interpolated_named_children_w_disjoint_range(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template M {"
+            LINE "  prop n: i32 = 3"
+            LINE "  first_ok { Position: {0, 0} }"
+            LINE "  \"l_0\" { Position: {0, 0} }"
+            LINE "  for j in 1..n {"
+            LINE "    \"l_{j}\" { Position: {j, 0} }"
+            LINE "  }"
+            LINE "}"
+            LINE "M m()"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error == NULL);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    ecs_entity_t l0 = ecs_lookup(world, "m.l_0");
+    ecs_entity_t l1 = ecs_lookup(world, "m.l_1");
+    ecs_entity_t l2 = ecs_lookup(world, "m.l_2");
+    test_assert(l0 != 0);
+    test_assert(l1 != 0);
+    test_assert(l2 != 0);
+    test_assert(ecs_lookup(world, "m.l_3") == 0);
+
+    const float *p = ecs_get_id(world, l0, position);
+    test_assert(p != NULL);
+    test_flt(p[0], 0);
+    p = ecs_get_id(world, l1, position);
+    test_assert(p != NULL);
+    test_flt(p[0], 1);
+    p = ecs_get_id(world, l2, position);
+    test_assert(p != NULL);
+    test_flt(p[0], 2);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_literal_and_interpolated_named_children_w_overlapping_range_fails(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_log_set_level(-4);
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template M {"
+            LINE "  prop n: i32 = 3"
+            LINE "  \"l_10\" { Position: {0, 0} }"
+            LINE "  for j in 1..n {"
+            LINE "    \"l_{j}\" { Position: {j, 0} }"
+            LINE "  }"
+            LINE "}"
+            LINE "M m()"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error != NULL);
+    test_assert(strstr(script_data->error,
+        "component can only be created in one scope or "
+        "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_same_literal_named_children_fails(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_log_set_level(-4);
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template M {"
+            LINE "  prop n: i32 = 3"
+            LINE "  \"l_0\" { Position: {0, 0} }"
+            LINE "  if n > 0 {"
+            LINE "    \"l_0\" { Position: {1, 0} }"
+            LINE "  }"
+            LINE "}"
+            LINE "M m()"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error != NULL);
+    test_assert(strstr(script_data->error,
+        "component can only be created in one scope or "
+        "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_instance_scope_assigns_template_component_fails(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "using flecs.meta"
+            LINE "struct Position(x: f32, y: f32)"
+            LINE "template Panel {"
+            LINE "  prop pad: f32 = 14"
+            LINE "  Position: {pad, pad}"
+            LINE "}"
+            LINE "export mut n: i32 = 0"
+            LINE "parent {"
+            LINE "  if n >= 0 {"
+            LINE "    Panel p(pad: n) {"
+            LINE "      Position: {7, 7}"
+            LINE "      \"child_{n}\" {}"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error != NULL);
+    test_assert(strstr(script_data->error,
+        "component can only be created in one scope or "
+        "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_instance_scope_assigns_template_component_w_const_prop_fails(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "using flecs.meta"
+            LINE "struct Position(x: f32, y: f32)"
+            LINE "template Panel {"
+            LINE "  prop pad: f32 = 14"
+            LINE "  Position: {pad, pad}"
+            LINE "}"
+            LINE "export mut n: i32 = 0"
+            LINE "parent {"
+            LINE "  if n >= 0 {"
+            LINE "    Panel p(pad: 2) {"
+            LINE "      Position: {}"
+            LINE "      \"child_{n}\" {}"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error != NULL);
+    test_assert(strstr(script_data->error,
+        "component can only be created in one scope or "
+        "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_instance_scope_assigns_template_component_after_template_fails(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "using flecs.meta"
+            LINE "struct Position(x: f32, y: f32)"
+            LINE "template Panel {"
+            LINE "  prop pad: f32 = 14"
+            LINE "  Position: {pad, pad}"
+            LINE "}"
+            LINE "p {"
+            LINE "  Panel: {pad: 2}"
+            LINE "  Position: {7, 7}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error != NULL);
+    test_assert(strstr(script_data->error,
+        "component can only be created in one scope or "
+        "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_instance_scope_assigns_template_component_before_template_fails(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "using flecs.meta"
+            LINE "struct Position(x: f32, y: f32)"
+            LINE "template Panel {"
+            LINE "  prop pad: f32 = 14"
+            LINE "  Position: {pad, pad}"
+            LINE "}"
+            LINE "p {"
+            LINE "  Position: {7, 7}"
+            LINE "  Panel: {pad: 2}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error != NULL);
+    test_assert(strstr(script_data->error,
+        "component can only be created in one scope or "
+        "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_instance_scope_assigns_base_template_component_fails(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "using flecs.meta"
+            LINE "struct Position(x: f32, y: f32)"
+            LINE "template Base {"
+            LINE "  prop pad: f32 = 14"
+            LINE "  Position: {pad, pad}"
+            LINE "}"
+            LINE "template Panel : Base {"
+            LINE "}"
+            LINE "Panel p(pad: 2) {"
+            LINE "  Position: {7, 7}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error != NULL);
+    test_assert(strstr(script_data->error,
+        "component can only be created in one scope or "
+        "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_instance_scope_partial_assigns_template_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "using flecs.meta"
+            LINE "struct Position(x: f32, y: f32)"
+            LINE "template Panel {"
+            LINE "  prop pad: f32 = 14"
+            LINE "  Position: {pad, pad}"
+            LINE "}"
+            LINE "export mut n: i32 = 0"
+            LINE "parent {"
+            LINE "  if n >= 0 {"
+            LINE "    Panel p(pad: 2) {"
+            LINE "      Position = {x: 7}"
+            LINE "      \"child_{n}\" {}"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error == NULL);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    ecs_entity_t p = ecs_lookup(world, "parent.p");
+    ecs_entity_t n = ecs_lookup(world, "n");
+    test_assert(position != 0);
+    test_assert(p != 0);
+    test_assert(n != 0);
+
+    const float *v = ecs_get_id(world, p, position);
+    test_assert(v != NULL);
+    test_flt(v[0], 7);
+    test_flt(v[1], 2);
+
+    EcsScriptMutVar *nv = ecs_ensure(world, n, EcsScriptMutVar);
+    *(int32_t*)nv->value.ptr = 1;
+    ecs_modified(world, n, EcsScriptMutVar);
+
+    test_assert(ecs_lookup(world, "parent.p.child_1") != 0);
+    v = ecs_get_id(world, p, position);
+    test_assert(v != NULL);
+    test_flt(v[0], 7);
+    test_flt(v[1], 2);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_instance_scope_assigns_other_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "using flecs.meta"
+            LINE "struct Position(x: f32, y: f32)"
+            LINE "struct Velocity(x: f32, y: f32)"
+            LINE "template Panel {"
+            LINE "  prop pad: f32 = 14"
+            LINE "  Position: {pad, pad}"
+            LINE "  child { Velocity: {1, 1} }"
+            LINE "}"
+            LINE "Panel p(pad: 2) {"
+            LINE "  Velocity: {7, 7}"
+            LINE "  child { Position: {3, 3} }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error == NULL);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    ecs_entity_t velocity = ecs_lookup(world, "Velocity");
+    ecs_entity_t p = ecs_lookup(world, "p");
+    test_assert(p != 0);
+    const float *v = ecs_get_id(world, p, position);
+    test_assert(v != NULL);
+    test_flt(v[0], 2);
+    v = ecs_get_id(world, p, velocity);
+    test_assert(v != NULL);
+    test_flt(v[0], 7);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_instance_scope_assigns_template_component_from_other_script_fails(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    test_assert(ecs_script_run_w_desc(world, "templates",
+        HEAD "template Panel {"
+        LINE "  prop pad: f32 = 14"
+        LINE "  Position: {pad, pad}"
+        LINE "}", &ir_desc, NULL) == 0);
+
+    ecs_log_set_level(-4);
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "Panel p(pad: 2) {"
+            LINE "  Position: {7, 7}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error != NULL);
+    test_assert(strstr(script_data->error,
+        "component can only be created in one scope or "
+        "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}

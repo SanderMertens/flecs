@@ -966,6 +966,10 @@ void Collection_map_init_from_other_map_type_in_async(void);
 void Collection_string_map_from_other_map_type_no_leak(void);
 void Collection_error_map_value_type_mismatch(void);
 void Collection_error_map_key_type_mismatch(void);
+void Collection_const_vector_to_component_vector_member(void);
+void Collection_untyped_const_vector_to_component_vector_member(void);
+void Collection_const_vector_to_c_component_vector_member(void);
+void Collection_untyped_const_vector_to_c_component_vector_member(void);
 
 // Testsuite 'Await'
 void Await_setup(void);
@@ -3479,6 +3483,17 @@ void Reactivity_template_first_instantiation_error_from_c(void);
 void Reactivity_script_reeval_error_in_other_script_eval(void);
 void Reactivity_if_else_switch_keeps_component_w_fewer_members(void);
 void Reactivity_partial_after_conditional_owner_reapplied(void);
+void Reactivity_component_in_literal_and_interpolated_named_children_w_disjoint_range(void);
+void Reactivity_component_in_literal_and_interpolated_named_children_w_overlapping_range_fails(void);
+void Reactivity_component_in_same_literal_named_children_fails(void);
+void Reactivity_template_instance_scope_assigns_template_component_fails(void);
+void Reactivity_template_instance_scope_assigns_template_component_w_const_prop_fails(void);
+void Reactivity_template_instance_scope_assigns_template_component_after_template_fails(void);
+void Reactivity_template_instance_scope_assigns_template_component_before_template_fails(void);
+void Reactivity_template_instance_scope_assigns_base_template_component_fails(void);
+void Reactivity_template_instance_scope_partial_assigns_template_component(void);
+void Reactivity_template_instance_scope_assigns_other_component(void);
+void Reactivity_template_instance_scope_assigns_template_component_from_other_script_fails(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_setup(void);
@@ -8180,6 +8195,22 @@ bake_test_case Collection_testcases[] = {
     {
         "error_map_key_type_mismatch",
         Collection_error_map_key_type_mismatch
+    },
+    {
+        "const_vector_to_component_vector_member",
+        Collection_const_vector_to_component_vector_member
+    },
+    {
+        "untyped_const_vector_to_component_vector_member",
+        Collection_untyped_const_vector_to_component_vector_member
+    },
+    {
+        "const_vector_to_c_component_vector_member",
+        Collection_const_vector_to_c_component_vector_member
+    },
+    {
+        "untyped_const_vector_to_c_component_vector_member",
+        Collection_untyped_const_vector_to_c_component_vector_member
     }
 };
 
@@ -18078,6 +18109,50 @@ bake_test_case Reactivity_testcases[] = {
     {
         "partial_after_conditional_owner_reapplied",
         Reactivity_partial_after_conditional_owner_reapplied
+    },
+    {
+        "component_in_literal_and_interpolated_named_children_w_disjoint_range",
+        Reactivity_component_in_literal_and_interpolated_named_children_w_disjoint_range
+    },
+    {
+        "component_in_literal_and_interpolated_named_children_w_overlapping_range_fails",
+        Reactivity_component_in_literal_and_interpolated_named_children_w_overlapping_range_fails
+    },
+    {
+        "component_in_same_literal_named_children_fails",
+        Reactivity_component_in_same_literal_named_children_fails
+    },
+    {
+        "template_instance_scope_assigns_template_component_fails",
+        Reactivity_template_instance_scope_assigns_template_component_fails
+    },
+    {
+        "template_instance_scope_assigns_template_component_w_const_prop_fails",
+        Reactivity_template_instance_scope_assigns_template_component_w_const_prop_fails
+    },
+    {
+        "template_instance_scope_assigns_template_component_after_template_fails",
+        Reactivity_template_instance_scope_assigns_template_component_after_template_fails
+    },
+    {
+        "template_instance_scope_assigns_template_component_before_template_fails",
+        Reactivity_template_instance_scope_assigns_template_component_before_template_fails
+    },
+    {
+        "template_instance_scope_assigns_base_template_component_fails",
+        Reactivity_template_instance_scope_assigns_base_template_component_fails
+    },
+    {
+        "template_instance_scope_partial_assigns_template_component",
+        Reactivity_template_instance_scope_partial_assigns_template_component
+    },
+    {
+        "template_instance_scope_assigns_other_component",
+        Reactivity_template_instance_scope_assigns_other_component
+    },
+    {
+        "template_instance_scope_assigns_template_component_from_other_script_fails",
+        Reactivity_template_instance_scope_assigns_template_component_from_other_script_fails
     }
 };
 
@@ -21655,7 +21730,7 @@ static bake_test_suite suites[] = {
         "Collection",
         Collection_setup,
         NULL,
-        135,
+        139,
         Collection_testcases,
         1,
         Collection_params
@@ -21813,7 +21888,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         Reactivity_setup,
         NULL,
-        177,
+        188,
         Reactivity_testcases,
         1,
         Reactivity_params
