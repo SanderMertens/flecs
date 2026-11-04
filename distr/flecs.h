@@ -4498,7 +4498,8 @@ typedef bool (*ecs_equals_t)(
 typedef bool (*ecs_on_validate_t)(
     ecs_world_t *world,
     ecs_entity_t entity,
-    void *ptr);
+    void *ptr,
+    const ecs_type_info_t *type_info);
 
 /** Destructor function for poly objects. */
 typedef void (*flecs_poly_dtor_t)(
@@ -31627,11 +31628,8 @@ struct validate_delegate : public delegate {
     explicit validate_delegate(const Func& func) noexcept
         : func_(func) { }
 
-    static bool run(ecs_world_t *world, ecs_entity_t entity, void *ptr) {
-        const ecs_type_hooks_t *h = ecs_get_hooks_id(
-            world, _::type<T>::id(world));
-        ecs_assert(h != nullptr, ECS_INTERNAL_ERROR, nullptr);
-        auto ctx = static_cast<component_binding_ctx*>(h->binding_ctx);
+    static bool run(ecs_world_t *world, ecs_entity_t entity, void *ptr, const ecs_type_info_t *type_info) {
+        auto ctx = static_cast<component_binding_ctx*>(type_info->hooks.binding_ctx);
         ecs_assert(ctx != nullptr, ECS_INTERNAL_ERROR, nullptr);
         auto self = static_cast<const validate_delegate*>(ctx->callbacks[component_binding_ctx::OnValidate]);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
