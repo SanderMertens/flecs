@@ -736,6 +736,7 @@ const void* flecs_expr_component_get(
 
     const void *ptr = ecs_get_id(world, entity, component);
     if (!ptr) {
+        flecs_script_missing_component_ref(world, entity, component);
         flecs_expr_visit_error(script, node,
             "entity '%s' does not have component '%s'",
             flecs_errstr(ecs_get_path(world, entity)),

@@ -20,6 +20,8 @@ struct ecs_script_runtime_t {
     ecs_vec_t with;
     ecs_vec_t annot;
     ecs_vec_t pending_resolves;
+    ecs_vec_t missing_component_refs;
+    int32_t missing_component_depth;
     ecs_vec_t ir_vms;
     ecs_vec_t call_runtimes;
 

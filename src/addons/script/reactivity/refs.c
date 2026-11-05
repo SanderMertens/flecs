@@ -176,6 +176,65 @@ void flecs_script_pending_resolve_remove(
     }
 }
 
+void flecs_script_missing_component_ref(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t component)
+{
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(
+        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world)));
+    if (!runtime->missing_component_depth) {
+        return;
+    }
+
+    ecs_vec_t *refs = &runtime->missing_component_refs;
+    ecs_script_unresolved_component_ref_t *elems = ecs_vec_first(refs);
+    int32_t i, count = ecs_vec_count(refs);
+    for (i = 0; i < count; i ++) {
+        if (elems[i].entity == entity && elems[i].component == component) {
+            return;
+        }
+    }
+
+    ecs_vec_append_t(runtime->allocator, refs,
+        ecs_script_unresolved_component_ref_t)[0] =
+            (ecs_script_unresolved_component_ref_t){
+                .entity = entity,
+                .component = component
+            };
+}
+
+int32_t flecs_script_missing_component_push(
+    ecs_world_t *world)
+{
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+    runtime->missing_component_depth ++;
+    return ecs_vec_count(&runtime->missing_component_refs);
+}
+
+void flecs_script_missing_component_pop(
+    ecs_world_t *world,
+    ecs_script_impl_t *impl,
+    int32_t start,
+    bool failed)
+{
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+    runtime->missing_component_depth --;
+
+    ecs_vec_t *refs = &runtime->missing_component_refs;
+    ecs_script_unresolved_component_ref_t *elems = ecs_vec_first(refs);
+    int32_t i, count = ecs_vec_count(refs);
+    if (failed && impl) {
+        for (i = start; i < count; i ++) {
+            ecs_vec_append_t(NULL, &impl->unresolved_component_refs,
+                ecs_script_unresolved_component_ref_t)[0] = elems[i];
+        }
+    }
+
+    ecs_vec_set_count_t(runtime->allocator, refs,
+        ecs_script_unresolved_component_ref_t, start);
+}
+
 void flecs_script_run_pending_resolves(
     ecs_world_t *world)
 {
@@ -578,6 +637,34 @@ void flecs_script_update_resolve_observers(
             .component = component_refs[i].component,
             .is_has = component_refs[i].is_has
         })->is_resolve = true;
+    }
+
+    ecs_entity_t *includes = ecs_vec_first(&impl->failed_includes);
+    int32_t include_count = ecs_vec_count(&impl->failed_includes);
+    for (i = 0; i < include_count; i ++) {
+        if (!ecs_is_alive(world, includes[i])) {
+            continue;
+        }
+
+        const EcsScript *child = ecs_get(world, includes[i], EcsScript);
+        if (!child || !child->error) {
+            continue;
+        }
+
+        const ecs_script_ref_t *child_refs = ecs_vec_first(&child->observers);
+        int32_t j, child_count = ecs_vec_count(&child->observers);
+        for (j = 0; j < child_count; j ++) {
+            if (!child_refs[j].is_resolve) {
+                continue;
+            }
+
+            flecs_script_ref_ensure(&resolve_refs, &(ecs_script_ref_t){
+                .entity = child_refs[j].entity,
+                .name = child_refs[j].name,
+                .component = child_refs[j].component,
+                .is_has = child_refs[j].is_has
+            })->is_resolve = true;
+        }
     }
 
     if (!ecs_vec_count(&resolve_refs)) {
