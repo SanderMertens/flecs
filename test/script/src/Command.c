@@ -1582,6 +1582,111 @@ void Command_modified_not_present(void) {
     ecs_fini(world);
 }
 
+static int32_t command_emit_invoked = 0;
+static ecs_entity_t command_emit_entity = 0;
+static float command_emit_x = 0;
+
+static void Command_on_emit(ecs_iter_t *it) {
+    command_emit_invoked ++;
+    command_emit_entity = ecs_field_src(it, 0);
+    if (it->param) {
+        command_emit_x = ((float*)it->param)[0];
+    }
+}
+
+void Command_emit(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_script_run(world, NULL,
+        HEAD "MyEvent {}"
+        LINE "e {}", NULL);
+    ecs_entity_t evt = ecs_lookup(world, "MyEvent");
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    command_emit_invoked = 0;
+    command_emit_entity = 0;
+    ecs_observer(world, {
+        .query.terms = {{ .id = EcsAny, .src.id = e }},
+        .events = { evt },
+        .callback = Command_on_emit
+    });
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session, "emit e MyEvent");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
+    test_int(command_emit_invoked, 1);
+    test_uint(command_emit_entity, e);
+    ecs_shell_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
+void Command_emit_value(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_script_run(world, NULL,
+        HEAD "struct MyEvent(x: f32, y: f32)"
+        LINE "e {}", NULL);
+    ecs_entity_t evt = ecs_lookup(world, "MyEvent");
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    command_emit_invoked = 0;
+    command_emit_entity = 0;
+    command_emit_x = 0;
+    ecs_observer(world, {
+        .query.terms = {{ .id = EcsAny, .src.id = e }},
+        .events = { evt },
+        .callback = Command_on_emit
+    });
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session,
+        "emit e MyEvent {x: 10}");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_int(command_emit_invoked, 1);
+    test_uint(command_emit_entity, e);
+    test_flt(command_emit_x, 10);
+    ecs_shell_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
+void Command_emit_value_no_type(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_script_run(world, NULL,
+        HEAD "MyEvent {}"
+        LINE "e {}", NULL);
+    ecs_entity_t evt = ecs_lookup(world, "MyEvent");
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    command_emit_invoked = 0;
+    ecs_observer(world, {
+        .query.terms = {{ .id = EcsAny, .src.id = e }},
+        .events = { evt },
+        .callback = Command_on_emit
+    });
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session,
+        "emit e MyEvent {x: 10}");
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0],
+        "event 'MyEvent' does not have a value");
+    test_int(command_emit_invoked, 0);
+    ecs_shell_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
 void Command_add_remove(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptShell);
