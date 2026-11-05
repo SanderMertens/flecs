@@ -428,6 +428,8 @@
                 "emit_staged_from_stage",
                 "emit_staged_from_world_observer",
                 "emit_staged_from_stage_observer",
+                "emit_from_system",
+                "emit_from_stage_observer_stage",
                 "emit_for_entity",
                 "emit_for_unused_observed_id",
                 "emit_custom_for_any",

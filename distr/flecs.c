@@ -15351,7 +15351,7 @@ void flecs_emit(
     int16_t columns_cache = -1;
 
     ecs_iter_t it = {
-        .stage = (ecs_world_t*)world->stages[0],
+        .stage = (ecs_world_t*)flecs_stage_from_readonly_world(stage),
         .world = world,
         .event = event,
         .event_cur = evtx,
@@ -15673,6 +15673,7 @@ void ecs_emit(
 {
     ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage));
     ecs_stage_t *main_stage = world->stages[0];
+    bool deferred = ecs_is_stage(stage);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!(desc->param && desc->const_param), ECS_INVALID_PARAMETER, 
         "cannot set param and const_param at the same time");
@@ -15705,9 +15706,13 @@ void ecs_emit(
         desc->const_param = NULL;
     }
 
-    flecs_commands_begin(world, main_stage);
+    if (!deferred) {
+        flecs_commands_begin(world, main_stage);
+    }
     flecs_emit(world, stage, desc);
-    flecs_commands_end(world, main_stage);
+    if (!deferred) {
+        flecs_commands_end(world, main_stage);
+    }
 
     if (desc->ids == &default_ids) {
         desc->ids = NULL;
