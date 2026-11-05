@@ -3085,7 +3085,9 @@
                 "include_managed_named_after_script_entity",
                 "include_managed_missing_file_no_orphan_entity",
                 "include_managed_missing_file_w_other_include_sets_error",
-                "include_managed_same_relative_path_different_dir"
+                "include_managed_same_relative_path_different_dir",
+                "include_template_waits_for_component_on_entity",
+                "include_waits_for_component_on_entity"
             ]
         }, {
             "id": "Fuzzing",

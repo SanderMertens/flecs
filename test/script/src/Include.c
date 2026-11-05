@@ -2775,3 +2775,168 @@ void Include_include_managed_same_relative_path_different_dir(void) {
 
     ecs_fini(world);
 }
+
+void Include_include_template_waits_for_component_on_entity(void) {
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "state.flecs", "e {}\n", 0 };
+    test_files[1] = (test_file_t){ "kit.flecs",
+        "template Bar {\n"
+        "  const m = e[Mass]\n"
+        "  Position: {m.value, 0}\n"
+        "}\n", 0 };
+    test_files[2] = (test_file_t){ "sky.flecs", "Bar foo()\n", 0 };
+    test_files[3] = (test_file_t){ "main.flecs",
+        "include state.flecs\n"
+        "include kit.flecs\n"
+        "include sky.flecs\n"
+        "body {}\n", 0 };
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .filename = "main.flecs"
+    });
+    test_assert(script != 0);
+    test_assert(ecs_lookup(world, "body") == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_set(world, e, Mass, {10});
+
+    {
+        const EcsScript *s = ecs_get(world, script, EcsScript);
+        test_assert(s != NULL);
+        test_assert(s->error == NULL);
+        test_assert(ecs_lookup(world, "body") != 0);
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const Position *p = ecs_get(world, foo, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+    }
+
+    ecs_set(world, e, Mass, {20});
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const Position *p = ecs_get(world, foo, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Include_include_waits_for_component_on_entity(void) {
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "state.flecs", "e {}\n", 0 };
+    test_files[1] = (test_file_t){ "sky.flecs",
+        "foo { Position: {e[Mass].value, 0} }\n", 0 };
+    test_files[2] = (test_file_t){ "main.flecs",
+        "include state.flecs\n"
+        "include sky.flecs\n"
+        "body {}\n", 0 };
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .filename = "main.flecs"
+    });
+    test_assert(script != 0);
+    test_assert(ecs_lookup(world, "body") == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_set(world, e, Mass, {10});
+
+    {
+        const EcsScript *s = ecs_get(world, script, EcsScript);
+        test_assert(s != NULL);
+        test_assert(s->error == NULL);
+        test_assert(ecs_lookup(world, "body") != 0);
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const Position *p = ecs_get(world, foo, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+    }
+
+    ecs_set(world, e, Mass, {20});
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const Position *p = ecs_get(world, foo, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+    }
+
+    ecs_fini(world);
+}

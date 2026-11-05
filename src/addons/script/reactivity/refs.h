@@ -81,6 +81,20 @@ void flecs_script_ref_enqueue(
 void flecs_script_run_pending_resolves(
     ecs_world_t *world);
 
+void flecs_script_missing_component_ref(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t component);
+
+int32_t flecs_script_missing_component_push(
+    ecs_world_t *world);
+
+void flecs_script_missing_component_pop(
+    ecs_world_t *world,
+    ecs_script_impl_t *impl,
+    int32_t start,
+    bool failed);
+
 void flecs_script_pending_resolve_remove(
     ecs_world_t *world,
     ecs_entity_t script);

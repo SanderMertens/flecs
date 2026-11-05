@@ -122,6 +122,7 @@ struct ecs_script_impl_t {
     ecs_vec_t regions;
     ecs_vec_t unresolved_refs;
     ecs_vec_t unresolved_component_refs;
+    ecs_vec_t failed_includes;
     ecs_vec_t skip_unknown_warned; /* vec<const char*> */
     ecs_script_ir_t *ir;
     ecs_map_t entity_index;

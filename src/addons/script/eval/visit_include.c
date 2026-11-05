@@ -68,6 +68,21 @@ static bool flecs_script_include_is_absolute(
     return false;
 }
 
+static void flecs_script_include_failed(
+    ecs_script_impl_t *impl,
+    ecs_entity_t include)
+{
+    ecs_entity_t *elems = ecs_vec_first(&impl->failed_includes);
+    int32_t i, count = ecs_vec_count(&impl->failed_includes);
+    for (i = 0; i < count; i ++) {
+        if (elems[i] == include) {
+            return;
+        }
+    }
+
+    ecs_vec_append_t(NULL, &impl->failed_includes, ecs_entity_t)[0] = include;
+}
+
 static int flecs_script_include_node(
     ecs_script_eval_visitor_t *v,
     ecs_script_include_t *node)
@@ -167,6 +182,7 @@ static int flecs_script_include_node(
 
         const EcsScript *sc = ecs_get(v->world, e, EcsScript);
         if (sc && sc->error) {
+            flecs_script_include_failed(v->base.script, e);
             flecs_script_eval_error(v, node,
                 "failed to include managed script '%s': %s",
                 resolved, sc->error);
@@ -239,6 +255,8 @@ int flecs_script_visit_include(
 {
     ecs_script_node_t **nodes = ecs_vec_first(&scope->stmts);
     int32_t i, count = ecs_vec_count(&scope->stmts);
+
+    ecs_vec_clear(&v->base.script->failed_includes);
 
     ecs_vec_t pending;
     ecs_vec_init_t(NULL, &pending, ecs_script_include_t*, 0);

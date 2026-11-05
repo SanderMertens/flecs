@@ -113,6 +113,7 @@ ecs_script_t* flecs_script_new(
         ecs_script_unresolved_ref_t, 0);
     ecs_vec_init_t(NULL, &result->unresolved_component_refs,
         ecs_script_unresolved_component_ref_t, 0);
+    ecs_vec_init_t(NULL, &result->failed_includes, ecs_entity_t, 0);
     ecs_vec_init_t(NULL, &result->skip_unknown_warned, char*, 0);
     return &result->pub;
 }
@@ -320,6 +321,7 @@ void ecs_script_free(
             ecs_script_unresolved_ref_t);
         ecs_vec_fini_t(NULL, &impl->unresolved_component_refs,
             ecs_script_unresolved_component_ref_t);
+        ecs_vec_fini_t(NULL, &impl->failed_includes, ecs_entity_t);
         {
             char **warned = ecs_vec_first(&impl->skip_unknown_warned);
             int32_t wi, wcount = ecs_vec_count(&impl->skip_unknown_warned);
@@ -569,8 +571,11 @@ static int flecs_script_update_impl(
 
     ecs_script_eval_result_t eval_result = {0};
     ecs_script_eval_desc_t eval_desc = { .runtime = eval_runtime, .ir = s->ir };
+    int32_t missing_start = flecs_script_missing_component_push(world);
     int eval_result_code = flecs_script_eval(parsed, &eval_desc,
         flecs_script_tag(e, instance), UINT64_MAX, &eval_result);
+    flecs_script_missing_component_pop(world, parsed_impl, missing_start,
+        eval_result_code != 0 && !instance);
 
     if (!ecs_is_alive(world, e)) {
         parsed_impl->evaluating = false;

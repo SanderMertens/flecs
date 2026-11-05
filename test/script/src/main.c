@@ -3004,6 +3004,8 @@ void Include_include_managed_named_after_script_entity(void);
 void Include_include_managed_missing_file_no_orphan_entity(void);
 void Include_include_managed_missing_file_w_other_include_sets_error(void);
 void Include_include_managed_same_relative_path_different_dir(void);
+void Include_include_template_waits_for_component_on_entity(void);
+void Include_include_waits_for_component_on_entity(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_setup(void);
@@ -16226,6 +16228,14 @@ bake_test_case Include_testcases[] = {
     {
         "include_managed_same_relative_path_different_dir",
         Include_include_managed_same_relative_path_different_dir
+    },
+    {
+        "include_template_waits_for_component_on_entity",
+        Include_include_template_waits_for_component_on_entity
+    },
+    {
+        "include_waits_for_component_on_entity",
+        Include_include_waits_for_component_on_entity
     }
 };
 
@@ -21891,7 +21901,7 @@ static bake_test_suite suites[] = {
         "Include",
         Include_setup,
         NULL,
-        66,
+        68,
         Include_testcases,
         1,
         Include_params
