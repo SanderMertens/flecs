@@ -297,6 +297,7 @@ static bool flecs_expr_oper_is_arithmetic(
     case EcsTokShiftRight:
     case EcsTokBitwiseAnd:
     case EcsTokBitwiseOr:
+    case EcsTokBitwiseXor:
         return true;
     default:
         return false;
@@ -317,6 +318,7 @@ static bool flecs_expr_oper_valid_for_type(
         return flecs_expr_is_type_number(type);
     case EcsTokBitwiseAnd:
     case EcsTokBitwiseOr:
+    case EcsTokBitwiseXor:
         if (ecs_get(world, type, EcsBitmask) != NULL) {
             return true;
         }
@@ -442,6 +444,7 @@ static int flecs_expr_type_for_operator(
     case EcsTokShiftRight:
     case EcsTokBitwiseAnd:
     case EcsTokBitwiseOr:
+    case EcsTokBitwiseXor:
     case EcsTokAdd:
     case EcsTokSub:
     case EcsTokMul:
@@ -913,7 +916,8 @@ static int flecs_expr_initializer_collection_check(
             }
 
             if (!node->is_collection && kind != EcsStructType &&
-                kind != EcsValueType)
+                kind != EcsValueType && !(kind == EcsArrayType &&
+                    node->node.kind == EcsExprEmptyInitializer))
             {
                 flecs_expr_visit_error(script, node,
                     "invalid object literal for type '%s'",
@@ -1195,6 +1199,39 @@ static int flecs_expr_initializer_visit_type(
         goto error;
     }
 
+    if (!node->is_collection && ecs_vec_count(&node->elements) == 1 &&
+        (ecs_meta_is_collection(cur) || ecs_meta_is_map(cur)))
+    {
+        ecs_expr_initializer_element_t *elem =
+            ecs_vec_first(&node->elements);
+        if (!elem->member && !elem->key && elem->value) {
+            ecs_meta_cursor_t value_cur = ecs_meta_cursor(
+                script->world, type, NULL);
+            if (flecs_expr_visit_type_priv(
+                script, &elem->value, &value_cur, desc))
+            {
+                goto error;
+            }
+
+            if (elem->value->type == type || flecs_expr_is_type_collection(
+                script->world, elem->value->type))
+            {
+                if (flecs_expr_cast_to(script, &elem->value, type)) {
+                    goto error;
+                }
+
+                if (ecs_meta_pop(cur)) {
+                    goto error;
+                }
+
+                *node_ptr = elem->value;
+                elem->value = NULL;
+                flecs_expr_visit_free(script, (ecs_expr_node_t*)node);
+                return 0;
+            }
+        }
+    }
+
     if (flecs_expr_initializer_collection_check(script, node, cur, type)) {
         goto error;
     }
@@ -1421,7 +1458,16 @@ static int flecs_expr_unary_visit_type(
     }
 
     ecs_entity_t type = ecs_id(ecs_bool_t);
-    if (node->operator == EcsTokSub) {
+    if (node->operator == EcsTokBitwiseNot) {
+        type = node->expr->type;
+        if (!flecs_expr_is_type_integer(type) &&
+            !ecs_has(script->world, type, EcsBitmask))
+        {
+            flecs_expr_visit_error(script, node, "invalid operator ~ for type '%s'",
+                flecs_errstr(ecs_get_path(script->world, type)));
+            goto error;
+        }
+    } else if (node->operator == EcsTokSub) {
         type = node->expr->type;
         if (!flecs_expr_is_type_number(type) && type != ecs_id(ecs_bool_t)) {
             flecs_expr_visit_error(script, node, "invalid operator - for type '%s'",
@@ -2369,6 +2415,14 @@ try_function:
         goto error;
     }
 
+    if (func_data->is_proc != node->is_proc_call) {
+        flecs_expr_visit_error(script, node, func_data->is_proc
+            ? "procedure '%s' can only be called as a statement"
+            : "'%s' is not a procedure and cannot be called as a statement",
+            node->function_name);
+        goto error;
+    }
+
     node->node.type = func_data->return_type;
     node->calldata.function = func;
     node->calldata.is.callback = func_data->callback;
@@ -2904,6 +2958,12 @@ static int flecs_expr_match_visit_type(
         goto error;
     }
 
+    if (node->is_conditional &&
+        flecs_expr_cast_to(script, &node->expr, ecs_id(ecs_bool_t)))
+    {
+        goto error;
+    }
+
     int32_t i, count = ecs_vec_count(&node->elements);
     ecs_expr_match_element_t *elems = ecs_vec_first(&node->elements);
 
@@ -2918,6 +2978,9 @@ static int flecs_expr_match_visit_type(
 
     for (i = 0; i < count; i ++) {
         ecs_expr_match_element_t *elem = &elems[i];
+        if (!elem->expr) {
+            continue;
+        }
 
         if (node->node.type) {
             expr_cur = ecs_meta_cursor(script->world, node->node.type, NULL);
@@ -2938,7 +3001,9 @@ static int flecs_expr_match_visit_type(
 
     /* Loop over elements again, cast values to result type */
     for (i = 0; i < count; i ++) {
-        if (flecs_expr_cast_to(script, &elems[i].expr, node->node.type)) {
+        if (elems[i].expr &&
+            flecs_expr_cast_to(script, &elems[i].expr, node->node.type))
+        {
             goto error;
         }
     }
@@ -2967,6 +3032,12 @@ static int flecs_expr_match_visit_type(
             if (i != count - 1) {
                 flecs_expr_visit_error(script, node, 
                     "any (_) must be the last case in match");
+                goto error;
+            }
+
+            if (i && !elems[i - 1].expr) {
+                flecs_expr_visit_error(script, node,
+                    "any (_) cannot be combined with other patterns");
                 goto error;
             }
 

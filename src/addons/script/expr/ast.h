@@ -149,6 +149,7 @@ typedef struct ecs_expr_function_t {
     ecs_expr_initializer_t *args;
     const char *function_name;
     ecs_function_calldata_t calldata;
+    bool is_proc_call;
 } ecs_expr_function_t;
 
 typedef struct ecs_expr_element_t {
@@ -179,7 +180,7 @@ typedef struct ecs_expr_cast_t {
 
 typedef struct ecs_expr_match_element_t {
     ecs_expr_node_t *compare;
-    ecs_expr_node_t *expr;
+    ecs_expr_node_t *expr; /* NULL if pattern shares expr with next element */
 } ecs_expr_match_element_t;
 
 typedef struct ecs_expr_match_t {
@@ -187,6 +188,7 @@ typedef struct ecs_expr_match_t {
     ecs_expr_node_t *expr;
     ecs_vec_t elements;
     ecs_expr_match_element_t any;
+    bool is_conditional;
 } ecs_expr_match_t;
 
 typedef struct ecs_expr_range_t {

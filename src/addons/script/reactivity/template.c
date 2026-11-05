@@ -1147,10 +1147,15 @@ static int flecs_script_template_instantiate_body(
         goto done;
     }
 
-    if ((run_input == UINT64_MAX || (run_input & template->async_input)) &&
-        ecs_vec_count(&root->async_blocks))
-    {
-        flecs_script_template_root_tasks_free(root);
+    if (ecs_vec_count(&root->async_blocks)) {
+        if (run_input == UINT64_MAX) {
+            flecs_script_template_root_tasks_free(root);
+        } else {
+#ifdef FLECS_SCRIPT_ASYNC
+            flecs_script_async_blocks_restart(
+                root, run_input & template->async_input);
+#endif
+        }
     }
 
     body_ran = true;
@@ -2229,6 +2234,7 @@ static ecs_script_template_t* flecs_script_template_init(
     ecs_vec_init_t(NULL, &result->using_, ecs_entity_t, 0);
     ecs_vec_init_t(NULL, &result->annot, ecs_script_annot_t*, 0);
     ecs_vec_init_t(NULL, &result->refs, ecs_script_ref_t, 0);
+    ecs_vec_init_t(NULL, &result->owned_ids, ecs_id_t, 0);
     ecs_vec_init_t(NULL, &result->capture_sp, int32_t, 0);
     ecs_vec_init_t(NULL, &result->capture_input,
         ecs_script_template_capture_t, 0);
@@ -2273,6 +2279,7 @@ void flecs_script_template_fini(
     ecs_vec_fini_t(a, &template->using_, ecs_entity_t);
     ecs_vec_fini_t(a, &template->annot, ecs_script_annot_t*);
     ecs_vec_fini_t(NULL, &template->refs, ecs_script_ref_t);
+    ecs_vec_fini_t(NULL, &template->owned_ids, ecs_id_t);
     ecs_vec_fini_t(NULL, &template->capture_sp, int32_t);
     ecs_vec_fini_t(NULL, &template->capture_input,
         ecs_script_template_capture_t);

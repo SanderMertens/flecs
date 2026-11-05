@@ -422,6 +422,106 @@ static const char* flecs_script_for_in(
     ParserEnd;
 }
 
+/* 'await Event' is a shorthand for 'await Event()' */
+static ecs_expr_node_t* flecs_script_await_expr(
+    ecs_parser_t *parser,
+    ecs_expr_node_t *expr)
+{
+    if (expr->kind != EcsExprIdentifier) {
+        return expr;
+    }
+
+    ecs_expr_function_t *call = flecs_expr_function(parser);
+    ecs_expr_initializer_t *args = flecs_expr_initializer(parser);
+    args->node.kind = EcsExprEmptyInitializer;
+    call->left = expr;
+    call->args = args;
+    call->node.pos = expr->pos;
+    call->node.end = expr->end;
+    return (ecs_expr_node_t*)call;
+}
+
+static const char* flecs_script_parse_compound_assign(
+    ecs_parser_t *parser,
+    const char *pos,
+    ecs_script_assign_t *stmt,
+    ecs_token_kind_t assign_oper,
+    ecs_expr_node_t *left)
+{
+    ParserBegin;
+
+    ecs_token_kind_t oper = EcsTokAdd;
+    switch(assign_oper) {
+    case EcsTokSubAssign: oper = EcsTokSub; break;
+    case EcsTokMulAssign: oper = EcsTokMul; break;
+    case EcsTokDivAssign: oper = EcsTokDiv; break;
+    default: break;
+    }
+
+    ecs_expr_binary_t *binary = flecs_expr_binary(parser);
+    binary->left = left;
+    binary->operator = oper;
+    stmt->expr = (ecs_expr_node_t*)binary;
+
+    // value += expr\n
+    Expr({
+        binary->right = EXPR;
+        binary->node.end = EXPR->end;
+        EndOfRule;
+    })
+
+    ParserEnd;
+}
+
+/* Parse assignment target after the first '[': value[expr].member[expr] */
+static const char* flecs_script_parse_assign_target(
+    ecs_parser_t *parser,
+    const char *pos,
+    ecs_script_assign_t *stmt)
+{
+    ParserBegin;
+
+    ecs_allocator_t *a = &parser->script->allocator;
+    bool is_index = true;
+    Loop(
+        if (ecs_vec_count(&stmt->steps) >= (FLECS_SCRIPT_ASSIGN_INDEX_MAX * 2)) {
+            Error("assignment target has too many elements");
+        }
+
+        ecs_script_assign_step_t *step = ecs_vec_append_t(
+            a, &stmt->steps, ecs_script_assign_step_t);
+        ecs_os_zeromem(step);
+
+        if (is_index) {
+            Expr({
+                step = ecs_vec_last_t(&stmt->steps, ecs_script_assign_step_t);
+                step->index = EXPR;
+            })
+
+            Parse_1(']', {});
+        } else {
+            Parse_1(EcsTokIdentifier, {
+                step->member = t->value;
+            })
+        }
+
+        LookAhead(
+            case '[':
+                Consume();
+                is_index = true;
+                continue;
+            case '.':
+                Consume();
+                is_index = false;
+                continue;
+        )
+
+        EndOfRule;
+    )
+
+    ParserEnd;
+}
+
 static const char* flecs_script_parse_var(
     ecs_parser_t *parser,
     const char *pos,
@@ -433,6 +533,10 @@ static const char* flecs_script_parse_var(
         ecs_script_var_node_t *var = flecs_script_insert_var(
             parser, Token(0));
         var->node.kind = kind;
+        if (kind == EcsAstMut && parser->async_scope) {
+            var->node.kind = EcsAstConst;
+            var->is_local_mut = true;
+        }
 
         bool is_prop = kind == EcsAstProp;
         bool is_mut = kind == EcsAstMut || kind == EcsAstExportMut;
@@ -445,7 +549,7 @@ static const char* flecs_script_parse_var(
                     Consume();
                     Expr(
                         var->is_await = true;
-                        var->expr = EXPR;
+                        var->expr = flecs_script_await_expr(parser, EXPR);
                         EndOfRule;
                     )
                 )
@@ -502,6 +606,30 @@ static const char* flecs_script_parse_var(
         )
 
     var_type: {
+        if (!var->type_is_template) {
+            // const value: i32[
+            LookAhead_1('[',
+                Consume();
+                Parse(
+                    // const value: i32[]
+                    case ']':
+                        var->type_count = -1;
+                        break;
+                    // const value: i32[10]
+                    case EcsTokNumber: {
+                        int64_t count = atoll(t->value);
+                        if (count <= 0 || count > INT32_MAX) {
+                            Error("invalid array size '%s'", t->value);
+                        }
+
+                        var->type_count = flecs_ito(int32_t, count);
+                        Parse_1(']', {});
+                        break;
+                    }
+                )
+            )
+        }
+
         LookAhead(
             case '=': {
                 Consume();
@@ -674,6 +802,8 @@ static const char* flecs_script_stmt_parse(
 {
     ParserBegin;
 
+    const char *stmt_start = pos;
+
     const char *component_first = NULL, *component_second = NULL;
     bool component_collection = false;
     bool component_partial = false;
@@ -707,6 +837,8 @@ static const char* flecs_script_stmt_parse(
         case EcsTokKeywordAwait:      goto await_stmt;
         case EcsTokKeywordTry:        goto try_stmt;
         case EcsTokKeywordContinue:   goto continue_stmt;
+        case EcsTokKeywordBreak:      goto break_stmt;
+        case EcsTokKeywordProc:       goto proc_stmt;
         case EcsTokKeywordAsync:      goto async_stmt;
         case EcsTokKeywordWhile:      goto while_stmt;
     );
@@ -746,6 +878,15 @@ identifier: {
         case '=': {
             Consume();
             goto identifier_assign;
+        }
+
+        // value +=
+        case EcsTokAddAssign:
+        case EcsTokSubAssign:
+        case EcsTokMulAssign:
+        case EcsTokDivAssign: {
+            Consume();
+            goto identifier_compound_assign;
         }
 
         // Spaceship enterprise
@@ -996,15 +1137,48 @@ fn_stmt: {
     })
 }
 
+proc_stmt: {
+    Parse_2(EcsTokIdentifier, '(', {
+        ecs_script_function_node_t *fn = flecs_script_insert_function(
+            parser, Token(1));
+        fn->is_proc = true;
+        fn->return_type = "flecs.meta.bool";
+        fn->return_type_node.pos = parser->pos;
+
+        bool significant_newline = parser->significant_newline;
+        parser->significant_newline = false;
+        pos = flecs_script_fn_params(parser, fn, pos);
+        parser->significant_newline = significant_newline;
+        if (!pos) {
+            goto error;
+        }
+
+        pos = flecs_parser_skip_newlines(parser, pos);
+
+        Parse_1('{', {
+            bool async_scope = parser->async_scope;
+            parser->async_scope = true;
+            pos = flecs_script_scope(parser, fn->body, pos);
+            parser->async_scope = async_scope;
+            return pos;
+        })
+    })
+}
+
 continue_stmt: {
     flecs_script_insert_continue(parser);
+    EndOfRule;
+}
+
+break_stmt: {
+    flecs_script_insert_break(parser);
     EndOfRule;
 }
 
 await_stmt: {
     Expr({
         ecs_script_await_t *await = flecs_script_insert_await(parser);
-        await->expr = EXPR;
+        await->expr = flecs_script_await_expr(parser, EXPR);
         EndOfRule;
     })
 }
@@ -1053,6 +1227,92 @@ identifier_assign: {
         stmt->expr = EXPR;
         EndOfRule;
     })
+}
+
+// emit Event
+emit_stmt: {
+    ecs_script_emit_t *stmt = flecs_script_insert_emit(parser, Token(1));
+
+    // emit Event(
+    LookAhead_1('(',
+        Consume();
+
+        // emit Event(expr)
+        Initializer(')',
+            stmt->expr = INITIALIZER;
+            EndOfRule;
+        )
+    )
+
+    ecs_expr_initializer_t *empty = flecs_expr_initializer(parser);
+    empty->node.kind = EcsExprEmptyInitializer;
+    stmt->expr = (ecs_expr_node_t*)empty;
+    EndOfRule;
+}
+
+// value(
+identifier_call: {
+    pos = stmt_start;
+    Expr({
+        ecs_script_call_t *stmt = flecs_script_insert_call(parser);
+        stmt->expr = EXPR;
+        if (EXPR->kind == EcsExprFunction) {
+            ((ecs_expr_function_t*)EXPR)->is_proc_call = true;
+        }
+
+        EndOfRule;
+    })
+}
+
+// value +=
+identifier_compound_assign: {
+    if (!parser->async_scope) {
+        Error("compound assignment is only allowed in async blocks");
+    }
+
+    return flecs_script_parse_compound_assign(parser, pos,
+        flecs_script_insert_assign(parser, Token(0)),
+        tokenizer->tokens[1].kind,
+        (ecs_expr_node_t*)flecs_expr_identifier(parser, Token(0)));
+}
+
+// value[
+identifier_assign_target: {
+    ecs_script_assign_t *stmt = flecs_script_insert_assign(parser, Token(0));
+    const char *target = stmt_start;
+
+    pos = flecs_script_parse_assign_target(parser, pos, stmt);
+    if (!pos) {
+        goto error;
+    }
+
+    Parse(
+        // value[0] = expr\n
+        case '=': {
+            Expr({
+                stmt->expr = EXPR;
+                EndOfRule;
+            })
+        }
+
+        // value[0] += expr\n
+        case EcsTokAddAssign:
+        case EcsTokSubAssign:
+        case EcsTokMulAssign:
+        case EcsTokDivAssign: {
+            ecs_expr_node_t *left = NULL;
+            bool significant_newline = parser->significant_newline;
+            parser->significant_newline = false;
+            target = flecs_script_parse_expr(parser, target, 0, &left);
+            parser->significant_newline = significant_newline;
+            if (!target) {
+                goto error;
+            }
+
+            return flecs_script_parse_compound_assign(
+                parser, pos, stmt, t->kind, left);
+        }
+    )
 }
 
 // try
@@ -1218,6 +1478,10 @@ flagged_id: {
 
 // facade[0]
 identifier_index: {
+    if (parser->async_scope) {
+        goto identifier_assign_target;
+    }
+
     component_first = Token(0);
 
     LookAhead(
@@ -1295,6 +1559,10 @@ identifier_colon: {
 
 // Spaceship enterprise
 identifier_identifier: {
+    if (parser->async_scope && !ecs_os_strcmp(Token(0), "emit")) {
+        goto emit_stmt;
+    }
+
     ecs_script_entity_t *entity = flecs_script_insert_entity(
         parser, Token(1));
     if (!entity) {
@@ -1302,6 +1570,12 @@ identifier_identifier: {
     }
 
     entity->kind = Token(0);
+
+    // event Build(
+    if (!ecs_os_strcmp(entity->kind, "event")) {
+        entity->kind = "struct";
+        entity->is_event = true;
+    }
 
     // Spaceship enterprise :
     LookAhead_1(':', 
@@ -1321,7 +1595,7 @@ identifier_identifier_x:
     // Spaceship enterprise(
     LookAhead_1('(',
         Consume();
-        return flecs_script_paren_expr(parser, Token(0), entity, pos);
+        return flecs_script_paren_expr(parser, entity->kind, entity, pos);
     )
 
     // Spaceship enterprise {
@@ -1336,6 +1610,10 @@ identifier_identifier_x:
 
 // SpaceShip(
 identifier_paren: {
+    if (parser->async_scope) {
+        goto identifier_call;
+    }
+
     return flecs_script_paren_expr(parser, Token(0),
         flecs_script_insert_entity(parser, NULL), pos);
 }

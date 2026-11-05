@@ -934,6 +934,42 @@ void Collection_range_literal_iterate(void);
 void Collection_range_literal_typed_vector(void);
 void Collection_range_literal_typed_float_vector(void);
 void Collection_range_literal_non_vector_type(void);
+void Collection_vector_init_from_vector(void);
+void Collection_vector_init_from_vector_in_async(void);
+void Collection_vector_assign_from_vector(void);
+void Collection_struct_vector_init_from_vector(void);
+void Collection_struct_vector_assign_from_vector(void);
+void Collection_struct_vector_assign_from_untyped_vector(void);
+void Collection_string_vector_assign_no_leak(void);
+void Collection_map_init_from_map(void);
+void Collection_map_assign_from_map(void);
+void Collection_map_assign_from_map_literal(void);
+void Collection_string_map_assign_no_leak(void);
+void Collection_untyped_vector_to_vector_const(void);
+void Collection_untyped_vector_to_array_const(void);
+void Collection_untyped_vector_to_vector_mut(void);
+void Collection_untyped_vector_to_array_mut(void);
+void Collection_untyped_vector_to_typed_local_const(void);
+void Collection_untyped_vector_to_vector_in_async(void);
+void Collection_untyped_vector_to_array_in_proc(void);
+void Collection_untyped_vector_to_float_vector(void);
+void Collection_untyped_vector_to_array_no_leak(void);
+void Collection_vector_assign_from_untyped_vector(void);
+void Collection_error_untyped_vector_to_vector_elem_type(void);
+void Collection_error_untyped_vector_to_array_size(void);
+void Collection_error_vector_to_array_size_in_async(void);
+void Collection_error_array_to_array_size(void);
+void Collection_error_map_to_vector(void);
+void Collection_map_init_from_other_map_type(void);
+void Collection_map_assign_from_other_map_type(void);
+void Collection_map_init_from_other_map_type_in_async(void);
+void Collection_string_map_from_other_map_type_no_leak(void);
+void Collection_error_map_value_type_mismatch(void);
+void Collection_error_map_key_type_mismatch(void);
+void Collection_const_vector_to_component_vector_member(void);
+void Collection_untyped_const_vector_to_component_vector_member(void);
+void Collection_const_vector_to_c_component_vector_member(void);
+void Collection_untyped_const_vector_to_c_component_vector_member(void);
 
 // Testsuite 'Await'
 void Await_setup(void);
@@ -1020,7 +1056,7 @@ void AsyncBlock_setup(void);
 void AsyncBlock_template_outer_capture_restarts_block(void);
 void AsyncBlock_template_mut_string_external_update(void);
 void AsyncBlock_template_sixty_four_muts_manual_restart(void);
-void AsyncBlock_template_unrelated_prop_restarts_all_blocks(void);
+void AsyncBlock_template_unrelated_prop_keeps_blocks_running(void);
 void AsyncBlock_template_prop_change_before_progress(void);
 void AsyncBlock_template_static_ref_restarts_block(void);
 void AsyncBlock_template_dynamic_ref_restarts_block(void);
@@ -1109,6 +1145,87 @@ void AsyncBlock_assign_export_mut(void);
 void AsyncBlock_assign_export_mut_from_template(void);
 void AsyncBlock_assign_extern_mut_var(void);
 void AsyncBlock_error_assign_to_export_const(void);
+void AsyncBlock_compound_assign_export_mut(void);
+void AsyncBlock_compound_assign_template_mut_notifies(void);
+void AsyncBlock_error_compound_assign_outside_async(void);
+void AsyncBlock_error_compound_assign_incompatible_type(void);
+void AsyncBlock_break_for(void);
+void AsyncBlock_break_while_in_async(void);
+void AsyncBlock_break_innermost_loop(void);
+void AsyncBlock_error_break_outside_loop(void);
+void AsyncBlock_error_break_async_in_loop(void);
+void AsyncBlock_local_mut(void);
+void AsyncBlock_local_mut_across_await(void);
+void AsyncBlock_local_mut_await_initializer(void);
+void AsyncBlock_local_mut_resets_in_loop(void);
+void AsyncBlock_local_mut_per_task(void);
+void AsyncBlock_local_mut_not_reactive(void);
+void AsyncBlock_local_mut_array_from_array(void);
+void AsyncBlock_error_local_mut_outside_block(void);
+void AsyncBlock_restart_only_block_reading_prop(void);
+void AsyncBlock_surviving_block_keeps_position(void);
+void AsyncBlock_restart_follows_const_chain(void);
+void AsyncBlock_block_in_removed_if_branch_stops(void);
+void AsyncBlock_block_on_deleted_entity_stops(void);
+void AsyncBlock_block_restarts_for_loop_var(void);
+void AsyncBlock_export_mut_read_does_not_restart(void);
+void AsyncBlock_export_mut_via_template_const_restarts(void);
+void AsyncBlock_assign_struct_member(void);
+void AsyncBlock_assign_nested_struct_member(void);
+void AsyncBlock_assign_array_element(void);
+void AsyncBlock_assign_vector_element(void);
+void AsyncBlock_assign_element_member(void);
+void AsyncBlock_assign_member_element_member(void);
+void AsyncBlock_assign_template_mut_element_notifies(void);
+void AsyncBlock_assign_export_mut_element_notifies(void);
+void AsyncBlock_assign_local_mut_element(void);
+void AsyncBlock_assign_index_evaluated_before_value(void);
+void AsyncBlock_assign_index_out_of_range(void);
+void AsyncBlock_assign_string_element(void);
+void AsyncBlock_declare_array_w_type(void);
+void AsyncBlock_struct_reset_w_empty_initializer(void);
+void AsyncBlock_error_assign_target(void);
+void AsyncBlock_assign_template_and_parent_mut_member(void);
+void AsyncBlock_next_frame(void);
+void AsyncBlock_delay(void);
+void AsyncBlock_delay_large_step(void);
+void AsyncBlock_delay_zero_and_negative(void);
+void AsyncBlock_delay_time_scale(void);
+void AsyncBlock_delay_time_scale_speedup(void);
+void AsyncBlock_delay_cancel_on_restart(void);
+void AsyncBlock_delay_cancel_on_delete(void);
+void AsyncBlock_delay_pending_at_fini(void);
+void AsyncBlock_delay_cancel_on_script_delete(void);
+void AsyncBlock_proc_call(void);
+void AsyncBlock_proc_no_args(void);
+void AsyncBlock_proc_control_flow(void);
+void AsyncBlock_proc_call_proc(void);
+void AsyncBlock_proc_recursion(void);
+void AsyncBlock_proc_infinite_recursion(void);
+void AsyncBlock_proc_error_stops_caller(void);
+void AsyncBlock_proc_from_template_block(void);
+void AsyncBlock_error_proc(void);
+void AsyncBlock_event_emit_await(void);
+void AsyncBlock_event_listener_after_emitter(void);
+void AsyncBlock_event_emit_does_not_pause(void);
+void AsyncBlock_event_no_listeners(void);
+void AsyncBlock_event_queued_in_order(void);
+void AsyncBlock_event_busy_block_receives_queued(void);
+void AsyncBlock_event_to_template_blocks(void);
+void AsyncBlock_event_from_template_block(void);
+void AsyncBlock_event_string_payload(void);
+void AsyncBlock_event_no_members(void);
+void AsyncBlock_event_self_emit_does_not_hang(void);
+void AsyncBlock_event_from_proc(void);
+void AsyncBlock_event_queue_limit(void);
+void AsyncBlock_event_cancel_drops_queue(void);
+void AsyncBlock_event_cancel_while_waiting(void);
+void AsyncBlock_event_emit_from_c(void);
+void AsyncBlock_event_observe_from_c(void);
+void AsyncBlock_event_no_members_from_c(void);
+void AsyncBlock_event_from_c_without_value(void);
+void AsyncBlock_event_script_update_delivers_once(void);
+void AsyncBlock_error_event(void);
 
 // Testsuite 'Input'
 void Input_setup(void);
@@ -1194,6 +1311,8 @@ void Input_get_mouse_state(void);
 void Input_listeners(void);
 void Input_emit_result(void);
 void Input_emit_result_stopped(void);
+void Input_click_not_lost_when_template_input_changes(void);
+void Input_click_not_lost_after_native_mut_var_modified(void);
 
 // Testsuite 'TryCatch'
 void TryCatch_setup(void);
@@ -2512,6 +2631,26 @@ void Expr_id_var_eq_literal(void);
 void Expr_vector_func_array_of_struct_error_type_name(void);
 void Expr_partial_initializer(void);
 void Expr_partial_nested_initializer(void);
+void Expr_conditional(void);
+void Expr_conditional_nested(void);
+void Expr_conditional_non_bool_condition(void);
+void Expr_conditional_evaluates_one_branch(void);
+void Expr_conditional_unify_types(void);
+void Expr_error_conditional(void);
+void Expr_conditional_collection_branches(void);
+void Expr_bitwise_xor(void);
+void Expr_bitwise_xor_precedence(void);
+void Expr_bitwise_xor_var(void);
+void Expr_bitwise_not(void);
+void Expr_bitwise_not_precedence(void);
+void Expr_bitwise_not_var(void);
+void Expr_bitwise_not_literal(void);
+void Expr_error_bitwise_invalid_type(void);
+void Expr_match_multiple_patterns(void);
+void Expr_match_multiple_patterns_const(void);
+void Expr_match_multiple_patterns_enum(void);
+void Expr_match_multiple_patterns_no_match(void);
+void Expr_error_match_multiple_patterns(void);
 
 // Testsuite 'ExprAst'
 void ExprAst_setup(void);
@@ -3359,6 +3498,17 @@ void Reactivity_template_first_instantiation_error_from_c(void);
 void Reactivity_script_reeval_error_in_other_script_eval(void);
 void Reactivity_if_else_switch_keeps_component_w_fewer_members(void);
 void Reactivity_partial_after_conditional_owner_reapplied(void);
+void Reactivity_component_in_literal_and_interpolated_named_children_w_disjoint_range(void);
+void Reactivity_component_in_literal_and_interpolated_named_children_w_overlapping_range_fails(void);
+void Reactivity_component_in_same_literal_named_children_fails(void);
+void Reactivity_template_instance_scope_assigns_template_component_fails(void);
+void Reactivity_template_instance_scope_assigns_template_component_w_const_prop_fails(void);
+void Reactivity_template_instance_scope_assigns_template_component_after_template_fails(void);
+void Reactivity_template_instance_scope_assigns_template_component_before_template_fails(void);
+void Reactivity_template_instance_scope_assigns_base_template_component_fails(void);
+void Reactivity_template_instance_scope_partial_assigns_template_component(void);
+void Reactivity_template_instance_scope_assigns_other_component(void);
+void Reactivity_template_instance_scope_assigns_template_component_from_other_script_fails(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_setup(void);
@@ -7932,6 +8082,150 @@ bake_test_case Collection_testcases[] = {
     {
         "range_literal_non_vector_type",
         Collection_range_literal_non_vector_type
+    },
+    {
+        "vector_init_from_vector",
+        Collection_vector_init_from_vector
+    },
+    {
+        "vector_init_from_vector_in_async",
+        Collection_vector_init_from_vector_in_async
+    },
+    {
+        "vector_assign_from_vector",
+        Collection_vector_assign_from_vector
+    },
+    {
+        "struct_vector_init_from_vector",
+        Collection_struct_vector_init_from_vector
+    },
+    {
+        "struct_vector_assign_from_vector",
+        Collection_struct_vector_assign_from_vector
+    },
+    {
+        "struct_vector_assign_from_untyped_vector",
+        Collection_struct_vector_assign_from_untyped_vector
+    },
+    {
+        "string_vector_assign_no_leak",
+        Collection_string_vector_assign_no_leak
+    },
+    {
+        "map_init_from_map",
+        Collection_map_init_from_map
+    },
+    {
+        "map_assign_from_map",
+        Collection_map_assign_from_map
+    },
+    {
+        "map_assign_from_map_literal",
+        Collection_map_assign_from_map_literal
+    },
+    {
+        "string_map_assign_no_leak",
+        Collection_string_map_assign_no_leak
+    },
+    {
+        "untyped_vector_to_vector_const",
+        Collection_untyped_vector_to_vector_const
+    },
+    {
+        "untyped_vector_to_array_const",
+        Collection_untyped_vector_to_array_const
+    },
+    {
+        "untyped_vector_to_vector_mut",
+        Collection_untyped_vector_to_vector_mut
+    },
+    {
+        "untyped_vector_to_array_mut",
+        Collection_untyped_vector_to_array_mut
+    },
+    {
+        "untyped_vector_to_typed_local_const",
+        Collection_untyped_vector_to_typed_local_const
+    },
+    {
+        "untyped_vector_to_vector_in_async",
+        Collection_untyped_vector_to_vector_in_async
+    },
+    {
+        "untyped_vector_to_array_in_proc",
+        Collection_untyped_vector_to_array_in_proc
+    },
+    {
+        "untyped_vector_to_float_vector",
+        Collection_untyped_vector_to_float_vector
+    },
+    {
+        "untyped_vector_to_array_no_leak",
+        Collection_untyped_vector_to_array_no_leak
+    },
+    {
+        "vector_assign_from_untyped_vector",
+        Collection_vector_assign_from_untyped_vector
+    },
+    {
+        "error_untyped_vector_to_vector_elem_type",
+        Collection_error_untyped_vector_to_vector_elem_type
+    },
+    {
+        "error_untyped_vector_to_array_size",
+        Collection_error_untyped_vector_to_array_size
+    },
+    {
+        "error_vector_to_array_size_in_async",
+        Collection_error_vector_to_array_size_in_async
+    },
+    {
+        "error_array_to_array_size",
+        Collection_error_array_to_array_size
+    },
+    {
+        "error_map_to_vector",
+        Collection_error_map_to_vector
+    },
+    {
+        "map_init_from_other_map_type",
+        Collection_map_init_from_other_map_type
+    },
+    {
+        "map_assign_from_other_map_type",
+        Collection_map_assign_from_other_map_type
+    },
+    {
+        "map_init_from_other_map_type_in_async",
+        Collection_map_init_from_other_map_type_in_async
+    },
+    {
+        "string_map_from_other_map_type_no_leak",
+        Collection_string_map_from_other_map_type_no_leak
+    },
+    {
+        "error_map_value_type_mismatch",
+        Collection_error_map_value_type_mismatch
+    },
+    {
+        "error_map_key_type_mismatch",
+        Collection_error_map_key_type_mismatch
+    },
+    {
+        "const_vector_to_component_vector_member",
+        Collection_const_vector_to_component_vector_member
+    },
+    {
+        "untyped_const_vector_to_component_vector_member",
+        Collection_untyped_const_vector_to_component_vector_member
+    },
+    {
+        "const_vector_to_c_component_vector_member",
+        Collection_const_vector_to_c_component_vector_member
+    },
+    {
+        "untyped_const_vector_to_c_component_vector_member",
+        Collection_untyped_const_vector_to_c_component_vector_member
     }
 };
 
@@ -8260,8 +8554,8 @@ bake_test_case AsyncBlock_testcases[] = {
         AsyncBlock_template_sixty_four_muts_manual_restart
     },
     {
-        "template_unrelated_prop_restarts_all_blocks",
-        AsyncBlock_template_unrelated_prop_restarts_all_blocks
+        "template_unrelated_prop_keeps_blocks_running",
+        AsyncBlock_template_unrelated_prop_keeps_blocks_running
     },
     {
         "template_prop_change_before_progress",
@@ -8614,6 +8908,330 @@ bake_test_case AsyncBlock_testcases[] = {
     {
         "error_assign_to_export_const",
         AsyncBlock_error_assign_to_export_const
+    },
+    {
+        "compound_assign_export_mut",
+        AsyncBlock_compound_assign_export_mut
+    },
+    {
+        "compound_assign_template_mut_notifies",
+        AsyncBlock_compound_assign_template_mut_notifies
+    },
+    {
+        "error_compound_assign_outside_async",
+        AsyncBlock_error_compound_assign_outside_async
+    },
+    {
+        "error_compound_assign_incompatible_type",
+        AsyncBlock_error_compound_assign_incompatible_type
+    },
+    {
+        "break_for",
+        AsyncBlock_break_for
+    },
+    {
+        "break_while_in_async",
+        AsyncBlock_break_while_in_async
+    },
+    {
+        "break_innermost_loop",
+        AsyncBlock_break_innermost_loop
+    },
+    {
+        "error_break_outside_loop",
+        AsyncBlock_error_break_outside_loop
+    },
+    {
+        "error_break_async_in_loop",
+        AsyncBlock_error_break_async_in_loop
+    },
+    {
+        "local_mut",
+        AsyncBlock_local_mut
+    },
+    {
+        "local_mut_across_await",
+        AsyncBlock_local_mut_across_await
+    },
+    {
+        "local_mut_await_initializer",
+        AsyncBlock_local_mut_await_initializer
+    },
+    {
+        "local_mut_resets_in_loop",
+        AsyncBlock_local_mut_resets_in_loop
+    },
+    {
+        "local_mut_per_task",
+        AsyncBlock_local_mut_per_task
+    },
+    {
+        "local_mut_not_reactive",
+        AsyncBlock_local_mut_not_reactive
+    },
+    {
+        "local_mut_array_from_array",
+        AsyncBlock_local_mut_array_from_array
+    },
+    {
+        "error_local_mut_outside_block",
+        AsyncBlock_error_local_mut_outside_block
+    },
+    {
+        "restart_only_block_reading_prop",
+        AsyncBlock_restart_only_block_reading_prop
+    },
+    {
+        "surviving_block_keeps_position",
+        AsyncBlock_surviving_block_keeps_position
+    },
+    {
+        "restart_follows_const_chain",
+        AsyncBlock_restart_follows_const_chain
+    },
+    {
+        "block_in_removed_if_branch_stops",
+        AsyncBlock_block_in_removed_if_branch_stops
+    },
+    {
+        "block_on_deleted_entity_stops",
+        AsyncBlock_block_on_deleted_entity_stops
+    },
+    {
+        "block_restarts_for_loop_var",
+        AsyncBlock_block_restarts_for_loop_var
+    },
+    {
+        "export_mut_read_does_not_restart",
+        AsyncBlock_export_mut_read_does_not_restart
+    },
+    {
+        "export_mut_via_template_const_restarts",
+        AsyncBlock_export_mut_via_template_const_restarts
+    },
+    {
+        "assign_struct_member",
+        AsyncBlock_assign_struct_member
+    },
+    {
+        "assign_nested_struct_member",
+        AsyncBlock_assign_nested_struct_member
+    },
+    {
+        "assign_array_element",
+        AsyncBlock_assign_array_element
+    },
+    {
+        "assign_vector_element",
+        AsyncBlock_assign_vector_element
+    },
+    {
+        "assign_element_member",
+        AsyncBlock_assign_element_member
+    },
+    {
+        "assign_member_element_member",
+        AsyncBlock_assign_member_element_member
+    },
+    {
+        "assign_template_mut_element_notifies",
+        AsyncBlock_assign_template_mut_element_notifies
+    },
+    {
+        "assign_export_mut_element_notifies",
+        AsyncBlock_assign_export_mut_element_notifies
+    },
+    {
+        "assign_local_mut_element",
+        AsyncBlock_assign_local_mut_element
+    },
+    {
+        "assign_index_evaluated_before_value",
+        AsyncBlock_assign_index_evaluated_before_value
+    },
+    {
+        "assign_index_out_of_range",
+        AsyncBlock_assign_index_out_of_range
+    },
+    {
+        "assign_string_element",
+        AsyncBlock_assign_string_element
+    },
+    {
+        "declare_array_w_type",
+        AsyncBlock_declare_array_w_type
+    },
+    {
+        "struct_reset_w_empty_initializer",
+        AsyncBlock_struct_reset_w_empty_initializer
+    },
+    {
+        "error_assign_target",
+        AsyncBlock_error_assign_target
+    },
+    {
+        "assign_template_and_parent_mut_member",
+        AsyncBlock_assign_template_and_parent_mut_member
+    },
+    {
+        "next_frame",
+        AsyncBlock_next_frame
+    },
+    {
+        "delay",
+        AsyncBlock_delay
+    },
+    {
+        "delay_large_step",
+        AsyncBlock_delay_large_step
+    },
+    {
+        "delay_zero_and_negative",
+        AsyncBlock_delay_zero_and_negative
+    },
+    {
+        "delay_time_scale",
+        AsyncBlock_delay_time_scale
+    },
+    {
+        "delay_time_scale_speedup",
+        AsyncBlock_delay_time_scale_speedup
+    },
+    {
+        "delay_cancel_on_restart",
+        AsyncBlock_delay_cancel_on_restart
+    },
+    {
+        "delay_cancel_on_delete",
+        AsyncBlock_delay_cancel_on_delete
+    },
+    {
+        "delay_pending_at_fini",
+        AsyncBlock_delay_pending_at_fini
+    },
+    {
+        "delay_cancel_on_script_delete",
+        AsyncBlock_delay_cancel_on_script_delete
+    },
+    {
+        "proc_call",
+        AsyncBlock_proc_call
+    },
+    {
+        "proc_no_args",
+        AsyncBlock_proc_no_args
+    },
+    {
+        "proc_control_flow",
+        AsyncBlock_proc_control_flow
+    },
+    {
+        "proc_call_proc",
+        AsyncBlock_proc_call_proc
+    },
+    {
+        "proc_recursion",
+        AsyncBlock_proc_recursion
+    },
+    {
+        "proc_infinite_recursion",
+        AsyncBlock_proc_infinite_recursion
+    },
+    {
+        "proc_error_stops_caller",
+        AsyncBlock_proc_error_stops_caller
+    },
+    {
+        "proc_from_template_block",
+        AsyncBlock_proc_from_template_block
+    },
+    {
+        "error_proc",
+        AsyncBlock_error_proc
+    },
+    {
+        "event_emit_await",
+        AsyncBlock_event_emit_await
+    },
+    {
+        "event_listener_after_emitter",
+        AsyncBlock_event_listener_after_emitter
+    },
+    {
+        "event_emit_does_not_pause",
+        AsyncBlock_event_emit_does_not_pause
+    },
+    {
+        "event_no_listeners",
+        AsyncBlock_event_no_listeners
+    },
+    {
+        "event_queued_in_order",
+        AsyncBlock_event_queued_in_order
+    },
+    {
+        "event_busy_block_receives_queued",
+        AsyncBlock_event_busy_block_receives_queued
+    },
+    {
+        "event_to_template_blocks",
+        AsyncBlock_event_to_template_blocks
+    },
+    {
+        "event_from_template_block",
+        AsyncBlock_event_from_template_block
+    },
+    {
+        "event_string_payload",
+        AsyncBlock_event_string_payload
+    },
+    {
+        "event_no_members",
+        AsyncBlock_event_no_members
+    },
+    {
+        "event_self_emit_does_not_hang",
+        AsyncBlock_event_self_emit_does_not_hang
+    },
+    {
+        "event_from_proc",
+        AsyncBlock_event_from_proc
+    },
+    {
+        "event_queue_limit",
+        AsyncBlock_event_queue_limit
+    },
+    {
+        "event_cancel_drops_queue",
+        AsyncBlock_event_cancel_drops_queue
+    },
+    {
+        "event_cancel_while_waiting",
+        AsyncBlock_event_cancel_while_waiting
+    },
+    {
+        "event_emit_from_c",
+        AsyncBlock_event_emit_from_c
+    },
+    {
+        "event_observe_from_c",
+        AsyncBlock_event_observe_from_c
+    },
+    {
+        "event_no_members_from_c",
+        AsyncBlock_event_no_members_from_c
+    },
+    {
+        "event_from_c_without_value",
+        AsyncBlock_event_from_c_without_value
+    },
+    {
+        "event_script_update_delivers_once",
+        AsyncBlock_event_script_update_delivers_once
+    },
+    {
+        "error_event",
+        AsyncBlock_error_event
     }
 };
 
@@ -8945,6 +9563,14 @@ bake_test_case Input_testcases[] = {
     {
         "emit_result_stopped",
         Input_emit_result_stopped
+    },
+    {
+        "click_not_lost_when_template_input_changes",
+        Input_click_not_lost_when_template_input_changes
+    },
+    {
+        "click_not_lost_after_native_mut_var_modified",
+        Input_click_not_lost_after_native_mut_var_modified
     }
 };
 
@@ -14154,6 +14780,86 @@ bake_test_case Expr_testcases[] = {
     {
         "partial_nested_initializer",
         Expr_partial_nested_initializer
+    },
+    {
+        "conditional",
+        Expr_conditional
+    },
+    {
+        "conditional_nested",
+        Expr_conditional_nested
+    },
+    {
+        "conditional_non_bool_condition",
+        Expr_conditional_non_bool_condition
+    },
+    {
+        "conditional_evaluates_one_branch",
+        Expr_conditional_evaluates_one_branch
+    },
+    {
+        "conditional_unify_types",
+        Expr_conditional_unify_types
+    },
+    {
+        "error_conditional",
+        Expr_error_conditional
+    },
+    {
+        "conditional_collection_branches",
+        Expr_conditional_collection_branches
+    },
+    {
+        "bitwise_xor",
+        Expr_bitwise_xor
+    },
+    {
+        "bitwise_xor_precedence",
+        Expr_bitwise_xor_precedence
+    },
+    {
+        "bitwise_xor_var",
+        Expr_bitwise_xor_var
+    },
+    {
+        "bitwise_not",
+        Expr_bitwise_not
+    },
+    {
+        "bitwise_not_precedence",
+        Expr_bitwise_not_precedence
+    },
+    {
+        "bitwise_not_var",
+        Expr_bitwise_not_var
+    },
+    {
+        "bitwise_not_literal",
+        Expr_bitwise_not_literal
+    },
+    {
+        "error_bitwise_invalid_type",
+        Expr_error_bitwise_invalid_type
+    },
+    {
+        "match_multiple_patterns",
+        Expr_match_multiple_patterns
+    },
+    {
+        "match_multiple_patterns_const",
+        Expr_match_multiple_patterns_const
+    },
+    {
+        "match_multiple_patterns_enum",
+        Expr_match_multiple_patterns_enum
+    },
+    {
+        "match_multiple_patterns_no_match",
+        Expr_match_multiple_patterns_no_match
+    },
+    {
+        "error_match_multiple_patterns",
+        Expr_error_match_multiple_patterns
     }
 };
 
@@ -17478,6 +18184,50 @@ bake_test_case Reactivity_testcases[] = {
     {
         "partial_after_conditional_owner_reapplied",
         Reactivity_partial_after_conditional_owner_reapplied
+    },
+    {
+        "component_in_literal_and_interpolated_named_children_w_disjoint_range",
+        Reactivity_component_in_literal_and_interpolated_named_children_w_disjoint_range
+    },
+    {
+        "component_in_literal_and_interpolated_named_children_w_overlapping_range_fails",
+        Reactivity_component_in_literal_and_interpolated_named_children_w_overlapping_range_fails
+    },
+    {
+        "component_in_same_literal_named_children_fails",
+        Reactivity_component_in_same_literal_named_children_fails
+    },
+    {
+        "template_instance_scope_assigns_template_component_fails",
+        Reactivity_template_instance_scope_assigns_template_component_fails
+    },
+    {
+        "template_instance_scope_assigns_template_component_w_const_prop_fails",
+        Reactivity_template_instance_scope_assigns_template_component_w_const_prop_fails
+    },
+    {
+        "template_instance_scope_assigns_template_component_after_template_fails",
+        Reactivity_template_instance_scope_assigns_template_component_after_template_fails
+    },
+    {
+        "template_instance_scope_assigns_template_component_before_template_fails",
+        Reactivity_template_instance_scope_assigns_template_component_before_template_fails
+    },
+    {
+        "template_instance_scope_assigns_base_template_component_fails",
+        Reactivity_template_instance_scope_assigns_base_template_component_fails
+    },
+    {
+        "template_instance_scope_partial_assigns_template_component",
+        Reactivity_template_instance_scope_partial_assigns_template_component
+    },
+    {
+        "template_instance_scope_assigns_other_component",
+        Reactivity_template_instance_scope_assigns_other_component
+    },
+    {
+        "template_instance_scope_assigns_template_component_from_other_script_fails",
+        Reactivity_template_instance_scope_assigns_template_component_from_other_script_fails
     }
 };
 
@@ -21055,7 +21805,7 @@ static bake_test_suite suites[] = {
         "Collection",
         Collection_setup,
         NULL,
-        103,
+        139,
         Collection_testcases,
         1,
         Collection_params
@@ -21073,7 +21823,7 @@ static bake_test_suite suites[] = {
         "AsyncBlock",
         AsyncBlock_setup,
         NULL,
-        92,
+        173,
         AsyncBlock_testcases,
         1,
         AsyncBlock_params
@@ -21082,7 +21832,7 @@ static bake_test_suite suites[] = {
         "Input",
         Input_setup,
         NULL,
-        82,
+        84,
         Input_testcases,
         1,
         Input_params
@@ -21145,7 +21895,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        451,
+        471,
         Expr_testcases,
         2,
         Expr_params
@@ -21213,7 +21963,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         Reactivity_setup,
         NULL,
-        177,
+        188,
         Reactivity_testcases,
         1,
         Reactivity_params

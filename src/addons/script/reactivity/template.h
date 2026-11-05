@@ -62,6 +62,8 @@ struct ecs_script_template_t {
     /* Statically known component references used in the template body */
     ecs_vec_t refs;
 
+    ecs_vec_t owned_ids;
+
     uint64_t async_input;
     int32_t symbol_offset;
     int32_t symbol_count;
@@ -90,6 +92,7 @@ struct ecs_script_template_t {
 typedef struct ecs_script_async_block_t {
     ecs_entity_t entity;
     ecs_script_scope_t *scope;
+    uint64_t restart_input;
     int32_t scope_slot;
 } ecs_script_async_block_t;
 
@@ -102,6 +105,14 @@ typedef struct EcsScriptTemplateRoot {
     int32_t generation;
     bool evaluating;
 } EcsScriptTemplateRoot;
+
+#ifdef FLECS_SCRIPT_ASYNC
+/* Stop async blocks that depend on the changed input. Their async statements
+ * are evaluated again as part of the template update, which restarts them. */
+void flecs_script_async_blocks_restart(
+    EcsScriptTemplateRoot *root,
+    uint64_t input);
+#endif
 
 const ecs_member_t* flecs_script_template_parent_member(
     ecs_world_t *world,

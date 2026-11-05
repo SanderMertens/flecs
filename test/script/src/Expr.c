@@ -13957,3 +13957,393 @@ void Expr_partial_nested_initializer(void) {
 
     ecs_fini(world);
 }
+
+void Expr_conditional(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const a: i32 = true ? 1 : 2"
+    LINE "const b: i32 = false ? 1 : 2"
+    LINE "const c: f64 = 2 > 1 ? 1.5 : 2"
+    LINE "const d: i32 = 1 + 2 == 3 ? 3 * 3 : 2 * 2"
+    LINE "const e: string = false ? \"foo\" : \"bar\""
+    LINE "export const r_a = a"
+    LINE "export const r_b = b"
+    LINE "export const r_c = c"
+    LINE "export const r_d = d"
+    LINE "export const r_e = e";
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_int(*(int32_t*)ecs_const_var_get(world, ecs_lookup(world, "r_a")).ptr, 1);
+    test_int(*(int32_t*)ecs_const_var_get(world, ecs_lookup(world, "r_b")).ptr, 2);
+    test_flt(*(double*)ecs_const_var_get(world, ecs_lookup(world, "r_c")).ptr, 1.5);
+    test_int(*(int32_t*)ecs_const_var_get(world, ecs_lookup(world, "r_d")).ptr, 9);
+    test_str(*(char**)ecs_const_var_get(world, ecs_lookup(world, "r_e")).ptr, "bar");
+
+    ecs_fini(world);
+}
+
+void Expr_conditional_nested(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "false ? 1 : false ? 2 : 3", &v, &desc) != NULL);
+    test_uint(*(uint64_t*)v.ptr, 3);
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    v = (ecs_value_t){0};
+    test_assert(ecs_expr_run(world, "true ? false ? 1 : 2 : 3", &v, &desc) != NULL);
+    test_uint(*(uint64_t*)v.ptr, 2);
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    v = (ecs_value_t){0};
+    test_assert(ecs_expr_run(world, "(true ? 1 : 2) + 1", &v, &desc) != NULL);
+    test_uint(*(uint64_t*)v.ptr, 2);
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_conditional_non_bool_condition(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "5 ? 1 : 2", &v, &desc) != NULL);
+    test_uint(*(uint64_t*)v.ptr, 1);
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    v = (ecs_value_t){0};
+    test_assert(ecs_expr_run(world, "0 ? 1 : 2", &v, &desc) != NULL);
+    test_uint(*(uint64_t*)v.ptr, 2);
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+static int32_t expr_conditional_count = 0;
+
+static void expr_conditional_func(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)ctx;
+    (void)argc;
+    expr_conditional_count ++;
+    *(int32_t*)result->ptr = *(int32_t*)argv[0].ptr;
+}
+
+void Expr_conditional_evaluates_one_branch(void) {
+    ecs_world_t *world = ecs_init();
+
+    expr_conditional_count = 0;
+
+    ecs_function(world, {
+        .name = "count_call",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = expr_conditional_func
+    });
+
+    const char *expr =
+    HEAD "export mut flag: bool = true"
+    LINE "export const a: i32 = flag ? count_call(1) : count_call(2)";
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_int(*(int32_t*)ecs_const_var_get(world, ecs_lookup(world, "a")).ptr, 1);
+    test_int(expr_conditional_count, 1);
+
+    ecs_fini(world);
+}
+
+void Expr_conditional_collection_branches(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct P(x: i32)"
+    LINE "const flag: bool = false"
+    LINE "const v = flag ? [1, 2] : [3, 4]"
+    LINE "e { P: {v[1]} }";
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    const int32_t *r = ecs_get_id(world,
+        ecs_lookup(world, "e"), ecs_lookup(world, "P"));
+    test_assert(r != NULL);
+    test_int(*r, 4);
+
+    ecs_fini(world);
+}
+
+void Expr_conditional_unify_types(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "true ? 1 : 2.5", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_f64_t));
+    test_flt(*(double*)v.ptr, 1);
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_error_conditional(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "true ? 1", &v, &desc) == NULL);
+    test_assert(ecs_expr_run(world, "true ? : 1", &v, &desc) == NULL);
+    test_assert(ecs_expr_run(world, "true ? 1 :", &v, &desc) == NULL);
+
+    ecs_fini(world);
+}
+
+void Expr_bitwise_xor(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "1 ^ 3", &v, &desc) != NULL);
+    test_uint(*(uint64_t*)v.ptr, 2);
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_bitwise_xor_precedence(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const a: i32 = 1 | 3 ^ 3"
+    LINE "export const b: i32 = 7 ^ 3 & 1"
+    LINE "export const c: i32 = 1 ^ 1 == 1";
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_int(*(int32_t*)ecs_const_var_get(world, ecs_lookup(world, "a")).ptr, 1);
+    test_int(*(int32_t*)ecs_const_var_get(world, ecs_lookup(world, "b")).ptr, 6);
+    test_int(*(int32_t*)ecs_const_var_get(world, ecs_lookup(world, "c")).ptr, 0);
+
+    ecs_fini(world);
+}
+
+void Expr_bitwise_xor_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export mut m: i32 = 5"
+    LINE "async {"
+    LINE "  m = m ^ 1"
+    LINE "}";
+    ecs_entity_t s = ecs_script(world, { .code = expr, .ir = ir_enabled });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "m")).ptr, 4);
+
+    ecs_fini(world);
+}
+
+void Expr_bitwise_not(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const a_i8: flecs.meta.i8 = 1"
+    LINE "const a_u8: flecs.meta.u8 = 1"
+    LINE "const a_i32: i32 = 1"
+    LINE "const a_u32: u32 = 1"
+    LINE "const a_i64: i64 = 1"
+    LINE "const a_u64: u64 = 1"
+    LINE "export const r_i8 = ~a_i8"
+    LINE "export const r_u8 = ~a_u8"
+    LINE "export const r_i32 = ~a_i32"
+    LINE "export const r_u32 = ~a_u32"
+    LINE "export const r_i64 = ~a_i64"
+    LINE "export const r_u64 = ~a_u64";
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_int(*(int8_t*)ecs_const_var_get(world, ecs_lookup(world, "r_i8")).ptr, -2);
+    test_int(*(uint8_t*)ecs_const_var_get(world, ecs_lookup(world, "r_u8")).ptr, 254);
+    test_int(*(int32_t*)ecs_const_var_get(world, ecs_lookup(world, "r_i32")).ptr, -2);
+    test_uint(*(uint32_t*)ecs_const_var_get(world, ecs_lookup(world, "r_u32")).ptr, 4294967294u);
+    test_int(*(int64_t*)ecs_const_var_get(world, ecs_lookup(world, "r_i64")).ptr, -2);
+    test_uint(*(uint64_t*)ecs_const_var_get(world, ecs_lookup(world, "r_u64")).ptr, ~(uint64_t)1);
+
+    ecs_fini(world);
+}
+
+void Expr_bitwise_not_precedence(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const a: i32 = ~1 & 7"
+    LINE "export const b: i32 = ~(1 | 2) & 7"
+    LINE "export const c: i32 = ~~5";
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_int(*(int32_t*)ecs_const_var_get(world, ecs_lookup(world, "a")).ptr, 6);
+    test_int(*(int32_t*)ecs_const_var_get(world, ecs_lookup(world, "b")).ptr, 4);
+    test_int(*(int32_t*)ecs_const_var_get(world, ecs_lookup(world, "c")).ptr, 5);
+
+    ecs_fini(world);
+}
+
+void Expr_bitwise_not_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export mut m: i32 = 5"
+    LINE "async {"
+    LINE "  m = ~m"
+    LINE "}";
+    ecs_entity_t s = ecs_script(world, { .code = expr, .ir = ir_enabled });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "m")).ptr, -6);
+
+    ecs_fini(world);
+}
+
+void Expr_bitwise_not_literal(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "~0", &v, &desc) != NULL);
+    test_uint(*(uint64_t*)v.ptr, ~(uint64_t)0);
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_error_bitwise_invalid_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "~1.5", &v, &desc) == NULL);
+    test_assert(ecs_expr_run(world, "~\"foo\"", &v, &desc) == NULL);
+    test_assert(ecs_expr_run(world, "~true", &v, &desc) == NULL);
+    test_assert(ecs_expr_run(world, "1.5 ^ 2", &v, &desc) == NULL);
+
+    ecs_fini(world);
+}
+
+void Expr_match_multiple_patterns(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export mut in_1: i32 = 1"
+    LINE "export mut in_2: i32 = 2"
+    LINE "export mut in_3: i32 = 3"
+    LINE "export mut in_4: i32 = 4"
+    LINE "export mut in_5: i32 = 5"
+    LINE "export mut r_1: i32 = 0"
+    LINE "export mut r_2: i32 = 0"
+    LINE "export mut r_3: i32 = 0"
+    LINE "export mut r_4: i32 = 0"
+    LINE "export mut r_5: i32 = 0"
+    LINE "async {"
+    LINE "  r_1 = match in_1 { 1, 2: 10; 3, 4: 20; _: 30 }"
+    LINE "  r_2 = match in_2 { 1, 2: 10; 3, 4: 20; _: 30 }"
+    LINE "  r_3 = match in_3 { 1, 2: 10; 3, 4: 20; _: 30 }"
+    LINE "  r_4 = match in_4 { 1, 2: 10; 3, 4: 20; _: 30 }"
+    LINE "  r_5 = match in_5 { 1, 2: 10; 3, 4: 20; _: 30 }"
+    LINE "}";
+    ecs_entity_t s = ecs_script(world, { .code = expr, .ir = ir_enabled });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "r_1")).ptr, 10);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "r_2")).ptr, 10);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "r_3")).ptr, 20);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "r_4")).ptr, 20);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "r_5")).ptr, 30);
+
+    ecs_fini(world);
+}
+
+void Expr_match_multiple_patterns_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const a: i32 = match 2 {"
+    LINE "  1, 2, 3: 10"
+    LINE "  4: 20"
+    LINE "}"
+    LINE "export const b: i32 = match 3 {"
+    LINE "  1,"
+    LINE "  2: 10"
+    LINE "  3,"
+    LINE "  4: 20"
+    LINE "}";
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_int(*(int32_t*)ecs_const_var_get(world, ecs_lookup(world, "a")).ptr, 10);
+    test_int(*(int32_t*)ecs_const_var_get(world, ecs_lookup(world, "b")).ptr, 20);
+
+    ecs_fini(world);
+}
+
+void Expr_match_multiple_patterns_enum(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "enum Color(Red, Green, Blue)"
+    LINE "export mut color: Color = Green"
+    LINE "export mut r: i32 = 0"
+    LINE "async {"
+    LINE "  r = match color { Red, Green: 1; Blue: 2 }"
+    LINE "}";
+    ecs_entity_t s = ecs_script(world, { .code = expr, .ir = ir_enabled });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "r")).ptr, 1);
+
+    ecs_fini(world);
+}
+
+void Expr_match_multiple_patterns_no_match(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    const char *expr =
+    HEAD "export mut x: i32 = 5"
+    LINE "export mut r: i32 = 0"
+    LINE "async {"
+    LINE "  r = match x { 1, 2: 10 }"
+    LINE "}";
+    ecs_entity_t s = ecs_script(world, { .code = expr, .ir = ir_enabled });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "r")).ptr, 0);
+
+    ecs_fini(world);
+}
+
+void Expr_error_match_multiple_patterns(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "match 1 { 1, }", &v, &desc) == NULL);
+    test_assert(ecs_expr_run(world, "match 1 { 1, : 2 }", &v, &desc) == NULL);
+    test_assert(ecs_expr_run(world, "match 1 { 1, _: 2 }", &v, &desc) == NULL);
+    test_assert(ecs_expr_run(world, "match 1 { _, 1: 2 }", &v, &desc) == NULL);
+
+    ecs_fini(world);
+}

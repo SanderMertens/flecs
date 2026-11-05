@@ -31,6 +31,9 @@ typedef enum ecs_script_node_kind_t {
     EcsAstAwait,
     EcsAstTry,
     EcsAstContinue,
+    EcsAstBreak,
+    EcsAstCall,
+    EcsAstEmit,
     EcsAstAsync,
     EcsAstWhile,
     EcsAstAssign
@@ -137,6 +140,7 @@ struct ecs_script_entity_t {
     int32_t kind_sp;
     int32_t symbol;
     bool is_type;
+    bool is_event;
 };
 
 typedef struct ecs_script_with_t {
@@ -190,6 +194,7 @@ typedef struct ecs_script_var_node_t {
     const char *type;
     bool type_is_template;
     bool type_is_vector;
+    int32_t type_count;     /* -1 for vector, >0 for array, 0 for neither */
     ecs_expr_node_t *expr;
     ecs_entity_t eval_type;
     ecs_entity_t eval_interface;
@@ -199,6 +204,7 @@ typedef struct ecs_script_var_node_t {
     int32_t computed;
     int32_t base_member;
     bool is_await;
+    bool is_local_mut;
 } ecs_script_var_node_t;
 
 typedef struct ecs_script_await_t {
@@ -209,6 +215,24 @@ typedef struct ecs_script_await_t {
 typedef struct ecs_script_continue_t {
     ecs_script_node_t node;
 } ecs_script_continue_t;
+
+typedef struct ecs_script_break_t {
+    ecs_script_node_t node;
+} ecs_script_break_t;
+
+typedef struct ecs_script_call_t {
+    ecs_script_node_t node;
+    ecs_expr_node_t *expr;
+} ecs_script_call_t;
+
+typedef struct ecs_script_emit_t {
+    ecs_script_node_t node;
+    const char *name;
+    ecs_expr_node_t *expr;
+    ecs_entity_t event;
+    ecs_entity_t eval_type;
+    bool has_payload;
+} ecs_script_emit_t;
 
 typedef struct ecs_script_catch_t {
     const char *error; /* Error entity to catch. NULL for catch-all clause. */
@@ -226,6 +250,8 @@ typedef struct ecs_script_try_t {
 typedef struct ecs_script_async_t {
     ecs_script_node_t node;
     ecs_script_scope_t *scope;
+    uint64_t restart_input;
+    ecs_vec_t events; /* vec<ecs_entity_t>, events awaited by the block */
 } ecs_script_async_t;
 
 typedef struct ecs_script_while_t {
@@ -234,16 +260,31 @@ typedef struct ecs_script_while_t {
     ecs_script_scope_t *scope;
 } ecs_script_while_t;
 
+#define FLECS_SCRIPT_ASSIGN_INDEX_MAX (8)
+#define FLECS_SCRIPT_PROC_DEPTH_MAX (64)
+
+typedef struct ecs_script_assign_step_t {
+    const char *member;    /* Member path, NULL if step is an index */
+    ecs_expr_node_t *index;
+    int32_t offset;        /* Offset of member(s) in value */
+    int32_t elem_size;
+    int32_t count;         /* Array size, 0 for vectors */
+    int32_t reg;           /* Register with index value, used by IR */
+} ecs_script_assign_step_t;
+
 typedef struct ecs_script_assign_t {
     ecs_script_node_t node;
     const char *name;
+    ecs_vec_t steps;       /* vec<ecs_script_assign_step_t> */
     ecs_expr_node_t *expr;
     ecs_entity_t eval_type;
+    ecs_entity_t root_type;
     ecs_entity_t component;
     ecs_entity_t global;
     int32_t offset;
     int32_t sp;
     bool parent;
+    bool local;
 } ecs_script_assign_t;
 
 typedef struct ecs_script_if_t {
@@ -288,6 +329,7 @@ typedef struct ecs_script_function_node_t {
     ecs_expr_node_t *return_expr;
     ecs_entity_t eval_return_type;
     int32_t symbol;
+    bool is_proc;
 } ecs_script_function_node_t;
 
 bool flecs_scope_is_empty(
@@ -334,6 +376,16 @@ ecs_script_await_t* flecs_script_insert_await(
 
 ecs_script_continue_t* flecs_script_insert_continue(
     ecs_parser_t *parser);
+
+ecs_script_break_t* flecs_script_insert_break(
+    ecs_parser_t *parser);
+
+ecs_script_call_t* flecs_script_insert_call(
+    ecs_parser_t *parser);
+
+ecs_script_emit_t* flecs_script_insert_emit(
+    ecs_parser_t *parser,
+    const char *name);
 
 ecs_script_try_t* flecs_script_insert_try(
     ecs_parser_t *parser);

@@ -22,6 +22,10 @@ struct ecs_script_future_t {
     ecs_script_future_status_t status;
 };
 
+#ifndef FLECS_SCRIPT_EVENT_QUEUE_MAX
+#define FLECS_SCRIPT_EVENT_QUEUE_MAX (1024)
+#endif
+
 ecs_expr_function_t* flecs_script_await_call(
     ecs_script_eval_visitor_t *v,
     const ecs_script_node_t *stmt,
@@ -92,6 +96,18 @@ void flecs_script_async_tasks_free(
 
 void flecs_script_async_cleanup(
     ecs_script_eval_visitor_t *v);
+
+/* Make an event type awaitable */
+int flecs_script_event_register(
+    ecs_world_t *world,
+    ecs_entity_t event);
+
+/* Send an event to all tasks that are subscribed to it. Does not suspend. */
+void flecs_script_event_emit(
+    ecs_world_t *world,
+    ecs_entity_t event,
+    ecs_entity_t type,
+    const void *value);
 
 #endif // FLECS_SCRIPT_ASYNC
 #endif // FLECS_SCRIPT_ASYNC_PRIVATE_H

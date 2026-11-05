@@ -229,6 +229,13 @@ static void flecs_expr_match_to_str(
         ecs_expr_match_element_t *elem = &elems[i];
         flecs_expr_node_to_str(v, elem->compare);
 
+        while (!elem->expr) {
+            i ++;
+            elem = &elems[i];
+            ecs_strbuf_appendlit(v->buf, ", ");
+            flecs_expr_node_to_str(v, elem->compare);
+        }
+
         ecs_strbuf_appendlit(v->buf, ": ");
 
         flecs_expr_node_to_str(v, elem->expr);

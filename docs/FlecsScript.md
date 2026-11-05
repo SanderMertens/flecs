@@ -362,6 +362,7 @@ The following operators are supported in expressions, in order of precedence:
 | **Symbol** | **Description**        | **Example**            |
 |------------|------------------------|------------------------|
 | `!`        | Logical NOT            | `!10`                  |
+| `~`        | Bitwise NOT            | `~10`                  |
 | `*`        | Multiplication         | `10 * 20`              |
 | `/`        | Division               | `10 / 20`              |
 | `%`        | Modulus                | `10 % 3`               |
@@ -376,9 +377,11 @@ The following operators are supported in expressions, in order of precedence:
 | `==`       | Equality               | `10 == 20`             |
 | `!=`       | Not equal              | `10 != 20`             |
 | `&`        | Bitwise AND            | `2 & 6`                |
+| `^`        | Bitwise XOR            | `2 ^ 6`                |
 | `\|`       | Bitwise OR             | `2 \| 4`               |
 | `&&`       | Logical AND            | `true && false`        |
 | `\|\|`     | Logical OR             | `true \|\| false`      |
+| `? :`      | Conditional            | `true ? 10 : 20`       |
 
 ### Values
 The following table lists the different kinds of values that are supported in expressions:
@@ -449,6 +452,19 @@ Tree: {color: color, height: height}
 Tree: {color: $, height: $}
 ```
 
+### Conditional expressions
+A conditional expression selects one of two values. Only the selected branch is evaluated. The condition is cast to `bool`, and the branches follow the same type rules as the cases of a match expression:
+
+```cpp
+const people = 100
+const crowded = people > 50
+
+// leak will be assigned with value 10
+const leak = crowded ? people * 0.1 : 0
+```
+
+Conditional expressions have the lowest precedence of all operators and are right associative. Add a space between `?` and a collection value, as `?[` is the token that checks if an entity has a component.
+
 ### Match expressions
 Match expressions can be used to conditionally assign a value. An example:
 
@@ -460,6 +476,18 @@ const y = match x {
   1: 10
   2: 20
   3: 30
+}
+```
+
+A case can list multiple patterns, separated by commas:
+
+```cpp
+const x = 2
+
+// y will be assigned with value 10
+const y = match x {
+  1, 2: 10
+  3, 4: 20
 }
 ```
 
@@ -724,6 +752,7 @@ Unary expressions have a single operand, with the operator preceding it. The fol
 | **Operator** | **Expression Type**     |
 |--------------|-------------------------|
 | `!`          | `bool`                  |
+| `~`          | Same as operand.        |
 | `-`          | Same as operand.        |
 
 #### Binary expressions
@@ -745,6 +774,7 @@ Binary expressions have two operands. The following table shows the different bi
 | `==`       | `bool`               | Values               |
 | `!=`       | `bool`               | Values               |
 | `&`        | other (see below)    | Integers             |
+| `^`        | other (see below)    | Integers             |
 | `\|`       | other (see below)    | Integers             |
 | `&&`       | `bool`               | `bool`               |
 | `\|\|`     | `bool`               | `bool`               |
@@ -1675,6 +1705,131 @@ async {
 }
 ```
 
+The compound assignment operators `+=`, `-=`, `*=` and `/=` can be used as a shorthand. `score += 10` behaves exactly like `score = score + 10`, including notifying reactive scripts.
+
+Assignments can target struct members and collection elements, in any combination. Mut variables can be declared with an array type (`T[N]`) or vector type (`T[]`):
+
+```cpp
+struct Ship(state: i32, timer: i32)
+
+export mut ships: Ship[10] = {}
+
+async {
+  ships[2].state = 1
+  ships[2].timer -= 1
+}
+```
+
+Indices are evaluated before the assigned value. Assigning to an index that is out of range is a script error and doesn't change the variable. A write to an exported or template mut variable notifies everything that reads the variable, as if the entire variable was assigned. Compound assignments behave like the long form, so `v[f()] += 1` evaluates `f()` twice, just like `v[f()] = v[f()] + 1`. Elements can't be added to a vector with an index assignment.
+
+Async blocks can declare local mut variables. A local mut variable belongs to a single task and keeps its value across `await`. It follows normal scoping rules, so a variable declared in a loop body is reset on each iteration. Local mut variables are not reactive: writing one doesn't notify anything.
+
+```cpp
+export mut supply: f64 = 0
+
+async {
+  mut total: f64 = 0
+  for i in 0..10 {
+    const power = await fetch_power(i)
+    total += power
+  }
+  supply = total
+}
+```
+
+Async blocks can wait for time to pass with the `next_frame` and `delay` functions in the `flecs.script` module:
+
+```cpp
+using flecs.script
+
+async {
+  while true {
+    await delay(1.5)
+    tick()
+    await next_frame()
+  }
+}
+```
+
+`next_frame()` resolves once per `ecs_progress` call. `delay(seconds)` resolves on the first frame at or after the specified amount of time has passed. A zero or negative duration resolves on the next frame, never in the same frame, so `while true { await delay(0) }` doesn't hang the application.
+
+Delays use scaled world time, so `ecs_set_time_scale` speeds up delays, and a time scale of 0 pauses them. `next_frame()` isn't affected by the time scale. Both functions are resolved by a system in the `EcsPreUpdate` phase of the default pipeline, and are not available in builds without the pipeline addon. Calling `ecs_script_tasks_progress` without `ecs_progress` doesn't advance time.
+
+### Procedures
+A procedure is a reusable block of statements that can be called from async blocks and from other procedures:
+
+```cpp
+export mut alert_text: string = ""
+export mut alert_time: f64 = 0
+
+proc alert(message: string, seconds: f64) {
+  alert_text = message
+  alert_time = seconds
+}
+
+async {
+  alert("A freighter docked", 4)
+}
+```
+
+A procedure body allows the same statements as an async block, like assignments, `if`, `for`, `while`, `const` and local `mut` variables, except for `await` and `try`. Arguments are passed by value. A procedure can read and assign exported mut variables, but not the variables of the block that calls it.
+
+Procedures can only be called as a statement in an async block or in another procedure. Calling a procedure from a template body or from an expression is an error. A procedure can call itself, up to a depth of 64 nested calls, after which the call fails with an error.
+
+### Events
+Async blocks can send each other messages with events. An `event` statement defines an event type with the same syntax as a struct. `emit` sends an event, and `await` waits for it:
+
+```cpp
+event Build(slot: i32)
+
+template Slot {
+  prop idx: i32 = 0
+
+  async {
+    while true {
+      await on.click(this)
+      emit Build(slot: idx)
+    }
+  }
+}
+
+async {
+  while true {
+    const e = await Build
+    build_at(e.slot)
+  }
+}
+```
+
+`emit` doesn't pause the block that sends the event. Events are delivered to all blocks that `await` the event type anywhere in their body, including blocks in templates. A block receives events from the moment it is started, even if it hasn't reached the `await` statement yet. If a block is busy when an event is sent, the event is queued for that block and the next `await` receives it, so no events are lost when several are sent in one frame. Events are received in the order they were sent. An event without members has no value: `await Ping` then evaluates to `true`.
+
+Each block has a queue with a limit of 1024 events per event type (`FLECS_SCRIPT_EVENT_QUEUE_MAX`). When a queue is full, new events for that block are dropped and an error is logged. Emitting an event that no block listens for does nothing. An event that a block emits while another event is queued for it, or that it emits to itself, is received in the next task pass, so a block can't hang the application by emitting the event it awaits.
+
+Queued events of a block are dropped when the block is cancelled or restarted. A block that restarts is subscribed again as soon as the new block is started, which happens as part of the same template update, and receives all events emitted after that.
+
+Script events are regular Flecs events. The event entity is also the event type, and `emit` sends the event to the event entity itself with `ecs_emit`, with the event value as `param`. This means that applications can observe events emitted by a script, and can emit events that async blocks await:
+
+```c
+ecs_entity_t build = ecs_lookup(world, "Build");
+
+// Observe events emitted by scripts
+ecs_observer(world, {
+    .events = { build },
+    .query.terms = {{ .id = EcsAny, .src.id = build }},
+    .callback = OnBuild
+});
+
+// Emit an event that async blocks await
+int32_t slot = 3;
+ecs_emit(world, &(ecs_event_desc_t){
+    .event = build,
+    .entity = build,
+    .const_param = &slot
+});
+```
+
+An event that is emitted without a value is received as a default-initialized value.
+
 ## Control flow
 
 ### If statement
@@ -1805,6 +1960,19 @@ for i in 0..5 {
   }
 
   // creates entities e_0, e_1, e_3 and e_4
+  "e_{i}" {}
+}
+```
+
+A `break` statement exits the innermost `for` or `while` loop:
+
+```cpp
+for i in 0..5 {
+  if i == 2 {
+    break
+  }
+
+  // creates entities e_0 and e_1
   "e_{i}" {}
 }
 ```
@@ -2493,6 +2661,12 @@ RadioGroup() {
 `on.activate` is provided by the `flecs.script.input` module. It resolves when the entity is clicked (like `on.click`), when Enter goes down while the entity has the focus, or when Space comes up after it went down while the entity had the focus. This makes widgets work with both a mouse and a keyboard without handling keys in each widget. The event has the activated `target`, a `keyboard` flag that is `false` for a click, the `local_x` and `local_y` position of a click (`0` for keys), and the `ctrl`, `shift`, `alt` and `meta` modifiers. Like other events, activation propagates to the parents of the activated entity until an async block calls `stop_propagation()`.
 
 Use `parent.active = label` if a local variable masks `active`. Changes to parent muts update reactive output without restarting the child's async blocks; subsequent reads in those blocks use the current parent state.
+
+An async block restarts only when a value that it depends on changes. A block depends on the props, captured variables and component values it reads, on constants derived from those values, and on the loop variables and entity names of the statements it is nested in. Blocks in the same template that don't depend on the changed value keep running and keep their place between awaits.
+
+Reading a `mut` variable of the template, a parent mut or an exported mut variable does not restart a block. The block sees the current value each time it reads the variable. A constant that is declared outside of the block and derived from such a variable is a captured value, so changes to the variable restart blocks that read the constant.
+
+Events are not queued: an event only reaches blocks that are waiting for it when it is emitted. A block that does depend on a changed value is restarted, and can miss an event that is emitted before the new block reaches its `await`. Move values that change frequently out of the block, for example into a child template, if the block must not miss events.
 
 #### Setting props from native code
 To update template props from native code, mirror the template type with a native type that has the same name, namespace and members. An example:

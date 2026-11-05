@@ -122,7 +122,9 @@ const char* flecs_script_node_kind_str(
     case EcsAstTemplate:           return "template";
     case EcsAstProp:               return "prop";
     case EcsAstMut:                return "mut";
-    case EcsAstConst:              return "const";
+    case EcsAstConst:
+        return ((const ecs_script_var_node_t*)node)->is_local_mut
+            ? "mut" : "const";
     case EcsAstExportConst:        return "export const";
     case EcsAstExportMut:          return "export mut";
     case EcsAstEntity:             return "entity";
@@ -134,6 +136,9 @@ const char* flecs_script_node_kind_str(
     case EcsAstAwait:              return "await";
     case EcsAstTry:                return "try";
     case EcsAstContinue:           return "continue";
+    case EcsAstBreak:              return "break";
+    case EcsAstCall:               return "call";
+    case EcsAstEmit:               return "emit";
     case EcsAstAsync:              return "async";
     case EcsAstWhile:              return "while";
     case EcsAstAssign:             return "assign";
@@ -364,6 +369,7 @@ static void flecs_script_stmt_to_str(
         break;
     }
     case EcsAstContinue:
+    case EcsAstBreak:
         break;
     case EcsAstAsync: {
         ecs_script_async_t *stmt = (ecs_script_async_t*)node;
@@ -377,9 +383,29 @@ static void flecs_script_stmt_to_str(
         wrap = true;
         break;
     }
+    case EcsAstCall:
+        flecs_expr_to_str(v, ((ecs_script_call_t*)node)->expr);
+        break;
+    case EcsAstEmit:
+        flecs_scriptbuf_append(v, "%s ", ((ecs_script_emit_t*)node)->name);
+        flecs_expr_to_str(v, ((ecs_script_emit_t*)node)->expr);
+        break;
     case EcsAstAssign: {
         ecs_script_assign_t *stmt = (ecs_script_assign_t*)node;
-        flecs_scriptbuf_append(v, "%s = ", stmt->name);
+        flecs_scriptbuf_append(v, "%s", stmt->name);
+        ecs_script_assign_step_t *steps = ecs_vec_first(&stmt->steps);
+        int32_t i, count = ecs_vec_count(&stmt->steps);
+        for (i = 0; i < count; i ++) {
+            if (steps[i].member) {
+                flecs_scriptbuf_append(v, ".%s", steps[i].member);
+            } else {
+                flecs_scriptbuf_appendstr(v, "[");
+                flecs_expr_to_str(v, steps[i].index);
+                flecs_scriptbuf_appendstr(v, "]");
+            }
+        }
+
+        flecs_scriptbuf_appendstr(v, " = ");
         flecs_expr_to_str(v, stmt->expr);
         break;
     }
@@ -420,7 +446,12 @@ static void flecs_script_stmt_to_str(
                 params[i].name, params[i].type);
         }
 
-        flecs_scriptbuf_append(v, ") -> %s ", fn->return_type);
+        if (fn->is_proc) {
+            flecs_scriptbuf_appendstr(v, ") ");
+        } else {
+            flecs_scriptbuf_append(v, ") -> %s ", fn->return_type);
+        }
+
         flecs_script_scope_to_str(v, fn->body);
         if (fn->return_expr) {
             flecs_expr_to_str(v, fn->return_expr);

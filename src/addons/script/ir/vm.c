@@ -120,6 +120,7 @@ static inline ecs_script_var_t* flecs_ir_var_declare(
     var->type_info = NULL;
     var->sp = vars->vars.count + vars->sp - 1;
     var->is_const = false;
+    var->is_local_mut = false;
     var->owned = false;
     return var;
 }
@@ -1125,6 +1126,22 @@ static int flecs_ir_assign(
     const ecs_type_info_t *ti = ecs_get_type_info(v->world, node->eval_type);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    int64_t indices[FLECS_SCRIPT_ASSIGN_INDEX_MAX];
+    ecs_script_assign_step_t *steps = ecs_vec_first(&node->steps);
+    int32_t i, count = ecs_vec_count(&node->steps), index_count = 0;
+    for (i = 0; i < count; i ++) {
+        if (!steps[i].member && flecs_ir_value_to(vm,
+            flecs_ir_reg(vm, steps[i].reg), ecs_id(ecs_i64_t),
+            &indices[index_count ++], ecs_get_type_info(
+                v->world, ecs_id(ecs_i64_t))))
+        {
+            flecs_ir_expr_error(vm, steps[i].index,
+                "failed to evaluate index for assignment to '%s'",
+                node->name);
+            return -1;
+        }
+    }
+
     const void *src = reg->value.ptr;
     void *tmp = NULL;
     if (reg->value.type != node->eval_type) {
@@ -1140,12 +1157,47 @@ static int flecs_ir_assign(
         src = tmp;
     }
 
-    int result = flecs_script_assign_value(v, node, src);
+    int result = flecs_script_assign_value(v, node, indices, src);
     if (tmp) {
         ecs_ptr_free_w_type_info(v->world, ti, tmp);
     }
 
     return result;
+}
+
+static int flecs_ir_emit_event(
+    ecs_script_ir_vm_t *vm,
+    const ecs_script_ir_op_t *op)
+{
+#ifdef FLECS_SCRIPT_ASYNC
+    ecs_script_eval_visitor_t *v = &vm->v;
+    const ecs_script_emit_t *node = op->node;
+    if (op->a == -1) {
+        bool value = true;
+        flecs_script_event_emit(v->world, node->event, node->eval_type, &value);
+        return 0;
+    }
+
+    ecs_script_ir_reg_t *reg = flecs_ir_reg(vm, op->a);
+    if (reg->value.type == node->eval_type) {
+        flecs_script_event_emit(v->world, node->event, node->eval_type,
+            reg->value.ptr);
+        return 0;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(v->world, node->eval_type);
+    void *tmp = ecs_ptr_new_w_type_info(v->world, ti);
+    int result = flecs_ir_value_to(vm, reg, node->eval_type, tmp, ti);
+    if (!result) {
+        flecs_script_event_emit(v->world, node->event, node->eval_type, tmp);
+    }
+
+    ecs_ptr_free_w_type_info(v->world, ti, tmp);
+    return result;
+#else
+    flecs_ir_error(vm, op->node, "emit requires FLECS_SCRIPT_ASYNC");
+    return -1;
+#endif
 }
 
 static int flecs_ir_load_var(
@@ -1284,6 +1336,7 @@ static int flecs_ir_binary(
         *(T*)out = (T)(l % r); return 0;\
     case EcsTokBitwiseAnd: *(T*)out = (T)(l & r); return 0;\
     case EcsTokBitwiseOr: *(T*)out = (T)(l | r); return 0;\
+    case EcsTokBitwiseXor: *(T*)out = (T)(l ^ r); return 0;\
     case EcsTokShiftLeft: *(T*)out = (T)(l << r); return 0;\
     case EcsTokShiftRight: *(T*)out = (T)(l >> r); return 0;
 
@@ -1390,6 +1443,16 @@ static int flecs_ir_cast(
         .type_info = src->ti,
         .owned = src->owned
     };
+    int32_t src_count, dst_count;
+    if (flecs_value_array_count_mismatch(vm->v.world, dst->value.type,
+        &src->value, &src_count, &dst_count))
+    {
+        flecs_ir_expr_error(vm, node,
+            "cannot assign %d elements to array of %d elements",
+            src_count, dst_count);
+        return -1;
+    }
+
     if (flecs_value_copy_to(vm->v.world, &dst->value, &expr)) {
         flecs_ir_expr_error(vm, node, "failed to cast value");
         return -1;
@@ -2090,6 +2153,15 @@ static flecs_script_run_status_t flecs_ir_exec(
                 res = -1;
             }
             break;
+        case EcsIrBreak:
+            if (flecs_ir_continue(vm)) {
+                vm->pc = op->a;
+            } else {
+                flecs_ir_error(vm, op->node,
+                    "break is only allowed inside a loop");
+                res = -1;
+            }
+            break;
         case EcsIrWhileEnter:
             flecs_ir_frame_push(vm, EcsIrFrameWhile, vm->pc);
             break;
@@ -2100,6 +2172,9 @@ static flecs_script_run_status_t flecs_ir_exec(
             break;
         case EcsIrAssign:
             res = flecs_ir_assign(vm, op);
+            break;
+        case EcsIrEmit:
+            res = flecs_ir_emit_event(vm, op);
             break;
         case EcsIrTryEnter: {
 #ifdef FLECS_SCRIPT_ASYNC

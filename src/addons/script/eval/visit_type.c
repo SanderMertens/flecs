@@ -1398,6 +1398,10 @@ static int flecs_script_type_annot(
     return result;
 }
 
+static void flecs_script_type_await_event(
+    ecs_script_type_visitor_t *t,
+    const ecs_expr_node_t *expr);
+
 static int flecs_script_type_const(
     ecs_script_type_visitor_t *t,
     ecs_script_var_node_t *node)
@@ -1406,7 +1410,8 @@ static int flecs_script_type_const(
         node->node.kind == EcsAstExportMut;
     if (!node->expr) {
         flecs_script_eval_error(t->v, node,
-            "const variable '%s' is missing initializer", node->name);
+            "%s variable '%s' is missing initializer",
+            node->is_local_mut ? "mut" : "const", node->name);
         return -1;
     }
 
@@ -1425,6 +1430,13 @@ static int flecs_script_type_const(
         {
             return -1;
         }
+    }
+
+    if (expected_type && node->type_count) {
+        expected_type = node->type_count == -1
+            ? flecs_script_vector_type(t->v->world, expected_type)
+            : flecs_script_array_type(
+                t->v->world, expected_type, node->type_count);
     }
 
     ecs_entity_t type = expected_type;
@@ -1510,10 +1522,15 @@ static int flecs_script_type_const(
 
     var->value.type = type;
     var->type_info = ecs_get_type_info(t->v->world, type);
-    var->is_const = true;
+    var->is_const = !node->is_local_mut;
+    var->is_local_mut = node->is_local_mut;
     node->sp = var->sp;
 
     if (node->is_await) {
+        flecs_script_type_await_event(t, node->expr);
+    }
+
+    if (node->is_await || node->is_local_mut) {
         return 0;
     }
 
@@ -1565,6 +1582,12 @@ static int flecs_script_type_template_var(
         {
             return -1;
         }
+    }
+
+    if (type && node->type_count) {
+        type = node->type_count == -1
+            ? flecs_script_vector_type(t->v->world, type)
+            : flecs_script_array_type(t->v->world, type, node->type_count);
     }
 
     if (type && t->v->template && type == t->v->template->props.type) {
@@ -1907,6 +1930,9 @@ static int flecs_script_type_function(
         goto done;
     }
 
+    ecs_get_mut(t->v->world, fn_entity, EcsScriptFunction)->is_proc =
+        node->is_proc;
+
     flecs_script_symbol_set(t->v, node->symbol, fn_entity);
     if (flecs_script_type_ensure_entities(t)) {
         goto done;
@@ -1918,7 +1944,12 @@ static int flecs_script_type_function(
         &t->v->base.script->unresolved_refs);
     int32_t prev_skip_count = t->skip_count;
     bool old_function_scope = t->function_scope;
-    t->function_scope = true;
+    bool old_async_scope = t->async_scope, old_proc_scope = t->proc_scope;
+    int32_t old_for_depth = t->for_depth;
+    t->function_scope = !node->is_proc;
+    t->async_scope = node->is_proc;
+    t->proc_scope = node->is_proc;
+    t->for_depth = 0;
     result = flecs_script_type_scope(t, node->body, table, false, false);
     if (!result && node->return_expr) {
         ecs_entity_t return_type = node->eval_return_type;
@@ -1927,6 +1958,9 @@ static int flecs_script_type_function(
     }
 
     t->function_scope = old_function_scope;
+    t->async_scope = old_async_scope;
+    t->proc_scope = old_proc_scope;
+    t->for_depth = old_for_depth;
     if (!result && t->skip_count == prev_skip_count &&
         ecs_vec_count(&t->v->base.script->unresolved_refs) == prev_unresolved)
     {
@@ -2145,6 +2179,16 @@ static int flecs_script_type_entity(
         if (node->symbol != -1) {
             flecs_script_symbol_set(t->v, node->symbol, out);
         }
+
+#ifdef FLECS_SCRIPT_ASYNC
+        if (node->is_event &&
+            flecs_script_event_register(t->v->world, out))
+        {
+            flecs_script_eval_error(t->v, node,
+                "failed to register event '%s'", node->name);
+            return -1;
+        }
+#endif
     }
 
     return 0;
@@ -2303,8 +2347,11 @@ static int flecs_script_type_async(
     int32_t old_for_depth = t->for_depth;
     t->for_depth = 0;
     t->async_scope = true;
+    t->async_node = node;
+    ecs_vec_clear(&node->events);
     int result = flecs_script_type_control_scope(t, node->scope);
     t->async_scope = false;
+    t->async_node = NULL;
     t->for_depth = old_for_depth;
     if (in_template) {
         v->vars = ecs_script_vars_pop(v->vars);
@@ -2357,38 +2404,110 @@ static bool flecs_script_type_is_number(
         p->kind != EcsId;
 }
 
-static int flecs_script_type_assign(
+/* Blocks subscribe to the events they await when they are started, so that they
+ * don't miss events before they reach the await statement. */
+static void flecs_script_type_await_event(
     ecs_script_type_visitor_t *t,
-    ecs_script_assign_t *node)
+    const ecs_expr_node_t *expr)
 {
-    ecs_script_eval_visitor_t *v = t->v;
-    if (!t->async_scope) {
-        flecs_script_eval_error(v, node,
-            "assignment is only allowed in async blocks");
+    if (!t->async_node || expr->kind != EcsExprFunction) {
+        return;
+    }
+
+    ecs_entity_t event = ((const ecs_expr_function_t*)expr)->calldata.function;
+    const EcsScriptFunction *f = ecs_get(t->v->world, event, EcsScriptFunction);
+    if (!f || !f->is_event) {
+        return;
+    }
+
+    ecs_vec_t *events = &t->async_node->events;
+    ecs_entity_t *array = ecs_vec_first(events);
+    int32_t i, count = ecs_vec_count(events);
+    for (i = 0; i < count; i ++) {
+        if (array[i] == event) {
+            return;
+        }
+    }
+
+    ecs_vec_append_t(&t->v->base.script->allocator, events, ecs_entity_t)[0] =
+        event;
+}
+
+static int flecs_script_type_emit(
+    ecs_script_type_visitor_t *t,
+    ecs_script_emit_t *node)
+{
+    ecs_world_t *world = t->v->world;
+    flecs_script_symbol_t symbol = {0};
+    const EcsScriptFunction *f = NULL;
+    if (!flecs_script_type_lookup(
+        t, 0, node->name, FlecsScriptLookupAll, NULL, &symbol) && symbol.entity)
+    {
+        f = ecs_get(world, symbol.entity, EcsScriptFunction);
+    }
+
+    if (!f || !f->is_event) {
+        flecs_script_eval_error(t->v, node,
+            "cannot emit '%s': not an event", node->name);
         return -1;
     }
 
-    ecs_script_template_t *template = v->template;
-    ecs_script_var_t *var = ecs_script_vars_lookup(v->vars, node->name);
-    bool qualified = !ecs_os_strncmp(node->name, "parent.", 7);
-    ecs_entity_t component = 0;
-    const ecs_member_t *m = NULL;
-    node->parent = false;
-    node->global = 0;
-    if ((!var || qualified) && template && template->parent_type) {
-        const char *name = qualified ? node->name + 7 : node->name;
-        if (strchr(name, '.')) {
-            flecs_script_eval_error(v, node,
-                "assignment requires a mut variable name");
+    node->event = symbol.entity;
+    node->eval_type = f->return_type;
+    node->has_payload = node->eval_type == symbol.entity;
+    if (!node->has_payload) {
+        if (node->expr->kind != EcsExprEmptyInitializer) {
+            flecs_script_eval_error(t->v, node,
+                "cannot emit '%s' with a value: event has no members",
+                node->name);
             return -1;
         }
 
-        m = flecs_script_template_parent_member(
-            v->world, template, name, &component);
-        if (m && component != template->parent_type) {
-            node->parent = true;
-        } else {
-            m = NULL;
+        return 0;
+    }
+
+    ecs_entity_t type = node->eval_type;
+    int result = flecs_script_type_check_expr(t, &node->expr, &type);
+    if (result == 1) {
+        node->node.skip = true;
+        return 0;
+    }
+
+    return result;
+}
+
+typedef struct flecs_script_assign_root_t {
+    ecs_script_var_t *var;
+    const ecs_member_t *member;
+    ecs_entity_t component;
+    ecs_entity_t global_type;
+} flecs_script_assign_root_t;
+
+static bool flecs_script_type_assign_root(
+    ecs_script_type_visitor_t *t,
+    ecs_script_assign_t *node,
+    const char *name,
+    flecs_script_assign_root_t *root)
+{
+    ecs_script_eval_visitor_t *v = t->v;
+    ecs_script_template_t *template = v->template;
+    ecs_script_var_t *var = ecs_script_vars_lookup(v->vars, name);
+    bool qualified = !ecs_os_strncmp(name, "parent.", 7);
+    ecs_entity_t component = 0;
+    const ecs_member_t *m = NULL;
+    node->local = var && !qualified && var->is_local_mut;
+    node->parent = false;
+    node->global = 0;
+    if ((!var || qualified) && template && template->parent_type) {
+        const char *parent_name = qualified ? name + 7 : name;
+        if (!strchr(parent_name, '.')) {
+            m = flecs_script_template_parent_member(
+                v->world, template, parent_name, &component);
+            if (m && component != template->parent_type) {
+                node->parent = true;
+            } else {
+                m = NULL;
+            }
         }
     }
 
@@ -2405,13 +2524,13 @@ static int flecs_script_type_assign(
         }
     }
 
-    ecs_value_t global = {0};
     if (!m && !var) {
         ecs_expr_eval_desc_t desc = flecs_script_expr_desc(v, 0);
         flecs_script_symbol_t symbol;
         ecs_id_t global_component = 0;
+        ecs_value_t global = {0};
         if (!flecs_script_symbol_lookup(&v->base.script->pub, &desc, 0,
-            node->name, FlecsScriptLookupEntity, &symbol) &&
+            name, FlecsScriptLookupEntity, &symbol) &&
             symbol.kind == FlecsScriptSymbolGlobalVariable)
         {
             global = flecs_script_global_var_get(
@@ -2420,49 +2539,211 @@ static int flecs_script_type_assign(
 
         if (global_component == ecs_id(EcsScriptMutVar)) {
             node->global = symbol.entity;
+            root->global_type = global.type;
         }
     }
 
-    if (!m && !node->global) {
+    root->var = var;
+    root->member = m;
+    root->component = component;
+    return m || var || node->global;
+}
+
+static int flecs_script_type_assign_member(
+    ecs_script_type_visitor_t *t,
+    ecs_script_assign_t *node,
+    const char *member,
+    ecs_entity_t *type,
+    int32_t *offset)
+{
+    ecs_world_t *world = t->v->world;
+    if (ecs_has(world, *type, EcsStruct)) {
+        ecs_meta_cursor_t cur = ecs_meta_cursor(world, *type, NULL);
+        if (!ecs_meta_push(&cur) && !ecs_meta_try_dotmember(&cur, member)) {
+            *type = ecs_meta_get_type(&cur);
+            *offset += flecs_ito(int32_t,
+                (uintptr_t)ecs_meta_get_ptr(&cur));
+            return 0;
+        }
+    }
+
+    flecs_script_eval_error(t->v, node,
+        "cannot assign to '%s': type '%s' has no member '%s'", node->name,
+        flecs_errstr(ecs_get_path(world, *type)), member);
+    return -1;
+}
+
+static int flecs_script_type_assign_steps(
+    ecs_script_type_visitor_t *t,
+    ecs_script_assign_t *node,
+    ecs_entity_t *type)
+{
+    ecs_world_t *world = t->v->world;
+    ecs_script_assign_step_t *steps = ecs_vec_first(&node->steps);
+    int32_t i, count = ecs_vec_count(&node->steps), index_count = 0;
+    for (i = 0; i < count; i ++) {
+        ecs_script_assign_step_t *step = &steps[i];
+        if (step->member) {
+            step->offset = 0;
+            if (flecs_script_type_assign_member(
+                t, node, step->member, type, &step->offset))
+            {
+                return -1;
+            }
+
+            continue;
+        }
+
+        if (++ index_count > FLECS_SCRIPT_ASSIGN_INDEX_MAX) {
+            flecs_script_eval_error(t->v, node,
+                "cannot assign to '%s': too many indices", node->name);
+            return -1;
+        }
+
+        const EcsArray *array = ecs_get(world, *type, EcsArray);
+        const EcsVector *vector = ecs_get(world, *type, EcsVector);
+        if (!array && !vector) {
+            flecs_script_eval_error(t->v, node,
+                "cannot assign to '%s': type '%s' is not an array or vector",
+                node->name, flecs_errstr(ecs_get_path(world, *type)));
+            return -1;
+        }
+
+        *type = array ? array->type : vector->type;
+        step->count = array ? array->count : 0;
+
+        const ecs_type_info_t *ti = ecs_get_type_info(world, *type);
+        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+        step->elem_size = ti->size;
+
+        ecs_entity_t index_type = ecs_id(ecs_i64_t);
+        int result = flecs_script_type_check_expr(t, &step->index, &index_type);
+        if (result) {
+            return result;
+        }
+
+        if (!flecs_script_type_is_number(world, index_type)) {
+            flecs_script_eval_error(t->v, node,
+                "cannot assign to '%s': index of type %s is not a number",
+                node->name, flecs_errstr(ecs_get_path(world, index_type)));
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+static int flecs_script_type_assign(
+    ecs_script_type_visitor_t *t,
+    ecs_script_assign_t *node)
+{
+    ecs_script_eval_visitor_t *v = t->v;
+    if (!t->async_scope) {
+        flecs_script_eval_error(v, node,
+            "assignment is only allowed in async blocks");
+        return -1;
+    }
+
+    char *name = ecs_os_strdup(node->name);
+    int result = -1;
+
+    /* The name can contain members, and the name of an exported variable can
+     * contain a module path. Find the longest prefix that is a variable. */
+    flecs_script_assign_root_t root = {0};
+    char *member = NULL;
+    bool found;
+    while (!(found = flecs_script_type_assign_root(t, node, name, &root))) {
+        char *dot = strrchr(name, '.');
+        if (!dot) {
+            break;
+        }
+
+        if (member) {
+            member[-1] = '.';
+        }
+
+        dot[0] = '\0';
+        member = dot + 1;
+    }
+
+    if (!found || (!root.member && !node->global && !node->local)) {
         flecs_script_eval_error(v, node,
             "cannot assign to '%s': only mut variables of a template or "
             "exported mut variables can be assigned", node->name);
-        return -1;
+        goto done;
     }
 
-    ecs_entity_t var_type = node->global ? global.type
-        : node->parent ? m->type : var->value.type;
+    ecs_script_template_t *template = v->template;
+    ecs_entity_t var_type = node->global ? root.global_type
+        : node->parent ? root.member->type
+        : root.var->value.type;
     int32_t sp = node->global ? -1
-        : node->parent ? template->parent_sp : var->sp;
-    ecs_entity_t type = var_type;
-    int result = flecs_script_type_check_expr(t, &node->expr, &type);
-    if (result) {
-        if (result == 1) {
+        : node->parent ? template->parent_sp : root.var->sp;
+    int32_t offset = root.member ? root.member->offset : 0;
+
+    ecs_entity_t target_type = var_type;
+    if (member && flecs_script_type_assign_member(
+        t, node, member, &target_type, &offset))
+    {
+        goto done;
+    }
+
+    int steps_result = flecs_script_type_assign_steps(t, node, &target_type);
+    if (steps_result) {
+        if (steps_result == 1) {
             node->node.skip = true;
-            return 0;
+            result = 0;
         }
 
-        return -1;
+        goto done;
     }
 
-    if (type != var_type && (!flecs_script_type_is_number(v->world, var_type) ||
-        !flecs_script_type_is_number(v->world, type)))
+    ecs_entity_t type = target_type;
+    int expr_result = flecs_script_type_check_expr(t, &node->expr, &type);
+    if (expr_result) {
+        if (expr_result == 1) {
+            node->node.skip = true;
+            result = 0;
+        }
+
+        goto done;
+    }
+
+    if (type != target_type &&
+        flecs_expr_is_type_collection(v->world, type) &&
+        flecs_expr_is_type_collection(v->world, target_type))
+    {
+        ecs_expr_cast_t *cast = flecs_expr_cast(
+            &v->base.script->pub, node->expr, target_type);
+        if (!cast) {
+            goto done;
+        }
+
+        node->expr = (ecs_expr_node_t*)cast;
+        type = target_type;
+    }
+
+    if (type != target_type &&
+        (!flecs_script_type_is_number(v->world, target_type) ||
+         !flecs_script_type_is_number(v->world, type)))
     {
         flecs_script_eval_error(v, node,
             "expression of type %s is incompatible with type %s of "
             "variable '%s'",
             flecs_errstr(ecs_get_path(v->world, type)),
-            flecs_errstr_1(ecs_get_path(v->world, var_type)), node->name);
-        return -1;
+            flecs_errstr_1(ecs_get_path(v->world, target_type)), node->name);
+        goto done;
     }
 
-    type = var_type;
-
-    node->eval_type = type;
+    node->eval_type = target_type;
+    node->root_type = var_type;
     node->sp = sp;
-    node->component = node->global ? ecs_id(EcsScriptMutVar) : component;
-    node->offset = m ? m->offset : 0;
-    return 0;
+    node->component = node->global ? ecs_id(EcsScriptMutVar) : root.component;
+    node->offset = offset;
+    result = 0;
+done:
+    ecs_os_free(name);
+    return result;
 }
 
 static int flecs_script_type_node(
@@ -2476,6 +2757,16 @@ static int flecs_script_type_node(
         return -1;
     }
 
+    if (t->proc_scope && (node->kind == EcsAstAwait ||
+        node->kind == EcsAstTry || (node->kind == EcsAstConst &&
+            ((ecs_script_var_node_t*)node)->is_await)))
+    {
+        flecs_script_eval_error(t->v, node,
+            "%s is not allowed in proc body",
+            node->kind == EcsAstTry ? "try" : "await");
+        return -1;
+    }
+
     if (t->async_scope) {
         switch(node->kind) {
         case EcsAstScope:
@@ -2486,6 +2777,9 @@ static int flecs_script_type_node(
         case EcsAstFor:
         case EcsAstWhile:
         case EcsAstContinue:
+        case EcsAstBreak:
+        case EcsAstCall:
+        case EcsAstEmit:
         case EcsAstAssign:
             break;
         default:
@@ -2570,9 +2864,17 @@ static int flecs_script_type_node(
     case EcsAstFunction:
         return flecs_script_type_function(
             t, (ecs_script_function_node_t*)node);
-    case EcsAstAwait:
-        return flecs_script_type_check_expr(t,
+    case EcsAstAwait: {
+        int result = flecs_script_type_check_expr(t,
             &((ecs_script_await_t*)node)->expr, NULL);
+        if (!result) {
+            flecs_script_type_await_event(t, ((ecs_script_await_t*)node)->expr);
+        }
+
+        return result;
+    }
+    case EcsAstEmit:
+        return flecs_script_type_emit(t, (ecs_script_emit_t*)node);
     case EcsAstTry:
         return flecs_script_type_try(t, (ecs_script_try_t*)node);
     case EcsAstContinue:
@@ -2582,10 +2884,26 @@ static int flecs_script_type_node(
             return -1;
         }
         return 0;
+    case EcsAstBreak:
+        if (!t->for_depth) {
+            flecs_script_eval_error(t->v, node,
+                "break is only allowed inside a loop");
+            return -1;
+        }
+        return 0;
     case EcsAstAsync:
         return flecs_script_type_async(t, (ecs_script_async_t*)node);
     case EcsAstWhile:
         return flecs_script_type_while(t, (ecs_script_while_t*)node);
+    case EcsAstCall:
+        if (((ecs_script_call_t*)node)->expr->kind != EcsExprFunction) {
+            flecs_script_eval_error(t->v, node,
+                "expected procedure call");
+            return -1;
+        }
+
+        return flecs_script_type_check_expr(t,
+            &((ecs_script_call_t*)node)->expr, NULL);
     case EcsAstAssign:
         return flecs_script_type_assign(t, (ecs_script_assign_t*)node);
     }

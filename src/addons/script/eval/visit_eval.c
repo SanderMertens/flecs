@@ -2013,6 +2013,35 @@ void flecs_script_user_function_bind(
     }
 }
 
+static void flecs_script_proc_call(
+    ecs_world_t *world,
+    const ecs_script_user_function_t *uf,
+    int32_t argc,
+    const ecs_value_t *argv)
+{
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+    ecs_script_eval_desc_t desc = {
+        .runtime = flecs_script_runtime_acquire_call(runtime)
+    };
+
+    ecs_script_runner_t runner;
+    flecs_script_eval_visit_init(flecs_script_impl(uf->script), &runner.v, &desc);
+    flecs_script_user_function_bind(&runner.v, uf, argc, argv, true);
+    runner.v.force = true;
+    flecs_script_runner_init(&runner, &runner.v);
+
+    bool failed = flecs_script_runner_run_scope(
+        &runner, uf->node->body) != FlecsScriptRunDone;
+
+    runner.v.vars = ecs_script_vars_pop(runner.v.vars);
+    flecs_script_runner_fini(&runner, &desc);
+    flecs_script_runtime_release_call(runtime, desc.runtime);
+
+    if (failed) {
+        flecs_script_runtime_get(world)->error = true;
+    }
+}
+
 void flecs_script_user_function_callback(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
@@ -2035,14 +2064,34 @@ void flecs_script_user_function_callback(
     ecs_script_user_function_t *uf = fcomp->binding_ctx;
     ecs_script_function_node_t *node = uf->node;
     ecs_script_impl_t *impl = flecs_script_impl(uf->script);
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+
+    if (node->is_proc) {
+        if (runtime->proc_depth >= FLECS_SCRIPT_PROC_DEPTH_MAX) {
+            ecs_err("too many nested calls to procedure '%s', "
+                "does the procedure call itself?", node->name);
+            runtime->error = true;
+            return;
+        }
+
+        runtime->proc_depth ++;
+    }
 
     if (impl->ir_enabled) {
         flecs_script_ir_call_function(ctx, uf, argc, argv, result);
+    } else if (node->is_proc) {
+        flecs_script_proc_call(world, uf, argc, argv);
+    }
+
+    if (node->is_proc) {
+        runtime->proc_depth --;
+    }
+
+    if (impl->ir_enabled || node->is_proc) {
         return;
     }
 
     ecs_script_eval_visitor_t v;
-    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
     ecs_script_eval_desc_t desc = {
         .runtime = flecs_script_runtime_acquire_call(runtime)
     };
@@ -2112,7 +2161,7 @@ int flecs_script_eval_function(
     ecs_vec_t fn_refs;
     ecs_vec_init_t(NULL, &fn_refs, ecs_script_ref_t, 0);
 
-    int32_t stmt_count = ecs_vec_count(&node->body->stmts);
+    int32_t stmt_count = node->is_proc ? 0 : ecs_vec_count(&node->body->stmts);
     ecs_script_node_t **stmts = ecs_vec_first(&node->body->stmts);
     for (int32_t i = 0; i < stmt_count; i ++) {
         ecs_script_var_node_t *var = (ecs_script_var_node_t*)stmts[i];
@@ -2154,28 +2203,93 @@ int flecs_script_eval_function(
     return 0;
 }
 
+static void* flecs_script_assign_target(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_assign_t *node,
+    void *base,
+    const int64_t *indices)
+{
+    void *ptr = ECS_OFFSET(base, node->offset);
+    ecs_script_assign_step_t *steps = ecs_vec_first(&node->steps);
+    int32_t i, count = ecs_vec_count(&node->steps), index = 0;
+    for (i = 0; i < count; i ++) {
+        ecs_script_assign_step_t *step = &steps[i];
+        if (step->member) {
+            ptr = ECS_OFFSET(ptr, step->offset);
+            continue;
+        }
+
+        void *array = ptr;
+        int32_t elem_count = step->count;
+        if (!elem_count) {
+            array = ecs_vec_first((ecs_vec_t*)ptr);
+            elem_count = ecs_vec_count((ecs_vec_t*)ptr);
+        }
+
+        int64_t elem = indices[index ++];
+        if (elem < 0 || elem >= elem_count) {
+            flecs_script_eval_error(v, node,
+                "cannot assign to '%s': index %d is out of range for "
+                "collection with %d elements",
+                node->name, (int)elem, elem_count);
+            return NULL;
+        }
+
+        ptr = ECS_ELEM(array, step->elem_size, (int32_t)elem);
+    }
+
+    return ptr;
+}
+
 int flecs_script_assign_value(
     ecs_script_eval_visitor_t *v,
     ecs_script_assign_t *node,
+    const int64_t *indices,
     const void *src)
 {
     ecs_world_t *world = v->world;
+    const ecs_type_info_t *ti = ecs_get_type_info(world, node->eval_type);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (node->local) {
+        ecs_script_var_t *var = ecs_script_vars_from_sp(v->vars, node->sp);
+        ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
+        void *dst = flecs_script_assign_target(
+            v, node, var->value.ptr, indices);
+        if (!dst) {
+            return -1;
+        }
+
+        if (dst != src) {
+            ecs_ptr_copy_w_type_info(world, ti, dst, src);
+        }
+
+        return 0;
+    }
+
     if (node->global) {
         EcsScriptMutVar *mv = NULL;
         if (ecs_is_alive(world, node->global)) {
             mv = ecs_get_mut(world, node->global, EcsScriptMutVar);
         }
 
-        if (!mv || mv->value.type != node->eval_type) {
+        if (!mv || mv->value.type != node->root_type) {
             flecs_script_eval_error(v, node,
                 "cannot assign to '%s': mut variable is no longer alive",
                 node->name);
             return -1;
         }
 
-        const ecs_type_info_t *ti = ecs_get_type_info(world, node->eval_type);
-        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_ptr_copy_w_type_info(world, ti, mv->value.ptr, src);
+        void *dst = flecs_script_assign_target(
+            v, node, mv->value.ptr, indices);
+        if (!dst) {
+            return -1;
+        }
+
+        if (dst != src) {
+            ecs_ptr_copy_w_type_info(world, ti, dst, src);
+        }
+
         ecs_modified(world, node->global, EcsScriptMutVar);
         return 0;
     }
@@ -2197,8 +2311,6 @@ int flecs_script_assign_value(
     ecs_id_t component = node->component;
     ecs_search(world, ecs_get_table(world, instance), component, &component);
 
-    const ecs_type_info_t *ti = ecs_get_type_info(world, node->eval_type);
-    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
     const ecs_type_info_t *comp_ti = ecs_get_type_info(world, component);
     ecs_assert(comp_ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -2206,12 +2318,18 @@ int flecs_script_assign_value(
     ecs_assert(cur != NULL, ECS_INTERNAL_ERROR, NULL);
     void *copy = ecs_ptr_new_w_type_info(world, comp_ti);
     ecs_ptr_copy_w_type_info(world, comp_ti, copy, cur);
-    ecs_ptr_copy_w_type_info(world, ti, ECS_OFFSET(copy, node->offset), src);
-    ecs_set_id(world, instance, component,
-        flecs_ito(size_t, comp_ti->size), copy);
-    ecs_ptr_free_w_type_info(world, comp_ti, copy);
 
-    return 0;
+    int result = -1;
+    void *dst = flecs_script_assign_target(v, node, copy, indices);
+    if (dst) {
+        ecs_ptr_copy_w_type_info(world, ti, dst, src);
+        ecs_set_id(world, instance, component,
+            flecs_ito(size_t, comp_ti->size), copy);
+        result = 0;
+    }
+
+    ecs_ptr_free_w_type_info(world, comp_ti, copy);
+    return result;
 }
 
 static FLECS_SCRIPT_NOINLINE int flecs_script_eval_assign(
@@ -2222,6 +2340,24 @@ static FLECS_SCRIPT_NOINLINE int flecs_script_eval_assign(
     ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
     const ecs_type_info_t *ti = ecs_get_type_info(v->world, type);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int64_t indices[FLECS_SCRIPT_ASSIGN_INDEX_MAX];
+    ecs_script_assign_step_t *steps = ecs_vec_first(&node->steps);
+    int32_t i, count = ecs_vec_count(&node->steps), index_count = 0;
+    for (i = 0; i < count; i ++) {
+        if (steps[i].member) {
+            continue;
+        }
+
+        ecs_value_t index = {
+            .type = ecs_id(ecs_i64_t), .ptr = &indices[index_count ++] };
+        if (flecs_script_eval_expr(v, &steps[i].index, &index)) {
+            flecs_script_eval_error(v, node,
+                "failed to evaluate index for assignment to '%s'",
+                node->name);
+            return -1;
+        }
+    }
 
     ecs_value_t value = { .type = type };
     value.ptr = flecs_stack_calloc(&v->r->stack, ti->size, ti->alignment);
@@ -2234,7 +2370,7 @@ static FLECS_SCRIPT_NOINLINE int flecs_script_eval_assign(
             node->name);
         result = -1;
     } else {
-        result = flecs_script_assign_value(v, node, value.ptr);
+        result = flecs_script_assign_value(v, node, indices, value.ptr);
     }
 
     if (ti->hooks.dtor) {
@@ -2243,6 +2379,60 @@ static FLECS_SCRIPT_NOINLINE int flecs_script_eval_assign(
 
     flecs_stack_free(value.ptr, ti->size);
     return result;
+}
+
+static FLECS_SCRIPT_NOINLINE int flecs_script_eval_emit(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_emit_t *node)
+{
+#ifdef FLECS_SCRIPT_ASYNC
+    if (!node->has_payload) {
+        bool value = true;
+        flecs_script_event_emit(v->world, node->event, node->eval_type, &value);
+        return 0;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(v->world, node->eval_type);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_value_t value = { .type = node->eval_type };
+    value.ptr = flecs_stack_calloc(&v->r->stack, ti->size, ti->alignment);
+    flecs_type_info_ctor(value.ptr, 1, ti);
+
+    int result = 0;
+    if (flecs_script_eval_expr(v, &node->expr, &value)) {
+        flecs_script_eval_error(v, node,
+            "failed to evaluate value for event '%s'", node->name);
+        result = -1;
+    } else {
+        flecs_script_event_emit(
+            v->world, node->event, node->eval_type, value.ptr);
+    }
+
+    if (ti->hooks.dtor) {
+        flecs_type_info_dtor(value.ptr, 1, ti);
+    }
+
+    flecs_stack_free(value.ptr, ti->size);
+    return result;
+#else
+    flecs_script_eval_error(v, node, "emit requires FLECS_SCRIPT_ASYNC");
+    return -1;
+#endif
+}
+
+static FLECS_SCRIPT_NOINLINE int flecs_script_eval_call(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_call_t *node)
+{
+    bool result = false;
+    ecs_value_t value = { .type = ecs_id(ecs_bool_t), .ptr = &result };
+    if (flecs_script_eval_expr(v, &node->expr, &value)) {
+        flecs_script_eval_error(v, node, "procedure call failed");
+        return -1;
+    }
+
+    return 0;
 }
 
 int flecs_script_value_to_bool(
@@ -2359,6 +2549,10 @@ int flecs_script_eval_node(
             "async blocks require FLECS_SCRIPT_ASYNC");
         return -1;
 #endif
+    case EcsAstCall:
+        return flecs_script_eval_call(v, (ecs_script_call_t*)node);
+    case EcsAstEmit:
+        return flecs_script_eval_emit(v, (ecs_script_emit_t*)node);
     case EcsAstAssign:
         return flecs_script_eval_assign(v, (ecs_script_assign_t*)node);
     default:
@@ -2563,6 +2757,11 @@ static int flecs_script_step_scope(
         if (stmt->kind == EcsAstContinue) {
             v->base.nodes[v->base.depth] = stmt;
             return 2;
+        }
+
+        if (stmt->kind == EcsAstBreak) {
+            v->base.nodes[v->base.depth] = stmt;
+            return 3;
         }
 
         if (stmt->kind == EcsAstScope) {
@@ -2847,6 +3046,17 @@ static flecs_script_run_status_t flecs_script_runner_exec(
             if (!flecs_script_runner_continue(r)) {
                 flecs_script_eval_error(&r->v, frame->node,
                     "continue is only allowed inside a loop");
+                if (!flecs_script_runner_unwind(r)) {
+                    return FlecsScriptRunError;
+                }
+            }
+        } else if (res == 3) {
+            if (flecs_script_runner_continue(r)) {
+                flecs_script_frame_leave(r,
+                    flecs_script_frame_at(r, r->frame_count - 1));
+            } else {
+                flecs_script_eval_error(&r->v, frame->node,
+                    "break is only allowed inside a loop");
                 if (!flecs_script_runner_unwind(r)) {
                     return FlecsScriptRunError;
                 }

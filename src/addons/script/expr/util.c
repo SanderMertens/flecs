@@ -117,6 +117,181 @@ flecs_expr_cast_t flecs_expr_cast_handler(
 #undef FLECS_EXPR_CAST_ENTRY
 #undef FLECS_EXPR_CAST_TARGETS
 
+bool flecs_expr_is_type_collection(
+    const ecs_world_t *world,
+    ecs_entity_t type)
+{
+    const EcsType *t = ecs_get(world, type, EcsType);
+    return t && (t->kind == EcsArrayType || t->kind == EcsVectorType ||
+        t->kind == EcsMapType);
+}
+
+static bool flecs_value_collection_elems(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *ptr,
+    ecs_entity_t *elem_type,
+    const void **elems,
+    int32_t *count)
+{
+    const EcsArray *array = ecs_get(world, type, EcsArray);
+    if (array) {
+        *elem_type = array->type;
+        *elems = ptr;
+        *count = array->count;
+        return true;
+    }
+
+    const EcsVector *vector = ecs_get(world, type, EcsVector);
+    if (vector) {
+        const ecs_vec_t *vec = ptr;
+        *elem_type = vector->type;
+        *elems = vec ? vec->array : NULL;
+        *count = vec ? vec->count : 0;
+        return true;
+    }
+
+    return false;
+}
+
+bool flecs_value_array_count_mismatch(
+    const ecs_world_t *world,
+    ecs_entity_t dst_type,
+    const ecs_value_t *src,
+    int32_t *src_count,
+    int32_t *dst_count)
+{
+    const EcsArray *array = ecs_get(world, dst_type, EcsArray);
+    if (!array || src->type == dst_type) {
+        return false;
+    }
+
+    ecs_entity_t elem_type;
+    const void *elems;
+    if (!flecs_value_collection_elems(
+        world, src->type, src->ptr, &elem_type, &elems, src_count))
+    {
+        return false;
+    }
+
+    *dst_count = array->count;
+    return *src_count != *dst_count;
+}
+
+static int flecs_value_copy_elem(
+    ecs_world_t *world,
+    ecs_meta_cursor_t *cur,
+    ecs_entity_t type,
+    const ecs_type_info_t *ti,
+    const void *ptr)
+{
+    ecs_value_t dst = {
+        .type = ecs_meta_get_type(cur),
+        .ptr = ecs_meta_get_ptr(cur)
+    };
+
+    ecs_expr_value_t src = {
+        .value = { .type = type, .ptr = ECS_CONST_CAST(void*, ptr) },
+        .type_info = ti
+    };
+
+    return flecs_value_copy_to(world, &dst, &src);
+}
+
+static int flecs_value_copy_map(
+    ecs_world_t *world,
+    ecs_value_t *dst,
+    const ecs_value_t *src)
+{
+    const EcsMap *src_type = ecs_get(world, src->type, EcsMap);
+    const EcsMap *dst_type = ecs_get(world, dst->type, EcsMap);
+    if (!src_type || !dst_type) {
+        return -1;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, src_type->type);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    bool is_alloc = ti->size > ECS_SIZEOF(ecs_map_val_t);
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, dst->type, dst->ptr);
+    if (ecs_meta_push(&cur)) {
+        return -1;
+    }
+
+    const ecs_map_t *map = src->ptr;
+    if (ecs_map_is_init(map)) {
+        int32_t i = 0;
+        ecs_map_iter_t it = ecs_map_iter(map);
+        while (ecs_map_next(&it)) {
+            if (i ++ && ecs_meta_next(&cur)) {
+                return -1;
+            }
+
+            ecs_map_key_t src_key = ecs_map_key(&it), key = src_key;
+            if (src_type->key_type != dst_type->key_type) {
+                key = 0;
+                flecs_expr_cast_handler(src_type->key_type,
+                    dst_type->key_type)(&key, &src_key);
+            }
+
+            ecs_value_t key_value = { .type = dst_type->key_type, .ptr = &key };
+            if (ecs_meta_key(&cur, &key_value)) {
+                return -1;
+            }
+
+            const void *value = is_alloc ? ecs_map_ptr(&it) : &it.res[1];
+            if (flecs_value_copy_elem(
+                world, &cur, src_type->type, ti, value))
+            {
+                return -1;
+            }
+        }
+    }
+
+    return ecs_meta_pop(&cur);
+}
+
+static int flecs_value_copy_collection(
+    ecs_world_t *world,
+    ecs_value_t *dst,
+    const ecs_value_t *src)
+{
+    if (ecs_has(world, src->type, EcsMap)) {
+        return flecs_value_copy_map(world, dst, src);
+    }
+
+    ecs_entity_t elem_type;
+    const void *elems;
+    int32_t i, count;
+    if (!flecs_value_collection_elems(
+        world, src->type, src->ptr, &elem_type, &elems, &count))
+    {
+        return -1;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, elem_type);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, dst->type, dst->ptr);
+    if (ecs_meta_push(&cur)) {
+        return -1;
+    }
+
+    for (i = 0; i < count; i ++) {
+        if (i && ecs_meta_next(&cur)) {
+            return -1;
+        }
+
+        if (flecs_value_copy_elem(world, &cur, elem_type, ti,
+            ECS_ELEM(elems, ti->size, i)))
+        {
+            return -1;
+        }
+    }
+
+    return ecs_meta_pop(&cur);
+}
+
 int flecs_value_copy_to(
     ecs_world_t *world,
     ecs_value_t *dst,
@@ -144,11 +319,18 @@ int flecs_value_copy_to(
             ecs_ptr_copy_w_type_info(world, ti, dst->ptr, defaults);
             ecs_ptr_free(world, type, defaults);
         }
-    } else if (src->value.type == ecs_id(ecs_bool_t) &&
+    } else if ((src->value.type == ecs_id(ecs_bool_t) ||
+        flecs_expr_is_type_number(src->value.type)) &&
         flecs_expr_is_type_number(dst->type))
     {
         flecs_expr_cast_handler(src->value.type, dst->type)(
             dst->ptr, src->value.ptr);
+    } else if (flecs_expr_is_type_collection(world, src->value.type) &&
+        flecs_expr_is_type_collection(world, dst->type))
+    {
+        if (flecs_value_copy_collection(world, dst, &src->value)) {
+            goto error;
+        }
     } else {
         /* Cast value to desired output type */
         ecs_meta_cursor_t cur = ecs_meta_cursor(world, dst->type, dst->ptr);
@@ -176,6 +358,24 @@ int flecs_value_unary(
         int64_t zero = 0;
         ecs_value_t left = { .type = expr->type, .ptr = &zero };
         return flecs_value_binary(script, NULL, &left, expr, out, EcsTokSub);
+    } else if (operator == EcsTokBitwiseNot) {
+#define FLECS_VALUE_BITWISE_NOT(T)\
+        if (expr->type == ecs_id(T)) {\
+            *(T*)out->ptr = (T)~*(const T*)expr->ptr;\
+            return 0;\
+        }
+        FLECS_VALUE_BITWISE_NOT(ecs_i8_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_i16_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_i32_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_i64_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_iptr_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_u8_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_u16_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_u32_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_u64_t)
+        FLECS_VALUE_BITWISE_NOT(ecs_uptr_t)
+#undef FLECS_VALUE_BITWISE_NOT
+        *(ecs_u32_t*)out->ptr = ~*(const ecs_u32_t*)expr->ptr;
     } else {
         ecs_abort(ECS_INTERNAL_ERROR, "invalid operator for unary expression");
     }
@@ -195,6 +395,7 @@ int flecs_value_unary(
     case EcsTokMod: *(T*)out = (T)(l % r); return 0;\
     case EcsTokBitwiseAnd: *(T*)out = (T)(l & r); return 0;\
     case EcsTokBitwiseOr: *(T*)out = (T)(l | r); return 0;\
+    case EcsTokBitwiseXor: *(T*)out = (T)(l ^ r); return 0;\
     case EcsTokShiftLeft: *(T*)out = (T)(l << r); return 0;\
     case EcsTokShiftRight: *(T*)out = (T)(l >> r); return 0;
 
@@ -281,7 +482,7 @@ int flecs_value_binary(
 
     if (operator == EcsTokAdd || operator == EcsTokSub || operator == EcsTokMul ||
         operator == EcsTokDiv || operator == EcsTokMod || operator == EcsTokBitwiseAnd ||
-        operator == EcsTokBitwiseOr || operator == EcsTokShiftLeft || operator == EcsTokShiftRight)
+        operator == EcsTokBitwiseOr || operator == EcsTokBitwiseXor || operator == EcsTokShiftLeft || operator == EcsTokShiftRight)
     {
         ecs_assert(out->type == right->type, ECS_INTERNAL_ERROR, NULL);
     }
