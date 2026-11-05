@@ -10240,6 +10240,10 @@ void ecs_modified_id(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_assert_entity_valid(world, entity, "modified");
     flecs_assert_component_valid(world, entity, component, "modified");
+    ecs_check(ecs_get_type_info(world, component) != NULL,
+        ECS_INVALID_PARAMETER,
+        "invalid component '%s' for modified(): component cannot be a tag/zero sized",
+            flecs_errstr(ecs_id_str(world, component)));
 
     bool deferred = ecs_is_stage(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
@@ -116665,6 +116669,42 @@ static void flecs_command_set(
     *(ecs_value_t*)result->ptr = value;
 }
 
+static void flecs_command_modified(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)argc;
+    ecs_world_t *world = ctx->world;
+    ecs_entity_t e = flecs_command_arg(argv, 0, ecs_entity_t);
+    ecs_id_t id = flecs_command_arg(argv, 1, ecs_id_t);
+    if (!flecs_command_check_alive(ctx, e) || !flecs_command_check_id(ctx, id)) {
+        return;
+    }
+
+    ecs_entity_t type = ecs_get_typeid(world, id);
+    if (!type) {
+        flecs_command_err(ctx, "'%s' is not a component with a value",
+            flecs_errstr(ecs_id_str(world, id)));
+        return;
+    }
+
+    if (!ecs_has_id(world, e, id)) {
+        flecs_command_err(ctx, "entity '%s' does not have component '%s'",
+            flecs_errstr(ecs_get_path(world, e)),
+            flecs_errstr_1(ecs_id_str(world, id)));
+        return;
+    }
+
+    ecs_modified_id(world, e, id);
+
+    const void *ptr = ecs_get_id(world, e, id);
+    if (ptr) {
+        *(ecs_value_t*)result->ptr = ecs_value_init(world, type, ptr);
+    }
+}
+
 static void flecs_command_add(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
@@ -117115,6 +117155,10 @@ void flecs_command_core_import(
             { "component", id_t, false, "Component" },
             { "value", string_t, false,
                 "Value, partial initializers keep the other members" }}},
+        { "modified", flecs_command_modified, value_t,
+            "Emit modified event for component", {
+            { "entity", entity_t, false, "Entity, $ for singleton" },
+            { "component", id_t, false, "Component" } }},
         { "add", flecs_command_add, id_t, "Add component", {
             { "entity", entity_t, false, "Entity, $ for singleton" },
             { "component", id_t, false, "Component, tag or pair" }}},

@@ -1894,6 +1894,10 @@ void ecs_modified_id(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_assert_entity_valid(world, entity, "modified");
     flecs_assert_component_valid(world, entity, component, "modified");
+    ecs_check(ecs_get_type_info(world, component) != NULL,
+        ECS_INVALID_PARAMETER,
+        "invalid component '%s' for modified(): component cannot be a tag/zero sized",
+            flecs_errstr(ecs_id_str(world, component)));
 
     bool deferred = ecs_is_stage(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);

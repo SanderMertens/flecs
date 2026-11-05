@@ -1653,6 +1653,8 @@
                 "get_mut_pair_second",
                 "modified_w_on_set",
                 "modified_no_component",
+                "modified_tag",
+                "modified_pair_tag",
                 "ensure_w_add_in_on_add",
                 "ensure_w_remove_in_on_add",
                 "ensure_w_realloc_in_on_add",
