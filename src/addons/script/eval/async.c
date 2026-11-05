@@ -1507,44 +1507,7 @@ static void flecs_script_event_cancel(
     }
 }
 
-int flecs_script_event_register(
-    ecs_world_t *world,
-    ecs_entity_t event)
-{
-    const char *name = ecs_get_name(world, event);
-    if (!name) {
-        return -1;
-    }
-
-    ecs_entity_t return_type = event;
-    if (!ecs_get_type_info(world, event)) {
-        if (!ecs_struct_init(world, &(ecs_struct_desc_t){ .entity = event })) {
-            return -1;
-        }
-
-        if (!ecs_get_type_info(world, event)) {
-            return_type = ecs_id(ecs_bool_t);
-        }
-    }
-
-    ecs_entity_t prev_scope = ecs_set_scope(world, 0);
-    ecs_entity_t function = ecs_async_function(world, {
-        .name = name,
-        .parent = ecs_get_parent(world, event),
-        .return_type = return_type,
-        .callback = flecs_script_event_wait,
-        .cancel = flecs_script_event_cancel
-    });
-    ecs_set_scope(world, prev_scope);
-    if (function != event) {
-        return -1;
-    }
-
-    ecs_get_mut(world, event, EcsScriptFunction)->is_event = true;
-    return 0;
-}
-
-void flecs_script_event_emit(
+static void flecs_script_event_deliver(
     ecs_world_t *world,
     ecs_entity_t event,
     ecs_entity_t type,
@@ -1587,6 +1550,101 @@ void flecs_script_event_emit(
             (flecs_script_event_value_t){ .ptr = copy, .pass = rt->event_pass };
         rt->event_queued ++;
     }
+}
+
+static void flecs_script_event_observer(
+    ecs_iter_t *it)
+{
+    ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(it->world));
+    const EcsScriptFunction *f = ecs_get(world, it->event, EcsScriptFunction);
+    if (!f || !f->is_event) {
+        return;
+    }
+
+    ecs_entity_t type = f->return_type;
+    if (type != it->event) {
+        bool value = true;
+        flecs_script_event_deliver(world, it->event, type, &value);
+        return;
+    }
+
+    if (it->param) {
+        flecs_script_event_deliver(world, it->event, type, it->param);
+        return;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, type);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    void *value = ecs_ptr_new_w_type_info(world, ti);
+    flecs_script_event_deliver(world, it->event, type, value);
+    ecs_ptr_free_w_type_info(world, ti, value);
+}
+
+int flecs_script_event_register(
+    ecs_world_t *world,
+    ecs_entity_t event)
+{
+    const char *name = ecs_get_name(world, event);
+    if (!name) {
+        return -1;
+    }
+
+    const EcsScriptFunction *prev = ecs_get(world, event, EcsScriptFunction);
+    bool registered = prev && prev->is_event;
+
+    ecs_entity_t return_type = event;
+    if (!ecs_get_type_info(world, event)) {
+        if (!ecs_struct_init(world, &(ecs_struct_desc_t){ .entity = event })) {
+            return -1;
+        }
+
+        if (!ecs_get_type_info(world, event)) {
+            return_type = ecs_id(ecs_bool_t);
+        }
+    }
+
+    ecs_entity_t prev_scope = ecs_set_scope(world, 0);
+    ecs_entity_t function = ecs_async_function(world, {
+        .name = name,
+        .parent = ecs_get_parent(world, event),
+        .return_type = return_type,
+        .callback = flecs_script_event_wait,
+        .cancel = flecs_script_event_cancel
+    });
+    ecs_set_scope(world, prev_scope);
+    if (function != event) {
+        return -1;
+    }
+
+    ecs_get_mut(world, event, EcsScriptFunction)->is_event = true;
+
+    if (!registered) {
+        ecs_entity_t observer = ecs_observer(world, {
+            .events = { event },
+            .query.terms = {{ .id = EcsAny, .src.id = event }},
+            .callback = flecs_script_event_observer
+        });
+        if (!observer) {
+            return -1;
+        }
+
+        ecs_add_pair(world, observer, EcsChildOf, event);
+    }
+
+    return 0;
+}
+
+void flecs_script_event_emit(
+    ecs_world_t *world,
+    ecs_entity_t event,
+    ecs_entity_t type,
+    const void *value)
+{
+    ecs_emit(world, &(ecs_event_desc_t){
+        .event = event,
+        .entity = event,
+        .const_param = type == event ? value : NULL
+    });
 }
 
 static void flecs_script_events_flush(

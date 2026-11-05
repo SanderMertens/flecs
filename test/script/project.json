@@ -1242,6 +1242,11 @@
                 "event_queue_limit",
                 "event_cancel_drops_queue",
                 "event_cancel_while_waiting",
+                "event_emit_from_c",
+                "event_observe_from_c",
+                "event_no_members_from_c",
+                "event_from_c_without_value",
+                "event_script_update_delivers_once",
                 "error_event"
             ]
         }, {

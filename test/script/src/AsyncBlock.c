@@ -8982,3 +8982,189 @@ void AsyncBlock_error_event(void) {
 
     ecs_fini(world);
 }
+
+void AsyncBlock_event_emit_from_c(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Build(slot: i32)"
+            LINE "export mut got: i32 = 0"
+            LINE "async {"
+            LINE "  const e = await Build()"
+            LINE "  got = e.slot"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    ecs_entity_t build = ecs_lookup(world, "Build");
+    test_assert(build != 0);
+    int32_t slot = 7;
+    ecs_emit(world, &(ecs_event_desc_t){
+        .event = build,
+        .entity = build,
+        .const_param = &slot
+    });
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "got")).ptr, 7);
+
+    ecs_fini(world);
+}
+
+static int32_t event_observer_invoked = 0;
+static int32_t event_observer_slot = 0;
+
+static void EventObserver(ecs_iter_t *it) {
+    event_observer_invoked ++;
+    if (it->param) {
+        event_observer_slot = *(int32_t*)it->param;
+    }
+}
+
+void AsyncBlock_event_observe_from_c(void) {
+    ecs_world_t *world = ecs_init();
+
+    event_observer_invoked = 0;
+    event_observer_slot = 0;
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Build(slot: i32)"
+            LINE "async {"
+            LINE "  emit Build(slot: 9)"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t build = ecs_lookup(world, "Build");
+    test_assert(build != 0);
+    ecs_observer(world, {
+        .events = { build },
+        .query.terms = {{ .id = EcsAny, .src.id = build }},
+        .callback = EventObserver
+    });
+
+    ecs_script_tasks_progress(world);
+
+    test_int(event_observer_invoked, 1);
+    test_int(event_observer_slot, 9);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_event_no_members_from_c(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Ping()"
+            LINE "export mut got: bool = false"
+            LINE "async {"
+            LINE "  await Ping()"
+            LINE "  got = true"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    ecs_entity_t ping = ecs_lookup(world, "Ping");
+    test_assert(ping != 0);
+    ecs_emit(world, &(ecs_event_desc_t){
+        .event = ping,
+        .entity = ping
+    });
+
+    ecs_script_tasks_progress(world);
+
+    test_bool(*(bool*)ecs_mut_var_get(world, ecs_lookup(world, "got")).ptr, true);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_event_from_c_without_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Build(slot: i32)"
+            LINE "export mut got: i32 = -1"
+            LINE "async {"
+            LINE "  const e = await Build()"
+            LINE "  got = e.slot"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    ecs_entity_t build = ecs_lookup(world, "Build");
+    test_assert(build != 0);
+    ecs_emit(world, &(ecs_event_desc_t){
+        .event = build,
+        .entity = build
+    });
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "got")).ptr, 0);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_event_script_update_delivers_once(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *code = HEAD "event Build(slot: i32)"
+        LINE "export mut count: i32 = 0"
+        LINE "async {"
+        LINE "  while true {"
+        LINE "    await Build()"
+        LINE "    count += 1"
+        LINE "  }"
+        LINE "}";
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = code,
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    test_int(ecs_script_update(world, s, 0, code), 0);
+
+    ecs_script_tasks_progress(world);
+
+    ecs_entity_t build = ecs_lookup(world, "Build");
+    test_assert(build != 0);
+    int32_t slot = 1;
+    ecs_emit(world, &(ecs_event_desc_t){
+        .event = build,
+        .entity = build,
+        .const_param = &slot
+    });
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 1);
+
+    ecs_fini(world);
+}
