@@ -1786,6 +1786,29 @@ Each block has a queue with a limit of 1024 events per event type (`FLECS_SCRIPT
 
 Queued events of a block are dropped when the block is cancelled or restarted. A block that restarts is subscribed again as soon as the new block is started, which happens as part of the same template update, and receives all events emitted after that.
 
+Script events are regular Flecs events. The event entity is also the event type, and `emit` sends the event to the event entity itself with `ecs_emit`, with the event value as `param`. This means that applications can observe events emitted by a script, and can emit events that async blocks await:
+
+```c
+ecs_entity_t build = ecs_lookup(world, "Build");
+
+// Observe events emitted by scripts
+ecs_observer(world, {
+    .events = { build },
+    .query.terms = {{ .id = EcsAny, .src.id = build }},
+    .callback = OnBuild
+});
+
+// Emit an event that async blocks await
+int32_t slot = 3;
+ecs_emit(world, &(ecs_event_desc_t){
+    .event = build,
+    .entity = build,
+    .const_param = &slot
+});
+```
+
+An event that is emitted without a value is received as a default-initialized value.
+
 ## Control flow
 
 ### If statement

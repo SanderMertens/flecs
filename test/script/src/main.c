@@ -1210,6 +1210,12 @@ void AsyncBlock_event_self_emit_does_not_hang(void);
 void AsyncBlock_event_queue_limit(void);
 void AsyncBlock_event_cancel_drops_queue(void);
 void AsyncBlock_event_cancel_while_waiting(void);
+void AsyncBlock_event_emit_from_c(void);
+void AsyncBlock_event_observe_from_c(void);
+void AsyncBlock_event_no_members_from_c(void);
+void AsyncBlock_event_from_c_without_value(void);
+void AsyncBlock_event_script_update_delivers_once(void);
+void AsyncBlock_event_no_members_await_value(void);
 void AsyncBlock_error_event(void);
 
 // Testsuite 'Input'
@@ -9153,6 +9159,30 @@ bake_test_case AsyncBlock_testcases[] = {
     {
         "event_cancel_while_waiting",
         AsyncBlock_event_cancel_while_waiting
+    },
+    {
+        "event_emit_from_c",
+        AsyncBlock_event_emit_from_c
+    },
+    {
+        "event_observe_from_c",
+        AsyncBlock_event_observe_from_c
+    },
+    {
+        "event_no_members_from_c",
+        AsyncBlock_event_no_members_from_c
+    },
+    {
+        "event_from_c_without_value",
+        AsyncBlock_event_from_c_without_value
+    },
+    {
+        "event_script_update_delivers_once",
+        AsyncBlock_event_script_update_delivers_once
+    },
+    {
+        "event_no_members_await_value",
+        AsyncBlock_event_no_members_await_value
     },
     {
         "error_event",
@@ -21748,7 +21778,7 @@ static bake_test_suite suites[] = {
         "AsyncBlock",
         AsyncBlock_setup,
         NULL,
-        158,
+        164,
         AsyncBlock_testcases,
         1,
         AsyncBlock_params
