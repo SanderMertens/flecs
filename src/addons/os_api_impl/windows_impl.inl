@@ -131,6 +131,32 @@ static void win_cond_wait(
     SleepConditionVariableCS(cond, mutex, INFINITE);
 }
 
+static bool win_cond_timedwait(
+    ecs_os_cond_t c,
+    ecs_os_mutex_t m,
+    int32_t sec,
+    int32_t nanosec)
+{
+    CRITICAL_SECTION *mutex = (CRITICAL_SECTION*)(intptr_t)m;
+    CONDITION_VARIABLE *cond = (CONDITION_VARIABLE*)(intptr_t)c;
+    uint64_t ms;
+    ecs_assert(sec >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(nanosec >= 0, ECS_INVALID_PARAMETER, NULL);
+
+    ms = (uint64_t)sec * 1000 + ((uint64_t)nanosec + 999999) / 1000000;
+    if (ms >= INFINITE) {
+        ms = INFINITE - 1;
+    }
+
+    if (!SleepConditionVariableCS(cond, mutex, (DWORD)ms)) {
+        if (GetLastError() == ERROR_TIMEOUT) {
+            return false;
+        }
+        abort();
+    }
+    return true;
+}
+
 static bool win_time_initialized;
 static double win_time_freq;
 static LARGE_INTEGER win_time_start;
@@ -265,6 +291,7 @@ void ecs_set_os_api_impl(void) {
     api.cond_signal_ = win_cond_signal;
     api.cond_broadcast_ = win_cond_broadcast;
     api.cond_wait_ = win_cond_wait;
+    api.cond_timedwait_ = win_cond_timedwait;
     api.sleep_ = win_sleep;
     api.now_ = win_time_now;
     api.fini_ = win_fini;

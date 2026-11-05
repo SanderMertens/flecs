@@ -3826,7 +3826,11 @@
                 "non_fragmenting_component_record_depth_after_parent_add",
                 "non_fragmenting_component_record_depth_nested_after_parent_add",
                 "component_record_for_value_pair",
-                "create_65k_tables"
+                "create_65k_tables",
+                "cond_timedwait_timeout",
+                "cond_timedwait_zero_timeout",
+                "cond_timedwait_signal",
+                "cond_timedwait_broadcast"
 
             ]
         }, {

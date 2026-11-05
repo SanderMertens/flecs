@@ -3691,6 +3691,13 @@ void (*ecs_os_api_cond_wait_t)(
     ecs_os_cond_t cond,
     ecs_os_mutex_t mutex);
 
+typedef
+bool (*ecs_os_api_cond_timedwait_t)(
+    ecs_os_cond_t cond,
+    ecs_os_mutex_t mutex,
+    int32_t sec,
+    int32_t nanosec);
+
 /** OS API sleep function type. */
 typedef
 void (*ecs_os_api_sleep_t)(
@@ -3849,6 +3856,7 @@ typedef struct ecs_os_api_t {
     ecs_os_api_cond_signal_t cond_signal_;         /**< cond_signal callback. */
     ecs_os_api_cond_broadcast_t cond_broadcast_;   /**< cond_broadcast callback. */
     ecs_os_api_cond_wait_t cond_wait_;             /**< cond_wait callback. */
+    ecs_os_api_cond_timedwait_t cond_timedwait_;
 
     /* Time */
     ecs_os_api_sleep_t sleep_;                     /**< sleep callback. */
@@ -4077,6 +4085,8 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_cond_signal(cond) ecs_os_api.cond_signal_(cond)
 #define ecs_os_cond_broadcast(cond) ecs_os_api.cond_broadcast_(cond)
 #define ecs_os_cond_wait(cond, mutex) ecs_os_api.cond_wait_(cond, mutex)
+#define ecs_os_cond_timedwait(cond, mutex, sec, nanosec) \
+    ecs_os_api.cond_timedwait_(cond, mutex, sec, nanosec)
 
 /* Time */
 #define ecs_os_sleep(sec, nanosec) ecs_os_api.sleep_(sec, nanosec)
