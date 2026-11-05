@@ -1241,3 +1241,117 @@ void Internals_always_inline_attribute_on_clang_only(void) {
     test_str(attr, "");
 #endif
 }
+
+void Internals_cond_timedwait_timeout(void) {
+    ecs_os_set_api_defaults();
+    test_assert(ecs_os_api.cond_timedwait_ != NULL);
+
+    ecs_os_mutex_t mutex = ecs_os_mutex_new();
+    ecs_os_cond_t cond = ecs_os_cond_new();
+
+    ecs_time_t t = {0};
+    ecs_time_measure(&t);
+
+    ecs_os_mutex_lock(mutex);
+    test_bool(ecs_os_cond_timedwait(cond, mutex, 0, 20 * 1000 * 1000), false);
+    ecs_os_mutex_unlock(mutex);
+
+    double elapsed = ecs_time_measure(&t);
+    test_assert(elapsed >= 0.015);
+    test_assert(elapsed < 5.0);
+
+    ecs_os_cond_free(cond);
+    ecs_os_mutex_free(mutex);
+}
+
+void Internals_cond_timedwait_zero_timeout(void) {
+    ecs_os_set_api_defaults();
+
+    ecs_os_mutex_t mutex = ecs_os_mutex_new();
+    ecs_os_cond_t cond = ecs_os_cond_new();
+
+    ecs_time_t t = {0};
+    ecs_time_measure(&t);
+
+    ecs_os_mutex_lock(mutex);
+    test_bool(ecs_os_cond_timedwait(cond, mutex, 0, 0), false);
+    ecs_os_mutex_unlock(mutex);
+
+    test_assert(ecs_time_measure(&t) < 5.0);
+
+    ecs_os_cond_free(cond);
+    ecs_os_mutex_free(mutex);
+}
+
+typedef struct cond_timedwait_ctx_t {
+    ecs_os_mutex_t mutex;
+    ecs_os_cond_t cond;
+    bool broadcast;
+    int32_t done;
+} cond_timedwait_ctx_t;
+
+static void* cond_timedwait_wake(void *arg) {
+    cond_timedwait_ctx_t *ctx = arg;
+    ecs_os_sleep(0, 10 * 1000 * 1000);
+    ecs_os_mutex_lock(ctx->mutex);
+    ctx->done = 1;
+    if (ctx->broadcast) {
+        ecs_os_cond_broadcast(ctx->cond);
+    } else {
+        ecs_os_cond_signal(ctx->cond);
+    }
+    ecs_os_mutex_unlock(ctx->mutex);
+    return NULL;
+}
+
+void Internals_cond_timedwait_signal(void) {
+    ecs_os_set_api_defaults();
+
+    cond_timedwait_ctx_t ctx = {
+        .mutex = ecs_os_mutex_new(),
+        .cond = ecs_os_cond_new()
+    };
+
+    ecs_time_t t = {0};
+    ecs_time_measure(&t);
+
+    ecs_os_mutex_lock(ctx.mutex);
+    ecs_os_thread_t thr = ecs_os_thread_new(cond_timedwait_wake, &ctx);
+    bool woken = true;
+    while (!ctx.done && woken) {
+        woken = ecs_os_cond_timedwait(ctx.cond, ctx.mutex, 30, 0);
+    }
+    test_bool(woken, true);
+    test_int(ctx.done, 1);
+    ecs_os_mutex_unlock(ctx.mutex);
+
+    test_assert(ecs_time_measure(&t) < 30.0);
+
+    ecs_os_thread_join(thr);
+    ecs_os_cond_free(ctx.cond);
+    ecs_os_mutex_free(ctx.mutex);
+}
+
+void Internals_cond_timedwait_broadcast(void) {
+    ecs_os_set_api_defaults();
+
+    cond_timedwait_ctx_t ctx = {
+        .mutex = ecs_os_mutex_new(),
+        .cond = ecs_os_cond_new(),
+        .broadcast = true
+    };
+
+    ecs_os_mutex_lock(ctx.mutex);
+    ecs_os_thread_t thr = ecs_os_thread_new(cond_timedwait_wake, &ctx);
+    bool woken = true;
+    while (!ctx.done && woken) {
+        woken = ecs_os_cond_timedwait(ctx.cond, ctx.mutex, 30, 0);
+    }
+    test_bool(woken, true);
+    test_int(ctx.done, 1);
+    ecs_os_mutex_unlock(ctx.mutex);
+
+    ecs_os_thread_join(thr);
+    ecs_os_cond_free(ctx.cond);
+    ecs_os_mutex_free(ctx.mutex);
+}

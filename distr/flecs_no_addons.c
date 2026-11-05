@@ -33372,6 +33372,32 @@ static void win_cond_wait(
     SleepConditionVariableCS(cond, mutex, INFINITE);
 }
 
+static bool win_cond_timedwait(
+    ecs_os_cond_t c,
+    ecs_os_mutex_t m,
+    int32_t sec,
+    int32_t nanosec)
+{
+    CRITICAL_SECTION *mutex = (CRITICAL_SECTION*)(intptr_t)m;
+    CONDITION_VARIABLE *cond = (CONDITION_VARIABLE*)(intptr_t)c;
+    uint64_t ms;
+    ecs_assert(sec >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(nanosec >= 0, ECS_INVALID_PARAMETER, NULL);
+
+    ms = (uint64_t)sec * 1000 + ((uint64_t)nanosec + 999999) / 1000000;
+    if (ms >= INFINITE) {
+        ms = INFINITE - 1;
+    }
+
+    if (!SleepConditionVariableCS(cond, mutex, (DWORD)ms)) {
+        if (GetLastError() == ERROR_TIMEOUT) {
+            return false;
+        }
+        abort();
+    }
+    return true;
+}
+
 static bool win_time_initialized;
 static double win_time_freq;
 static LARGE_INTEGER win_time_start;
@@ -33506,6 +33532,7 @@ void ecs_set_os_api_impl(void) {
     api.cond_signal_ = win_cond_signal;
     api.cond_broadcast_ = win_cond_broadcast;
     api.cond_wait_ = win_cond_wait;
+    api.cond_timedwait_ = win_cond_timedwait;
     api.sleep_ = win_sleep;
     api.now_ = win_time_now;
     api.fini_ = win_fini;
@@ -33526,11 +33553,13 @@ void ecs_set_os_api_impl(void) {
 
 #include "pthread.h"
 #include <dlfcn.h>
+#include <errno.h>
 
 #if defined(__APPLE__) && defined(__MACH__)
 #include <mach/mach_time.h>
 #elif defined(__EMSCRIPTEN__)
 #include <emscripten.h>
+#include <time.h>
 #else
 #include <time.h>
 #endif
@@ -33682,9 +33711,23 @@ static void posix_mutex_unlock(
 
 static ecs_os_cond_t posix_cond_new(void) {
     pthread_cond_t *cond = ecs_os_malloc(sizeof(pthread_cond_t));
+#if defined(__APPLE__) && defined(__MACH__)
     if (pthread_cond_init(cond, NULL)) {
         abort();
     }
+#else
+    pthread_condattr_t attr;
+    if (pthread_condattr_init(&attr)) {
+        abort();
+    }
+    if (pthread_condattr_setclock(&attr, CLOCK_MONOTONIC)) {
+        abort();
+    }
+    if (pthread_cond_init(cond, &attr)) {
+        abort();
+    }
+    pthread_condattr_destroy(&attr);
+#endif
     return (ecs_os_cond_t)(uintptr_t)cond;
 }
 
@@ -33725,6 +33768,42 @@ static void posix_cond_wait(
     if (pthread_cond_wait(cond, mutex)) {
         abort();
     }
+}
+
+static bool posix_cond_timedwait(
+    ecs_os_cond_t c,
+    ecs_os_mutex_t m,
+    int32_t sec,
+    int32_t nanosec)
+{
+    pthread_cond_t *cond = (pthread_cond_t*)(intptr_t)c;
+    pthread_mutex_t *mutex = (pthread_mutex_t*)(intptr_t)m;
+    struct timespec ts;
+    int64_t nsec;
+    int result;
+    ecs_assert(sec >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(nanosec >= 0, ECS_INVALID_PARAMETER, NULL);
+
+    nsec = (int64_t)nanosec;
+#if defined(__APPLE__) && defined(__MACH__)
+    ts.tv_sec = (time_t)sec + (time_t)(nsec / 1000000000);
+    ts.tv_nsec = (long)(nsec % 1000000000);
+    result = pthread_cond_timedwait_relative_np(cond, mutex, &ts);
+#else
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    nsec += (int64_t)ts.tv_nsec;
+    ts.tv_sec += (time_t)sec + (time_t)(nsec / 1000000000);
+    ts.tv_nsec = (long)(nsec % 1000000000);
+    result = pthread_cond_timedwait(cond, mutex, &ts);
+#endif
+
+    if (result == ETIMEDOUT) {
+        return false;
+    }
+    if (result) {
+        abort();
+    }
+    return true;
 }
 
 static bool posix_time_initialized;
@@ -33840,6 +33919,7 @@ void ecs_set_os_api_impl(void) {
     api.cond_signal_ = posix_cond_signal;
     api.cond_broadcast_ = posix_cond_broadcast;
     api.cond_wait_ = posix_cond_wait;
+    api.cond_timedwait_ = posix_cond_timedwait;
     api.sleep_ = posix_sleep;
     api.now_ = posix_time_now;
     api.dlopen_ = posix_dlopen;

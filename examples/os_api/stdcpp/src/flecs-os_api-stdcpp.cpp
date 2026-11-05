@@ -2,6 +2,7 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include <chrono>
 
 #ifdef _MSC_VER
 #ifndef NOMINMAX
@@ -93,6 +94,16 @@ static void stdcpp_cond_wait(ecs_os_cond_t c, ecs_os_mutex_t m) {
     cond->wait(*mutex);
 }
 
+static bool stdcpp_cond_timedwait(
+    ecs_os_cond_t c, ecs_os_mutex_t m, int32_t sec, int32_t nanosec)
+{
+    std::condition_variable_any* cond = reinterpret_cast<std::condition_variable_any*>(c);
+    std::mutex* mutex = reinterpret_cast<std::mutex*>(m);
+    std::chrono::nanoseconds timeout =
+        std::chrono::seconds(sec) + std::chrono::nanoseconds(nanosec);
+    return cond->wait_for(*mutex, timeout) == std::cv_status::no_timeout;
+}
+
 void stdcpp_set_os_api(void) {
     ecs_os_set_api_defaults();
 
@@ -113,6 +124,7 @@ void stdcpp_set_os_api(void) {
     api.cond_signal_ = stdcpp_cond_signal;
     api.cond_broadcast_ = stdcpp_cond_broadcast;
     api.cond_wait_ = stdcpp_cond_wait;
+    api.cond_timedwait_ = stdcpp_cond_timedwait;
 
     ecs_os_set_api(&api);
 }

@@ -3728,6 +3728,10 @@ void Internals_non_fragmenting_component_record_depth_after_parent_add(void);
 void Internals_non_fragmenting_component_record_depth_nested_after_parent_add(void);
 void Internals_component_record_for_value_pair(void);
 void Internals_create_65k_tables(void);
+void Internals_cond_timedwait_timeout(void);
+void Internals_cond_timedwait_zero_timeout(void);
+void Internals_cond_timedwait_signal(void);
+void Internals_cond_timedwait_broadcast(void);
 
 // Testsuite 'Error'
 void Error_setup(void);
@@ -18345,6 +18349,22 @@ bake_test_case Internals_testcases[] = {
     {
         "create_65k_tables",
         Internals_create_65k_tables
+    },
+    {
+        "cond_timedwait_timeout",
+        Internals_cond_timedwait_timeout
+    },
+    {
+        "cond_timedwait_zero_timeout",
+        Internals_cond_timedwait_zero_timeout
+    },
+    {
+        "cond_timedwait_signal",
+        Internals_cond_timedwait_signal
+    },
+    {
+        "cond_timedwait_broadcast",
+        Internals_cond_timedwait_broadcast
     }
 };
 
@@ -18761,7 +18781,7 @@ static bake_test_suite suites[] = {
         "Internals",
         Internals_setup,
         NULL,
-        48,
+        52,
         Internals_testcases
     },
     {
