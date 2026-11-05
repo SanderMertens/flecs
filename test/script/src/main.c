@@ -4121,6 +4121,9 @@ void Command_set_nested_partial(void);
 void Command_set_invalid_value(void);
 void Command_modified(void);
 void Command_modified_not_present(void);
+void Command_emit(void);
+void Command_emit_value(void);
+void Command_emit_value_no_type(void);
 void Command_add_remove(void);
 void Command_new(void);
 void Command_new_in_scope(void);
@@ -20417,6 +20420,18 @@ bake_test_case Command_testcases[] = {
         Command_modified_not_present
     },
     {
+        "emit",
+        Command_emit
+    },
+    {
+        "emit_value",
+        Command_emit_value
+    },
+    {
+        "emit_value_no_type",
+        Command_emit_value_no_type
+    },
+    {
         "add_remove",
         Command_add_remove
     },
@@ -21304,7 +21319,7 @@ static bake_test_suite suites[] = {
         "Command",
         Command_setup,
         NULL,
-        141,
+        144,
         Command_testcases
     },
     {

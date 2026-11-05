@@ -415,6 +415,54 @@ static void flecs_command_modified(
     }
 }
 
+static void flecs_command_emit(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)result;
+    ecs_world_t *world = ctx->world;
+    ecs_entity_t e = flecs_command_arg(argv, 0, ecs_entity_t);
+    ecs_entity_t event = flecs_command_arg(argv, 1, ecs_entity_t);
+    const char *expr = argc > 2 ? flecs_command_arg(argv, 2, char*) : NULL;
+    if (!flecs_command_check_alive(ctx, e) ||
+        !flecs_command_check_alive(ctx, event))
+    {
+        return;
+    }
+
+    ecs_entity_t type = flecs_command_value_type(world, event);
+    if (!type) {
+        if (expr) {
+            flecs_command_err(ctx, "event '%s' does not have a value",
+                flecs_errstr(ecs_get_path(world, event)));
+            return;
+        }
+
+        ecs_emit(world, &(ecs_event_desc_t){
+            .event = event,
+            .entity = e
+        });
+        return;
+    }
+
+    ecs_value_t value = ecs_value_new(world, type);
+    if (flecs_command_parse_value(world, expr ? expr : "", &value, true)) {
+        ecs_value_fini(world, &value);
+        flecs_command_fail(ctx);
+        return;
+    }
+
+    ecs_emit(world, &(ecs_event_desc_t){
+        .event = event,
+        .entity = e,
+        .param = value.ptr
+    });
+
+    ecs_value_fini(world, &value);
+}
+
 static void flecs_command_add(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
@@ -869,6 +917,10 @@ void flecs_command_core_import(
             "Emit modified event for component", {
             { "entity", entity_t, false, "Entity, $ for singleton" },
             { "component", id_t, false, "Component" } }},
+        { "emit", flecs_command_emit, 0, "Emit event for entity", {
+            { "entity", entity_t, false, "Entity, $ for singleton" },
+            { "event", entity_t, false, "Event" },
+            { "value", string_t, true, "Event value, if event has a type" }}},
         { "add", flecs_command_add, id_t, "Add component", {
             { "entity", entity_t, false, "Entity, $ for singleton" },
             { "component", id_t, false, "Component, tag or pair" }}},
