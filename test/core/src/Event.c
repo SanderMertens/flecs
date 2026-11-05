@@ -423,6 +423,100 @@ void Event_emit_staged_from_stage_observer(void) {
     ecs_fini(world);
 }
 
+static ecs_entity_t emit_event_id;
+static ecs_id_t emit_position_id;
+static ecs_id_t emit_hit_id;
+static ecs_world_t *emit_observer_stage;
+
+static void EmitFromSystem(ecs_iter_t *it) {
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_emit(it->stage, &(ecs_event_desc_t) {
+            .event = emit_event_id,
+            .ids = &(ecs_type_t){ .count = 1, .array = &emit_position_id },
+            .entity = it->entities[i]
+        });
+    }
+}
+
+static void AddHit(ecs_iter_t *it) {
+    int32_t i;
+    emit_observer_stage = it->stage;
+    for (i = 0; i < it->count; i ++) {
+        ecs_add_id(it->stage, it->entities[i], emit_hit_id);
+    }
+}
+
+static void init_emit_world(ecs_world_t *world, ecs_id_t position, ecs_id_t hit) {
+    emit_event_id = ecs_new(world);
+    emit_position_id = position;
+    emit_hit_id = hit;
+
+    ecs_observer(world, {
+        .query.terms = {{ position }},
+        .events = { emit_event_id },
+        .callback = AddHit
+    });
+}
+
+void Event_emit_from_system(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Hit);
+
+    init_emit_world(world, ecs_id(Position), ecs_id(Hit));
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {0, 0});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Position, {0, 0});
+
+    ecs_system(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .phase = EcsOnUpdate,
+        .callback = EmitFromSystem
+    });
+
+    ecs_progress(world, 0);
+
+    test_assert(ecs_has(world, e1, Hit));
+    test_assert(ecs_has(world, e2, Hit));
+
+    ecs_fini(world);
+}
+
+void Event_emit_from_stage_observer_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Hit);
+
+    init_emit_world(world, ecs_id(Position), ecs_id(Hit));
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {0, 0});
+
+    ecs_set_stage_count(world, 2);
+    ecs_world_t *stage = ecs_get_stage(world, 1);
+
+    ecs_readonly_begin(world, false);
+    ecs_emit(stage, &(ecs_event_desc_t) {
+        .event = emit_event_id,
+        .ids = &(ecs_type_t){ .count = 1, .array = &emit_position_id },
+        .entity = e
+    });
+
+    test_assert(emit_observer_stage == stage);
+    test_assert(!ecs_has(world, e, Hit));
+
+    ecs_readonly_end(world);
+
+    test_assert(ecs_has(world, e, Hit));
+
+    ecs_fini(world);
+}
+
 void Event_emit_for_entity(void) {
     ecs_world_t *world = ecs_mini();
 
