@@ -4268,6 +4268,8 @@
                 "set_partial",
                 "set_nested_partial",
                 "set_invalid_value",
+                "modified",
+                "modified_not_present",
                 "add_remove",
                 "new",
                 "new_in_scope",

@@ -1601,6 +1601,8 @@ void Set_get_mut_pair(void);
 void Set_get_mut_pair_second(void);
 void Set_modified_w_on_set(void);
 void Set_modified_no_component(void);
+void Set_modified_tag(void);
+void Set_modified_pair_tag(void);
 void Set_ensure_w_add_in_on_add(void);
 void Set_ensure_w_remove_in_on_add(void);
 void Set_ensure_w_realloc_in_on_add(void);
@@ -9986,6 +9988,14 @@ bake_test_case Set_testcases[] = {
     {
         "modified_no_component",
         Set_modified_no_component
+    },
+    {
+        "modified_tag",
+        Set_modified_tag
+    },
+    {
+        "modified_pair_tag",
+        Set_modified_pair_tag
     },
     {
         "ensure_w_add_in_on_add",
@@ -18590,7 +18600,7 @@ static bake_test_suite suites[] = {
         "Set",
         NULL,
         NULL,
-        40,
+        42,
         Set_testcases
     },
     {

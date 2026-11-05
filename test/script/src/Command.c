@@ -1509,6 +1509,79 @@ void Command_set_invalid_value(void) {
     ecs_fini(world);
 }
 
+static int32_t command_on_set_invoked = 0;
+
+static void Command_on_set(ecs_iter_t *it) {
+    command_on_set_invoked += it->count;
+}
+
+void Command_modified(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_script_run(world, NULL,
+        HEAD "struct Position(x: f32, y: f32)"
+        LINE "e { Position: {1, 2} }", NULL);
+    ecs_entity_t position = ecs_lookup(world, "Position");
+
+    command_on_set_invoked = 0;
+    ecs_observer(world, {
+        .query.terms = {{ .id = position }},
+        .events = { EcsOnSet },
+        .callback = Command_on_set
+    });
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session, "modified e Position");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_int(command_on_set_invoked, 1);
+    char *str = ecs_ptr_to_expr(world, ecs_vec_first_t(&r.results, ecs_value_t)->type, ecs_vec_first_t(&r.results, ecs_value_t)->ptr);
+    test_str(str, "{Position: {x: 1, y: 2}}");
+    ecs_os_free(str);
+    ecs_shell_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
+void Command_modified_not_present(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_script_run(world, NULL,
+        HEAD "struct Position(x: f32, y: f32)"
+        LINE "Tag {}"
+        LINE "e { Tag }", NULL);
+    ecs_entity_t position = ecs_lookup(world, "Position");
+
+    command_on_set_invoked = 0;
+    ecs_observer(world, {
+        .query.terms = {{ .id = position }},
+        .events = { EcsOnSet },
+        .callback = Command_on_set
+    });
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session, "modified e Position");
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0],
+        "entity 'e' does not have component 'Position'");
+    ecs_shell_result_fini(world, &r);
+
+    r = ecs_shell_run(world, session, "modified e Tag");
+    test_uint(ecs_vec_first_t(&r.results, ecs_value_t)->type, 0);
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0],
+        "'Tag' is not a component with a value");
+    ecs_shell_result_fini(world, &r);
+
+    test_int(command_on_set_invoked, 0);
+
+    ecs_fini(world);
+}
+
 void Command_add_remove(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptShell);

@@ -565,6 +565,35 @@ void Set_modified_no_component(void) {
     ecs_fini(world);
 }
 
+void Set_modified_tag(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e = ecs_new_w(world, Foo);
+    test_assert(e != 0);
+
+    test_expect_abort();
+    ecs_modified_id(world, e, Foo);
+}
+
+void Set_modified_pair_tag(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e = ecs_new_w_pair(world, Rel, Tgt);
+    test_assert(e != 0);
+
+    test_expect_abort();
+    ecs_modified_pair(world, e, Rel, Tgt);
+}
+
 static ECS_COMPONENT_DECLARE(Position);
 static ECS_COMPONENT_DECLARE(Velocity);
 
