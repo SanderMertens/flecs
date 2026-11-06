@@ -4334,6 +4334,10 @@ void Command_shell_singleton(void);
 void Command_custom_command_path(void);
 void Command_command_path_order(void);
 void Command_help_custom_command_path(void);
+void Command_nested_command(void);
+void Command_nested_command_unknown(void);
+void Command_help_nested_command(void);
+void Command_usage_repeated_param(void);
 void Command_no_command_paths(void);
 void Command_command_path_from_script(void);
 void Command_multi_command(void);
@@ -21415,6 +21419,22 @@ bake_test_case Command_testcases[] = {
         Command_help_custom_command_path
     },
     {
+        "nested_command",
+        Command_nested_command
+    },
+    {
+        "nested_command_unknown",
+        Command_nested_command_unknown
+    },
+    {
+        "help_nested_command",
+        Command_help_nested_command
+    },
+    {
+        "usage_repeated_param",
+        Command_usage_repeated_param
+    },
+    {
         "no_command_paths",
         Command_no_command_paths
     },
@@ -22034,7 +22054,7 @@ static bake_test_suite suites[] = {
         "Command",
         Command_setup,
         NULL,
-        144,
+        148,
         Command_testcases
     },
     {
