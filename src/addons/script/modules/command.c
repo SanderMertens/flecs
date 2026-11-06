@@ -157,7 +157,8 @@ ecs_entity_t flecs_command_resolve(
             continue;
         }
 
-        ecs_entity_t function = ecs_lookup_child(world, paths[i], name);
+        ecs_entity_t function = ecs_lookup_path_w_sep(
+            world, paths[i], name, ".", NULL, false);
         if (function && ecs_has(world, function, EcsScriptFunction)) {
             return function;
         }
@@ -643,6 +644,14 @@ static int flecs_command_parse_relative(
     return 0;
 }
 
+static bool flecs_command_param_repeats(
+    const ecs_script_parameter_t *params,
+    int32_t i)
+{
+    return i > 0 && params[i].optional && params[i - 1].optional &&
+        !ecs_os_strcmp(params[i].name, params[i - 1].name);
+}
+
 static char* flecs_command_usage(
     const char *name,
     const EcsScriptFunction *f)
@@ -652,8 +661,13 @@ static char* flecs_command_usage(
     const ecs_script_parameter_t *params = ecs_vec_first(&f->params);
     int32_t i, count = ecs_vec_count(&f->params);
     for (i = 0; i < count; i ++) {
-        ecs_strbuf_append(&buf, params[i].optional ? " [%s]" : " <%s>",
-            params[i].name);
+        if (flecs_command_param_repeats(params, i)) {
+            continue;
+        }
+
+        bool more = i + 1 < count && flecs_command_param_repeats(params, i + 1);
+        ecs_strbuf_append(&buf, params[i].optional ? " [%s%s]" : " <%s%s>",
+            params[i].name, more ? "..." : "");
     }
 
     return ecs_strbuf_get(&buf);

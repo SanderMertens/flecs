@@ -3866,6 +3866,201 @@ void Command_help_custom_command_path(void) {
     ecs_fini(world);
 }
 
+void Command_nested_command(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t commands = ecs_entity(world, { .name = "commands" });
+    ecs_entity_t group = ecs_function(world, {
+        .name = "group",
+        .parent = commands,
+        .return_type = ecs_id(ecs_entity_t),
+        .callback = Command_function_callback
+    });
+
+    ecs_entity_t sub = ecs_function(world, {
+        .name = "sub",
+        .parent = group,
+        .return_type = ecs_id(ecs_entity_t),
+        .params = {{ .name = "value", .type = ecs_id(ecs_i32_t) }},
+        .callback = Command_function_callback
+    });
+
+    EcsScriptShell *shell = ecs_singleton_ensure(world, EcsScriptShell);
+    ecs_vec_append_t(NULL, &shell->command_paths, ecs_entity_t)[0] = commands;
+    ecs_singleton_modified(world, EcsScriptShell);
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session, "group");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, group);
+    ecs_shell_result_fini(world, &r);
+
+    r = ecs_shell_run(world, session, "group.sub 10");
+    test_int(ecs_vec_count(&r.errors), 0);
+    test_uint(*(ecs_entity_t*)ecs_vec_first_t(&r.results, ecs_value_t)->ptr, sub);
+    ecs_shell_result_fini(world, &r);
+
+    r = ecs_shell_run(world, session, "group.sub");
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0],
+        "missing argument 'value' for command 'group.sub' (usage: group.sub <value>)");
+    ecs_shell_result_fini(world, &r);
+
+    r = ecs_shell_run(world, session, "sub 10");
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0], "unknown command 'sub'");
+    ecs_shell_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
+void Command_nested_command_unknown(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t commands = ecs_entity(world, { .name = "commands" });
+    ecs_entity_t group = ecs_function(world, {
+        .name = "group",
+        .parent = commands,
+        .return_type = ecs_id(ecs_entity_t),
+        .callback = Command_function_callback
+    });
+
+    ecs_entity(world, { .name = "plain", .parent = group });
+
+    EcsScriptShell *shell = ecs_singleton_ensure(world, EcsScriptShell);
+    ecs_vec_append_t(NULL, &shell->command_paths, ecs_entity_t)[0] = commands;
+    ecs_singleton_modified(world, EcsScriptShell);
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session, "group.missing");
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0],
+        "unknown command 'group.missing'");
+    ecs_shell_result_fini(world, &r);
+
+    r = ecs_shell_run(world, session, "group.plain");
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0],
+        "unknown command 'group.plain'");
+    ecs_shell_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
+void Command_help_nested_command(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t commands = ecs_entity(world, { .name = "commands" });
+    ecs_entity_t group = ecs_function(world, {
+        .name = "group",
+        .parent = commands,
+        .return_type = ecs_id(ecs_entity_t),
+        .callback = Command_function_callback
+    });
+
+    ecs_function(world, {
+        .name = "sub",
+        .parent = group,
+        .return_type = ecs_id(ecs_entity_t),
+        .callback = Command_function_callback
+    });
+
+    ecs_function(world, {
+        .name = "groupie",
+        .parent = commands,
+        .return_type = ecs_id(ecs_entity_t),
+        .callback = Command_function_callback
+    });
+
+    EcsScriptShell *shell = ecs_singleton_ensure(world, EcsScriptShell);
+    ecs_vec_append_t(NULL, &shell->command_paths, ecs_entity_t)[0] = commands;
+    ecs_singleton_modified(world, EcsScriptShell);
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session, "help");
+    test_int(ecs_vec_count(&r.errors), 0);
+    ecs_vec_t *infos = ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
+    ecs_shell_info_t *info = ecs_vec_first(infos);
+    int32_t i, count = ecs_vec_count(infos);
+    int32_t group_count = 0, sub_count = 0;
+    for (i = 0; i < count; i ++) {
+        if (!strcmp(info[i].name, "group")) {
+            group_count ++;
+        } else if (!strcmp(info[i].name, "group.sub")) {
+            sub_count ++;
+        }
+        test_assert(strcmp(info[i].name, "sub"));
+    }
+    test_int(group_count, 1);
+    test_int(sub_count, 1);
+    ecs_shell_result_fini(world, &r);
+
+    r = ecs_shell_run(world, session, "help group");
+    test_int(ecs_vec_count(&r.errors), 0);
+    infos = ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
+    test_int(ecs_vec_count(infos), 2);
+    info = ecs_vec_first(infos);
+    test_str(info[0].name, "group");
+    test_str(info[1].name, "group.sub");
+    ecs_shell_result_fini(world, &r);
+
+    r = ecs_shell_run(world, session, "help group.sub");
+    test_int(ecs_vec_count(&r.errors), 0);
+    infos = ecs_vec_first_t(&r.results, ecs_value_t)->ptr;
+    test_int(ecs_vec_count(infos), 1);
+    test_str(((ecs_shell_info_t*)ecs_vec_first(infos))[0].name, "group.sub");
+    ecs_shell_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
+void Command_usage_repeated_param(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t commands = ecs_entity(world, { .name = "commands" });
+    ecs_function(world, {
+        .name = "custom",
+        .parent = commands,
+        .return_type = ecs_id(ecs_entity_t),
+        .params = {
+            { .name = "subject", .type = ecs_id(ecs_string_t) },
+            { .name = "options", .type = ecs_id(ecs_string_t), .optional = true },
+            { .name = "options", .type = ecs_id(ecs_string_t), .optional = true },
+            { .name = "options", .type = ecs_id(ecs_string_t), .optional = true }
+        },
+        .callback = Command_function_callback
+    });
+
+    EcsScriptShell *shell = ecs_singleton_ensure(world, EcsScriptShell);
+    ecs_vec_append_t(NULL, &shell->command_paths, ecs_entity_t)[0] = commands;
+    ecs_singleton_modified(world, EcsScriptShell);
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session, "custom");
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0],
+        "missing argument 'subject' for command 'custom' "
+        "(usage: custom <subject> [options...])");
+    ecs_shell_result_fini(world, &r);
+
+    r = ecs_shell_run(world, session, "custom a b c d e");
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0],
+        "too many arguments for command 'custom' "
+        "(usage: custom <subject> [options...])");
+    ecs_shell_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
 void Command_no_command_paths(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptShell);

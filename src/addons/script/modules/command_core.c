@@ -9,7 +9,7 @@
 #include "command.h"
 
 typedef struct {
-    const char *name;
+    char *name;
     ecs_entity_t entity;
 } flecs_command_sort_elem_t;
 
@@ -53,6 +53,57 @@ static ecs_entity_t flecs_command_scope_arg(
     return scope;
 }
 
+static bool flecs_command_help_filter(
+    const char *name,
+    const char *filter)
+{
+    if (!filter) {
+        return true;
+    }
+
+    ecs_size_t len = ecs_os_strlen(filter);
+    if (ecs_os_strncmp(name, filter, len)) {
+        return false;
+    }
+
+    return !name[len] || name[len] == '.';
+}
+
+static void flecs_command_help_collect(
+    ecs_world_t *world,
+    ecs_entity_t path,
+    ecs_entity_t parent,
+    const char *filter,
+    ecs_vec_t *elems)
+{
+    ecs_vec_t children;
+    ecs_vec_init_t(NULL, &children, ecs_entity_t, 0);
+    flecs_command_children(world, parent, &children);
+
+    int32_t i, count = ecs_vec_count(&children);
+    ecs_entity_t *entities = ecs_vec_first(&children);
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = entities[i];
+        if (!ecs_get_name(world, e) || !ecs_has(world, e, EcsScriptFunction)) {
+            continue;
+        }
+
+        char *name = ecs_get_path_w_sep(world, path, e, ".", NULL);
+        if (flecs_command_help_filter(name, filter) &&
+            flecs_command_resolve(world, name) == e)
+        {
+            ecs_vec_append_t(NULL, elems, flecs_command_sort_elem_t)[0] =
+                (flecs_command_sort_elem_t){ name, e };
+        } else {
+            ecs_os_free(name);
+        }
+
+        flecs_command_help_collect(world, path, e, filter, elems);
+    }
+
+    ecs_vec_fini_t(NULL, &children, ecs_entity_t);
+}
+
 static void flecs_command_help(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
@@ -63,8 +114,8 @@ static void flecs_command_help(
     const char *filter = argc ? flecs_command_arg(argv, 0, char*) : NULL;
     ecs_vec_t *out = result->ptr;
 
-    ecs_vec_t children;
-    ecs_vec_init_t(NULL, &children, ecs_entity_t, 0);
+    ecs_vec_t found;
+    ecs_vec_init_t(NULL, &found, flecs_command_sort_elem_t, 0);
 
     const EcsScriptShell *shell = ecs_singleton_get(world, EcsScriptShell);
     if (shell) {
@@ -72,31 +123,14 @@ static void flecs_command_help(
         int32_t p, path_count = ecs_vec_count(&shell->command_paths);
         for (p = 0; p < path_count; p ++) {
             if (paths[p] && ecs_is_alive(world, paths[p])) {
-                flecs_command_children(world, paths[p], &children);
+                flecs_command_help_collect(
+                    world, paths[p], paths[p], filter, &found);
             }
         }
     }
 
-    int32_t i, count = 0, child_count = ecs_vec_count(&children);
-    ecs_entity_t *entities = ecs_vec_first(&children);
-    flecs_command_sort_elem_t *elems = child_count ?
-        ecs_os_malloc_n(flecs_command_sort_elem_t, child_count) : NULL;
-    for (i = 0; i < child_count; i ++) {
-        const char *name = ecs_get_name(world, entities[i]);
-        if (!name || !ecs_has(world, entities[i], EcsScriptFunction)) {
-            continue;
-        }
-
-        if (filter && ecs_os_strcmp(name, filter)) {
-            continue;
-        }
-
-        if (flecs_command_resolve(world, name) != entities[i]) {
-            continue;
-        }
-
-        elems[count ++] = (flecs_command_sort_elem_t){ name, entities[i] };
-    }
+    int32_t i, count = ecs_vec_count(&found);
+    flecs_command_sort_elem_t *elems = ecs_vec_first(&found);
 
     if (count) {
         qsort(elems, (size_t)count, sizeof(flecs_command_sort_elem_t),
@@ -129,8 +163,11 @@ static void flecs_command_help(
         flecs_command_err(ctx, "unknown command '%s'", filter);
     }
 
-    ecs_os_free(elems);
-    ecs_vec_fini_t(NULL, &children, ecs_entity_t);
+    for (i = 0; i < count; i ++) {
+        ecs_os_free(elems[i].name);
+    }
+
+    ecs_vec_fini_t(NULL, &found, flecs_command_sort_elem_t);
 }
 
 static void flecs_command_ls(
