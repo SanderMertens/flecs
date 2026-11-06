@@ -422,6 +422,12 @@ int flecs_script_symbol_lookup(
     ecs_flags32_t lookup_kind,
     flecs_script_symbol_t *symbol);
 
+int flecs_script_global_var_lookup(
+    const ecs_script_t *script,
+    const ecs_expr_eval_desc_t *desc,
+    const char *name,
+    flecs_script_symbol_t *symbol);
+
 int flecs_script_id_elem_lookup(
     const ecs_script_t *script,
     const ecs_expr_eval_desc_t *desc,
@@ -451,6 +457,11 @@ void flecs_script_symbol_set(
     ecs_entity_t entity);
 
 int flecs_script_type_symbol_lookup(
+    void *ctx,
+    const char *name,
+    flecs_script_symbol_t *symbol);
+
+int flecs_script_type_global_var_lookup(
     void *ctx,
     const char *name,
     flecs_script_symbol_t *symbol);

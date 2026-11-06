@@ -665,6 +665,12 @@ void Eval_entity_scope_after_export_const_same_name(void);
 void Eval_existing_child_of_reopened_parent(void);
 void Eval_pair_scope_target_shadowed_by_root_entity(void);
 void Eval_pair_scope_predeclared_entity_export_const(void);
+void Eval_export_const_var_w_entity_same_name_in_scope(void);
+void Eval_export_const_var_w_entity_same_name_in_scope_same_script(void);
+void Eval_export_const_var_w_entity_same_name_in_nested_scope(void);
+void Eval_export_const_var_w_entity_same_name_nearest_var(void);
+void Eval_export_mut_var_w_entity_same_name_in_scope(void);
+void Eval_var_w_entity_same_name_no_var(void);
 void Eval_has_expr_pair_w_enum_constant(void);
 void Eval_has_expr_in_if(void);
 void Eval_const_bool_from_optional_component(void);
@@ -6865,6 +6871,30 @@ bake_test_case Eval_testcases[] = {
     {
         "pair_scope_predeclared_entity_export_const",
         Eval_pair_scope_predeclared_entity_export_const
+    },
+    {
+        "export_const_var_w_entity_same_name_in_scope",
+        Eval_export_const_var_w_entity_same_name_in_scope
+    },
+    {
+        "export_const_var_w_entity_same_name_in_scope_same_script",
+        Eval_export_const_var_w_entity_same_name_in_scope_same_script
+    },
+    {
+        "export_const_var_w_entity_same_name_in_nested_scope",
+        Eval_export_const_var_w_entity_same_name_in_nested_scope
+    },
+    {
+        "export_const_var_w_entity_same_name_nearest_var",
+        Eval_export_const_var_w_entity_same_name_nearest_var
+    },
+    {
+        "export_mut_var_w_entity_same_name_in_scope",
+        Eval_export_mut_var_w_entity_same_name_in_scope
+    },
+    {
+        "var_w_entity_same_name_no_var",
+        Eval_var_w_entity_same_name_no_var
     },
     {
         "has_expr_pair_w_enum_constant",
@@ -21046,7 +21076,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        818,
+        824,
         Eval_testcases,
         1,
         Eval_params
