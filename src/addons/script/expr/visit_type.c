@@ -1893,8 +1893,7 @@ static int flecs_expr_global_variable_resolve(
 {
     ecs_world_t *world = script->world;
     flecs_script_symbol_t symbol;
-    if (flecs_script_symbol_lookup(script, desc, 0, node->name,
-        FlecsScriptLookupAll, &symbol) ||
+    if (flecs_script_global_var_lookup(script, desc, node->name, &symbol) ||
         symbol.kind != FlecsScriptSymbolGlobalVariable)
     {
         if (!flecs_expr_unresolved_ref(script, desc,
