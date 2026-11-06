@@ -46123,6 +46123,17 @@ static void http_sock_keep_alive(
     }
 }
 
+static void http_sock_cloexec(ecs_http_socket_t sock) {
+    (void)sock;
+#ifdef ECS_TARGET_POSIX
+    int flags = fcntl(sock, F_GETFD, 0);
+    if (flags == -1 || fcntl(sock, F_SETFD, flags | FD_CLOEXEC) == -1) {
+        ecs_warn("http: failed to set socket CLOEXEC: %s",
+            ecs_os_strerror(errno));
+    }
+#endif
+}
+
 static void http_sock_nonblock(ecs_http_socket_t sock, bool enable) {
     (void)sock;
     (void)enable;
@@ -46224,6 +46235,9 @@ static ecs_http_socket_t http_accept(
     socklen_t len = (socklen_t)addr_len[0];
     ecs_http_socket_t result = accept(sock, addr, &len);
     addr_len[0] = (ecs_size_t)len;
+    if (http_socket_is_valid(result)) {
+        http_sock_cloexec(result);
+    }
     return result;
 }
 
@@ -46935,6 +46949,8 @@ static int http_accept_connections(
             ecs_os_mutex_unlock(srv->lock);
             goto done;
         }
+
+        http_sock_cloexec(sock);
 
         int reuse = 1, result;
         result = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, 
