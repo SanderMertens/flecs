@@ -1691,6 +1691,7 @@
                 "unit_w_prefix",
                 "unit_w_over",
                 "bitmask",
+                "bitmask_w_zero_constant",
                 "custom_i32_to_json",
                 "custom_std_string_to_json",
                 "custom_std_vector_i32_to_json",

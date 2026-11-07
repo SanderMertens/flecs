@@ -1635,6 +1635,7 @@ void Meta_unit_w_quantity(void);
 void Meta_unit_w_prefix(void);
 void Meta_unit_w_over(void);
 void Meta_bitmask(void);
+void Meta_bitmask_w_zero_constant(void);
 void Meta_custom_i32_to_json(void);
 void Meta_custom_std_string_to_json(void);
 void Meta_custom_std_vector_i32_to_json(void);
@@ -8176,6 +8177,10 @@ bake_test_case Meta_testcases[] = {
         Meta_bitmask
     },
     {
+        "bitmask_w_zero_constant",
+        Meta_bitmask_w_zero_constant
+    },
+    {
         "custom_i32_to_json",
         Meta_custom_i32_to_json
     },
@@ -8925,7 +8930,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        75,
+        76,
         Meta_testcases
     },
     {
