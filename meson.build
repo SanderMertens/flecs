@@ -131,6 +131,7 @@ flecs_src = files(
     'src/addons/system/system.c',
     'src/addons/timer.c',
     'src/addons/units.c',
+    'src/addons/world_guard.c',
     'src/datastructures/allocator.c',
     'src/datastructures/bitset.c',
     'src/datastructures/block_allocator.c',

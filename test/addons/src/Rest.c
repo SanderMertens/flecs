@@ -2457,3 +2457,1129 @@ void Rest_get_stats_wo_stats_import(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_get_component_invalid_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "GET",
+        "/component/Foo?component=#0", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_put_component_wildcard(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Foo?component=*", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_put_component_invalid_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Foo?component=#0", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_put_component_invalid_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Foo?component=(flecs.core.ChildOf,#0)", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_put_component_value_wildcard(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) }
+        }
+    });
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_set(world, foo, Position, {10, 20});
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Foo?component=(Position,*)&value={\"x\":1}", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_delete_component_invalid_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE",
+        "/component/Foo?component=#0", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_delete_component_invalid_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE",
+        "/component/Foo?component=(flecs.core.ChildOf,#0)", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_toggle_invalid_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/toggle/Foo?component=#0", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_toggle_wildcard_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tgl = ecs_entity(world, { .name = "Tgl" });
+    ecs_add_id(world, tgl, EcsCanToggle);
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_id(world, foo, tgl);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/toggle/Foo?component=(Tgl,*)", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_toggle_pair_not_owned(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tgl = ecs_entity(world, { .name = "Tgl" });
+    ecs_add_id(world, tgl, EcsCanToggle);
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_id(world, foo, tgl);
+    ecs_entity(world, { .name = "Bar" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/toggle/Foo?component=(Tgl,Bar)&enable=false", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_toggle_builtin_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/toggle/flecs/core/World?enable=false", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(!ecs_has_id(world, EcsWorld, EcsDisabled));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_delete_entity_w_panic(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE",
+        "/entity/flecs", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_is_alive(world, EcsFlecs));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_delete_builtin_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE",
+        "/entity/flecs/core/World", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_is_alive(world, EcsWorld));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_delete_builtin_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE",
+        "/entity/flecs/core", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_is_alive(world, EcsFlecsCore));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_delete_entity_used_by_query(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_set(world, foo, Position, {10, 20});
+    ecs_query_t *q = ecs_query(world, { .terms = {{ ecs_id(Position) }}, .cache_kind = EcsQueryCacheAuto });
+    test_assert(q != NULL);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE",
+        "/entity/Position", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_is_alive(world, ecs_id(Position)));
+    ecs_query_fini(q);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_delete_entity_w_user_panic(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, bar, EcsOnDelete, EcsPanic);
+    ecs_entity_t foo = ecs_new(world);
+    ecs_add_id(world, foo, bar);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE",
+        "/entity/Bar", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_is_alive(world, bar));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_delete_entity_w_on_delete_target_panic(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_pair(world, rel, EcsOnDeleteTarget, EcsPanic);
+    ecs_entity_t tgt = ecs_entity(world, { .name = "Tgt" });
+    ecs_entity_t foo = ecs_new(world);
+    ecs_add_pair(world, foo, rel, tgt);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE",
+        "/entity/Tgt", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_is_alive(world, tgt));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_delete_entity_used_by_builtin_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+    ecs_add_id(world, EcsWorld, tag);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE",
+        "/entity/Tag", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_is_alive(world, tag));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_delete_component_from_builtin_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE",
+        "/component/flecs/core/World?component=(flecs.core.ChildOf,flecs.core)", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_has_pair(world, EcsWorld, EcsChildOf, EcsFlecsCore));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_delete_component_from_component_in_use(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_set(world, foo, Position, {10, 20});
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE",
+        "/component/Position?component=flecs.core.Component", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_has(world, ecs_id(Position), EcsComponent));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_delete_wildcard_from_component_in_use(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_set(world, foo, Position, {10, 20});
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE",
+        "/component/Position?component=*", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_has(world, ecs_id(Position), EcsComponent));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_add_childof_self(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Foo?component=(flecs.core.ChildOf,Foo)", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(!ecs_has_pair(world, foo, EcsChildOf, foo));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_add_childof_cycle(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Foo.Bar" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Foo?component=(flecs.core.ChildOf,Foo.Bar)", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(!ecs_has_pair(world, foo, EcsChildOf, bar));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_add_isa_self(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Foo?component=(flecs.core.IsA,Foo)", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(!ecs_has_pair(world, foo, EcsIsA, foo));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_add_isa_cycle(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, bar, EcsIsA, foo);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Foo?component=(flecs.core.IsA,Bar)", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(!ecs_has_pair(world, foo, EcsIsA, bar));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_add_childof_flecs_core(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Foo?component=(flecs.core.ChildOf,flecs.core)", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(!ecs_has_pair(world, foo, EcsChildOf, EcsFlecsCore));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_reparent_flecs_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/flecs?component=(flecs.core.ChildOf,Foo)", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(!ecs_has_pair(world, EcsFlecs, EcsChildOf, foo));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_reparent_flecs_core_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/flecs/core?component=(flecs.core.ChildOf,Foo)", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(!ecs_has_pair(world, EcsFlecsCore, EcsChildOf, foo));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_reparent_builtin_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/flecs/core/World?component=(flecs.core.ChildOf,Foo)", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_has_pair(world, EcsWorld, EcsChildOf, EcsFlecsCore));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_add_isa_final(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_id(world, bar, EcsFinal);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Foo?component=(flecs.core.IsA,Bar)", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(!ecs_has_pair(world, foo, EcsIsA, bar));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_add_target_trait_by_itself(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_id(world, bar, EcsTarget);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Foo?component=Bar", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(!ecs_has_id(world, foo, bar));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+
+void Rest_add_target_trait_as_relationship(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_id(world, bar, EcsTarget);
+    ecs_entity(world, { .name = "Tgt" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Foo?component=(Bar,Tgt)", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_add_relationship_trait_as_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_id(world, bar, EcsRelationship);
+    ecs_entity(world, { .name = "Rel" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Foo?component=(Rel,Bar)", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_add_singleton_to_other_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_id(world, bar, EcsSingleton);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Foo?component=Bar", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(!ecs_has_id(world, foo, bar));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_add_trait_to_component_in_use(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_set(world, foo, Position, {10, 20});
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Position?component=flecs.core.Sparse", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(!ecs_has_id(world, ecs_id(Position), EcsSparse));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_add_trait_to_queried_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/flecs/core/IsA?component=flecs.core.Exclusive", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(!ecs_has_id(world, EcsIsA, EcsExclusive));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_remove_trait_from_component_in_use(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, rel, EcsTraversable);
+    ecs_entity_t tgt = ecs_entity(world, { .name = "Tgt" });
+    ecs_add_pair(world, foo, rel, tgt);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE",
+        "/component/Rel?component=flecs.core.Traversable", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_has_id(world, rel, EcsTraversable));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_add_final_to_inherited_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_id(world, bar, EcsPrefab);
+    ecs_add_pair(world, foo, EcsIsA, bar);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Bar?component=flecs.core.Final", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(!ecs_has_id(world, bar, EcsFinal));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_set_component_invalid_size(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "Bar" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Bar?component=flecs.core.Component&value={\"size\":3}", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_set_component_in_use(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_set(world, foo, Position, {10, 20});
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Position?component=flecs.core.Component&value={\"size\":1,\"alignment\":1}", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_int(ecs_get(world, ecs_id(Position), EcsComponent)->size, ECS_SIZEOF(Position));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_set_component_size_overflow(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity(world, { .name = "Bar" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Bar?component=flecs.core.Component&value={\"size\":2147483647,\"alignment\":4}", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_set_parent_self(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Foo?component=flecs.core.Parent&value={\"value\":\"Foo\"}", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_set_parent_invalid(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Foo?component=flecs.core.Parent&value={\"value\":\"#0\"}", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_rename_builtin_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/flecs/core/World?component=(flecs.core.Identifier,flecs.core.Name)&value={\"value\":\"Foo\"}", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_str(ecs_get_name(world, EcsWorld), "World");
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_rename_flecs_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/flecs?component=(flecs.core.Identifier,flecs.core.Name)&value={\"value\":\"Foo\"}", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_str(ecs_get_name(world, EcsFlecs), "flecs");
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_set_array_cyclic(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "Bar" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Bar?component=flecs.meta.array&value={\"type\":\"Bar\",\"count\":2}", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_set_array_size_overflow(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity(world, { .name = "Bar" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Bar?component=flecs.meta.array&value={\"type\":\"Position\",\"count\":2000000000}", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_set_member_cyclic(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity(world, { .name = "Position.z" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Position/z?component=flecs.meta.member&value={\"type\":\"Position\"}", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_set_enum_non_primitive_underlying_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity(world, { .name = "Bar" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Bar?component=flecs.meta.enum&value={\"underlying_type\":\"Position\"}", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_set_enum_float_underlying_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "Bar" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Bar?component=flecs.meta.enum&value={\"underlying_type\":\"flecs.meta.f32\"}", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_set_meta_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "Bar" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Bar?component=flecs.meta.type&value={\"kind\":\"StructType\"}", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_query_negative_offset(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_set(world, foo, Position, {10, 20});
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "GET",
+        "/query?expr=Position&offset=-1", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_request_commands_negative_frame(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "GET",
+        "/commands/frame/-1", NULL, &reply));
+    test_int(reply.code, 404);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_command_history_offset_limit_overflow(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/shell/session", NULL, &reply));
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    unsigned long long session = 0;
+    test_int(sscanf(reply_str, "{\"session\":%llu}", &session), 1);
+    ecs_os_free(reply_str);
+
+    char path[256];
+    ecs_os_snprintf(path, 256, "/shell/session/%llu", session);
+
+    reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT", path, "pwd", &reply));
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_os_snprintf(path, 256, "/shell/session/%llu/history"
+        "?offset=2147483647&limit=2147483647&results=true", session);
+
+    reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET", path, NULL, &reply));
+    test_int(reply.code, 200);
+    reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str, "{\"history\":[], \"results\":[], \"more\":false}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_script_save_file_open_fails(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_int(0, ecs_os_mkdir("dir"));
+    FILE *f = ecs_os_fopen("dir/s.flecs", "w");
+    test_assert(f != NULL);
+    ecs_os_fwrite("Foo {}", 6, 1, f);
+    ecs_os_fclose(f);
+
+    ecs_entity_t s = ecs_entity(world, { .name = "s" });
+    test_assert(s == ecs_script(world, {
+        .entity = s,
+        .filename = "dir/s.flecs"
+    }));
+
+    test_int(0, ecs_os_remove("dir/s.flecs"));
+    test_int(0, ecs_os_rmdir("dir"));
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/script/s?save_file=true", "Bar {}", &reply));
+    test_int(reply.code, 500);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}

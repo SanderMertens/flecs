@@ -238,6 +238,11 @@ void flecs_script_eval_error_(
 #define flecs_script_eval_error(v, node, ...)\
     flecs_script_eval_error_(v, (const ecs_script_node_t*)node, __VA_ARGS__)
 
+int flecs_script_eval_guard(
+    ecs_script_eval_visitor_t *v,
+    const void *node,
+    char *err);
+
 void flecs_script_eval_warn_(
     ecs_script_eval_visitor_t *v,
     const ecs_script_node_t *node,

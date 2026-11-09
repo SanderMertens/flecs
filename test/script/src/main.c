@@ -1907,6 +1907,27 @@ void Error_pair_scope_unresolved_first(void);
 void Error_pair_scope_unresolved_second(void);
 void Error_compare_vector_types(void);
 void Error_divide_strings(void);
+void Error_add_childof_self(void);
+void Error_add_childof_cycle(void);
+void Error_with_childof_self(void);
+void Error_add_isa_self(void);
+void Error_add_isa_cycle(void);
+void Error_add_isa_final(void);
+void Error_add_target_trait_by_itself(void);
+void Error_add_relationship_trait_as_target(void);
+void Error_add_relationship_trait_by_itself(void);
+void Error_add_singleton_to_other_entity(void);
+void Error_add_trait_to_component_in_use(void);
+void Error_add_trait_to_queried_component(void);
+void Error_add_childof_flecs_core(void);
+void Error_reparent_builtin_entity(void);
+void Error_reparent_flecs_module(void);
+void Error_reparent_flecs_core_module(void);
+void Error_set_component_in_use(void);
+void Error_set_component_invalid_size(void);
+void Error_set_parent_self(void);
+void Error_set_parent_invalid(void);
+void Error_set_meta_type(void);
 
 // Testsuite 'Format'
 void Format_setup(void);
@@ -4204,6 +4225,22 @@ void Command_multi_command_history(void);
 void Command_multi_command_history_errors_per_command(void);
 void Command_multi_command_help(void);
 void Command_query_sparse(void);
+void Command_add_childof_self(void);
+void Command_add_isa_self(void);
+void Command_add_trait_to_component_in_use(void);
+void Command_add_relationship_trait_by_itself(void);
+void Command_rm_entity_w_panic(void);
+void Command_rm_builtin_entity(void);
+void Command_rm_entity_used_by_query(void);
+void Command_rm_component_from_builtin_entity(void);
+void Command_rm_component_from_component_in_use(void);
+void Command_set_component_invalid_size(void);
+void Command_set_component_in_use(void);
+void Command_set_parent_self(void);
+void Command_set_parent_invalid(void);
+void Command_mv_entity_into_builtin_module(void);
+void Command_mv_builtin_entity(void);
+void Command_mv_flecs_module(void);
 
 // Testsuite 'CommandResource'
 void CommandResource_setup(void);
@@ -11752,6 +11789,90 @@ bake_test_case Error_testcases[] = {
     {
         "divide_strings",
         Error_divide_strings
+    },
+    {
+        "add_childof_self",
+        Error_add_childof_self
+    },
+    {
+        "add_childof_cycle",
+        Error_add_childof_cycle
+    },
+    {
+        "with_childof_self",
+        Error_with_childof_self
+    },
+    {
+        "add_isa_self",
+        Error_add_isa_self
+    },
+    {
+        "add_isa_cycle",
+        Error_add_isa_cycle
+    },
+    {
+        "add_isa_final",
+        Error_add_isa_final
+    },
+    {
+        "add_target_trait_by_itself",
+        Error_add_target_trait_by_itself
+    },
+    {
+        "add_relationship_trait_as_target",
+        Error_add_relationship_trait_as_target
+    },
+    {
+        "add_relationship_trait_by_itself",
+        Error_add_relationship_trait_by_itself
+    },
+    {
+        "add_singleton_to_other_entity",
+        Error_add_singleton_to_other_entity
+    },
+    {
+        "add_trait_to_component_in_use",
+        Error_add_trait_to_component_in_use
+    },
+    {
+        "add_trait_to_queried_component",
+        Error_add_trait_to_queried_component
+    },
+    {
+        "add_childof_flecs_core",
+        Error_add_childof_flecs_core
+    },
+    {
+        "reparent_builtin_entity",
+        Error_reparent_builtin_entity
+    },
+    {
+        "reparent_flecs_module",
+        Error_reparent_flecs_module
+    },
+    {
+        "reparent_flecs_core_module",
+        Error_reparent_flecs_core_module
+    },
+    {
+        "set_component_in_use",
+        Error_set_component_in_use
+    },
+    {
+        "set_component_invalid_size",
+        Error_set_component_invalid_size
+    },
+    {
+        "set_parent_self",
+        Error_set_parent_self
+    },
+    {
+        "set_parent_invalid",
+        Error_set_parent_invalid
+    },
+    {
+        "set_meta_type",
+        Error_set_meta_type
     }
 };
 
@@ -20750,6 +20871,70 @@ bake_test_case Command_testcases[] = {
     {
         "query_sparse",
         Command_query_sparse
+    },
+    {
+        "add_childof_self",
+        Command_add_childof_self
+    },
+    {
+        "add_isa_self",
+        Command_add_isa_self
+    },
+    {
+        "add_trait_to_component_in_use",
+        Command_add_trait_to_component_in_use
+    },
+    {
+        "add_relationship_trait_by_itself",
+        Command_add_relationship_trait_by_itself
+    },
+    {
+        "rm_entity_w_panic",
+        Command_rm_entity_w_panic
+    },
+    {
+        "rm_builtin_entity",
+        Command_rm_builtin_entity
+    },
+    {
+        "rm_entity_used_by_query",
+        Command_rm_entity_used_by_query
+    },
+    {
+        "rm_component_from_builtin_entity",
+        Command_rm_component_from_builtin_entity
+    },
+    {
+        "rm_component_from_component_in_use",
+        Command_rm_component_from_component_in_use
+    },
+    {
+        "set_component_invalid_size",
+        Command_set_component_invalid_size
+    },
+    {
+        "set_component_in_use",
+        Command_set_component_in_use
+    },
+    {
+        "set_parent_self",
+        Command_set_parent_self
+    },
+    {
+        "set_parent_invalid",
+        Command_set_parent_invalid
+    },
+    {
+        "mv_entity_into_builtin_module",
+        Command_mv_entity_into_builtin_module
+    },
+    {
+        "mv_builtin_entity",
+        Command_mv_builtin_entity
+    },
+    {
+        "mv_flecs_module",
+        Command_mv_flecs_module
     }
 };
 
@@ -21127,7 +21312,7 @@ static bake_test_suite suites[] = {
         "Error",
         Error_setup,
         NULL,
-        259,
+        280,
         Error_testcases,
         1,
         Error_params
@@ -21319,7 +21504,7 @@ static bake_test_suite suites[] = {
         "Command",
         Command_setup,
         NULL,
-        144,
+        160,
         Command_testcases
     },
     {

@@ -6199,3 +6199,297 @@ void Error_divide_strings(void) {
 
     ecs_fini(world);
 }
+
+void Error_add_childof_self(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "e {\n  (ChildOf, e)\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_add_childof_cycle(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "a {}\nb {\n  (ChildOf, a)\n}\na {\n  (ChildOf, b)\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_with_childof_self(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "e {}\nwith (ChildOf, e) {\n  e {}\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_add_isa_self(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "e {\n  (IsA, e)\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_add_isa_cycle(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "a {}\nb {\n  (IsA, a)\n}\na {\n  (IsA, b)\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_add_isa_final(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "a {\n  Final\n}\nb {\n  (IsA, a)\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_add_target_trait_by_itself(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "a {\n  Target\n}\nb {\n  a\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_add_relationship_trait_as_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "a {\n  Relationship\n}\nr {}\nb {\n  (r, a)\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_add_relationship_trait_by_itself(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "a {\n  flecs.core.Identifier: {value: \"x\"}\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_add_singleton_to_other_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "a {\n  Singleton\n}\nb {\n  a\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_add_trait_to_component_in_use(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t foo = ecs_new(world);
+    ecs_set(world, foo, Position, {10, 20});
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "Position {\n  Sparse\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    test_assert(!ecs_has_id(world, ecs_id(Position), EcsSparse));
+
+    ecs_fini(world);
+}
+
+void Error_add_trait_to_queried_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "const x = flecs.core.IsA\n$x {\n  Exclusive\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    test_assert(!ecs_has_id(world, EcsIsA, EcsExclusive));
+
+    ecs_fini(world);
+}
+
+void Error_add_childof_flecs_core(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "e {\n  (ChildOf, flecs.core)\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_reparent_builtin_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "e {}\nconst x = flecs.core.World\n$x {\n  (ChildOf, e)\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    test_assert(ecs_has_pair(world, EcsWorld, EcsChildOf, EcsFlecsCore));
+
+    ecs_fini(world);
+}
+
+void Error_reparent_flecs_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "e {}\nconst x = flecs\n$x {\n  (ChildOf, e)\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    test_assert(!ecs_has_id(world, EcsFlecs, ecs_pair(EcsChildOf, EcsWildcard)));
+
+    ecs_fini(world);
+}
+
+void Error_reparent_flecs_core_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "e {}\nconst x = flecs.core\n$x {\n  (ChildOf, e)\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    test_assert(ecs_has_pair(world, EcsFlecsCore, EcsChildOf, EcsFlecs));
+
+    ecs_fini(world);
+}
+
+void Error_set_component_in_use(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t foo = ecs_new(world);
+    ecs_set(world, foo, Position, {10, 20});
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "Position {\n  Component: {size: 4, alignment: 4}\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    test_int(ecs_get(world, ecs_id(Position), EcsComponent)->size, ECS_SIZEOF(Position));
+
+    ecs_fini(world);
+}
+
+void Error_set_component_invalid_size(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "a {\n  Component: {size: 3}\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_set_parent_self(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "a {\n  Parent: {a}\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_set_parent_invalid(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "a {\n  Parent: {#0}\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_set_meta_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "e {\n  flecs.meta.type: {kind: StructType}\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+

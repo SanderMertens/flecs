@@ -7,6 +7,7 @@
 
 #ifdef FLECS_SCRIPT_SHELL
 #include "command.h"
+#include "../../world_guard.h"
 
 typedef struct {
     const char *name;
@@ -374,6 +375,11 @@ static void flecs_command_set(
         return;
     }
 
+    if (flecs_command_guard(ctx, flecs_guard_set(world, e, id, value.ptr))) {
+        ecs_value_fini(world, &value);
+        return;
+    }
+
     ecs_set_id(world, e, id,
         flecs_itosize(ecs_get_type_info(world, value.type)->size), value.ptr);
     *(ecs_value_t*)result->ptr = value;
@@ -476,6 +482,10 @@ static void flecs_command_add(
         return;
     }
 
+    if (flecs_command_guard(ctx, flecs_guard_add(ctx->world, e, id))) {
+        return;
+    }
+
     ecs_add_id(ctx->world, e, id);
     *(ecs_id_t*)result->ptr = id;
 }
@@ -498,8 +508,16 @@ static void flecs_command_rm(
             return;
         }
 
+        if (flecs_command_guard(ctx, flecs_guard_remove(ctx->world, e, id))) {
+            return;
+        }
+
         ecs_remove_id(ctx->world, e, id);
     } else {
+        if (flecs_command_guard(ctx, flecs_guard_delete(ctx->world, e))) {
+            return;
+        }
+
         ecs_delete(ctx->world, e);
     }
 }
@@ -591,6 +609,18 @@ static void flecs_command_mv(
     if (existing && existing != e) {
         flecs_command_err(ctx, "entity '%s' already exists", path);
         return;
+    }
+
+    if (flecs_command_guard(ctx, flecs_guard_rename(world, e))) {
+        return;
+    }
+
+    if (parent && ecs_get_parent(world, e) != parent) {
+        if (flecs_command_guard(ctx, flecs_guard_add(
+            world, e, ecs_childof(parent))))
+        {
+            return;
+        }
     }
 
     if (ecs_get_parent(world, e) != parent) {

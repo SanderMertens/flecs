@@ -6,6 +6,7 @@
 #include "../private_api.h"
 #include "query_dsl/query_dsl.h"
 #include "json/json.h"
+#include "world_guard.h"
 
 #ifdef FLECS_REST
 
@@ -110,6 +111,48 @@ static void flecs_rest_string_param(
     }
 }
 
+static bool flecs_rest_guard(
+    ecs_http_reply_t *reply,
+    char *err)
+{
+    if (!err) {
+        return false;
+    }
+
+    char *escaped_err = flecs_astresc('"', err);
+    flecs_reply_error(reply, "%s", escaped_err);
+    ecs_os_free(escaped_err);
+    ecs_os_free(err);
+    reply->code = 400;
+    return true;
+}
+
+static bool flecs_rest_parent_guard(
+    ecs_world_t *world,
+    ecs_http_reply_t *reply,
+    const char *path)
+{
+    const char *last = strrchr(path, '/');
+    if (!last) {
+        return false;
+    }
+
+    char *parent_path = ecs_os_strdup(path);
+    parent_path[last - path] = '\0';
+    ecs_entity_t parent = ecs_lookup_path_w_sep(
+        world, 0, parent_path, "/", NULL, false);
+    ecs_os_free(parent_path);
+
+    if (parent == EcsFlecsCore) {
+        flecs_reply_error(reply,
+            "cannot create entity '%s' in builtin module", path);
+        reply->code = 400;
+        return true;
+    }
+
+    return false;
+}
+
 static void flecs_rest_parse_json_ser_entity_params(
     ecs_world_t *world,
     ecs_entity_to_json_desc_t *desc,
@@ -206,6 +249,10 @@ static bool flecs_rest_put_entity(
     const char *path)
 {
     ecs_dbg_2("rest: create entity '%s'", path);
+
+    if (flecs_rest_parent_guard(world, reply, path)) {
+        return true;
+    }
 
     ecs_entity_t result = ecs_entity(world, {
         .name = path,
@@ -316,6 +363,10 @@ static bool flecs_rest_get_component(
         return true;
     }
 
+    if (flecs_rest_guard(reply, flecs_guard_id_valid(world, id))) {
+        return true;
+    }
+
     ecs_entity_t type = ecs_get_typeid(world, id);
     if (!type) {
         flecs_reply_error(reply, "component '%s' is not a type", component);
@@ -360,8 +411,16 @@ static bool flecs_rest_put_component(
         return true;
     }
 
+    if (flecs_rest_guard(reply, flecs_guard_id_valid(world, id))) {
+        return true;
+    }
+
     const char *data = ecs_http_get_param(req, "value");
     if (!data) {
+        if (flecs_rest_guard(reply, flecs_guard_add(world, e, id))) {
+            return true;
+        }
+
         ecs_add_id(world, e, id);
         return true;
     }
@@ -390,8 +449,13 @@ static bool flecs_rest_put_component(
 
     ecs_entity_t type = ti->component;
     bool valid = ecs_ptr_from_json(world, type, ptr, data, NULL) != NULL;
+    bool rejected = false;
     if (valid) {
-        ecs_set_id(world, e, id, flecs_ito(size_t, ti->size), ptr);
+        rejected = flecs_rest_guard(reply,
+            flecs_guard_set(world, e, id, ptr));
+        if (!rejected) {
+            ecs_set_id(world, e, id, flecs_ito(size_t, ti->size), ptr);
+        }
     }
 
     flecs_type_info_dtor(ptr, 1, ti);
@@ -430,6 +494,10 @@ static bool flecs_rest_delete_component(
         return true;
     }
 
+    if (flecs_rest_guard(reply, flecs_guard_remove(world, e, id))) {
+        return true;
+    }
+
     ecs_remove_id(world, e, id);
 
     return true;
@@ -445,8 +513,12 @@ static bool flecs_rest_delete_entity(
         return true;
     }
 
+    if (flecs_rest_guard(reply, flecs_guard_delete(world, e))) {
+        return true;
+    }
+
     ecs_delete(world, e);
-    
+
     return true;
 }
 
@@ -464,6 +536,10 @@ static bool flecs_rest_toggle(
     bool enable = true;
     flecs_rest_bool_param(req, "enable", &enable);
 
+    if (flecs_rest_guard(reply, flecs_guard_enable(world, e))) {
+        return true;
+    }
+
     const char *component = ecs_http_get_param(req, "component");
     if (!component) {
         ecs_enable(world, e, enable);
@@ -477,6 +553,10 @@ static bool flecs_rest_toggle(
         return true;
     }
 
+    if (flecs_rest_guard(reply, flecs_guard_id_valid(world, id))) {
+        return true;
+    }
+
     ecs_entity_t rel = 0;
     if (ECS_IS_PAIR(id)) {
         rel = ecs_pair_first(world, id);
@@ -486,6 +566,13 @@ static bool flecs_rest_toggle(
 
     if (!ecs_has_id(world, rel, EcsCanToggle)) {
         flecs_reply_error(reply, "cannot toggle component '%s'", component);
+        reply->code = 400;
+        return true;
+    }
+
+    if (!ecs_owns_id(world, e, id)) {
+        flecs_reply_error(reply, "entity '%s' does not have component '%s'",
+            path, component);
         reply->code = 400;
         return true;
     }
@@ -512,6 +599,10 @@ static bool flecs_rest_script(
          * populated by the failed lookup, as the request itself is valid. */
         ecs_strbuf_reset(&reply->body);
         reply->code = 200;
+        if (flecs_rest_parent_guard(world, reply, path)) {
+            return true;
+        }
+
         script = ecs_entity(world, { .name = path, .sep = "/" });
         if (!script) {
             flecs_reply_error(reply, "invalid script name '%s'", path);
@@ -546,6 +637,15 @@ static bool flecs_rest_script(
 
     if (s && s->filename && save_file) {
         FILE *f = ecs_os_fopen(s->filename, "w");
+        if (!f) {
+            char *escaped = flecs_astresc('"', s->filename);
+            ecs_strbuf_reset(&reply->body);
+            flecs_reply_error(reply, "failed to open file '%s'", escaped);
+            ecs_os_free(escaped);
+            reply->code = 500;
+            return true;
+        }
+
         ecs_os_fwrite(code, strlen(code), 1, f);
         ecs_os_fclose(f);
     }
@@ -760,7 +860,7 @@ static void flecs_rest_command_elems_to_json(
 {
     const ecs_type_info_t *ti = ecs_get_type_info(world, elem_type);
     int32_t i, end = count;
-    if (limit >= 0 && (offset + limit) < count) {
+    if (limit >= 0 && ((int64_t)offset + limit) < count) {
         end = offset + limit;
     }
 
@@ -796,7 +896,7 @@ static void flecs_rest_command_lines_to_json(
             end = ptr + ecs_os_strlen(ptr);
         }
 
-        if (limit >= 0 && line >= (offset + limit)) {
+        if (limit >= 0 && line >= ((int64_t)offset + limit)) {
             *more = true;
             break;
         }
@@ -945,7 +1045,7 @@ static bool flecs_rest_command_get(
     if (results) {
         char **array = ecs_vec_first(&s->results);
         int32_t i, end = ecs_vec_count(&s->results);
-        if (limit >= 0 && (offset + limit) < end) {
+        if (limit >= 0 && ((int64_t)offset + limit) < end) {
             end = offset + limit;
         }
 
@@ -1101,6 +1201,8 @@ static bool flecs_rest_iter_to_reply(
 
     if (offset < 0 || limit < 0) {
         flecs_reply_error(reply, "invalid offset/limit parameter");
+        reply->code = 400;
+        ecs_iter_fini(it);
         return true;
     }
 
@@ -2348,8 +2450,16 @@ static bool flecs_rest_get_commands_request(
 {
     (void)world;
     char *frame_str = &req->path[15];
-    int32_t frame = atoi(frame_str);
-    
+    char *frame_end = NULL;
+    long long frame_ll = strtoll(frame_str, &frame_end, 10);
+    if (frame_end == frame_str || frame_ll < 0 || frame_ll > INT32_MAX) {
+        flecs_reply_error(reply, "invalid frame '%s'", frame_str);
+        reply->code = 404;
+        return true;
+    }
+
+    int32_t frame = (int32_t)frame_ll;
+
     ecs_map_init_if(&impl->cmd_captures, &world->allocator);
     const ecs_rest_cmd_capture_t *capture = ecs_map_get_deref(
         &impl->cmd_captures, ecs_rest_cmd_capture_t, 

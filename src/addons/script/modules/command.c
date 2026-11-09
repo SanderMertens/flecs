@@ -7,6 +7,7 @@
 
 #ifdef FLECS_SCRIPT_SHELL
 #include "command.h"
+#include "../../world_guard.h"
 
 ECS_COMPONENT_DECLARE(EcsScriptShell);
 ECS_COMPONENT_DECLARE(EcsCommandSession);
@@ -253,6 +254,19 @@ ecs_entity_t flecs_command_value_type(
     }
 
     return type;
+}
+
+bool flecs_command_guard(
+    const ecs_function_ctx_t *ctx,
+    char *err)
+{
+    if (!err) {
+        return false;
+    }
+
+    flecs_command_err(ctx, "%s", err);
+    ecs_os_free(err);
+    return true;
 }
 
 int flecs_command_parse_component(

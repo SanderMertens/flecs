@@ -8,6 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "../script.h"
 #include "../../meta/meta.h"
+#include "../../world_guard.h"
 
 static bool flecs_script_valid_lookup_path(
     const char *path)
@@ -73,6 +74,20 @@ void flecs_script_eval_error_(
     va_end(args);
 }
 
+int flecs_script_eval_guard(
+    ecs_script_eval_visitor_t *v,
+    const void *node,
+    char *err)
+{
+    if (!err) {
+        return 0;
+    }
+
+    flecs_script_eval_error(v, node, "%s", err);
+    ecs_os_free(err);
+    return -1;
+}
+
 void flecs_script_eval_warn_(
     ecs_script_eval_visitor_t *v,
     const ecs_script_node_t *node,
@@ -122,6 +137,12 @@ const ecs_type_info_t* flecs_script_get_type_info(
     const void *node,
     ecs_id_t id)
 {
+    if (flecs_script_eval_guard(v, node,
+        flecs_guard_component(v->world, id)))
+    {
+        return NULL;
+    }
+
     ecs_component_record_t *cr = flecs_components_ensure(v->world, id);
     if (!cr) {
         goto error;
@@ -424,7 +445,7 @@ bool flecs_script_can_own_entity(
     return true;
 }
 
-static void flecs_script_apply_with(
+static int flecs_script_apply_with(
     ecs_script_eval_visitor_t *v,
     ecs_entity_t entity)
 {
@@ -432,6 +453,12 @@ static void flecs_script_apply_with(
     int32_t i, count = ecs_vec_count(&v->r->with);
     for (i = 0; i < count; i ++) {
         ecs_value_t *value = &with[i].value;
+        if (flecs_script_eval_guard(v, NULL, flecs_guard_set(
+            v->world, entity, value->type, value->ptr)))
+        {
+            return -1;
+        }
+
         if (value->ptr) {
             const ecs_type_info_t *ti = with[i].ti;
             ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -441,6 +468,8 @@ static void flecs_script_apply_with(
             ecs_add_id(v->world, entity, value->type);
         }
     }
+
+    return 0;
 }
 
 ecs_entity_t flecs_script_new_entity(
@@ -449,6 +478,12 @@ ecs_entity_t flecs_script_new_entity(
     const char *name,
     bool non_fragmenting_parent)
 {
+    if (parent == EcsFlecsCore) {
+        flecs_script_eval_error(v, NULL,
+            "cannot create entity '%s' in builtin module", name);
+        return 0;
+    }
+
     ecs_entity_desc_t desc = {0};
     if (non_fragmenting_parent) {
         desc.id = ecs_new_w_parent(v->world, parent, name);
@@ -474,7 +509,9 @@ ecs_entity_t flecs_script_create_entity(
     ecs_entity_t result = flecs_script_new_entity(v, v->parent, name,
         v->entity && v->entity->node && v->entity->node->non_fragmenting_parent);
     if (result) {
-        flecs_script_apply_with(v, result);
+        if (flecs_script_apply_with(v, result)) {
+            return 0;
+        }
     }
 
     return result;
@@ -874,7 +911,7 @@ int flecs_script_apply_annot(
     return 0;
 }
 
-static void flecs_script_add_entity_kind(
+static int flecs_script_add_entity_kind(
     ecs_script_eval_visitor_t *v,
     ecs_entity_t entity,
     ecs_entity_t kind,
@@ -888,8 +925,15 @@ static void flecs_script_add_entity_kind(
         stage->ensure_add = &ensure_add_type;
     }
 
+    if (flecs_script_eval_guard(v, NULL,
+        flecs_guard_add(v->world, entity, kind)))
+    {
+        return -1;
+    }
+
     ecs_add_id(v->world, entity, kind);
     stage->ensure_add = ensure_add;
+    return 0;
 }
 
 void flecs_script_scope_add_ids(
@@ -1011,7 +1055,9 @@ int flecs_script_eval_entity_enter_w_name(
         }
 
         if (is_ref) {
-            flecs_script_apply_with(v, eval);
+            if (flecs_script_apply_with(v, eval)) {
+                return -1;
+            }
         } else if (state->eval && state->eval != eval &&
             ecs_is_alive(v->world, state->eval))
         {
@@ -1022,11 +1068,17 @@ int flecs_script_eval_entity_enter_w_name(
         state->created = true;
     } else if (!state->eval) {
         state->eval = flecs_script_create_entity(v, node->name);
+        if (!state->eval) {
+            return -1;
+        }
+
         state->created = true;
     }
 
     if (apply_with && !node->name_expr && v->force) {
-        flecs_script_apply_with(v, state->eval);
+        if (flecs_script_apply_with(v, state->eval)) {
+            return -1;
+        }
     }
 
     if (node->symbol != -1) {
@@ -1069,8 +1121,11 @@ int flecs_script_eval_entity_enter_w_name(
             goto error;
         }
 
-        flecs_script_add_entity_kind(
-            v, state->eval, state->eval_kind, node->kind_w_expr);
+        if (flecs_script_add_entity_kind(
+            v, state->eval, state->eval_kind, node->kind_w_expr))
+        {
+            goto error;
+        }
     }
 
     int32_t i, count = ecs_vec_count(&v->r->annot);
@@ -1254,6 +1309,11 @@ static int flecs_script_set_template_ref(
     int result = flecs_script_template_ref_apply(
         v->world, v->id_ref, ti, value);
     if (!result) {
+        result = flecs_script_eval_guard(v, node,
+            flecs_guard_set(v->world, src, id, value));
+    }
+
+    if (!result) {
         ecs_set_id(v->world, src, id, flecs_itosize(ti->size), value);
     }
 
@@ -1341,6 +1401,12 @@ int flecs_script_eval_tag_id(
             return -1;
         }
     } else {
+        if (flecs_script_eval_guard(v, node,
+            flecs_guard_add(v->world, src, id)))
+        {
+            return -1;
+        }
+
         ecs_add_id(v->world, src, id);
     }
 
@@ -1444,6 +1510,12 @@ int flecs_script_eval_component_add(
             return -1;
         }
     } else {
+        if (flecs_script_eval_guard(v, node,
+            flecs_guard_add(v->world, src, id)))
+        {
+            return -1;
+        }
+
         ecs_add_id(v->world, src, id);
     }
 
@@ -1540,6 +1612,13 @@ static int flecs_script_eval_component(
         }
 
         if (flecs_script_eval_expr(v, &node->expr, &value)) {
+            flecs_type_info_dtor(value.ptr, 1, ti);
+            return -1;
+        }
+
+        if (flecs_script_eval_guard(v, node,
+            flecs_guard_set(v->world, src, node->id.eval, value.ptr)))
+        {
             flecs_type_info_dtor(value.ptr, 1, ti);
             return -1;
         }
@@ -2207,11 +2286,16 @@ int flecs_script_assign_value(
     void *copy = ecs_ptr_new_w_type_info(world, comp_ti);
     ecs_ptr_copy_w_type_info(world, comp_ti, copy, cur);
     ecs_ptr_copy_w_type_info(world, ti, ECS_OFFSET(copy, node->offset), src);
-    ecs_set_id(world, instance, component,
-        flecs_ito(size_t, comp_ti->size), copy);
+    int result = flecs_script_eval_guard(v, node,
+        flecs_guard_set(world, instance, component, copy));
+    if (!result) {
+        ecs_set_id(world, instance, component,
+            flecs_ito(size_t, comp_ti->size), copy);
+    }
+
     ecs_ptr_free_w_type_info(world, comp_ti, copy);
 
-    return 0;
+    return result;
 }
 
 static FLECS_SCRIPT_NOINLINE int flecs_script_eval_assign(

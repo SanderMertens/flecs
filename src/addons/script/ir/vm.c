@@ -8,6 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "../script.h"
 #include "../../meta/meta.h"
+#include "../../world_guard.h"
 #include <inttypes.h>
 
 #define flecs_ir_error(vm, node, ...)\
@@ -831,6 +832,12 @@ static int flecs_ir_component_end(
     if (!src) {
         flecs_ir_error(vm, node,
             "cannot set component '%s' on invalid entity", node->id.first);
+        return -1;
+    }
+
+    if (flecs_script_eval_guard(v, node,
+        flecs_guard_set(v->world, src, id, value)))
+    {
         return -1;
     }
 
