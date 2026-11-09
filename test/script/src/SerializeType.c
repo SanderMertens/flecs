@@ -306,3 +306,63 @@ void SerializeType_opaque_dep(void) {
 
     ecs_fini(world);
 }
+
+void SerializeType_anonymous_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .members = {
+            { "x", ecs_id(ecs_f32_t) }
+        }
+    });
+    test_assert(t != 0);
+
+    ecs_log_set_level(-4);
+    char *str = ecs_type_to_script(world, t);
+    test_assert(str == NULL);
+
+    ecs_fini(world);
+}
+
+void SerializeType_struct_w_anonymous_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "T", .parent = p }),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) }
+        }
+    });
+    test_assert(t != 0);
+
+    ecs_log_set_level(-4);
+    char *str = ecs_type_to_script(world, t);
+    test_assert(str == NULL);
+
+    ecs_fini(world);
+}
+
+void SerializeType_struct_w_anonymous_member_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t inner = ecs_struct(world, {
+        .members = {
+            { "x", ecs_id(ecs_f32_t) }
+        }
+    });
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .members = {
+            { "a", inner }
+        }
+    });
+    test_assert(t != 0);
+
+    ecs_log_set_level(-4);
+    char *str = ecs_type_to_script(world, t);
+    test_assert(str == NULL);
+
+    ecs_fini(world);
+}

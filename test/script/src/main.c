@@ -4305,6 +4305,9 @@ void SerializeType_roundtrip(void);
 void SerializeType_primitive(void);
 void SerializeType_not_a_type(void);
 void SerializeType_opaque_dep(void);
+void SerializeType_anonymous_struct(void);
+void SerializeType_struct_w_anonymous_parent(void);
+void SerializeType_struct_w_anonymous_member_type(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -21201,6 +21204,18 @@ bake_test_case SerializeType_testcases[] = {
     {
         "opaque_dep",
         SerializeType_opaque_dep
+    },
+    {
+        "anonymous_struct",
+        SerializeType_anonymous_struct
+    },
+    {
+        "struct_w_anonymous_parent",
+        SerializeType_struct_w_anonymous_parent
+    },
+    {
+        "struct_w_anonymous_member_type",
+        SerializeType_struct_w_anonymous_member_type
     }
 };
 
@@ -21638,7 +21653,7 @@ static bake_test_suite suites[] = {
         "SerializeType",
         NULL,
         NULL,
-        18,
+        21,
         SerializeType_testcases
     }
 };

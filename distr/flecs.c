@@ -73849,6 +73849,12 @@ static int flecs_type_to_script_decl(
     const EcsType *t = ecs_get(world, type, EcsType);
     ecs_assert(t != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    if (!ecs_get_name(world, type)) {
+        ecs_err("type '%s' cannot be declared in a script: type has no name",
+            flecs_errstr(ecs_get_path(world, type)));
+        return -1;
+    }
+
     switch(t->kind) {
     case EcsStructType:
         return flecs_type_to_script_struct(world, type, buf);
@@ -73899,6 +73905,13 @@ static int flecs_type_to_script_emit(
     int32_t i, depth = 0;
     ecs_entity_t parent = ecs_get_parent(world, type);
     while (parent && depth < 64) {
+        if (!ecs_get_name(world, parent)) {
+            ecs_err("type '%s' cannot be declared in a script: "
+                "parent has no name",
+                    flecs_errstr(ecs_get_path(world, type)));
+            return -1;
+        }
+
         parents[depth ++] = parent;
         parent = ecs_get_parent(world, parent);
     }

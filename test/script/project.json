@@ -4457,7 +4457,10 @@
                 "roundtrip",
                 "primitive",
                 "not_a_type",
-                "opaque_dep"
+                "opaque_dep",
+                "anonymous_struct",
+                "struct_w_anonymous_parent",
+                "struct_w_anonymous_member_type"
             ]
         }]
     }
