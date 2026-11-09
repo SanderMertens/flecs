@@ -2873,7 +2873,9 @@ static void DisableRest(ecs_iter_t *it) {
             int i;
             for (i = 0; i < rit.count; i ++) {
                 ecs_rest_ctx_t *ctx = rest[i].impl;
-                ecs_http_server_stop(ctx->srv);
+                if (ctx) {
+                    ecs_http_server_stop(ctx->srv);
+                }
             }
         }
     } else if (it->event == EcsOnRemove) {
@@ -2883,7 +2885,9 @@ static void DisableRest(ecs_iter_t *it) {
             int i;
             for (i = 0; i < rit.count; i ++) {
                 ecs_rest_ctx_t *ctx = rest[i].impl;
-                ecs_http_server_start(ctx->srv);
+                if (ctx) {
+                    ecs_http_server_start(ctx->srv);
+                }
             }
         }
     }

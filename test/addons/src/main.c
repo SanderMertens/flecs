@@ -632,6 +632,7 @@ void Rest_request_commands_after_server_fini(void);
 void Rest_remove_rest_component(void);
 void Rest_delete_rest_entity(void);
 void Rest_delete_rest_entity_parent(void);
+void Rest_disable_rest_module_w_uninitialized_rest(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -3074,6 +3075,10 @@ bake_test_case Rest_testcases[] = {
     {
         "delete_rest_entity_parent",
         Rest_delete_rest_entity_parent
+    },
+    {
+        "disable_rest_module_w_uninitialized_rest",
+        Rest_disable_rest_module_w_uninitialized_rest
     }
 };
 
@@ -3534,7 +3539,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        137,
+        138,
         Rest_testcases
     },
     {

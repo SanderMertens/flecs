@@ -3973,3 +3973,22 @@ void Rest_delete_rest_entity_parent(void) {
 
     ecs_fini(world);
 }
+
+void Rest_disable_rest_module_w_uninitialized_rest(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsRest);
+    ecs_entity_t rest = ecs_lookup(world, "flecs.rest");
+    test_assert(rest != 0);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, EcsRest);
+
+    ecs_enable(world, rest, false);
+    test_assert(ecs_has_id(world, rest, EcsDisabled));
+
+    ecs_enable(world, rest, true);
+    test_assert(!ecs_has_id(world, rest, EcsDisabled));
+
+    ecs_fini(world);
+}

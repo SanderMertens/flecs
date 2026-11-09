@@ -681,7 +681,8 @@
                 "request_commands_after_server_fini",
                 "remove_rest_component",
                 "delete_rest_entity",
-                "delete_rest_entity_parent"
+                "delete_rest_entity_parent",
+                "disable_rest_module_w_uninitialized_rest"
             ]
         }, {
             "id": "Metrics",
