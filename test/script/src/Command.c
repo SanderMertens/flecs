@@ -4609,3 +4609,35 @@ void Command_script_remove_invalid_id(void) {
 
     ecs_fini(world);
 }
+
+void Command_cd_wildcard(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_log_set_level(-4);
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    char cmd[256];
+    ecs_os_snprintf(cmd, 256, "cd %u; new", (uint32_t)EcsWildcard);
+    ecs_shell_result_t r = ecs_shell_run(world, session, cmd);
+    test_int(ecs_vec_count(&r.errors), 1);
+    ecs_shell_result_fini(world, &r);
+
+    ecs_os_snprintf(cmd, 256, "cd %u; new x", (uint32_t)EcsAny);
+    r = ecs_shell_run(world, session, cmd);
+    test_int(ecs_vec_count(&r.errors), 1);
+    ecs_shell_result_fini(world, &r);
+
+    ecs_os_snprintf(cmd, 256, "cd %u; new x", (uint32_t)EcsVariable);
+    r = ecs_shell_run(world, session, cmd);
+    test_int(ecs_vec_count(&r.errors), 1);
+    ecs_shell_result_fini(world, &r);
+
+    ecs_os_snprintf(cmd, 256, "cd %u; script_write s \"x {}\"",
+        (uint32_t)EcsWildcard);
+    r = ecs_shell_run(world, session, cmd);
+    test_int(ecs_vec_count(&r.errors), 1);
+    ecs_shell_result_fini(world, &r);
+
+    ecs_fini(world);
+}

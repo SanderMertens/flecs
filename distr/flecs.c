@@ -118160,6 +118160,14 @@ static void flecs_command_cd(
         return;
     }
 
+    if (ecs_id_is_wildcard(scope) || scope == EcsThis ||
+        scope == EcsVariable)
+    {
+        flecs_command_err(ctx, "cannot use '%s' as scope",
+            flecs_errstr(ecs_get_path(world, scope)));
+        return;
+    }
+
     ecs_entity_t session = ecs_shell_get_session(world);
     EcsCommandSession *s = ecs_get_mut(world, session, EcsCommandSession);
     s->scope = scope;
