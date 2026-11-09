@@ -275,3 +275,23 @@ void Stats_progress_stats_systems(void) {
 
     ecs_fini(world);
 }
+
+void Stats_get_pipeline_stats_uninitialized_pipeline(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsStats);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_add(world, p, EcsPipeline);
+
+    ecs_pipeline_stats_t stats = {0};
+    test_bool(false, ecs_pipeline_stats_get(world, p, &stats));
+    ecs_pipeline_stats_fini(&stats);
+
+    ecs_progress(world, 1.0);
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, p, EcsPipeline));
+
+    ecs_fini(world);
+}

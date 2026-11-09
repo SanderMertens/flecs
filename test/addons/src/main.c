@@ -354,6 +354,7 @@ void Stats_get_entity_count(void);
 void Stats_get_pipeline_stats_w_task_system(void);
 void Stats_get_not_alive_entity_count(void);
 void Stats_progress_stats_systems(void);
+void Stats_get_pipeline_stats_uninitialized_pipeline(void);
 
 // Testsuite 'Memory'
 void Memory_query_memory_no_cache(void);
@@ -2035,6 +2036,10 @@ bake_test_case Stats_testcases[] = {
     {
         "progress_stats_systems",
         Stats_progress_stats_systems
+    },
+    {
+        "get_pipeline_stats_uninitialized_pipeline",
+        Stats_get_pipeline_stats_uninitialized_pipeline
     }
 };
 
@@ -3539,7 +3544,7 @@ static bake_test_suite suites[] = {
         "Stats",
         NULL,
         NULL,
-        12,
+        13,
         Stats_testcases
     },
     {

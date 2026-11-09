@@ -501,7 +501,9 @@ bool ecs_pipeline_stats_get(
     }
 
     ecs_pipeline_state_t *pq = pqc->state;
-    ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!pq) {
+        return false;
+    }
 
     int32_t sys_count = 0, active_sys_count = 0;
 
