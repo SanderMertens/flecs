@@ -4023,3 +4023,47 @@ void Rest_disable_rest_module(void) {
 
     ecs_fini(world);
 }
+
+void Rest_put_entity_w_deleted_parent_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_delete(world, e);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    char path[128];
+    ecs_os_snprintf(path, 128, "/entity/#%u/x", (uint32_t)e);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT", path, NULL, &reply));
+    test_assert(reply.code >= 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_put_entity_w_deleted_parent_id_not_recycled(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    char path[128];
+    ecs_os_snprintf(path, 128, "/entity/#%u/x", (uint32_t)e1);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT", path, NULL, &reply));
+    test_assert(reply.code >= 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}

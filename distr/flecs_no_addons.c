@@ -10022,6 +10022,16 @@ static ecs_entity_t flecs_get_parent_from_path(
             return 0;
         }
 
+        if (parent) {
+            ecs_entity_t alive = flecs_entities_get_alive(world, parent);
+            if (alive) {
+                parent = alive;
+            } else if (ecs_exists(world, parent)) {
+                *error = true;
+                return 0;
+            }
+        }
+
         path ++;
         while (path[0] && isdigit(path[0])) {
             path ++; /* Skip id part of path */
@@ -10644,6 +10654,12 @@ ecs_entity_t ecs_add_path_w_sep(
     if (error) {
         /* Invalid id */
         ecs_err("invalid identifier: '%s'", path);
+        return 0;
+    }
+
+    if (entity && parent && ((uint32_t)entity == (uint32_t)parent)) {
+        ecs_err("invalid identifier: '%s' (entity cannot be its own parent)",
+            path);
         return 0;
     }
 

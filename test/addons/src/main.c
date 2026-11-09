@@ -634,6 +634,8 @@ void Rest_delete_rest_entity(void);
 void Rest_delete_rest_entity_parent(void);
 void Rest_disable_rest_module_w_uninitialized_rest(void);
 void Rest_disable_rest_module(void);
+void Rest_put_entity_w_deleted_parent_id(void);
+void Rest_put_entity_w_deleted_parent_id_not_recycled(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -3084,6 +3086,14 @@ bake_test_case Rest_testcases[] = {
     {
         "disable_rest_module",
         Rest_disable_rest_module
+    },
+    {
+        "put_entity_w_deleted_parent_id",
+        Rest_put_entity_w_deleted_parent_id
+    },
+    {
+        "put_entity_w_deleted_parent_id_not_recycled",
+        Rest_put_entity_w_deleted_parent_id_not_recycled
     }
 };
 
@@ -3544,7 +3554,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        139,
+        141,
         Rest_testcases
     },
     {
