@@ -32682,6 +32682,14 @@ static char* flecs_guard_add_intern(
             if (err) {
                 return err;
             }
+
+            if (value) {
+                const EcsIdentifier *name = value;
+                if (!name->value || !name->value[0]) {
+                    return flecs_asprintf("cannot set empty name for '%s'",
+                        flecs_guard_path(world, e));
+                }
+            }
         }
     }
 

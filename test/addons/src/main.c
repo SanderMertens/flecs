@@ -659,6 +659,7 @@ void Rest_set_vector_cyclic(void);
 void Rest_change_type_nested_in_type_in_use(void);
 void Rest_put_entity_hierarchy_too_deep(void);
 void Rest_reparent_hierarchy_too_deep(void);
+void Rest_set_null_name(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -3209,6 +3210,10 @@ bake_test_case Rest_testcases[] = {
     {
         "reparent_hierarchy_too_deep",
         Rest_reparent_hierarchy_too_deep
+    },
+    {
+        "set_null_name",
+        Rest_set_null_name
     }
 };
 
@@ -3669,7 +3674,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        161,
+        162,
         Rest_testcases
     },
     {

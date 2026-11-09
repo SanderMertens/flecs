@@ -708,7 +708,8 @@
                 "set_vector_cyclic",
                 "change_type_nested_in_type_in_use",
                 "put_entity_hierarchy_too_deep",
-                "reparent_hierarchy_too_deep"
+                "reparent_hierarchy_too_deep",
+                "set_null_name"
             ]
         }, {
             "id": "Metrics",
