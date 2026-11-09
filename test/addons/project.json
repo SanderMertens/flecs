@@ -702,7 +702,8 @@
                 "add_flag_pair",
                 "set_empty_struct",
                 "query_info_w_value_pair",
-                "query_and_from_empty_type"
+                "query_and_from_empty_type",
+                "query_or_component_and_tag"
             ]
         }, {
             "id": "Metrics",

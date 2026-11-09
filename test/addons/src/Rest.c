@@ -4465,3 +4465,27 @@ void Rest_query_and_from_empty_type(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_query_or_component_and_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/query?expr=flecs.core.Component%20%7C%7C%20flecs.core.Final"
+        "&values=true&fields=true&field_info=true", NULL, &reply));
+    test_int(reply.code, 200);
+    ecs_strbuf_reset(&reply.body);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/query?expr=flecs.core.Final%20%7C%7C%20flecs.core.Component"
+        "&values=true&fields=true&field_info=true", NULL, &reply));
+    test_int(reply.code, 200);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}

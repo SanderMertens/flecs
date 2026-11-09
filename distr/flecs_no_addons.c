@@ -25740,9 +25740,15 @@ static int flecs_query_finalize_terms(
             }
         }
 
-        if (!nodata_term && (term->flags_ & EcsTermIsOr)) {
-            nodata_term = other_type;
-            q->data_fields &= (ecs_termset_t)~(1llu << field);
+        if (term->flags_ & EcsTermIsOr) {
+            if (other_type) {
+                nodata_term = true;
+                q->data_fields &= (ecs_termset_t)~(1llu << field);
+                q->write_fields &= (ecs_termset_t)~(1llu << field);
+                q->read_fields &= (ecs_termset_t)~(1llu << field);
+            } else if (!nodata_term) {
+                q->data_fields &= (ecs_termset_t)~(1llu << field);
+            }
         }
 
         if (term->flags_ & EcsTermIsMember) {
