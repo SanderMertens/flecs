@@ -50001,6 +50001,7 @@ typedef struct ecs_script_scope_t ecs_script_scope_t;
 
 #ifndef ECS_PARSER_MAX_RECURSION_DEPTH
 #define ECS_PARSER_MAX_RECURSION_DEPTH (64)
+#define ECS_PARSER_MAX_EXPR_CHAIN (512)
 #endif
 
 typedef struct ecs_parser_t {
@@ -50023,6 +50024,7 @@ typedef struct ecs_parser_t {
     int16_t scope_depth;
     int16_t expr_depth;
     int16_t elem_depth;
+    int32_t expr_chain;
 
     ecs_world_t *world;
 
@@ -105480,6 +105482,13 @@ static const char* flecs_script_parse_rhs(
         }
 
         if (is_oper && !flecs_has_precedence(left_oper, oper)) {
+            if (++ parser->expr_chain > ECS_PARSER_MAX_EXPR_CHAIN) {
+                ecs_parser_error(parser->name, parser->code,
+                    flecs_parser_errpos(parser, pos),
+                    "expression is too complex");
+                goto error;
+            }
+
             pos = lookahead;
 
             switch(oper) {
@@ -105815,10 +105824,12 @@ const char* flecs_script_parse_expr(
     }
 
     parser->expr_depth ++;
+    int32_t expr_chain = parser->expr_chain;
 
     ParserBegin;
 
     pos = flecs_script_parse_lhs(parser, pos, tokenizer, left_oper, out);
+    parser->expr_chain = expr_chain;
     if (!pos) {
         parser->expr_depth --;
         if (out && *out) {

@@ -2615,7 +2615,8 @@
                 "partial_initializer",
                 "partial_nested_initializer",
                 "i64_arithmetic_overflow",
-                "shift_out_of_range"
+                "shift_out_of_range",
+                "long_binary_chain"
             ]
         }, {
             "id": "ExprAst",

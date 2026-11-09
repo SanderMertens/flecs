@@ -2553,6 +2553,7 @@ void Expr_partial_initializer(void);
 void Expr_partial_nested_initializer(void);
 void Expr_i64_arithmetic_overflow(void);
 void Expr_shift_out_of_range(void);
+void Expr_long_binary_chain(void);
 
 // Testsuite 'ExprAst'
 void ExprAst_setup(void);
@@ -14389,6 +14390,10 @@ bake_test_case Expr_testcases[] = {
     {
         "shift_out_of_range",
         Expr_shift_out_of_range
+    },
+    {
+        "long_binary_chain",
+        Expr_long_binary_chain
     }
 };
 
@@ -21500,7 +21505,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        453,
+        454,
         Expr_testcases,
         2,
         Expr_params
