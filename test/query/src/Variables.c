@@ -13935,3 +13935,50 @@ void Variables_not_self_ref_then_transitive(void) {
 
     ecs_fini(world);
 }
+
+void Variables_optional_cond_eval_skips_var_write(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+    ecs_add_pair(world, a, Likes, b);
+    ecs_add_id(world, b, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Likes($x, $p), ?$p(Foo)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) { }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_anonymous_var_then_transitive(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t base = ecs_new_w_id(world, Foo);
+    ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$p($_), IsA($y, $_)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) { }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

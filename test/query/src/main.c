@@ -1117,6 +1117,8 @@ void Variables_not_first_var_then_src(void);
 void Variables_not_this_first_then_this_src(void);
 void Variables_optional_this_second_not_unwritten(void);
 void Variables_not_self_ref_then_transitive(void);
+void Variables_optional_cond_eval_skips_var_write(void);
+void Variables_anonymous_var_then_transitive(void);
 
 // Testsuite 'Operators'
 void Operators_setup(void);
@@ -7408,6 +7410,14 @@ bake_test_case Variables_testcases[] = {
     {
         "not_self_ref_then_transitive",
         Variables_not_self_ref_then_transitive
+    },
+    {
+        "optional_cond_eval_skips_var_write",
+        Variables_optional_cond_eval_skips_var_write
+    },
+    {
+        "anonymous_var_then_transitive",
+        Variables_anonymous_var_then_transitive
     }
 };
 
@@ -15019,7 +15029,7 @@ static bake_test_suite suites[] = {
         "Variables",
         Variables_setup,
         NULL,
-        235,
+        237,
         Variables_testcases,
         1,
         Variables_params

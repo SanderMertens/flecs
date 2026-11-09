@@ -85695,7 +85695,9 @@ static bool flecs_query_each(
 
     ecs_table_range_t range = flecs_query_var_get_range(op->first.var, ctx);
     ecs_table_t *table = range.table;
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!table) {
+        return false;
+    }
 
     if (!redo) {
         if (!ecs_table_count(table)) {

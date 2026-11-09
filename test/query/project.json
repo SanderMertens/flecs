@@ -1146,7 +1146,9 @@
                 "not_first_var_then_src",
                 "not_this_first_then_this_src",
                 "optional_this_second_not_unwritten",
-                "not_self_ref_then_transitive"
+                "not_self_ref_then_transitive",
+                "optional_cond_eval_skips_var_write",
+                "anonymous_var_then_transitive"
             ]
         }, {
             "id": "Operators",
