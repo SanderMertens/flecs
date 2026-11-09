@@ -93494,6 +93494,11 @@ static void flecs_struct_dtor(
 static ECS_COPY(EcsStruct, dst, src, {
     flecs_struct_dtor(dst);
 
+    if (!src->members.array) {
+        dst->members = (ecs_vec_t){0};
+        return;
+    }
+
     dst->members = ecs_vec_copy_t(NULL, &src->members, ecs_member_t);
 
     ecs_member_t *members = ecs_vec_first_t(&dst->members, ecs_member_t);

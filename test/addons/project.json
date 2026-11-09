@@ -699,7 +699,8 @@
                 "add_isa_to_component_in_use",
                 "add_isa_to_trait_component",
                 "delete_base_of_component_in_use",
-                "add_flag_pair"
+                "add_flag_pair",
+                "set_empty_struct"
             ]
         }, {
             "id": "Metrics",
