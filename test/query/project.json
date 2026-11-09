@@ -1580,7 +1580,8 @@
                 "match_any",
                 "this_neq_id_written_after_eq",
                 "this_neq_id_written_same_table_twice",
-                "2_or_w_eq_wildcard"
+                "2_or_w_eq_wildcard",
+                "unconstrained_var_eq_wildcard"
             ]
         }, {
             "id": "Scopes",

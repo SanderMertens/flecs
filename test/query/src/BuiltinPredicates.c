@@ -3914,3 +3914,30 @@ void BuiltinPredicates_2_or_w_eq_wildcard(void) {
 
     ecs_fini(world);
 }
+
+void BuiltinPredicates_unconstrained_var_eq_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_new(world);
+
+    ecs_log_set_level(-4);
+
+    const char *exprs[] = { "$y == *", "$x != *", "$y == _", "$x != _" };
+    int32_t i;
+    for (i = 0; i < 4; i ++) {
+        ecs_query_t *q = ecs_query(world, {
+            .expr = exprs[i],
+            .cache_kind = cache_kind
+        });
+
+        if (q) {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            while (ecs_query_next(&it)) { }
+            ecs_query_fini(q);
+        }
+    }
+
+    test_assert(true);
+
+    ecs_fini(world);
+}

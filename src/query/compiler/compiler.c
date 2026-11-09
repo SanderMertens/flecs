@@ -1233,6 +1233,12 @@ int flecs_query_compile(
                 if (!flecs_query_is_written(var_id, ctx.written)) {
                     /* Skip anonymous variables */
                     if (!flecs_query_var_is_anonymous(query, var_id)) {
+                        if (!flecs_query_is_written(var->id, ctx.written)) {
+                            ecs_err("variable '%s' is not constrained by query",
+                                var->name);
+                            return -1;
+                        }
+
                         flecs_query_insert_each(var->id, var_id, &ctx, false);
                     }
                 }

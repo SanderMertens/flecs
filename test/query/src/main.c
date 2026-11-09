@@ -1534,6 +1534,7 @@ void BuiltinPredicates_match_any(void);
 void BuiltinPredicates_this_neq_id_written_after_eq(void);
 void BuiltinPredicates_this_neq_id_written_same_table_twice(void);
 void BuiltinPredicates_2_or_w_eq_wildcard(void);
+void BuiltinPredicates_unconstrained_var_eq_wildcard(void);
 
 // Testsuite 'Scopes'
 void Scopes_setup(void);
@@ -9037,6 +9038,10 @@ bake_test_case BuiltinPredicates_testcases[] = {
     {
         "2_or_w_eq_wildcard",
         BuiltinPredicates_2_or_w_eq_wildcard
+    },
+    {
+        "unconstrained_var_eq_wildcard",
+        BuiltinPredicates_unconstrained_var_eq_wildcard
     }
 };
 
@@ -15018,7 +15023,7 @@ static bake_test_suite suites[] = {
         "BuiltinPredicates",
         BuiltinPredicates_setup,
         NULL,
-        96,
+        97,
         BuiltinPredicates_testcases,
         1,
         BuiltinPredicates_params
