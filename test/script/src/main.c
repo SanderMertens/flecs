@@ -829,6 +829,7 @@ void Eval_interpolated_name_in_for_loop_no_warn(void);
 void Eval_child_of_interpolated_name_in_for_loop_no_warn(void);
 void Eval_named_entity_w_tag_in_for_loop_no_warn(void);
 void Eval_set_name_component(void);
+void Eval_i64_runtime_arithmetic_overflow(void);
 
 // Testsuite 'Collection'
 void Collection_setup(void);
@@ -2550,6 +2551,8 @@ void Expr_id_var_eq_literal(void);
 void Expr_vector_func_array_of_struct_error_type_name(void);
 void Expr_partial_initializer(void);
 void Expr_partial_nested_initializer(void);
+void Expr_i64_arithmetic_overflow(void);
+void Expr_shift_out_of_range(void);
 
 // Testsuite 'ExprAst'
 void ExprAst_setup(void);
@@ -7589,6 +7592,10 @@ bake_test_case Eval_testcases[] = {
     {
         "set_name_component",
         Eval_set_name_component
+    },
+    {
+        "i64_runtime_arithmetic_overflow",
+        Eval_i64_runtime_arithmetic_overflow
     }
 };
 
@@ -14374,6 +14381,14 @@ bake_test_case Expr_testcases[] = {
     {
         "partial_nested_initializer",
         Expr_partial_nested_initializer
+    },
+    {
+        "i64_arithmetic_overflow",
+        Expr_i64_arithmetic_overflow
+    },
+    {
+        "shift_out_of_range",
+        Expr_shift_out_of_range
     }
 };
 
@@ -21386,7 +21401,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        819,
+        820,
         Eval_testcases,
         1,
         Eval_params
@@ -21485,7 +21500,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        451,
+        453,
         Expr_testcases,
         2,
         Expr_params

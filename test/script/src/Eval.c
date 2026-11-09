@@ -26356,3 +26356,50 @@ void Eval_set_name_component(void) {
 
     ecs_fini(world);
 }
+
+void Eval_i64_runtime_arithmetic_overflow(void) {
+    typedef struct {
+        int64_t a;
+        int64_t b;
+        int64_t c;
+        int64_t d;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(T) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .members = {
+            {"a", ecs_id(ecs_i64_t)},
+            {"b", ecs_id(ecs_i64_t)},
+            {"c", ecs_id(ecs_i64_t)},
+            {"d", ecs_id(ecs_i64_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "for i in 0..1 {"
+    LINE "  e {"
+    LINE "    T: {"
+    LINE "      a: 9223372036854775807 + (i + 1),"
+    LINE "      b: (0 - 9223372036854775807 - 1) % (i - 1),"
+    LINE "      c: 1 << (i + 70),"
+    LINE "      d: 9223372036854775807 * (i + 2)"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const T *t = ecs_get(world, e, T);
+    test_assert(t != NULL);
+    test_assert(t->a == INT64_MIN);
+    test_assert(t->b == 0);
+    test_assert(t->c == 0);
+    test_assert(t->d == -2);
+
+    ecs_fini(world);
+}

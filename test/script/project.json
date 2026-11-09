@@ -835,7 +835,8 @@
                 "interpolated_name_in_for_loop_no_warn",
                 "child_of_interpolated_name_in_for_loop_no_warn",
                 "named_entity_w_tag_in_for_loop_no_warn",
-                "set_name_component"
+                "set_name_component",
+                "i64_runtime_arithmetic_overflow"
             ]
         }, {
             "id": "Collection",
@@ -2612,7 +2613,9 @@
                 "id_var_eq_literal",
                 "vector_func_array_of_struct_error_type_name",
                 "partial_initializer",
-                "partial_nested_initializer"
+                "partial_nested_initializer",
+                "i64_arithmetic_overflow",
+                "shift_out_of_range"
             ]
         }, {
             "id": "ExprAst",

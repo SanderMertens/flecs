@@ -13957,3 +13957,47 @@ void Expr_partial_nested_initializer(void) {
 
     ecs_fini(world);
 }
+
+void Expr_i64_arithmetic_overflow(void) {
+    ecs_world_t *world = ecs_init();
+
+    int64_t v = 0;
+    ecs_value_t value = { .type = ecs_id(ecs_i64_t), .ptr = &v };
+    ecs_expr_eval_desc_t desc = { .type = ecs_id(ecs_i64_t) };
+
+    test_assert(ecs_expr_run(world, "9223372036854775807 + 1", &value, &desc) != NULL);
+    test_assert(v == INT64_MIN);
+
+    test_assert(ecs_expr_run(world, "(0 - 9223372036854775807 - 1) - 1", &value, &desc) != NULL);
+    test_assert(v == INT64_MAX);
+
+    test_assert(ecs_expr_run(world, "9223372036854775807 * 2", &value, &desc) != NULL);
+    test_assert(v == -2);
+
+    test_assert(ecs_expr_run(world, "(0 - 9223372036854775807 - 1) % -1", &value, &desc) != NULL);
+    test_assert(v == 0);
+
+    ecs_fini(world);
+}
+
+void Expr_shift_out_of_range(void) {
+    ecs_world_t *world = ecs_init();
+
+    int64_t v = 0;
+    ecs_value_t value = { .type = ecs_id(ecs_i64_t), .ptr = &v };
+    ecs_expr_eval_desc_t desc = { .type = ecs_id(ecs_i64_t) };
+
+    test_assert(ecs_expr_run(world, "1 << 70", &value, &desc) != NULL);
+    test_assert(v == 0);
+
+    test_assert(ecs_expr_run(world, "1 << 64", &value, &desc) != NULL);
+    test_assert(v == 0);
+
+    test_assert(ecs_expr_run(world, "1024 >> 70", &value, &desc) != NULL);
+    test_assert(v == 0);
+
+    test_assert(ecs_expr_run(world, "1 << 3", &value, &desc) != NULL);
+    test_assert(v == 8);
+
+    ecs_fini(world);
+}
