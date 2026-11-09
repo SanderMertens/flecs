@@ -2279,6 +2279,11 @@ static int flecs_expr_function_visit_type(
             script, node, &target_cur, desc);
     }
 
+    if (!node->function_name) {
+        flecs_expr_visit_error(script, node, "expression is not callable");
+        goto error;
+    }
+
     ecs_world_t *world = script->world;
     const struct ecs_script_function_t *func_data = NULL;
     ecs_entity_t func = 0;

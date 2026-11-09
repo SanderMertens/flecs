@@ -1929,6 +1929,8 @@ void Error_set_parent_self(void);
 void Error_set_parent_invalid(void);
 void Error_set_meta_type(void);
 void Error_entity_has_zero_id(void);
+void Error_call_variable(void);
+void Error_call_entity_variable(void);
 
 // Testsuite 'Format'
 void Format_setup(void);
@@ -11878,6 +11880,14 @@ bake_test_case Error_testcases[] = {
     {
         "entity_has_zero_id",
         Error_entity_has_zero_id
+    },
+    {
+        "call_variable",
+        Error_call_variable
+    },
+    {
+        "call_entity_variable",
+        Error_call_entity_variable
     }
 };
 
@@ -21317,7 +21327,7 @@ static bake_test_suite suites[] = {
         "Error",
         Error_setup,
         NULL,
-        281,
+        283,
         Error_testcases,
         1,
         Error_params

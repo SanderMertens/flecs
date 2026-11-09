@@ -1980,7 +1980,9 @@
                 "set_parent_self",
                 "set_parent_invalid",
                 "set_meta_type",
-                "entity_has_zero_id"
+                "entity_has_zero_id",
+                "call_variable",
+                "call_entity_variable"
             ]
         }, {
             "id": "Format",
