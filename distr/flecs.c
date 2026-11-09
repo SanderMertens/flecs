@@ -28458,6 +28458,23 @@ static bool flecs_rest_put_component(
         return true;
     }
 
+    if (ti->hooks.flags &
+        (ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL))
+    {
+        flecs_reply_error(reply, "cannot set '%s': type is not copyable",
+            component);
+        reply->code = 400;
+        return true;
+    }
+
+    const void *cur = ecs_get_id(world, e, id);
+    if (!cur && (ti->hooks.flags & ECS_TYPE_HOOK_CTOR_ILLEGAL)) {
+        flecs_reply_error(reply, "cannot set '%s': type is not constructible",
+            component);
+        reply->code = 400;
+        return true;
+    }
+
     void *ptr = ecs_os_malloc(ti->size);
     if (!ptr) {
         flecs_reply_error(reply, "failed to create component '%s'", component);
@@ -28465,7 +28482,6 @@ static bool flecs_rest_put_component(
         return true;
     }
 
-    const void *cur = ecs_get_id(world, e, id);
     if (cur) {
         flecs_type_info_copy_ctor(ptr, cur, 1, ti);
     } else {

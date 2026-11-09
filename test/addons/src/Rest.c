@@ -3583,3 +3583,106 @@ void Rest_script_save_file_open_fails(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_put_component_not_copyable(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_query_t *q = ecs_query(world, {
+        .entity = ecs_entity(world, { .name = "q" }),
+        .expr = "flecs.core.Component"
+    });
+    test_assert(q != NULL);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/q?component=(flecs.core.Poly,flecs.core.Query)&value={}",
+        NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+static int32_t rest_dtor_invoked = 0;
+
+static void Rest_count_dtor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    (void)ptr;
+    (void)ti;
+    rest_dtor_invoked += count;
+}
+
+void Rest_put_component_not_copy_assignable(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) }
+        }
+    });
+    ecs_set_hooks(world, Position, {
+        .dtor = Rest_count_dtor,
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
+    });
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add(world, foo, Position);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    rest_dtor_invoked = 0;
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Foo?component=Position&value={\"x\":1}", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_int(rest_dtor_invoked, 0);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_put_component_not_constructible(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) }
+        }
+    });
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_CTOR_ILLEGAL
+    });
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Foo?component=Position&value={\"x\":1}", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(!ecs_has(world, foo, Position));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}

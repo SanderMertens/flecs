@@ -670,7 +670,10 @@
                 "query_negative_offset",
                 "request_commands_negative_frame",
                 "command_history_offset_limit_overflow",
-                "script_save_file_open_fails"
+                "script_save_file_open_fails",
+                "put_component_not_copyable",
+                "put_component_not_copy_assignable",
+                "put_component_not_constructible"
             ]
         }, {
             "id": "Metrics",

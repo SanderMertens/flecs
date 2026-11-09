@@ -621,6 +621,9 @@ void Rest_query_negative_offset(void);
 void Rest_request_commands_negative_frame(void);
 void Rest_command_history_offset_limit_overflow(void);
 void Rest_script_save_file_open_fails(void);
+void Rest_put_component_not_copyable(void);
+void Rest_put_component_not_copy_assignable(void);
+void Rest_put_component_not_constructible(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -3019,6 +3022,18 @@ bake_test_case Rest_testcases[] = {
     {
         "script_save_file_open_fails",
         Rest_script_save_file_open_fails
+    },
+    {
+        "put_component_not_copyable",
+        Rest_put_component_not_copyable
+    },
+    {
+        "put_component_not_copy_assignable",
+        Rest_put_component_not_copy_assignable
+    },
+    {
+        "put_component_not_constructible",
+        Rest_put_component_not_constructible
     }
 };
 
@@ -3479,7 +3494,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        126,
+        129,
         Rest_testcases
     },
     {
