@@ -32,6 +32,13 @@ static bool flecs_guard_is_builtin(
     return table && (table->flags & EcsTableHasBuiltins);
 }
 
+static bool flecs_guard_is_module(
+    const ecs_world_t *world,
+    ecs_entity_t e)
+{
+    return ecs_owns_id(world, e, EcsModule);
+}
+
 static bool flecs_guard_in_use(
     const ecs_world_t *world,
     ecs_entity_t e)
@@ -198,6 +205,11 @@ static char* flecs_guard_parent(
 
     if (flecs_guard_is_builtin(world, e)) {
         return flecs_asprintf("cannot reparent builtin entity '%s'",
+            flecs_guard_path(world, e));
+    }
+
+    if (flecs_guard_is_module(world, e)) {
+        return flecs_asprintf("cannot reparent module '%s'",
             flecs_guard_path(world, e));
     }
 
@@ -862,6 +874,14 @@ static char* flecs_guard_remove_id(
             flecs_guard_id_str(world, id), flecs_guard_path(world, e));
     }
 
+    if (flecs_guard_is_module(world, e) && (id == EcsModule ||
+        ECS_HAS_RELATION(id, ecs_id(EcsIdentifier)) ||
+        ECS_HAS_RELATION(id, EcsChildOf)))
+    {
+        return flecs_asprintf("cannot remove '%s' from module '%s'",
+            flecs_guard_id_str(world, id), flecs_guard_path(world, e));
+    }
+
     char *err = flecs_guard_trait(world, e, id, false);
     if (err) {
         return err;
@@ -1131,6 +1151,11 @@ char* flecs_guard_rename(
 
     if (flecs_guard_is_builtin(world, entity)) {
         return flecs_asprintf("cannot rename builtin entity '%s'",
+            flecs_guard_path(world, entity));
+    }
+
+    if (flecs_guard_is_module(world, entity)) {
+        return flecs_asprintf("cannot rename module '%s'",
             flecs_guard_path(world, entity));
     }
 

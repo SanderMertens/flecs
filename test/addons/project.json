@@ -690,7 +690,8 @@
                 "put_script_nested_in_flecs_core",
                 "put_script_invalid_entity",
                 "command_delete_session_builtin_entity",
-                "command_delete_session_w_panic"
+                "command_delete_session_w_panic",
+                "rename_module"
             ]
         }, {
             "id": "Metrics",

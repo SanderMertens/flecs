@@ -4204,3 +4204,56 @@ void Rest_command_delete_session_w_panic(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_rename_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script_module = ecs_lookup(world, "flecs.script");
+    test_assert(script_module != 0);
+
+    ecs_entity(world, { .name = "Bar" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_log_set_level(-4);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/flecs/script?component=(flecs.core.Identifier,flecs.core.Name)"
+        "&value={\"value\":\"zz\"}", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/flecs/script?component=(flecs.core.ChildOf,Bar)",
+        NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE",
+        "/component/flecs/script?component=(flecs.core.Identifier,flecs.core.Name)",
+        NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE",
+        "/component/flecs/script?component=flecs.core.Module",
+        NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_lookup(world, "flecs.script") == script_module);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/shell/session", NULL, &reply));
+    test_int(reply.code, 200);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
