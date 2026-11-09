@@ -703,7 +703,8 @@
                 "set_empty_struct",
                 "query_info_w_value_pair",
                 "query_and_from_empty_type",
-                "query_or_component_and_tag"
+                "query_or_component_and_tag",
+                "set_map_on_type_in_use"
             ]
         }, {
             "id": "Metrics",

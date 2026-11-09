@@ -654,6 +654,7 @@ void Rest_set_empty_struct(void);
 void Rest_query_info_w_value_pair(void);
 void Rest_query_and_from_empty_type(void);
 void Rest_query_or_component_and_tag(void);
+void Rest_set_map_on_type_in_use(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -3184,6 +3185,10 @@ bake_test_case Rest_testcases[] = {
     {
         "query_or_component_and_tag",
         Rest_query_or_component_and_tag
+    },
+    {
+        "set_map_on_type_in_use",
+        Rest_set_map_on_type_in_use
     }
 };
 
@@ -3644,7 +3649,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        156,
+        157,
         Rest_testcases
     },
     {

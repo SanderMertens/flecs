@@ -32390,7 +32390,7 @@ static bool flecs_guard_is_type_kind(
     return id == ecs_id(EcsPrimitive) || id == ecs_id(EcsStruct) ||
         id == ecs_id(EcsEnum) || id == ecs_id(EcsBitmask) ||
         id == ecs_id(EcsArray) || id == ecs_id(EcsVector) ||
-        id == ecs_id(EcsOpaque);
+        id == ecs_id(EcsMap) || id == ecs_id(EcsOpaque);
 }
 
 static char* flecs_guard_element_size(

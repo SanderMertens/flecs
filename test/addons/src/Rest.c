@@ -4489,3 +4489,33 @@ void Rest_query_or_component_and_tag(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_set_map_on_type_in_use(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "S" }),
+        .members = {
+            { "a", ecs_id(ecs_f32_t) }
+        }
+    });
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_id(world, foo, s);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/S?component=flecs.meta.map"
+        "&value={\"key_type\":\"flecs.meta.i32\",\"type\":\"flecs.meta.i32\"}",
+        NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(!ecs_has(world, s, EcsMap));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
