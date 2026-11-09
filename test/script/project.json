@@ -1983,7 +1983,17 @@
                 "entity_has_zero_id",
                 "call_variable",
                 "call_entity_variable",
-                "template_add_poly"
+                "template_add_poly",
+                "const_poly",
+                "const_tree_spawner",
+                "const_copy_illegal_type",
+                "copy_const_w_copy_illegal_type",
+                "export_const_copy_illegal_type",
+                "get_copy_illegal_component",
+                "set_copy_illegal_component",
+                "set_copy_illegal_pair",
+                "set_tree_spawner",
+                "template_set_copy_illegal_component"
             ]
         }, {
             "id": "Format",

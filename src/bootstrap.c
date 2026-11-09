@@ -49,12 +49,6 @@ static ECS_MOVE(EcsIdentifier, dst, src, {
 
 /* -- Poly component -- */
 
-static ECS_COPY(EcsPoly, dst, src, {
-    (void)dst;
-    (void)src;
-    ecs_abort(ECS_INVALID_OPERATION, "poly component cannot be copied");
-})
-
 static ECS_MOVE(EcsPoly, dst, src, {
     if (dst->poly && (dst->poly != src->poly)) {
         flecs_poly_dtor_t *dtor = flecs_get_dtor(dst->poly);
@@ -683,9 +677,9 @@ void flecs_bootstrap(
 
     flecs_type_info_init(world, EcsPoly, {
         .ctor = flecs_default_ctor,
-        .copy = ecs_copy(EcsPoly),
         .move = ecs_move(EcsPoly),
-        .dtor = ecs_dtor(EcsPoly)
+        .dtor = ecs_dtor(EcsPoly),
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL
     });
 
     flecs_type_info_init(world, EcsParent, {

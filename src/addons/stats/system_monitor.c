@@ -26,12 +26,6 @@ static ECS_CTOR(EcsSystemStats, ptr, {
     ecs_map_init(&ptr->stats, NULL);
 })
 
-static ECS_COPY(EcsSystemStats, dst, src, {
-    (void)dst;
-    (void)src;
-    ecs_abort(ECS_INVALID_OPERATION, "cannot copy system stats component");
-})
-
 static ECS_MOVE(EcsSystemStats, dst, src, {
     flecs_system_monitor_dtor(dst);
     ecs_os_memcpy_t(dst, src, EcsSystemStats);
@@ -93,9 +87,9 @@ void FlecsSystemMonitorImport(
 
     ecs_set_hooks(world, EcsSystemStats, {
         .ctor = ecs_ctor(EcsSystemStats),
-        .copy = ecs_copy(EcsSystemStats),
         .move = ecs_move(EcsSystemStats),
-        .dtor = ecs_dtor(EcsSystemStats)
+        .dtor = ecs_dtor(EcsSystemStats),
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL
     });
 
     ecs_stats_api_t api = {

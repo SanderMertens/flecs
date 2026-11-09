@@ -25,6 +25,22 @@ static int flecs_expr_visit_type_priv(
     return flecs_expr_visit_type_ex(script, node_ptr, cur, desc, false);
 }
 
+static int flecs_expr_check_copyable(
+    ecs_script_t *script,
+    const ecs_expr_node_t *node)
+{
+    if (!node->type_info || !(node->type_info->hooks.flags &
+        (ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL)))
+    {
+        return 0;
+    }
+
+    flecs_expr_visit_error(script, node,
+        "values of type '%s' cannot be used in expressions: type is not "
+        "copyable", flecs_errstr(ecs_get_path(script->world, node->type)));
+    return -1;
+}
+
 static void flecs_expr_visit_type_cursor(
     const ecs_world_t *world,
     ecs_meta_cursor_t *cur,
@@ -3162,6 +3178,10 @@ static int flecs_expr_visit_type_ex(
     node->type_info = ecs_get_type_info(script->world, node->type);
     ecs_assert(node->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    if (flecs_expr_check_copyable(script, node)) {
+        return -1;
+    }
+
     /* Every node produces a value of its own type. Rebase the cursor on that
      * type so that members and elements resolved on the value get an offset
      * that is relative to the value. */
@@ -3192,7 +3212,7 @@ int flecs_expr_visit_type(
             }
 
             node->type_info = ecs_get_type_info(script->world, node->type);
-            return 0;
+            return flecs_expr_check_copyable(script, node);
         }
     }
 

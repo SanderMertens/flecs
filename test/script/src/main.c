@@ -1932,6 +1932,16 @@ void Error_entity_has_zero_id(void);
 void Error_call_variable(void);
 void Error_call_entity_variable(void);
 void Error_template_add_poly(void);
+void Error_const_poly(void);
+void Error_const_tree_spawner(void);
+void Error_const_copy_illegal_type(void);
+void Error_copy_const_w_copy_illegal_type(void);
+void Error_export_const_copy_illegal_type(void);
+void Error_get_copy_illegal_component(void);
+void Error_set_copy_illegal_component(void);
+void Error_set_copy_illegal_pair(void);
+void Error_set_tree_spawner(void);
+void Error_template_set_copy_illegal_component(void);
 
 // Testsuite 'Format'
 void Format_setup(void);
@@ -11893,6 +11903,46 @@ bake_test_case Error_testcases[] = {
     {
         "template_add_poly",
         Error_template_add_poly
+    },
+    {
+        "const_poly",
+        Error_const_poly
+    },
+    {
+        "const_tree_spawner",
+        Error_const_tree_spawner
+    },
+    {
+        "const_copy_illegal_type",
+        Error_const_copy_illegal_type
+    },
+    {
+        "copy_const_w_copy_illegal_type",
+        Error_copy_const_w_copy_illegal_type
+    },
+    {
+        "export_const_copy_illegal_type",
+        Error_export_const_copy_illegal_type
+    },
+    {
+        "get_copy_illegal_component",
+        Error_get_copy_illegal_component
+    },
+    {
+        "set_copy_illegal_component",
+        Error_set_copy_illegal_component
+    },
+    {
+        "set_copy_illegal_pair",
+        Error_set_copy_illegal_pair
+    },
+    {
+        "set_tree_spawner",
+        Error_set_tree_spawner
+    },
+    {
+        "template_set_copy_illegal_component",
+        Error_template_set_copy_illegal_component
     }
 };
 
@@ -21332,7 +21382,7 @@ static bake_test_suite suites[] = {
         "Error",
         Error_setup,
         NULL,
-        284,
+        294,
         Error_testcases,
         1,
         Error_params

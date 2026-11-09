@@ -4738,12 +4738,6 @@ static ECS_MOVE(EcsIdentifier, dst, src, {
 
 /* -- Poly component -- */
 
-static ECS_COPY(EcsPoly, dst, src, {
-    (void)dst;
-    (void)src;
-    ecs_abort(ECS_INVALID_OPERATION, "poly component cannot be copied");
-})
-
 static ECS_MOVE(EcsPoly, dst, src, {
     if (dst->poly && (dst->poly != src->poly)) {
         flecs_poly_dtor_t *dtor = flecs_get_dtor(dst->poly);
@@ -5371,9 +5365,9 @@ void flecs_bootstrap(
 
     flecs_type_info_init(world, EcsPoly, {
         .ctor = flecs_default_ctor,
-        .copy = ecs_copy(EcsPoly),
         .move = ecs_move(EcsPoly),
-        .dtor = ecs_dtor(EcsPoly)
+        .dtor = ecs_dtor(EcsPoly),
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL
     });
 
     flecs_type_info_init(world, EcsParent, {
@@ -32450,6 +32444,16 @@ char* flecs_guard_set(
 
     if ((err = flecs_guard_id(world, id, false))) {
         return err;
+    }
+
+    if (value) {
+        const ecs_type_info_t *ti = ecs_get_type_info(world, id);
+        if (ti && (ti->hooks.flags &
+            (ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL)))
+        {
+            return flecs_asprintf("cannot set '%s': type is not copyable",
+                flecs_guard_id_str(world, id));
+        }
     }
 
     return flecs_guard_add_intern(
@@ -66355,12 +66359,6 @@ void EcsTreeSpawner_free(EcsTreeSpawner *ptr) {
     }
 }
 
-static ECS_COPY(EcsTreeSpawner, dst, src, {
-    (void)dst;
-    (void)src;
-    ecs_abort(ECS_INVALID_OPERATION, "TreeSpawner component cannot be copied");
-})
-
 static ECS_MOVE(EcsTreeSpawner, dst, src, {
     EcsTreeSpawner_free(dst);
     *dst = *src;
@@ -66480,9 +66478,9 @@ void flecs_bootstrap_prefab(
 
     flecs_type_info_init(world, EcsTreeSpawner, {
         .ctor = flecs_default_ctor,
-        .copy = ecs_copy(EcsTreeSpawner),
         .move = ecs_move(EcsTreeSpawner),
-        .dtor = ecs_dtor(EcsTreeSpawner)
+        .dtor = ecs_dtor(EcsTreeSpawner),
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL
     });
 
     /* Observer that ensures children of a prefab are also prefabs */
@@ -76655,12 +76653,6 @@ static ECS_CTOR(EcsPipelineStats, ptr, {
     ecs_map_init(&ptr->stats, NULL);
 })
 
-static ECS_COPY(EcsPipelineStats, dst, src, {
-    (void)dst;
-    (void)src;
-    ecs_abort(ECS_INVALID_OPERATION, "cannot copy pipeline stats component");
-})
-
 static ECS_MOVE(EcsPipelineStats, dst, src, {
     flecs_pipeline_monitor_dtor(dst);
     ecs_os_memcpy_t(dst, src, EcsPipelineStats);
@@ -76728,9 +76720,9 @@ void FlecsPipelineMonitorImport(
 
     ecs_set_hooks(world, EcsPipelineStats, {
         .ctor = ecs_ctor(EcsPipelineStats),
-        .copy = ecs_copy(EcsPipelineStats),
         .move = ecs_move(EcsPipelineStats),
-        .dtor = ecs_dtor(EcsPipelineStats)
+        .dtor = ecs_dtor(EcsPipelineStats),
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL
     });
 
     ecs_stats_api_t api = {
@@ -77518,12 +77510,6 @@ static ECS_CTOR(EcsSystemStats, ptr, {
     ecs_map_init(&ptr->stats, NULL);
 })
 
-static ECS_COPY(EcsSystemStats, dst, src, {
-    (void)dst;
-    (void)src;
-    ecs_abort(ECS_INVALID_OPERATION, "cannot copy system stats component");
-})
-
 static ECS_MOVE(EcsSystemStats, dst, src, {
     flecs_system_monitor_dtor(dst);
     ecs_os_memcpy_t(dst, src, EcsSystemStats);
@@ -77585,9 +77571,9 @@ void FlecsSystemMonitorImport(
 
     ecs_set_hooks(world, EcsSystemStats, {
         .ctor = ecs_ctor(EcsSystemStats),
-        .copy = ecs_copy(EcsSystemStats),
         .move = ecs_move(EcsSystemStats),
-        .dtor = ecs_dtor(EcsSystemStats)
+        .dtor = ecs_dtor(EcsSystemStats),
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL
     });
 
     ecs_stats_api_t api = {
@@ -108345,6 +108331,22 @@ static int flecs_expr_visit_type_priv(
     return flecs_expr_visit_type_ex(script, node_ptr, cur, desc, false);
 }
 
+static int flecs_expr_check_copyable(
+    ecs_script_t *script,
+    const ecs_expr_node_t *node)
+{
+    if (!node->type_info || !(node->type_info->hooks.flags &
+        (ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL)))
+    {
+        return 0;
+    }
+
+    flecs_expr_visit_error(script, node,
+        "values of type '%s' cannot be used in expressions: type is not "
+        "copyable", flecs_errstr(ecs_get_path(script->world, node->type)));
+    return -1;
+}
+
 static void flecs_expr_visit_type_cursor(
     const ecs_world_t *world,
     ecs_meta_cursor_t *cur,
@@ -111482,6 +111484,10 @@ static int flecs_expr_visit_type_ex(
     node->type_info = ecs_get_type_info(script->world, node->type);
     ecs_assert(node->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    if (flecs_expr_check_copyable(script, node)) {
+        return -1;
+    }
+
     /* Every node produces a value of its own type. Rebase the cursor on that
      * type so that members and elements resolved on the value get an offset
      * that is relative to the value. */
@@ -111512,7 +111518,7 @@ int flecs_expr_visit_type(
             }
 
             node->type_info = ecs_get_type_info(script->world, node->type);
-            return 0;
+            return flecs_expr_check_copyable(script, node);
         }
     }
 
