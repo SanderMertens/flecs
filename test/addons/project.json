@@ -677,7 +677,8 @@
                 "add_component_not_constructible",
                 "get_stats_user_period",
                 "get_pipeline_stats_after_add_system",
-                "request_commands_nested"
+                "request_commands_nested",
+                "request_commands_after_server_fini"
             ]
         }, {
             "id": "Metrics",

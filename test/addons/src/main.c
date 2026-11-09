@@ -628,6 +628,7 @@ void Rest_add_component_not_constructible(void);
 void Rest_get_stats_user_period(void);
 void Rest_get_pipeline_stats_after_add_system(void);
 void Rest_request_commands_nested(void);
+void Rest_request_commands_after_server_fini(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -3054,6 +3055,10 @@ bake_test_case Rest_testcases[] = {
     {
         "request_commands_nested",
         Rest_request_commands_nested
+    },
+    {
+        "request_commands_after_server_fini",
+        Rest_request_commands_after_server_fini
     }
 };
 
@@ -3514,7 +3519,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        133,
+        134,
         Rest_testcases
     },
     {

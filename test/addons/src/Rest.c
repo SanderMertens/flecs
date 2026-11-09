@@ -3860,3 +3860,32 @@ void Rest_request_commands_nested(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_request_commands_after_server_fini(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/commands/capture", NULL, &reply));
+    test_int(reply.code, 200);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_frame_begin(world, 0);
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_set(stage, e, Position, {10, 20});
+    ecs_merge(stage);
+    ecs_frame_end(world);
+
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}

@@ -2288,6 +2288,25 @@ static bool flecs_rest_cmd_has_id(
     }
 }
 
+static void flecs_rest_capture_detach(
+    ecs_world_t *world,
+    ecs_rest_cmd_capture_t *capture)
+{
+    if (!world) {
+        return;
+    }
+
+    if (world->on_commands_ctx == capture) {
+        world->on_commands = NULL;
+        world->on_commands_ctx = NULL;
+    }
+
+    if (world->on_commands_ctx_active == capture) {
+        world->on_commands_active = NULL;
+        world->on_commands_ctx_active = NULL;
+    }
+}
+
 static void flecs_rest_server_garbage_collect_all(
     ecs_rest_ctx_t *impl)
 {
@@ -2295,6 +2314,7 @@ static void flecs_rest_server_garbage_collect_all(
 
     while (ecs_map_next(&it)) {
         ecs_rest_cmd_capture_t *capture = ecs_map_ptr(&it);
+        flecs_rest_capture_detach(impl->world, capture);
         int32_t i, count = ecs_vec_count(&capture->syncs);
         ecs_rest_cmd_sync_capture_t *syncs = ecs_vec_first(&capture->syncs);
         for (i = 0; i < count; i ++) {
@@ -2325,6 +2345,7 @@ static void flecs_rest_server_garbage_collect(
         int64_t frame = flecs_uto(int64_t, ecs_map_key(&it));
         if ((wi->frame_count_total - frame) > FLECS_REST_COMMAND_RETAIN_COUNT) {
             ecs_rest_cmd_capture_t *capture = ecs_map_ptr(&it);
+            flecs_rest_capture_detach(world, capture);
             int32_t i, count = ecs_vec_count(&capture->syncs);
             ecs_rest_cmd_sync_capture_t *syncs = ecs_vec_first(&capture->syncs);
             for (i = 0; i < count; i ++) {
