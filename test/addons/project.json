@@ -698,7 +698,8 @@
                 "command_new_session_shell_module_name_taken",
                 "add_isa_to_component_in_use",
                 "add_isa_to_trait_component",
-                "delete_base_of_component_in_use"
+                "delete_base_of_component_in_use",
+                "add_flag_pair"
             ]
         }, {
             "id": "Metrics",

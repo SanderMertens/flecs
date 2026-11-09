@@ -649,6 +649,7 @@ void Rest_command_new_session_shell_module_name_taken(void);
 void Rest_add_isa_to_component_in_use(void);
 void Rest_add_isa_to_trait_component(void);
 void Rest_delete_base_of_component_in_use(void);
+void Rest_add_flag_pair(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -3159,6 +3160,10 @@ bake_test_case Rest_testcases[] = {
     {
         "delete_base_of_component_in_use",
         Rest_delete_base_of_component_in_use
+    },
+    {
+        "add_flag_pair",
+        Rest_add_flag_pair
     }
 };
 
@@ -3619,7 +3624,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        151,
+        152,
         Rest_testcases
     },
     {

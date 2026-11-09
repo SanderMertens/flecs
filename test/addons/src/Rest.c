@@ -4367,3 +4367,26 @@ void Rest_delete_base_of_component_in_use(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_add_flag_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Bar?component=(flecs.core.Flag,Foo)", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_entity_t flag = ecs_lookup(world, "flecs.core.Flag");
+    test_assert(flag != 0);
+    test_assert(!ecs_has_pair(world, bar, flag, EcsWildcard));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}

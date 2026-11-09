@@ -96,6 +96,11 @@ static char* flecs_guard_id(
             return flecs_asprintf("invalid pair: pair elements cannot be 0");
         }
 
+        if (first == EcsFlag) {
+            return flecs_asprintf("invalid pair: cannot use internal "
+                "relationship '%s'", flecs_guard_path(world, first));
+        }
+
         if (!flecs_guard_element_alive(world, first)) {
             return flecs_asprintf("invalid pair: relationship #%u is not alive",
                 (uint32_t)first);
