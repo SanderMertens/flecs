@@ -174,6 +174,8 @@ void Validator_exceed_max_var_count(void);
 void Validator_query_for_relationship_trait_as_component(void);
 void Validator_query_for_relationship_trait_as_component_2_terms(void);
 void Validator_from_op_w_pair(void);
+void Validator_validate_value_pair_as_src(void);
+void Validator_validate_value_pair_w_traversable_rel(void);
 
 // Testsuite 'Parser'
 void Parser_resolve_this(void);
@@ -3672,6 +3674,14 @@ bake_test_case Validator_testcases[] = {
     {
         "from_op_w_pair",
         Validator_from_op_w_pair
+    },
+    {
+        "validate_value_pair_as_src",
+        Validator_validate_value_pair_as_src
+    },
+    {
+        "validate_value_pair_w_traversable_rel",
+        Validator_validate_value_pair_w_traversable_rel
     }
 };
 
@@ -14921,7 +14931,7 @@ static bake_test_suite suites[] = {
         "Validator",
         NULL,
         NULL,
-        165,
+        167,
         Validator_testcases
     },
     {

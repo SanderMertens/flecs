@@ -38784,6 +38784,16 @@ int flecs_term_finalize(
     ecs_entity_t second_id = ECS_TERM_REF_ID(second);
     ecs_entity_t src_id = ECS_TERM_REF_ID(src);
 
+    if (ECS_IS_VALUE_PAIR(term->id) && (first->id & EcsIsEntity) && first_id &&
+        (first_id == EcsIsA || first_id == EcsChildOf ||
+         ecs_has_id(world, first_id, EcsTraversable) ||
+         ecs_has_id(world, first_id, EcsTransitive)))
+    {
+        flecs_query_validator_error(ctx,
+            "value pair cannot be used with traversable relationship");
+        return -1;
+    }
+
     if ((first->id & EcsIsVariable) && (first_id == EcsAny)) {
         term->flags_ |= EcsTermMatchAny;
     }
@@ -55982,7 +55992,7 @@ static void flecs_json_serialize_term_entity(
     flecs_json_memberl(buf, "entity");
     flecs_json_path(buf, world, e);
 
-    if (e) {
+    if (e && ecs_is_alive(world, e)) {
         const char *symbol = ecs_get_symbol(world, e);
         if (symbol) {
             flecs_json_memberl(buf, "symbol");
@@ -67363,6 +67373,11 @@ static bool flecs_term_ref(flecs_term_parser_t *p, ecs_term_ref_t *ref) {
     }
 
     if (p->token.kind == '@') {
+        if (ref != &p->parser->term->second) {
+            return flecs_term_error(p,
+                "value pair syntax is only valid for pair target");
+        }
+
         p->parser->term->id = ECS_VALUE_PAIR;
         if (!flecs_term_next(p)) return false;
         if (p->token.kind == EcsTokMul) {

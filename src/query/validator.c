@@ -620,6 +620,16 @@ int flecs_term_finalize(
     ecs_entity_t second_id = ECS_TERM_REF_ID(second);
     ecs_entity_t src_id = ECS_TERM_REF_ID(src);
 
+    if (ECS_IS_VALUE_PAIR(term->id) && (first->id & EcsIsEntity) && first_id &&
+        (first_id == EcsIsA || first_id == EcsChildOf ||
+         ecs_has_id(world, first_id, EcsTraversable) ||
+         ecs_has_id(world, first_id, EcsTransitive)))
+    {
+        flecs_query_validator_error(ctx,
+            "value pair cannot be used with traversable relationship");
+        return -1;
+    }
+
     if ((first->id & EcsIsVariable) && (first_id == EcsAny)) {
         term->flags_ |= EcsTermMatchAny;
     }

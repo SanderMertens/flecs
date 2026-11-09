@@ -4416,3 +4416,21 @@ void Rest_set_empty_struct(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_query_info_w_value_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "Rel" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/query?expr=(Rel,%20@99999)&query_info=true", NULL, &reply));
+    test_int(reply.code, 200);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}

@@ -651,6 +651,7 @@ void Rest_add_isa_to_trait_component(void);
 void Rest_delete_base_of_component_in_use(void);
 void Rest_add_flag_pair(void);
 void Rest_set_empty_struct(void);
+void Rest_query_info_w_value_pair(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -3169,6 +3170,10 @@ bake_test_case Rest_testcases[] = {
     {
         "set_empty_struct",
         Rest_set_empty_struct
+    },
+    {
+        "query_info_w_value_pair",
+        Rest_query_info_w_value_pair
     }
 };
 
@@ -3629,7 +3634,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        153,
+        154,
         Rest_testcases
     },
     {
