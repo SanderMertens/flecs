@@ -674,7 +674,8 @@
                 "put_component_not_copyable",
                 "put_component_not_copy_assignable",
                 "put_component_not_constructible",
-                "add_component_not_constructible"
+                "add_component_not_constructible",
+                "get_stats_user_period"
             ]
         }, {
             "id": "Metrics",

@@ -29674,7 +29674,10 @@ static bool flecs_rest_get_stats(
         char *period_name = flecs_asprintf("Period%s", period_str);
         period = ecs_lookup_child(world, ecs_id(FlecsStats), period_name);
         ecs_os_free(period_name);
-        if (!period) {
+        if (period != EcsPeriod1s && period != EcsPeriod1m &&
+            period != EcsPeriod1h && period != EcsPeriod1d &&
+            period != EcsPeriod1w)
+        {
             flecs_reply_error(reply, "bad request (invalid period string)");
             reply->code = 400;
             return false;
@@ -29684,6 +29687,12 @@ static bool flecs_rest_get_stats(
     if (!ecs_os_strcmp(category, "world")) {
         const EcsWorldStats *stats = ecs_get_pair(world, EcsWorld, 
             EcsWorldStats, period);
+        if (!stats || !stats->stats) {
+            flecs_reply_error(reply, "no stats available for period");
+            reply->code = 404;
+            return true;
+        }
+
         flecs_world_stats_to_json(&reply->body, stats);
         return true;
 
