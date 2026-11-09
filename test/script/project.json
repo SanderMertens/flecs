@@ -1982,7 +1982,8 @@
                 "set_meta_type",
                 "entity_has_zero_id",
                 "call_variable",
-                "call_entity_variable"
+                "call_entity_variable",
+                "template_add_poly"
             ]
         }, {
             "id": "Format",

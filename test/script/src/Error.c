@@ -6532,3 +6532,16 @@ void Error_call_entity_variable(void) {
 
     ecs_fini(world);
 }
+
+void Error_template_add_poly(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "template Foo {\n  flecs.core.Poly\n}\ne {\n  Foo\n}", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}

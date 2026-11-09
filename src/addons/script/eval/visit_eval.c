@@ -944,6 +944,16 @@ void flecs_script_scope_add_ids(
     int32_t count)
 {
     ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(v->world));
+
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        char *err = flecs_guard_add(world, entity, ids[i]);
+        if (err) {
+            ecs_os_free(err);
+            return;
+        }
+    }
+
     ecs_stage_t *stage = world->stages[0];
     const ecs_stage_ensure_t *ensure_add = stage->ensure_add;
     ecs_stage_ensure_t ensure_add_type = { entity, {

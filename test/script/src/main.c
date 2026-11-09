@@ -1931,6 +1931,7 @@ void Error_set_meta_type(void);
 void Error_entity_has_zero_id(void);
 void Error_call_variable(void);
 void Error_call_entity_variable(void);
+void Error_template_add_poly(void);
 
 // Testsuite 'Format'
 void Format_setup(void);
@@ -11888,6 +11889,10 @@ bake_test_case Error_testcases[] = {
     {
         "call_entity_variable",
         Error_call_entity_variable
+    },
+    {
+        "template_add_poly",
+        Error_template_add_poly
     }
 };
 
@@ -21327,7 +21332,7 @@ static bake_test_suite suites[] = {
         "Error",
         Error_setup,
         NULL,
-        283,
+        284,
         Error_testcases,
         1,
         Error_params
