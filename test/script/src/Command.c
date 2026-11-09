@@ -4696,3 +4696,59 @@ void Command_script_write_invalid_entity(void) {
 
     ecs_fini(world);
 }
+
+void Command_new_hierarchy_too_deep(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_log_set_level(-4);
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_strbuf_appendlit(&buf, "new \"a");
+    int32_t i;
+    for (i = 0; i < 140; i ++) {
+        ecs_strbuf_appendlit(&buf, ".a");
+    }
+    ecs_strbuf_appendlit(&buf, "\"");
+    char *cmd = ecs_strbuf_get(&buf);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session, cmd);
+    test_int(ecs_vec_count(&r.errors), 1);
+    ecs_shell_result_fini(world, &r);
+    ecs_os_free(cmd);
+
+    for (i = 0; i < 140; i ++) {
+        ecs_strbuf_appendlit(&buf, "new a; cd a;");
+    }
+    cmd = ecs_strbuf_get(&buf);
+
+    r = ecs_shell_run(world, session, cmd);
+    test_assert(ecs_vec_count(&r.errors) >= 1);
+    ecs_shell_result_fini(world, &r);
+    ecs_os_free(cmd);
+
+    ecs_fini(world);
+}
+
+void Command_new_in_flecs_core(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_log_set_level(-4);
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session,
+        "new \"flecs.core.Foo\"");
+    test_int(ecs_vec_count(&r.errors), 1);
+    ecs_shell_result_fini(world, &r);
+
+    r = ecs_shell_run(world, session, "cd flecs.core; new Bar");
+    test_int(ecs_vec_count(&r.errors), 1);
+    ecs_shell_result_fini(world, &r);
+
+    test_assert(ecs_lookup(world, "flecs.core.Foo") == 0);
+    test_assert(ecs_lookup(world, "flecs.core.Bar") == 0);
+
+    ecs_fini(world);
+}

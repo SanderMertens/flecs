@@ -534,6 +534,12 @@ static void flecs_command_new(
     const char *name = argc ? flecs_command_arg(argv, 0, char*) : NULL;
     ecs_entity_t e = 0;
 
+    if (flecs_command_guard(ctx, flecs_guard_new_path(
+        world, scope, name, ".")))
+    {
+        return;
+    }
+
     if (name && name[0]) {
         if (ecs_lookup_path_w_sep(world, scope, name, ".", NULL, false)) {
             flecs_command_err(ctx, "entity '%s' already exists", name);

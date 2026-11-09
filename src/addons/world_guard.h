@@ -3,6 +3,16 @@
 
 #if defined(FLECS_REST) || defined(FLECS_SCRIPT)
 
+int32_t flecs_guard_depth(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
+
+char* flecs_guard_new_path(
+    ecs_world_t *world,
+    ecs_entity_t scope,
+    const char *path,
+    const char *sep);
+
 char* flecs_guard_id_valid(
     const ecs_world_t *world,
     ecs_id_t id);

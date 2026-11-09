@@ -657,6 +657,8 @@ void Rest_query_or_component_and_tag(void);
 void Rest_set_map_on_type_in_use(void);
 void Rest_set_vector_cyclic(void);
 void Rest_change_type_nested_in_type_in_use(void);
+void Rest_put_entity_hierarchy_too_deep(void);
+void Rest_reparent_hierarchy_too_deep(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -3199,6 +3201,14 @@ bake_test_case Rest_testcases[] = {
     {
         "change_type_nested_in_type_in_use",
         Rest_change_type_nested_in_type_in_use
+    },
+    {
+        "put_entity_hierarchy_too_deep",
+        Rest_put_entity_hierarchy_too_deep
+    },
+    {
+        "reparent_hierarchy_too_deep",
+        Rest_reparent_hierarchy_too_deep
     }
 };
 
@@ -3659,7 +3669,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        159,
+        161,
         Rest_testcases
     },
     {

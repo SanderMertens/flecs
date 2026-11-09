@@ -4634,3 +4634,67 @@ void Rest_change_type_nested_in_type_in_use(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_put_entity_hierarchy_too_deep(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_strbuf_appendlit(&buf, "/entity/a");
+    int32_t i;
+    for (i = 0; i < 140; i ++) {
+        ecs_strbuf_appendlit(&buf, "/a");
+    }
+    char *path = ecs_strbuf_get(&buf);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT", path, NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+    ecs_os_free(path);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT", "/entity/a/a/a", NULL,
+        &reply));
+    test_int(reply.code, 200);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_reparent_hierarchy_too_deep(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t root_a = ecs_entity(world, { .name = "A" });
+    ecs_entity_t cur = root_a;
+    int32_t i;
+    for (i = 0; i < 80; i ++) {
+        cur = ecs_new_w_pair(world, EcsChildOf, cur);
+    }
+
+    ecs_entity_t root_b = ecs_entity(world, { .name = "B" });
+    ecs_entity_t leaf_b = root_b;
+    for (i = 0; i < 80; i ++) {
+        leaf_b = ecs_new_w_pair(world, EcsChildOf, leaf_b);
+    }
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    char path[256];
+    ecs_os_snprintf(path, 256,
+        "/component/A?component=(flecs.core.ChildOf,%%23%u)", (uint32_t)leaf_b);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT", path, NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(!ecs_has_pair(world, root_a, EcsChildOf, EcsWildcard));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}

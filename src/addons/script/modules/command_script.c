@@ -448,6 +448,12 @@ static void flecs_command_script_write(
 
     ecs_entity_t script = flecs_command_lookup(world, name);
     if (!script) {
+        if (flecs_command_guard(ctx, flecs_guard_new_path(
+            world, flecs_command_scope(world), name, ".")))
+        {
+            return;
+        }
+
         script = ecs_entity(world, {
             .name = name, .parent = flecs_command_scope(world) });
         if (!script) {

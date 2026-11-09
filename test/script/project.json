@@ -4415,7 +4415,9 @@
                 "script_remove_invalid_id",
                 "cd_wildcard",
                 "emit_wildcard_event",
-                "script_write_invalid_entity"
+                "script_write_invalid_entity",
+                "new_hierarchy_too_deep",
+                "new_in_flecs_core"
             ]
         }, {
             "id": "CommandResource",

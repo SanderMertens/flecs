@@ -28025,6 +28025,16 @@ void flecs_json_assemble_output(
 
 #if defined(FLECS_REST) || defined(FLECS_SCRIPT)
 
+int32_t flecs_guard_depth(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
+
+char* flecs_guard_new_path(
+    ecs_world_t *world,
+    ecs_entity_t scope,
+    const char *path,
+    const char *sep);
+
 char* flecs_guard_id_valid(
     const ecs_world_t *world,
     ecs_id_t id);
@@ -28195,45 +28205,7 @@ static bool flecs_rest_parent_guard(
     ecs_http_reply_t *reply,
     const char *path)
 {
-    char *buf = ecs_os_strdup(path);
-    ecs_entity_t parent = 0;
-    int32_t nesting = 0;
-    char *ptr;
-    for (ptr = buf; ptr[0]; ptr ++) {
-        char ch = ptr[0];
-        if (ch == '\\') {
-            if (!ptr[1]) {
-                break;
-            }
-            ptr ++;
-        } else if (ch == '<') {
-            nesting ++;
-        } else if (ch == '>') {
-            if (nesting) {
-                nesting --;
-            }
-        } else if (ch == '/' && !nesting) {
-            ptr[0] = '\0';
-            ecs_entity_t e = ecs_lookup_path_w_sep(
-                world, 0, buf, "/", NULL, false);
-            ptr[0] = '/';
-            if (!e) {
-                break;
-            }
-
-            parent = e;
-        }
-    }
-    ecs_os_free(buf);
-
-    if (parent == EcsFlecsCore) {
-        flecs_reply_error(reply,
-            "cannot create entity '%s' in builtin module", path);
-        reply->code = 400;
-        return true;
-    }
-
-    return false;
+    return flecs_rest_guard(reply, flecs_guard_new_path(world, 0, path, "/"));
 }
 
 static void flecs_rest_parse_json_ser_entity_params(
@@ -32044,6 +32016,46 @@ static bool flecs_guard_is_traversable(
         ecs_has_id(world, rel, EcsTraversable);
 }
 
+int32_t flecs_guard_depth(
+    const ecs_world_t *world,
+    ecs_entity_t e)
+{
+    int32_t depth = 0;
+    while (e && depth <= FLECS_DAG_DEPTH_MAX) {
+        e = ecs_get_parent(world, e);
+        if (e) {
+            depth ++;
+        }
+    }
+
+    return depth;
+}
+
+static int32_t flecs_guard_height(
+    const ecs_world_t *world,
+    ecs_entity_t e,
+    int32_t depth)
+{
+    if (depth > FLECS_DAG_DEPTH_MAX) {
+        return 0;
+    }
+
+    int32_t result = 0;
+    ecs_iter_t it = ecs_children(world, e);
+    while (ecs_children_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            int32_t h = 1 + flecs_guard_height(
+                world, it.entities[i], depth + 1);
+            if (h > result) {
+                result = h;
+            }
+        }
+    }
+
+    return result;
+}
+
 static char* flecs_guard_parent(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -32076,6 +32088,14 @@ static char* flecs_guard_parent(
     if (flecs_guard_reachable(world, EcsChildOf, parent, e)) {
         return flecs_asprintf("cannot make '%s' a child of '%s': "
             "cycle detected in hierarchy",
+                flecs_guard_path(world, e), flecs_guard_id_str(world, parent));
+    }
+
+    if ((flecs_guard_depth(world, parent) + 1 + flecs_guard_height(world, e, 0))
+        >= FLECS_DAG_DEPTH_MAX)
+    {
+        return flecs_asprintf("cannot make '%s' a child of '%s': "
+            "hierarchy is too deep",
                 flecs_guard_path(world, e), flecs_guard_id_str(world, parent));
     }
 
@@ -32720,6 +32740,71 @@ static char* flecs_guard_add_intern(
         }
     }
 #endif
+
+    return NULL;
+}
+
+char* flecs_guard_new_path(
+    ecs_world_t *world,
+    ecs_entity_t scope,
+    const char *path,
+    const char *sep)
+{
+    world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world));
+
+    char *buf = ecs_os_strdup(path ? path : "");
+    ecs_entity_t parent = scope;
+    int32_t nesting = 0, new_count = 1;
+    bool resolving = true;
+    char *ptr;
+    for (ptr = buf; ptr[0]; ptr ++) {
+        char ch = ptr[0];
+        if (ch == '\\') {
+            if (!ptr[1]) {
+                break;
+            }
+            ptr ++;
+        } else if (ch == '<') {
+            nesting ++;
+        } else if (ch == '>') {
+            if (nesting) {
+                nesting --;
+            }
+        } else if (ch == sep[0] && !nesting) {
+            if (!resolving) {
+                new_count ++;
+                continue;
+            }
+
+            ptr[0] = '\0';
+            ecs_entity_t e = ecs_lookup_path_w_sep(
+                world, scope, buf, sep, NULL, false);
+            ptr[0] = sep[0];
+            if (!e) {
+                resolving = false;
+                new_count ++;
+                continue;
+            }
+
+            parent = e;
+        }
+    }
+    ecs_os_free(buf);
+
+    int32_t depth = new_count - 1;
+    if (parent) {
+        depth += flecs_guard_depth(world, parent) + 1;
+    }
+
+    if (depth >= FLECS_DAG_DEPTH_MAX) {
+        return flecs_asprintf("cannot create entity '%s': "
+            "hierarchy is too deep", path);
+    }
+
+    if (parent == EcsFlecsCore) {
+        return flecs_asprintf("cannot create entity '%s' in builtin module",
+            path);
+    }
 
     return NULL;
 }
@@ -118792,6 +118877,12 @@ static void flecs_command_new(
     const char *name = argc ? flecs_command_arg(argv, 0, char*) : NULL;
     ecs_entity_t e = 0;
 
+    if (flecs_command_guard(ctx, flecs_guard_new_path(
+        world, scope, name, ".")))
+    {
+        return;
+    }
+
     if (name && name[0]) {
         if (ecs_lookup_path_w_sep(world, scope, name, ".", NULL, false)) {
             flecs_command_err(ctx, "entity '%s' already exists", name);
@@ -120830,6 +120921,12 @@ static void flecs_command_script_write(
 
     ecs_entity_t script = flecs_command_lookup(world, name);
     if (!script) {
+        if (flecs_command_guard(ctx, flecs_guard_new_path(
+            world, flecs_command_scope(world), name, ".")))
+        {
+            return;
+        }
+
         script = ecs_entity(world, {
             .name = name, .parent = flecs_command_scope(world) });
         if (!script) {

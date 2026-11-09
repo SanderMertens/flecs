@@ -4267,6 +4267,8 @@ void Command_script_remove_invalid_id(void);
 void Command_cd_wildcard(void);
 void Command_emit_wildcard_event(void);
 void Command_script_write_invalid_entity(void);
+void Command_new_hierarchy_too_deep(void);
+void Command_new_in_flecs_core(void);
 
 // Testsuite 'CommandResource'
 void CommandResource_setup(void);
@@ -21068,6 +21070,14 @@ bake_test_case Command_testcases[] = {
     {
         "script_write_invalid_entity",
         Command_script_write_invalid_entity
+    },
+    {
+        "new_hierarchy_too_deep",
+        Command_new_hierarchy_too_deep
+    },
+    {
+        "new_in_flecs_core",
+        Command_new_in_flecs_core
     }
 };
 
@@ -21649,7 +21659,7 @@ static bake_test_suite suites[] = {
         "Command",
         Command_setup,
         NULL,
-        168,
+        170,
         Command_testcases
     },
     {

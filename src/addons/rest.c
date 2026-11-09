@@ -132,45 +132,7 @@ static bool flecs_rest_parent_guard(
     ecs_http_reply_t *reply,
     const char *path)
 {
-    char *buf = ecs_os_strdup(path);
-    ecs_entity_t parent = 0;
-    int32_t nesting = 0;
-    char *ptr;
-    for (ptr = buf; ptr[0]; ptr ++) {
-        char ch = ptr[0];
-        if (ch == '\\') {
-            if (!ptr[1]) {
-                break;
-            }
-            ptr ++;
-        } else if (ch == '<') {
-            nesting ++;
-        } else if (ch == '>') {
-            if (nesting) {
-                nesting --;
-            }
-        } else if (ch == '/' && !nesting) {
-            ptr[0] = '\0';
-            ecs_entity_t e = ecs_lookup_path_w_sep(
-                world, 0, buf, "/", NULL, false);
-            ptr[0] = '/';
-            if (!e) {
-                break;
-            }
-
-            parent = e;
-        }
-    }
-    ecs_os_free(buf);
-
-    if (parent == EcsFlecsCore) {
-        flecs_reply_error(reply,
-            "cannot create entity '%s' in builtin module", path);
-        reply->code = 400;
-        return true;
-    }
-
-    return false;
+    return flecs_rest_guard(reply, flecs_guard_new_path(world, 0, path, "/"));
 }
 
 static void flecs_rest_parse_json_ser_entity_params(
