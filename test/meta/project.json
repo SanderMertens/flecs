@@ -924,7 +924,8 @@
                 "entity_wildcard_tag",
                 "entity_wildcard_pair_target",
                 "entity_wildcard_component",
-                "opaque_vector_wo_ensure_element"
+                "opaque_vector_wo_ensure_element",
+                "value_w_not_copyable_type"
             ]
         }, {
             "id": "SerializeToJson",

@@ -896,6 +896,7 @@ void DeserializeFromJson_entity_wildcard_tag(void);
 void DeserializeFromJson_entity_wildcard_pair_target(void);
 void DeserializeFromJson_entity_wildcard_component(void);
 void DeserializeFromJson_opaque_vector_wo_ensure_element(void);
+void DeserializeFromJson_value_w_not_copyable_type(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_string_w_control_char(void);
@@ -5065,6 +5066,10 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "opaque_vector_wo_ensure_element",
         DeserializeFromJson_opaque_vector_wo_ensure_element
+    },
+    {
+        "value_w_not_copyable_type",
+        DeserializeFromJson_value_w_not_copyable_type
     }
 };
 
@@ -7812,7 +7817,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        222,
+        223,
         DeserializeFromJson_testcases
     },
     {

@@ -8758,3 +8758,29 @@ void DeserializeFromJson_opaque_vector_wo_ensure_element(void) {
 
     ecs_fini(world);
 }
+
+void DeserializeFromJson_value_w_not_copyable_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) }
+        }
+    });
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
+    });
+
+    ecs_log_set_level(-4);
+
+    ecs_value_t v = {0};
+    ecs_ptr_from_json(world, ecs_id(ecs_value_t), &v,
+        "{\"Position\":{\"x\":10}}", NULL);
+    test_assert(v.type == 0);
+    test_assert(v.ptr == NULL);
+
+    ecs_fini(world);
+}

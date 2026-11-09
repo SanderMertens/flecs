@@ -62979,6 +62979,14 @@ int flecs_value_ensure_type(
         return -1;
     }
 
+    if (ti->hooks.flags & (ECS_TYPE_HOOK_CTOR_ILLEGAL|
+        ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL))
+    {
+        ecs_err("type '%s' cannot be stored in a value",
+            flecs_errstr(ecs_get_path(world, type)));
+        return -1;
+    }
+
     ecs_value_fini(world, v);
 
     v->type = type;
