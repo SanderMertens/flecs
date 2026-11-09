@@ -13745,3 +13745,55 @@ void Variables_same_this_src_tgt_w_fixed_first_id_matching_var_id(void) {
         ecs_fini(world);
     }
 }
+
+void Variables_page_iter_entity_var_only(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e[5];
+    int32_t i;
+    for (i = 0; i < 5; i ++) {
+        e[i] = ecs_new_w_id(world, Tag);
+    }
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Tag($x)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    int32_t x_var = ecs_query_find_var(q, "x");
+    test_assert(x_var != -1);
+
+    ecs_entity_t all[5];
+    int32_t count = 0;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_assert(count < 5);
+        all[count ++] = ecs_iter_get_var(&it, x_var);
+    }
+    test_int(count, 5);
+
+    it = ecs_query_iter(world, q);
+    ecs_iter_t pit = ecs_page_iter(&it, 1, 2);
+    test_bool(true, ecs_iter_next(&pit));
+    test_uint(ecs_iter_get_var(&pit, x_var), all[1]);
+    test_bool(true, ecs_iter_next(&pit));
+    test_uint(ecs_iter_get_var(&pit, x_var), all[2]);
+    test_bool(false, ecs_iter_next(&pit));
+
+    it = ecs_query_iter(world, q);
+    pit = ecs_page_iter(&it, 4, 0);
+    test_bool(true, ecs_iter_next(&pit));
+    test_uint(ecs_iter_get_var(&pit, x_var), all[4]);
+    test_bool(false, ecs_iter_next(&pit));
+
+    it = ecs_query_iter(world, q);
+    pit = ecs_page_iter(&it, 10, 2);
+    test_bool(false, ecs_iter_next(&pit));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
