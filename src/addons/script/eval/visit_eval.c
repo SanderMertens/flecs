@@ -2490,6 +2490,8 @@ int flecs_script_eval_node(
         return flecs_script_eval_emit(v, (ecs_script_emit_t*)node);
     case EcsAstAssign:
         return flecs_script_eval_assign(v, (ecs_script_assign_t*)node);
+    case EcsAstQuery:
+        return flecs_script_eval_query(v, (ecs_script_query_node_t*)node);
     default:
         break;
     }
@@ -2639,7 +2641,8 @@ bool flecs_script_stmt_support(
     return (node->kind == EcsAstConst &&
             !((const ecs_script_var_node_t*)node)->computed) ||
         node->kind == EcsAstUsing ||
-        node->kind == EcsAstModule;
+        node->kind == EcsAstModule ||
+        node->kind == EcsAstQuery;
 }
 
 static bool flecs_script_stmt_run(

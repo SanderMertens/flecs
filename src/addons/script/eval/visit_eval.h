@@ -123,8 +123,23 @@ typedef enum flecs_script_for_kind_t {
     FlecsScriptForRange,
     FlecsScriptForArray,
     FlecsScriptForVector,
-    FlecsScriptForMap
+    FlecsScriptForMap,
+    FlecsScriptForQuery
 } flecs_script_for_kind_t;
+
+typedef struct flecs_script_for_query_t {
+    ecs_iter_t it;
+    int32_t row;
+    int32_t count;
+    int8_t fields[FLECS_SCRIPT_FOR_VAR_MAX];
+    const ecs_type_info_t *ti[FLECS_SCRIPT_FOR_VAR_MAX];
+    void *defaults[FLECS_SCRIPT_FOR_VAR_MAX];
+    int32_t field_count;
+    ecs_entity_t entity;
+    ecs_entity_t *entities;
+    int32_t entities_size;
+    bool active;
+} flecs_script_for_query_t;
 
 typedef struct flecs_script_for_state_t {
     flecs_script_for_kind_t kind;
@@ -133,7 +148,9 @@ typedef struct flecs_script_for_state_t {
     int32_t elem_var;
     int32_t key_var;
     int32_t index_var;
-    ecs_entity_t var_types[3];
+    ecs_entity_t var_types[FLECS_SCRIPT_FOR_VAR_MAX];
+    flecs_script_for_query_t *query;
+    int32_t entity_var;
     int32_t index;
     int32_t from;
     int32_t count;
@@ -493,7 +510,16 @@ int flecs_script_for_declare_vars(
     flecs_script_for_state_t *state,
     bool alloc_elem);
 
+int flecs_script_for_query_iter(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_for_t *node,
+    flecs_script_for_state_t *state);
+
 bool flecs_script_for_next(
+    flecs_script_for_state_t *state);
+
+void flecs_script_for_fini(
+    ecs_script_eval_visitor_t *v,
     flecs_script_for_state_t *state);
 
 /* Runtime bookkeeping helpers shared with the IR runtime */

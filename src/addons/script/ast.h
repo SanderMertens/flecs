@@ -35,7 +35,8 @@ typedef enum ecs_script_node_kind_t {
     EcsAstEmit,
     EcsAstAsync,
     EcsAstWhile,
-    EcsAstAssign
+    EcsAstAssign,
+    EcsAstQuery
 } ecs_script_node_kind_t;
 
 typedef struct ecs_script_node_t {
@@ -287,11 +288,30 @@ typedef struct ecs_script_if_t {
     ecs_expr_node_t *expr;
 } ecs_script_if_t;
 
+#ifndef FLECS_SCRIPT_FOR_VAR_MAX
+#define FLECS_SCRIPT_FOR_VAR_MAX (16)
+#endif
+
+typedef struct ecs_script_query_node_t {
+    ecs_script_node_t node;
+    const char *name;
+    char *expr;
+    const char *expr_pos;
+    char *unresolved;
+    ecs_query_t *query;
+    uint64_t input;
+    int32_t sp;
+    int32_t query_slot;
+    int32_t computed;
+} ecs_script_query_node_t;
+
 typedef struct ecs_script_for_t {
     ecs_script_node_t node;
-    const char *loop_vars[3];
-    int32_t loop_var_sp[3];
+    const char *loop_vars[FLECS_SCRIPT_FOR_VAR_MAX];
+    int32_t loop_var_sp[FLECS_SCRIPT_FOR_VAR_MAX];
     int32_t loop_var_count;
+    ecs_script_query_node_t *query;
+    int32_t query_sp;
     ecs_expr_node_t *from;
     ecs_expr_node_t *to;
     ecs_expr_node_t *expr;
@@ -416,6 +436,10 @@ ecs_script_assign_t* flecs_script_insert_assign(
 
 ecs_script_for_t* flecs_script_insert_for(
     ecs_parser_t *parser);
+
+ecs_script_query_node_t* flecs_script_insert_query(
+    ecs_parser_t *parser,
+    const char *name);
 
 ecs_script_include_t* flecs_script_insert_include(
     ecs_parser_t *parser,

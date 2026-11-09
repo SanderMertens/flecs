@@ -33,7 +33,8 @@
     case EcsTokKeywordInclude: case EcsTokKeywordFn: case EcsTokKeywordAwait:\
     case EcsTokKeywordTry: case EcsTokKeywordCatch: case EcsTokKeywordAsync:\
     case EcsTokKeywordContinue: case EcsTokKeywordBreak:\
-    case EcsTokKeywordWhile: case EcsTokKeywordScript
+    case EcsTokKeywordWhile: case EcsTokKeywordScript:\
+    case EcsTokKeywordQuery
 
 /* Definitions for parser functions */
 #define ParserBegin\

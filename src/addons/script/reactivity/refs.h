@@ -43,6 +43,14 @@ void flecs_script_observe_refs(
     ecs_vec_t *refs,
     ecs_vec_t *observers);
 
+ecs_entity_t flecs_script_query_observer_init(
+    ecs_world_t *world,
+    ecs_entity_t script,
+    ecs_entity_t instance,
+    const ecs_query_desc_t *query,
+    ecs_entity_t event,
+    uint64_t input);
+
 void flecs_script_record_dyn_ref(
     ecs_vec_t *run_refs,
     ecs_entity_t entity,

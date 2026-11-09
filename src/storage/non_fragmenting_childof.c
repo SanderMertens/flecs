@@ -155,6 +155,20 @@ static void flecs_on_replace_parent(ecs_iter_t *it) {
             .count = 1, .array = &new_parent
         }, NULL);
 
+        if ((r->table->flags & EcsTableHasOnRemove) &&
+            flecs_entities_is_alive(world, old_parent))
+        {
+            ecs_id_t old_pair = ecs_childof(old_parent);
+            flecs_emit(world, world, &(ecs_event_desc_t){
+                .event = EcsOnRemove,
+                .ids = &(ecs_type_t){ .count = 1, .array = &old_pair },
+                .table = r->table,
+                .offset = ECS_RECORD_TO_ROW(r->row),
+                .count = 1,
+                .observable = world
+            });
+        }
+
         ecs_component_record_t *cr_old =
             flecs_remove_non_fragmenting_child(world, old_parent, r, e);
 

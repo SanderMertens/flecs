@@ -25,6 +25,16 @@ typedef struct ecs_script_for_slot_t {
     int32_t scope_slot;
 } ecs_script_for_slot_t;
 
+typedef struct EcsScriptQuery {
+    const struct ecs_script_query_node_t *node;
+} EcsScriptQuery;
+
+typedef struct ecs_script_query_slot_t {
+    EcsScriptQuery value;
+    ecs_world_t *world;
+    ecs_entity_t observers[2];
+} ecs_script_query_slot_t;
+
 /* Stores reference to entity in same script */
 typedef struct ecs_script_symbol_slot_t {
     ecs_entity_t entity;
@@ -50,6 +60,7 @@ typedef struct ecs_script_state_t {
     ecs_vec_t component_slots;
     ecs_vec_t scope_slots;
     ecs_vec_t for_slots;
+    ecs_vec_t query_slots;
     ecs_vec_t computed;
     int32_t visit;
     bool initialized;
@@ -77,6 +88,7 @@ void flecs_script_state_resize(
     int32_t scope_count,
     int32_t component_count,
     int32_t for_count,
+    int32_t query_count,
     int32_t computed_count);
 
 ecs_entity_t flecs_script_state_component_src(
@@ -114,5 +126,8 @@ void flecs_script_for_slot_track_component(
     ecs_entity_t entity,
     ecs_id_t component,
     int32_t visit);
+
+void flecs_script_query_slots_clear(
+    ecs_vec_t *query_slots);
 
 #endif

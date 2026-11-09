@@ -84,6 +84,7 @@ typedef enum ecs_token_kind_t {
     EcsTokKeywordAsync,
     EcsTokKeywordWhile,
     EcsTokKeywordScript,
+    EcsTokKeywordQuery,
     EcsTokLast
 } ecs_token_kind_t;
 

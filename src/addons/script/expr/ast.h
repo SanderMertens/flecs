@@ -206,6 +206,12 @@ typedef struct ecs_expr_script_t {
     ecs_script_t *script;
 } ecs_expr_script_t;
 
+ecs_expr_cast_t* flecs_expr_cast_fn(
+    ecs_script_t *script,
+    ecs_expr_node_t *expr,
+    ecs_entity_t type,
+    flecs_expr_cast_t fn);
+
 ecs_expr_value_node_t* flecs_expr_value_from(
     ecs_script_t *script,
     ecs_expr_node_t *node,

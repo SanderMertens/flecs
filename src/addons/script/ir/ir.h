@@ -39,6 +39,7 @@ typedef enum ecs_script_ir_op_kind_t {
     EcsIrComponentVisitor,
     EcsIrUsing,
     EcsIrModule,
+    EcsIrQuery,
     EcsIrAnnot,
     EcsIrTemplate,
     EcsIrMutCheck,

@@ -73,6 +73,7 @@ struct ecs_script_template_t {
     int32_t scope_count;
     int32_t component_count;
     int32_t for_count;
+    int32_t query_count;
     int32_t inherited_count;
     int32_t inherited_mut_count;
     ecs_entity_t base;

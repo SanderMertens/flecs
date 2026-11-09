@@ -385,11 +385,24 @@ ecs_script_for_t* flecs_script_insert_for(
 {
     ecs_script_for_t *result = flecs_ast_insert(
         parser, ecs_script_for_t, EcsAstFor);
-    result->loop_var_sp[0] = -1;
-    result->loop_var_sp[1] = -1;
-    result->loop_var_sp[2] = -1;
+    for (int32_t i = 0; i < FLECS_SCRIPT_FOR_VAR_MAX; i ++) {
+        result->loop_var_sp[i] = -1;
+    }
+    result->query_sp = -1;
     result->for_slot = -1;
     result->scope = flecs_script_scope_new(parser);
+    return result;
+}
+
+ecs_script_query_node_t* flecs_script_insert_query(
+    ecs_parser_t *parser,
+    const char *name)
+{
+    ecs_script_query_node_t *result = flecs_ast_insert(
+        parser, ecs_script_query_node_t, EcsAstQuery);
+    result->name = name;
+    result->sp = -1;
+    result->query_slot = -1;
     return result;
 }
 

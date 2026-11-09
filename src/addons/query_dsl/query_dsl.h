@@ -18,6 +18,15 @@ int flecs_terms_parse(
     ecs_term_t *terms,
     int32_t *term_count_out);
 
+int flecs_terms_parse_at(
+    ecs_world_t *world,
+    const char *name,
+    const char *code,
+    const char *expr,
+    char *token_buffer,
+    ecs_term_t *terms,
+    int32_t *term_count_out);
+
 const char* flecs_term_parse(
     ecs_world_t *world,
     const char *name,

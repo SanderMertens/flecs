@@ -312,7 +312,20 @@ int flecs_terms_parse(
     ecs_term_t *terms,
     int32_t *term_count_out)
 {
-    if (!ecs_os_strcmp(code, "0")) {
+    return flecs_terms_parse_at(world, name, code, code, token_buffer, terms,
+        term_count_out);
+}
+
+int flecs_terms_parse_at(
+    ecs_world_t *world,
+    const char *name,
+    const char *code,
+    const char *expr,
+    char *token_buffer,
+    ecs_term_t *terms,
+    int32_t *term_count_out)
+{
+    if (!ecs_os_strcmp(expr, "0")) {
         *term_count_out = 0;
         return 0;
     }
@@ -321,14 +334,14 @@ int flecs_terms_parse(
         .name = name,
         .code = code,
         .world = world,
-        .pos = code,
+        .pos = expr,
         .merge_variable_members = true
     };
 
     parser.token_cur = token_buffer;
 
     int32_t term_count = 0;
-    const char *ptr = code;
+    const char *ptr = expr;
     ecs_term_ref_t extra_args[FLECS_TERM_ARG_COUNT_MAX];
 
     parser.extra_args = extra_args;
