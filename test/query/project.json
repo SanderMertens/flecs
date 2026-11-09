@@ -1142,7 +1142,11 @@
                 "first_var_w_fixed_tgt_id_matching_var_id",
                 "same_src_tgt_var_w_fixed_first_id_matching_var_id",
                 "same_this_src_tgt_w_fixed_first_id_matching_var_id",
-                "page_iter_entity_var_only"
+                "page_iter_entity_var_only",
+                "not_first_var_then_src",
+                "not_this_first_then_this_src",
+                "optional_this_second_not_unwritten",
+                "not_self_ref_then_transitive"
             ]
         }, {
             "id": "Operators",

@@ -1113,6 +1113,10 @@ void Variables_first_var_w_fixed_tgt_id_matching_var_id(void);
 void Variables_same_src_tgt_var_w_fixed_first_id_matching_var_id(void);
 void Variables_same_this_src_tgt_w_fixed_first_id_matching_var_id(void);
 void Variables_page_iter_entity_var_only(void);
+void Variables_not_first_var_then_src(void);
+void Variables_not_this_first_then_this_src(void);
+void Variables_optional_this_second_not_unwritten(void);
+void Variables_not_self_ref_then_transitive(void);
 
 // Testsuite 'Operators'
 void Operators_setup(void);
@@ -7388,6 +7392,22 @@ bake_test_case Variables_testcases[] = {
     {
         "page_iter_entity_var_only",
         Variables_page_iter_entity_var_only
+    },
+    {
+        "not_first_var_then_src",
+        Variables_not_first_var_then_src
+    },
+    {
+        "not_this_first_then_this_src",
+        Variables_not_this_first_then_this_src
+    },
+    {
+        "optional_this_second_not_unwritten",
+        Variables_optional_this_second_not_unwritten
+    },
+    {
+        "not_self_ref_then_transitive",
+        Variables_not_self_ref_then_transitive
     }
 };
 
@@ -14999,7 +15019,7 @@ static bake_test_suite suites[] = {
         "Variables",
         Variables_setup,
         NULL,
-        231,
+        235,
         Variables_testcases,
         1,
         Variables_params

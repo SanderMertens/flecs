@@ -13797,3 +13797,141 @@ void Variables_page_iter_entity_var_only(void) {
 
     ecs_fini(world);
 }
+
+void Variables_not_first_var_then_src(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, Foo);
+    ecs_entity_t e2 = ecs_new_w_id(world, Foo);
+    ecs_add_id(world, e2, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!$x($y), Foo($x)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    int32_t x_var = ecs_query_find_var(q, "x");
+    test_assert(x_var != -1);
+
+    int32_t count = 0;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        ecs_entity_t x = ecs_iter_get_var(&it, x_var);
+        test_assert(x == e1 || x == e2);
+        count ++;
+    }
+    test_assert(count > 0);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_not_this_first_then_this_src(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!$this($p), Foo($this)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    bool found = false;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_uint(it.entities[i], e1);
+            found = true;
+        }
+    }
+    test_assert(found);
+
+    ecs_query_fini(q);
+
+    q = ecs_query(world, {
+        .expr = "!$this($p), ChildOf($this, $this)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_optional_this_second_not_unwritten(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, Foo);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, e1);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "?Rel($y, $this), !(Foo, $z), Foo",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    int32_t y_var = ecs_query_find_var(q, "y");
+    test_assert(y_var != -1);
+
+    bool found = false;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            if (it.entities[i] == e1) {
+                found = true;
+            }
+        }
+    }
+    test_assert(found);
+    (void)e2;
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_not_self_ref_then_transitive(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!$z($z), IsA($y, $z)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    int32_t y_var = ecs_query_find_var(q, "y");
+    test_assert(y_var != -1);
+
+    bool found = false;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        if (ecs_iter_get_var(&it, y_var) == inst) {
+            found = true;
+        }
+    }
+    test_assert(found);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
