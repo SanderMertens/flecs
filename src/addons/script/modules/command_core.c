@@ -338,7 +338,7 @@ static void flecs_command_get(
         return;
     }
 
-    ecs_entity_t type = ecs_get_typeid(world, id);
+    ecs_entity_t type = flecs_command_value_type(world, id);
     const void *ptr = type ? ecs_get_id(world, e, id) : NULL;
     if (!ptr) {
         if (!type) {
@@ -399,7 +399,7 @@ static void flecs_command_modified(
         return;
     }
 
-    ecs_entity_t type = ecs_get_typeid(world, id);
+    ecs_entity_t type = flecs_command_value_type(world, id);
     if (!type) {
         flecs_command_err(ctx, "'%s' is not a component with a value",
             flecs_errstr(ecs_id_str(world, id)));

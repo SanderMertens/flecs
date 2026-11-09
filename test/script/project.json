@@ -4405,7 +4405,9 @@
                 "set_parent_invalid",
                 "mv_entity_into_builtin_module",
                 "mv_builtin_entity",
-                "mv_flecs_module"
+                "mv_flecs_module",
+                "get_not_copyable",
+                "modified_not_copyable"
             ]
         }, {
             "id": "CommandResource",

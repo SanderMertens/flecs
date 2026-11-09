@@ -247,7 +247,8 @@ ecs_entity_t flecs_command_value_type(
 {
     ecs_entity_t type = ecs_get_typeid(world, id);
     const ecs_type_info_t *ti = type ? ecs_get_type_info(world, type) : NULL;
-    if (!ti || (ti->hooks.flags & ECS_TYPE_HOOK_COPY_ILLEGAL) ||
+    if (!ti || (ti->hooks.flags & (ECS_TYPE_HOOK_CTOR_ILLEGAL|
+        ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL)) ||
         !ecs_has(world, type, EcsTypeSerializer))
     {
         return 0;

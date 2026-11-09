@@ -4257,6 +4257,8 @@ void Command_set_parent_invalid(void);
 void Command_mv_entity_into_builtin_module(void);
 void Command_mv_builtin_entity(void);
 void Command_mv_flecs_module(void);
+void Command_get_not_copyable(void);
+void Command_modified_not_copyable(void);
 
 // Testsuite 'CommandResource'
 void CommandResource_setup(void);
@@ -21015,6 +21017,14 @@ bake_test_case Command_testcases[] = {
     {
         "mv_flecs_module",
         Command_mv_flecs_module
+    },
+    {
+        "get_not_copyable",
+        Command_get_not_copyable
+    },
+    {
+        "modified_not_copyable",
+        Command_modified_not_copyable
     }
 };
 
@@ -21584,7 +21594,7 @@ static bake_test_suite suites[] = {
         "Command",
         Command_setup,
         NULL,
-        160,
+        162,
         Command_testcases
     },
     {
