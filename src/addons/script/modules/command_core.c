@@ -311,25 +311,6 @@ static void flecs_command_clear(
     flecs_command_history_clear(s);
 }
 
-static bool flecs_command_check_id(
-    const ecs_function_ctx_t *ctx,
-    ecs_id_t id)
-{
-    if (!id || !ecs_id_is_valid(ctx->world, id)) {
-        flecs_command_err(ctx, "invalid component '%s'",
-            flecs_errstr(ecs_id_str(ctx->world, id)));
-        return false;
-    }
-
-    if (!ecs_id_is_wildcard(id) &&
-        flecs_command_guard(ctx, flecs_guard_id_valid(ctx->world, id)))
-    {
-        return false;
-    }
-
-    return true;
-}
-
 static void flecs_command_get(
     const ecs_function_ctx_t *ctx,
     int32_t argc,

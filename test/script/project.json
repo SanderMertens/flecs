@@ -4408,7 +4408,9 @@
                 "mv_flecs_module",
                 "get_not_copyable",
                 "modified_not_copyable",
-                "get_pair_w_dead_relationship"
+                "get_pair_w_dead_relationship",
+                "script_set_invalid_id",
+                "script_remove_invalid_id"
             ]
         }, {
             "id": "CommandResource",

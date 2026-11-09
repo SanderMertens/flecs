@@ -525,6 +525,10 @@ static void flecs_command_script_set(
     ecs_entity_t e = flecs_command_arg(argv, 0, ecs_entity_t);
     ecs_id_t id = flecs_command_arg(argv, 1, ecs_id_t);
     const char *expr = flecs_command_arg(argv, 2, char*);
+    if (!flecs_command_check_id(ctx, id)) {
+        return;
+    }
+
     ecs_entity_t owner = 0;
     const EcsScript *s = flecs_command_get_owner(ctx, e, &owner);
     if (!s) {
@@ -576,6 +580,11 @@ static void flecs_command_script_remove(
     (void)argc;
     (void)result;
     ecs_entity_t e = flecs_command_arg(argv, 0, ecs_entity_t);
+    ecs_id_t id = ctx->ctx ? 0 : flecs_command_arg(argv, 1, ecs_id_t);
+    if (!ctx->ctx && !flecs_command_check_id(ctx, id)) {
+        return;
+    }
+
     ecs_entity_t owner = 0;
     const EcsScript *s = flecs_command_get_owner(ctx, e, &owner);
     if (!s) {
@@ -584,7 +593,7 @@ static void flecs_command_script_remove(
 
     ecs_script_edits_t *edits = ecs_script_edits_new(s->script);
     int r = ctx->ctx ? ecs_script_edits_delete(edits, e) :
-        ecs_script_edits_remove(edits, e, flecs_command_arg(argv, 1, ecs_id_t));
+        ecs_script_edits_remove(edits, e, id);
     char *new_code = flecs_command_edits_apply(ctx, edits, r);
     if (new_code) {
         ecs_script_update(ctx->world, owner, 0, new_code);

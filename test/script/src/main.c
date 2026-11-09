@@ -4260,6 +4260,8 @@ void Command_mv_flecs_module(void);
 void Command_get_not_copyable(void);
 void Command_modified_not_copyable(void);
 void Command_get_pair_w_dead_relationship(void);
+void Command_script_set_invalid_id(void);
+void Command_script_remove_invalid_id(void);
 
 // Testsuite 'CommandResource'
 void CommandResource_setup(void);
@@ -21030,6 +21032,14 @@ bake_test_case Command_testcases[] = {
     {
         "get_pair_w_dead_relationship",
         Command_get_pair_w_dead_relationship
+    },
+    {
+        "script_set_invalid_id",
+        Command_script_set_invalid_id
+    },
+    {
+        "script_remove_invalid_id",
+        Command_script_remove_invalid_id
     }
 };
 
@@ -21599,7 +21609,7 @@ static bake_test_suite suites[] = {
         "Command",
         Command_setup,
         NULL,
-        163,
+        165,
         Command_testcases
     },
     {

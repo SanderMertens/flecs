@@ -4556,3 +4556,56 @@ void Command_get_pair_w_dead_relationship(void) {
 
     ecs_fini(world);
 }
+
+void Command_script_set_invalid_id(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "s" }),
+        .code =
+        HEAD "struct Position(x: f32, y: f32)"
+        LINE "e {"
+        LINE "  Position: {1, 2}"
+        LINE "}"
+        LINE
+    });
+
+    ecs_log_set_level(-4);
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session,
+        "script_set e 0 \"1\"");
+    test_int(ecs_vec_count(&r.errors), 1);
+    ecs_shell_result_fini(world, &r);
+
+    r = ecs_shell_run(world, session, "script_set e (99999, Position) \"{}\"");
+    test_int(ecs_vec_count(&r.errors), 1);
+    ecs_shell_result_fini(world, &r);
+
+    ecs_fini(world);
+}
+
+void Command_script_remove_invalid_id(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "s" }),
+        .code =
+        HEAD "Tag {}"
+        LINE "e {"
+        LINE "  Tag"
+        LINE "}"
+        LINE
+    });
+
+    ecs_log_set_level(-4);
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session, "script_remove e 0");
+    test_int(ecs_vec_count(&r.errors), 1);
+    ecs_shell_result_fini(world, &r);
+
+    ecs_fini(world);
+}
