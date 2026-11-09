@@ -1979,7 +1979,8 @@
                 "set_component_invalid_size",
                 "set_parent_self",
                 "set_parent_invalid",
-                "set_meta_type"
+                "set_meta_type",
+                "entity_has_zero_id"
             ]
         }, {
             "id": "Format",

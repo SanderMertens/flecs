@@ -6493,3 +6493,16 @@ void Error_set_meta_type(void) {
     ecs_fini(world);
 }
 
+
+void Error_entity_has_zero_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "e {}\nconst x = e.has(#0)", &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
