@@ -687,7 +687,8 @@
                 "put_entity_w_deleted_parent_id",
                 "put_entity_w_deleted_parent_id_not_recycled",
                 "put_entity_nested_in_flecs_core",
-                "put_script_nested_in_flecs_core"
+                "put_script_nested_in_flecs_core",
+                "put_script_invalid_entity"
             ]
         }, {
             "id": "Metrics",

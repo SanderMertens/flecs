@@ -647,6 +647,10 @@ static bool flecs_rest_script(
         }
     }
 
+    if (flecs_rest_guard(reply, flecs_guard_script(world, script))) {
+        return true;
+    }
+
     /* If true, check if file changed */
     bool check_file = false;
     flecs_rest_bool_param(req, "check_file", &check_file);

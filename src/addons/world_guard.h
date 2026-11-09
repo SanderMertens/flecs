@@ -39,6 +39,12 @@ char* flecs_guard_rename(
     ecs_world_t *world,
     ecs_entity_t entity);
 
+#ifdef FLECS_SCRIPT
+char* flecs_guard_script(
+    ecs_world_t *world,
+    ecs_entity_t entity);
+#endif
+
 #endif
 
 #endif

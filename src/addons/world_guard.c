@@ -1137,4 +1137,38 @@ char* flecs_guard_rename(
     return NULL;
 }
 
+#ifdef FLECS_SCRIPT
+char* flecs_guard_script(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world));
+
+    char *err = flecs_guard_entity(world, entity);
+    if (err) {
+        return err;
+    }
+
+    if (ecs_id_is_wildcard(entity) || entity == EcsThis ||
+        entity == EcsVariable)
+    {
+        return flecs_asprintf("cannot use '%s' as script",
+            flecs_guard_path(world, entity));
+    }
+
+    if (flecs_guard_is_builtin(world, entity)) {
+        return flecs_asprintf("cannot use builtin entity '%s' as script",
+            flecs_guard_path(world, entity));
+    }
+
+    if ((err = flecs_guard_component(world,
+        ecs_pair(ecs_id(EcsScript), entity))))
+    {
+        return err;
+    }
+
+    return flecs_guard_add(world, entity, ecs_id(EcsScript));
+}
+#endif
+
 #endif

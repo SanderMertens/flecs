@@ -7,6 +7,7 @@
 
 #ifdef FLECS_SCRIPT_SHELL
 #include "command.h"
+#include "../../world_guard.h"
 
 typedef struct {
     char *path;
@@ -459,6 +460,10 @@ static void flecs_command_script_write(
             flecs_command_err(ctx, "'%s' is a template, not a script", name);
             return;
         }
+    }
+
+    if (flecs_command_guard(ctx, flecs_guard_script(world, script))) {
+        return;
     }
 
     ecs_script(world, { .entity = script, .code = code ? code : "" });

@@ -4664,3 +4664,35 @@ void Command_emit_wildcard_event(void) {
 
     ecs_fini(world);
 }
+
+void Command_script_write_invalid_entity(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, rel, EcsRelationship);
+
+    ecs_log_set_level(-4);
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session,
+        "script_write Rel \"x {}\"");
+    test_int(ecs_vec_count(&r.errors), 1);
+    ecs_shell_result_fini(world, &r);
+
+    r = ecs_shell_run(world, session,
+        "script_write flecs.core.ChildOf \"x {}\"");
+    test_int(ecs_vec_count(&r.errors), 1);
+    ecs_shell_result_fini(world, &r);
+
+    char cmd[256];
+    ecs_os_snprintf(cmd, 256, "script_write \"#%u\" \"x {}\"",
+        (uint32_t)EcsWildcard);
+    r = ecs_shell_run(world, session, cmd);
+    test_int(ecs_vec_count(&r.errors), 1);
+    ecs_shell_result_fini(world, &r);
+
+    test_assert(ecs_lookup(world, "x") == 0);
+
+    ecs_fini(world);
+}

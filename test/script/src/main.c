@@ -4264,6 +4264,7 @@ void Command_script_set_invalid_id(void);
 void Command_script_remove_invalid_id(void);
 void Command_cd_wildcard(void);
 void Command_emit_wildcard_event(void);
+void Command_script_write_invalid_entity(void);
 
 // Testsuite 'CommandResource'
 void CommandResource_setup(void);
@@ -21050,6 +21051,10 @@ bake_test_case Command_testcases[] = {
     {
         "emit_wildcard_event",
         Command_emit_wildcard_event
+    },
+    {
+        "script_write_invalid_entity",
+        Command_script_write_invalid_entity
     }
 };
 
@@ -21619,7 +21624,7 @@ static bake_test_suite suites[] = {
         "Command",
         Command_setup,
         NULL,
-        167,
+        168,
         Command_testcases
     },
     {

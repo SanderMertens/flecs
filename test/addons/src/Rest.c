@@ -4103,3 +4103,36 @@ void Rest_put_script_nested_in_flecs_core(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_put_script_invalid_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, rel, EcsRelationship);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/script/Rel", "x {}", &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/script/flecs/core/ChildOf", "x {}", &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/script/*", "x {}", &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_lookup(world, "x") == 0);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
