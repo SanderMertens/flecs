@@ -180,7 +180,8 @@
                 "query_for_relationship_trait_as_component_2_terms",
                 "from_op_w_pair",
                 "validate_value_pair_as_src",
-                "validate_value_pair_w_traversable_rel"
+                "validate_value_pair_w_traversable_rel",
+                "validate_eq_pred_wo_rhs"
             ]
         }, {
             "id": "Parser",

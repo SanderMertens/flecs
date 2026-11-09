@@ -176,6 +176,7 @@ void Validator_query_for_relationship_trait_as_component_2_terms(void);
 void Validator_from_op_w_pair(void);
 void Validator_validate_value_pair_as_src(void);
 void Validator_validate_value_pair_w_traversable_rel(void);
+void Validator_validate_eq_pred_wo_rhs(void);
 
 // Testsuite 'Parser'
 void Parser_resolve_this(void);
@@ -3682,6 +3683,10 @@ bake_test_case Validator_testcases[] = {
     {
         "validate_value_pair_w_traversable_rel",
         Validator_validate_value_pair_w_traversable_rel
+    },
+    {
+        "validate_eq_pred_wo_rhs",
+        Validator_validate_eq_pred_wo_rhs
     }
 };
 
@@ -14931,7 +14936,7 @@ static bake_test_suite suites[] = {
         "Validator",
         NULL,
         NULL,
-        167,
+        168,
         Validator_testcases
     },
     {

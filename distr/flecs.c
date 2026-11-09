@@ -38570,6 +38570,11 @@ static int flecs_term_verify_eq_pred(
         goto error;
     }
 
+    if (!ecs_term_ref_is_set(second)) {
+        flecs_query_validator_error(ctx, "missing right-hand of operator");
+        goto error;
+    }
+
     if (first_id == EcsPredMatch && !(second->id & EcsIsName)) {
         flecs_query_validator_error(ctx, "right-hand of match operator must be a string");
         goto error;
