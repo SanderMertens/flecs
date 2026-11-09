@@ -642,6 +642,7 @@ void Rest_put_script_invalid_entity(void);
 void Rest_command_delete_session_builtin_entity(void);
 void Rest_command_delete_session_w_panic(void);
 void Rest_rename_module(void);
+void Rest_command_new_session_shell_module_name_taken(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -3124,6 +3125,10 @@ bake_test_case Rest_testcases[] = {
     {
         "rename_module",
         Rest_rename_module
+    },
+    {
+        "command_new_session_shell_module_name_taken",
+        Rest_command_new_session_shell_module_name_taken
     }
 };
 
@@ -3584,7 +3589,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        147,
+        148,
         Rest_testcases
     },
     {

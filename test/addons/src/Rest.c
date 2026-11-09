@@ -4257,3 +4257,32 @@ void Rest_rename_module(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_command_new_session_shell_module_name_taken(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_log_set_level(-4);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/entity/flecs/script/shell", NULL, &reply));
+    ecs_strbuf_reset(&reply.body);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/shell/session", NULL, &reply));
+    test_assert(reply.code >= 400);
+    ecs_strbuf_reset(&reply.body);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/shell/session/1", "pwd", &reply));
+    test_assert(reply.code >= 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}

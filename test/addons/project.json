@@ -691,7 +691,8 @@
                 "put_script_invalid_entity",
                 "command_delete_session_builtin_entity",
                 "command_delete_session_w_panic",
-                "rename_module"
+                "rename_module",
+                "command_new_session_shell_module_name_taken"
             ]
         }, {
             "id": "Metrics",

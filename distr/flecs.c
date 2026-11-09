@@ -28900,12 +28900,28 @@ done:
 }
 
 #ifdef FLECS_SCRIPT_SHELL
-static void flecs_rest_command_import(
-    ecs_world_t *world)
+static bool flecs_rest_command_import(
+    ecs_world_t *world,
+    ecs_http_reply_t *reply)
 {
-    if (!ecs_lookup(world, "flecs.script.shell")) {
+    ecs_entity_t module = ecs_lookup(world, "flecs.script.shell");
+    if (!module) {
         ecs_import_c(world, FlecsScriptShellImport, "FlecsScriptShell");
+        module = ecs_lookup(world, "flecs.script.shell");
     }
+
+    ecs_entity_t session = ecs_id(EcsCommandSession);
+    if (!module || !ecs_has_id(world, module, EcsModule) || !session ||
+        !ecs_is_alive(world, session) ||
+        !ecs_has(world, session, EcsComponent) ||
+        !ecs_has_pair(world, session, EcsChildOf, module))
+    {
+        flecs_reply_error(reply, "shell module is not available");
+        reply->code = 500;
+        return false;
+    }
+
+    return true;
 }
 
 static ecs_entity_t flecs_rest_command_session(
@@ -29045,7 +29061,9 @@ static bool flecs_rest_command_new_session(
     ecs_world_t *world,
     ecs_http_reply_t *reply)
 {
-    flecs_rest_command_import(world);
+    if (!flecs_rest_command_import(world, reply)) {
+        return true;
+    }
     ecs_entity_t session = ecs_shell_session_init(world, NULL);
     ecs_strbuf_append(&reply->body, "{\"session\":%llu}", (unsigned long long)session);
     return true;
@@ -29056,7 +29074,9 @@ static bool flecs_rest_command_delete_session(
     ecs_http_reply_t *reply,
     const char *path)
 {
-    flecs_rest_command_import(world);
+    if (!flecs_rest_command_import(world, reply)) {
+        return true;
+    }
     const char *remainder;
     ecs_entity_t session = flecs_rest_command_session(
         world, reply, path, &remainder);
@@ -29100,7 +29120,9 @@ static bool flecs_rest_command_get(
     ecs_http_reply_t *reply,
     const char *path)
 {
-    flecs_rest_command_import(world);
+    if (!flecs_rest_command_import(world, reply)) {
+        return true;
+    }
     const char *remainder;
     ecs_entity_t session = flecs_rest_command_session(
         world, reply, path, &remainder);
@@ -29166,7 +29188,9 @@ static bool flecs_rest_command_run(
     ecs_http_reply_t *reply,
     const char *path)
 {
-    flecs_rest_command_import(world);
+    if (!flecs_rest_command_import(world, reply)) {
+        return true;
+    }
     const char *remainder;
     ecs_entity_t session = flecs_rest_command_session(
         world, reply, path, &remainder);
