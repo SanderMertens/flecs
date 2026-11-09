@@ -511,6 +511,25 @@ ecs_expr_cast_t* flecs_expr_cast(
     return result;
 }
 
+ecs_expr_cast_t* flecs_expr_cast_fn(
+    ecs_script_t *script,
+    ecs_expr_node_t *expr,
+    ecs_entity_t type,
+    flecs_expr_cast_t fn)
+{
+    ecs_allocator_t *a = &((ecs_script_impl_t*)script)->allocator;
+    ecs_expr_cast_t *result = flecs_calloc_t(a, ecs_expr_cast_t);
+    result->node.kind = EcsExprCastNumber;
+    result->node.alloc_size = ECS_SIZEOF(ecs_expr_cast_t);
+    result->node.pos = expr->pos;
+    result->node.end = expr->end;
+    result->node.type = type;
+    result->node.type_info = ecs_get_type_info(script->world, type);
+    result->expr = expr;
+    result->cast = fn;
+    return result;
+}
+
 int flecs_expr_visit_children(
     ecs_expr_node_t *node,
     flecs_expr_visit_action_t action,

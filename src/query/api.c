@@ -549,6 +549,13 @@ static bool flecs_query_table_has_self_ids(
             continue;
         }
 
+        if (term->id == ecs_pair(EcsChildOf, 0)) {
+            if (table->flags & (EcsTableHasChildOf|EcsTableHasParent)) {
+                return false;
+            }
+            continue;
+        }
+
         if (ecs_table_get_type_index(q->world, table, term->id) == -1) {
             return false;
         }

@@ -1833,7 +1833,12 @@ static int flecs_expr_identifier_visit_type(
         var_node->sp = symbol.sp;
         node->expr = (ecs_expr_node_t*)var_node;
         node->node.type = var->value.type;
-        return flecs_expr_visit_type_priv(script, &node->expr, cur, desc);
+        if (flecs_expr_visit_type_priv(script, &node->expr, cur, desc)) {
+            goto error;
+        }
+
+        node->node.type = node->expr->type;
+        return 0;
     }
 
     int parent_result = flecs_expr_parent_member_visit_type(
@@ -3164,6 +3169,11 @@ static int flecs_expr_visit_type_ex(
     case EcsExprVariable:
         r = flecs_expr_variable_visit_type(
             script, (ecs_expr_variable_t*)node, desc);
+        if (!r && node->type == ecs_id(EcsScriptQuery)) {
+            node->type_info = ecs_get_type_info(script->world, node->type);
+            *node_ptr = (ecs_expr_node_t*)flecs_expr_cast_fn(script, node,
+                ecs_id(ecs_bool_t), flecs_script_query_to_bool);
+        }
         break;
     case EcsExprGlobalVariable:
         r = flecs_expr_global_variable_resolve(

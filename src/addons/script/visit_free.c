@@ -109,6 +109,15 @@ int flecs_script_visit_free_node(
     case EcsAstTry:
         ecs_vec_fini_t(a, &((ecs_script_try_t*)node)->catches, ecs_script_catch_t);
         break;
+    case EcsAstQuery: {
+        ecs_script_query_node_t *query = (ecs_script_query_node_t*)node;
+        ecs_os_free(query->expr);
+        ecs_os_free(query->unresolved);
+        if (query->query) {
+            ecs_query_fini(query->query);
+        }
+        break;
+    }
     case EcsAstFunction: {
         ecs_script_function_node_t *fn = (ecs_script_function_node_t*)node;
         flecs_expr_visit_free(script, fn->return_expr);

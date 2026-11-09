@@ -396,6 +396,7 @@ static void flecs_ir_for_leave(
         frame->u.for_.vscratch_top, frame->u.for_.vheap_count);
     vm->v.for_slot = state->for_slot;
     vm->v.force = state->force;
+    flecs_script_for_fini(&vm->v, state);
 }
 
 static void flecs_ir_block_leave(
@@ -960,7 +961,8 @@ static int flecs_ir_for_enter(
 
     flecs_script_for_prepare(v, node, state);
 
-    if (node->expr) {
+    if (node->query) {
+    } else if (node->expr) {
         collection = &flecs_ir_reg(vm, op->a)->value;
     } else if (flecs_ir_reg_to_i32(vm, op->a, &state->from)) {
         flecs_ir_expr_error(vm, node->from, "failed to write to output");
@@ -970,7 +972,10 @@ static int flecs_ir_for_enter(
         return -1;
     }
 
-    if (flecs_script_for_init(v, node, state, collection)) {
+    if (flecs_script_for_init(v, node, state, collection) ||
+        (node->query && flecs_script_for_query_iter(v, node, state)))
+    {
+        flecs_script_for_fini(v, state);
         return -1;
     }
 
@@ -981,7 +986,11 @@ static int flecs_ir_for_enter(
     for (i = 0; i < node->loop_var_count; i ++) {
         ecs_script_var_t *var = flecs_ir_var_declare(vm);
         var->value.type = state->var_types[i];
-        if (i != state->elem_var || state->kind == FlecsScriptForRange) {
+        if (state->kind == FlecsScriptForQuery) {
+            var->type_info = ecs_get_type_info(v->world, var->value.type);
+        } else if (i != state->elem_var ||
+            state->kind == FlecsScriptForRange)
+        {
             const ecs_type_info_t *ti = ecs_get_type_info(
                 v->world, var->value.type);
             ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -2250,6 +2259,7 @@ static flecs_script_run_status_t flecs_ir_exec(
         }
         case EcsIrUsing:
         case EcsIrModule:
+        case EcsIrQuery:
         case EcsIrTemplate:
         case EcsIrMutCheck:
         case EcsIrAsync:

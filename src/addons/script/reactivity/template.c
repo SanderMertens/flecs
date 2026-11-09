@@ -297,7 +297,7 @@ static void flecs_script_template_root_init(
 
     flecs_script_state_resize(&root->state, template->scope_count,
         template->component_count, template->for_count,
-        template->computed_count);
+        template->query_count, template->computed_count);
 }
 
 static bool flecs_script_template_chain_has(
@@ -653,6 +653,7 @@ static void flecs_script_template_root_on_remove(
     int32_t i;
     for (i = 0; i < it->count; i ++) {
         flecs_script_ref_observers_clear(world, &roots[i].observers);
+        flecs_script_query_slots_clear(&roots[i].state.query_slots);
     }
 }
 

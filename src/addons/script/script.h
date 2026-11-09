@@ -167,6 +167,7 @@ typedef struct ecs_function_calldata_t {
 #include "reactivity/refs.h"
 #include "reactivity/template.h"
 #include "reactivity/deps.h"
+#include "reactivity/query.h"
 #include "ir/ir.h"
 
 ecs_script_t* flecs_script_new(

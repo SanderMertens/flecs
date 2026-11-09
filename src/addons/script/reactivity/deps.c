@@ -36,6 +36,7 @@ typedef struct flecs_script_dep_ctx_t {
     int32_t scope_count;
     int32_t component_count;
     int32_t for_count;
+    int32_t query_count;
     int32_t computed_count;
     int32_t member;
     int32_t entity_symbol;
@@ -1357,7 +1358,10 @@ static int flecs_script_dep_node_impl(
     }
     case EcsAstFor: {
         ecs_script_for_t *n = (ecs_script_for_t*)node;
-        if (flecs_script_dep_expr(ctx, n->from, node) ||
+        if (n->query) {
+            node->direct_input |= n->query->node.direct_input;
+            node->direct_internal |= n->query->node.direct_internal;
+        } else if (flecs_script_dep_expr(ctx, n->from, node) ||
             flecs_script_dep_expr(ctx, n->to, node) ||
             flecs_script_dep_expr(ctx, n->expr, node))
         {
@@ -1454,6 +1458,33 @@ static int flecs_script_dep_node_impl(
 
         if (flecs_script_dep_expr(ctx, n->expr, node)) {
             return -1;
+        }
+        break;
+    }
+    case EcsAstQuery: {
+        ecs_script_query_node_t *n = (ecs_script_query_node_t*)node;
+        n->computed = 0;
+        n->input = 0;
+        n->query_slot = ctx->query_count ++;
+
+        if (ctx->reactive) {
+            if (flecs_script_dep_input_new(ctx, &n->input)) {
+                return -1;
+            }
+
+            node->direct_input |= n->input;
+        }
+
+        if (ctx->reactive && !ctx->conditional && ctx->computed_count < 64) {
+            int32_t slot = ctx->computed_count;
+            ctx->computed_input[slot] = node->direct_input |
+                flecs_script_dep_computed_input(ctx, node->direct_internal);
+            ctx->computed_count ++;
+            n->computed = slot + 1;
+            flecs_script_dep_var_set(ctx, n->sp, 0, (uint64_t)1 << slot);
+        } else {
+            flecs_script_dep_var_set(ctx, n->sp,
+                node->direct_input, node->direct_internal);
         }
         break;
     }
@@ -1684,6 +1715,7 @@ static int flecs_script_dep_template(
     template->scope_count = ctx.scope_count;
     template->component_count = ctx.component_count;
     template->for_count = ctx.for_count;
+    template->query_count = ctx.query_count;
     template->computed_count = ctx.computed_count;
     flecs_script_dep_symbol_scope(&ctx, template->root_symbol,
         template->node->scope->scope_slot);
@@ -1710,7 +1742,8 @@ int flecs_script_analyze_dependencies(
     }
 
     flecs_script_state_resize(&impl->state, ctx.scope_count,
-        ctx.component_count, ctx.for_count, ctx.computed_count);
+        ctx.component_count, ctx.for_count, ctx.query_count,
+        ctx.computed_count);
     return 0;
 }
 

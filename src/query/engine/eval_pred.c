@@ -86,6 +86,12 @@ bool flecs_query_pred_eq(
         ECS_INTERNAL_ERROR, 
             "invalid instruction sequence: uninitialized eq operand");
 
+    if ((flecs_query_ref_flags(op->flags, EcsQuerySecond) & EcsQueryIsEntity) &&
+        !flecs_entities_is_alive(ctx->world, op->second.entity))
+    {
+        return false;
+    }
+
     ecs_table_range_t r = flecs_query_get_range(
         op, &op->second, EcsQuerySecond, ctx);
     return flecs_query_pred_eq_w_range(op, redo, ctx, r);
@@ -294,6 +300,12 @@ bool flecs_query_pred_neq(
     ecs_assert(flecs_ref_is_written(op, &op->second, EcsQuerySecond, written),
         ECS_INTERNAL_ERROR, 
             "invalid instruction sequence: uninitialized neq operand");
+
+    if ((flecs_query_ref_flags(op->flags, EcsQuerySecond) & EcsQueryIsEntity) &&
+        !flecs_entities_is_alive(ctx->world, op->second.entity))
+    {
+        return !redo;
+    }
 
     ecs_table_range_t r = flecs_query_get_range(
         op, &op->second, EcsQuerySecond, ctx);

@@ -9,6 +9,7 @@
 
 #include "../parser/grammar.h"
 #include "script.h"
+#include "../query_dsl/query_dsl.h"
 
 #define EcsTokEndOfStatement\
     case ';':\
@@ -420,6 +421,103 @@ static const char* flecs_script_for_in(
     })
 
     ParserEnd;
+}
+
+static const char* flecs_script_query_stmt(
+    ecs_parser_t *parser,
+    const char *name,
+    const char *pos)
+{
+    const char *start = pos, *ptr = pos;
+    int32_t depth = 1;
+    while (ptr[0]) {
+        char ch = ptr[0];
+        if (ch == '/' && ptr[1] == '/') {
+            while (ptr[0] && ptr[0] != '\n') {
+                ptr ++;
+            }
+            continue;
+        }
+
+        if (ch == '/' && ptr[1] == '*') {
+            ptr += 2;
+            while (ptr[0] && !(ptr[0] == '*' && ptr[1] == '/')) {
+                ptr ++;
+            }
+            ptr += ptr[0] ? 2 : 0;
+            continue;
+        }
+
+        if (ch == '"' || ch == '\'' || ch == '`') {
+            ptr ++;
+            while (ptr[0] && ptr[0] != ch) {
+                ptr += (ptr[0] == '\\' && ptr[1]) ? 2 : 1;
+            }
+            ptr += ptr[0] ? 1 : 0;
+            continue;
+        }
+
+        if (ch == '{') {
+            depth ++;
+        } else if (ch == '}') {
+            if (!(-- depth)) {
+                break;
+            }
+        }
+
+        ptr ++;
+    }
+
+    if (!ptr[0]) {
+        ecs_parser_error(parser->name, parser->code,
+            flecs_parser_errpos(parser, start - 1),
+            "missing '}' after query expression");
+        return NULL;
+    }
+
+    const char *end = ptr;
+    while (start < end && isspace(start[0])) {
+        start ++;
+    }
+
+    const char *expr_end = end;
+    while (expr_end > start && isspace(expr_end[-1])) {
+        expr_end --;
+    }
+
+    if (start == expr_end) {
+        ecs_parser_error(parser->name, parser->code,
+            flecs_parser_errpos(parser, end),
+            "missing expression for query '%s'", name);
+        return NULL;
+    }
+
+    ecs_size_t code_len = flecs_ito(ecs_size_t, expr_end - parser->code);
+    ecs_size_t expr_len = flecs_ito(ecs_size_t, expr_end - start);
+    char *code = ecs_os_malloc(code_len + 1);
+    ecs_os_memcpy(code, parser->code, code_len);
+    code[code_len] = '\0';
+
+    char *token_buffer = ecs_os_malloc(expr_len * 2 + 1);
+    ecs_term_t *terms = ecs_os_calloc_n(ecs_term_t, FLECS_TERM_COUNT_MAX);
+    int32_t term_count = 0;
+    int result = flecs_terms_parse_at(parser->world, parser->name, code,
+        &code[start - parser->code], token_buffer, terms, &term_count);
+    ecs_os_free(terms);
+    ecs_os_free(token_buffer);
+    ecs_os_free(code);
+
+    if (result) {
+        return NULL;
+    }
+
+    ecs_script_query_node_t *stmt = flecs_script_insert_query(parser, name);
+    stmt->expr = ecs_os_malloc(expr_len + 1);
+    ecs_os_memcpy(stmt->expr, start, expr_len);
+    stmt->expr[expr_len] = '\0';
+    stmt->expr_pos = start;
+
+    return end + 1;
 }
 
 /* 'await Event' is a shorthand for 'await Event()' */
@@ -841,6 +939,7 @@ static const char* flecs_script_stmt_parse(
         case EcsTokKeywordBreak:      goto break_stmt;
         case EcsTokKeywordAsync:      goto async_stmt;
         case EcsTokKeywordWhile:      goto while_stmt;
+        case EcsTokKeywordQuery:      goto query_stmt;
     );
 
 anonymous_entity: {
@@ -1076,20 +1175,19 @@ for_stmt: {
 
         case '(': {
             Loop(
+                if (stmt->loop_var_count == FLECS_SCRIPT_FOR_VAR_MAX) {
+                    Error("too many loop variables (max %d)",
+                        FLECS_SCRIPT_FOR_VAR_MAX);
+                }
+
                 Parse_1(EcsTokIdentifier,
                     stmt->loop_vars[stmt->loop_var_count ++] = Token(2);
                 )
 
-                if (stmt->loop_var_count == 1) {
-                    Parse_1(',', continue;)
-                } else if (stmt->loop_var_count == 2) {
-                    LookAhead_1(',',
-                        Consume();
-                        continue;
-                    )
-                }
-
-                Parse_1(')', goto for_in_stmt;)
+                Parse(
+                    case ',': continue;
+                    case ')': goto for_in_stmt;
+                )
             )
         }
     )
@@ -1098,6 +1196,16 @@ for_in_stmt:
     Parse_1(EcsTokKeywordIn,
         return flecs_script_for_in(parser, pos, stmt);
     )
+}
+
+query_stmt: {
+    Parse_1(EcsTokIdentifier, {
+        const char *name = Token(1);
+        pos = flecs_parser_skip_newlines(parser, pos);
+        Parse_1('{', {
+            return flecs_script_query_stmt(parser, name, pos);
+        })
+    })
 }
 
 fn_stmt: {

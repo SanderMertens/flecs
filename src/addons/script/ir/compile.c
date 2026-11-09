@@ -652,8 +652,8 @@ static void flecs_irc_compile_expr(
             dst, src, 0, node);
         flecs_irc_op(c, op)->flags = place;
         if (number) {
-            flecs_irc_op(c, op)->imm.cast = flecs_expr_cast_handler(
-                n->expr->type, node->type);
+            flecs_irc_op(c, op)->imm.cast = n->cast ? n->cast :
+                flecs_expr_cast_handler(n->expr->type, node->type);
         }
 
         return;
@@ -1000,9 +1000,12 @@ static void flecs_irc_compile_for(
     ecs_script_for_t *node)
 {
     int32_t begin = flecs_irc_expr_begin(c, node);
-    int32_t from = flecs_irc_compile_tmp(
-        c, node->expr ? node->expr : node->from);
-    int32_t to = flecs_irc_compile_tmp(c, node->expr ? NULL : node->to);
+    int32_t from = -1, to = -1;
+    if (!node->query) {
+        from = flecs_irc_compile_tmp(
+            c, node->expr ? node->expr : node->from);
+        to = flecs_irc_compile_tmp(c, node->expr ? NULL : node->to);
+    }
     flecs_irc_expr_end(c, begin, false);
 
     flecs_irc_emit(c, EcsIrForEnter, from, to, 0, node);
@@ -1145,6 +1148,9 @@ static void flecs_irc_compile_stmt(
     case EcsAstModule:
         flecs_irc_emit(c, EcsIrModule, 0, 0, 0, node);
         break;
+    case EcsAstQuery:
+        flecs_irc_emit(c, EcsIrQuery, 0, 0, 0, node);
+        break;
     case EcsAstAnnotation: {
         int32_t op = flecs_irc_emit(c, EcsIrAnnot, 0, 0, 0, node);
         ecs_script_node_t *next = (index + 1) < count
@@ -1263,7 +1269,9 @@ static int32_t flecs_irc_scope_var_count(
     ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
     int32_t i, count = ecs_vec_count(&scope->stmts), result = 0;
     for (i = 0; i < count; i ++) {
-        if (stmts[i]->kind == EcsAstConst && !stmts[i]->skip) {
+        if ((stmts[i]->kind == EcsAstConst ||
+            stmts[i]->kind == EcsAstQuery) && !stmts[i]->skip)
+        {
             result ++;
         }
     }

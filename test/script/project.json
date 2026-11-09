@@ -1486,7 +1486,9 @@
                 "optional_params_call",
                 "param_brief",
                 "void_return_call",
-                "void_return_in_expr"
+                "void_return_in_expr",
+                "query_as_bool_arg",
+                "query_in_fn_body"
             ]
         }, {
             "id": "Template",
@@ -3406,6 +3408,54 @@
                 "delete_script_during_ref_eval"
             ]
         }, {
+            "id": "Query",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
+            "testcases": [
+                "one_term",
+                "multiple_terms",
+                "multiline",
+                "pair",
+                "not_term",
+                "optional_term_present",
+                "optional_term_absent",
+                "malformed_expr",
+                "missing_scope_close",
+                "empty_expr",
+                "unresolved_name",
+                "wait_for_unresolved_name",
+                "update_w_partial_name",
+                "query_as_member_name",
+                "query_as_entity_name",
+                "for_entity_and_two_fields",
+                "for_two_fields",
+                "for_tag_query",
+                "for_paren_vars",
+                "for_wrong_var_count",
+                "for_tag_query_wrong_var_count",
+                "for_assign_to_value",
+                "for_assign_to_member",
+                "for_continue",
+                "for_break",
+                "for_body_adds_to_iterated_table",
+                "for_paren_vars_many",
+                "for_bracket_vars",
+                "unbound_var",
+                "if_true",
+                "if_false",
+                "if_not",
+                "if_and_or",
+                "const_from_query",
+                "if_in_template",
+                "scope",
+                "redeclare",
+                "identifier_name",
+                "using",
+                "ast_to_str"
+            ]
+        }, {
             "id": "Reactivity",
             "params": {
                 "ir": ["disabled", "enabled"]
@@ -3599,7 +3649,28 @@
                 "template_instance_scope_assigns_base_template_component_fails",
                 "template_instance_scope_partial_assigns_template_component",
                 "template_instance_scope_assigns_other_component",
-                "template_instance_scope_assigns_template_component_from_other_script_fails"
+                "template_instance_scope_assigns_template_component_from_other_script_fails",
+                "query_loop_entity_created",
+                "query_loop_component_added",
+                "query_loop_component_removed",
+                "query_loop_entity_deleted",
+                "query_loop_value_set",
+                "query_loop_childof_child_added",
+                "query_loop_childof_child_deleted",
+                "query_loop_childof_reparent_away",
+                "query_loop_childof_reparent_in",
+                "query_loop_childof_nonfragmenting",
+                "query_loop_outside_not_rerun",
+                "query_instance_delete_deletes_observers",
+                "query_script_update_deletes_observers",
+                "query_if_first_match",
+                "query_if_last_match",
+                "query_if_second_match_no_rerun",
+                "query_if_in_template_reactive",
+                "query_loop_named_instance_kept",
+                "query_loop_rename",
+                "query_loop_root_entities",
+                "query_loop_exclude_name"
             ]
         }, {
             "id": "ConstVar",

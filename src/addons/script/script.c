@@ -855,6 +855,7 @@ void FlecsScriptImport(
 
     flecs_script_refs_import(world);
     flecs_script_template_import(world);
+    flecs_script_query_import(world);
     flecs_function_import(world);
 #ifdef FLECS_SCRIPT_ASYNC
     flecs_script_async_import(world);

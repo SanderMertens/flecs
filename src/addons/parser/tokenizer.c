@@ -94,6 +94,7 @@ static const struct {
     [EcsTokKeywordAsync] = {"async", "keyword "},
     [EcsTokKeywordWhile] = {"while", "keyword "},
     [EcsTokKeywordScript] = {"script", "keyword "},
+    [EcsTokKeywordQuery] = {"query", "keyword "},
     [EcsTokArrow] = {"->", ""},
     [EcsTokIdentifier] = {"identifier", "identifier "},
     [EcsTokString] = {"string", "string "},

@@ -141,6 +141,7 @@ const char* flecs_script_node_kind_str(
     case EcsAstAsync:              return "async";
     case EcsAstWhile:              return "while";
     case EcsAstAssign:             return "assign";
+    case EcsAstQuery:              return "query";
     }
     return "???";
 }
@@ -380,6 +381,11 @@ static void flecs_script_stmt_to_str(
         flecs_expr_to_str(v, stmt->expr);
         scope = stmt->scope;
         wrap = true;
+        break;
+    }
+    case EcsAstQuery: {
+        ecs_script_query_node_t *stmt = (ecs_script_query_node_t*)node;
+        flecs_scriptbuf_append(v, "%s { %s }", stmt->name, stmt->expr);
         break;
     }
     case EcsAstEmit:

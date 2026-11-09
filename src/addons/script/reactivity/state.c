@@ -50,6 +50,35 @@ static void flecs_script_for_slots_init(
     }
 }
 
+void flecs_script_query_slots_clear(
+    ecs_vec_t *query_slots)
+{
+    ecs_script_query_slot_t *slots = ecs_vec_first(query_slots);
+    int32_t i, j, count = ecs_vec_count(query_slots);
+    for (i = 0; i < count; i ++) {
+        for (j = 0; j < 2; j ++) {
+            ecs_entity_t observer = slots[i].observers[j];
+            if (slots[i].world && observer &&
+                ecs_is_alive(slots[i].world, observer))
+            {
+                ecs_delete(slots[i].world, observer);
+            }
+
+            slots[i].observers[j] = 0;
+        }
+    }
+}
+
+static void flecs_script_query_slots_init(
+    ecs_vec_t *query_slots,
+    int32_t count)
+{
+    flecs_script_query_slots_clear(query_slots);
+    ecs_vec_set_count_t(NULL, query_slots, ecs_script_query_slot_t, count);
+    ecs_os_memset_n(ecs_vec_first(query_slots), 0,
+        ecs_script_query_slot_t, count);
+}
+
 static void flecs_script_for_slot_mark(
     ecs_script_for_slot_t *slot,
     int32_t visit)
@@ -85,6 +114,7 @@ void flecs_script_state_init(
     ecs_vec_init_t(NULL, &state->component_slots, ecs_script_component_slot_t, 0);
     ecs_vec_init_t(NULL, &state->scope_slots, int32_t, 0);
     ecs_vec_init_t(NULL, &state->for_slots, ecs_script_for_slot_t, 0);
+    ecs_vec_init_t(NULL, &state->query_slots, ecs_script_query_slot_t, 0);
     ecs_vec_init_t(NULL, &state->computed, ecs_script_computed_t, 0);
     state->visit = 0;
     state->initialized = false;
@@ -116,6 +146,8 @@ void flecs_script_state_fini(
     ecs_vec_fini_t(NULL, &state->component_slots, ecs_script_component_slot_t);
     ecs_vec_fini_t(NULL, &state->scope_slots, int32_t);
     flecs_script_for_slots_fini(&state->for_slots);
+    flecs_script_query_slots_clear(&state->query_slots);
+    ecs_vec_fini_t(NULL, &state->query_slots, ecs_script_query_slot_t);
 }
 
 void flecs_script_state_resize(
@@ -123,6 +155,7 @@ void flecs_script_state_resize(
     int32_t scope_count,
     int32_t component_count,
     int32_t for_count,
+    int32_t query_count,
     int32_t computed_count)
 {
     flecs_script_state_clear_computed(state);
@@ -132,6 +165,7 @@ void flecs_script_state_resize(
     flecs_script_slots_reset_t(&state->component_slots,
         ecs_script_component_slot_t, component_count);
     flecs_script_for_slots_init(&state->for_slots, for_count);
+    flecs_script_query_slots_init(&state->query_slots, query_count);
 }
 
 ecs_entity_t flecs_script_state_component_src(

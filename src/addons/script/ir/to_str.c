@@ -44,6 +44,7 @@ static const struct {
     [EcsIrComponentVisitor] = {"ComponentVisitor", {"id", "done"}},
     [EcsIrUsing] = {"Using", {NULL}},
     [EcsIrModule] = {"Module", {NULL}},
+    [EcsIrQuery] = {"Query", {NULL}},
     [EcsIrAnnot] = {"Annot", {NULL}},
     [EcsIrTemplate] = {"Template", {NULL}},
     [EcsIrMutCheck] = {"MutCheck", {NULL}},

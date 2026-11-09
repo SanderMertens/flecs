@@ -2767,6 +2767,9 @@ void Monitor_monitor_at_fini(void);
 void Monitor_monitor_other_table(void);
 void Monitor_monitor_component(void);
 void Monitor_yield_existing(void);
+void Monitor_monitor_w_not_childof_wildcard(void);
+void Monitor_monitor_w_neq_name(void);
+void Monitor_monitor_w_parent_nonfragmenting_reparent(void);
 
 // Testsuite 'Prefab'
 void Prefab_setup(void);
@@ -14584,6 +14587,18 @@ bake_test_case Monitor_testcases[] = {
     {
         "yield_existing",
         Monitor_yield_existing
+    },
+    {
+        "monitor_w_not_childof_wildcard",
+        Monitor_monitor_w_not_childof_wildcard
+    },
+    {
+        "monitor_w_neq_name",
+        Monitor_monitor_w_neq_name
+    },
+    {
+        "monitor_w_parent_nonfragmenting_reparent",
+        Monitor_monitor_w_parent_nonfragmenting_reparent
     }
 };
 
@@ -18704,7 +18719,7 @@ static bake_test_suite suites[] = {
         "Monitor",
         NULL,
         NULL,
-        18,
+        21,
         Monitor_testcases
     },
     {

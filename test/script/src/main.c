@@ -1450,6 +1450,8 @@ void Function_optional_params_call(void);
 void Function_param_brief(void);
 void Function_void_return_call(void);
 void Function_void_return_in_expr(void);
+void Function_query_as_bool_arg(void);
+void Function_query_in_fn_body(void);
 
 // Testsuite 'Template'
 void Template_setup(void);
@@ -3313,6 +3315,49 @@ void Refs_has_ref_resolve_observer_on_add(void);
 void Refs_update_script_during_ref_eval(void);
 void Refs_delete_script_during_ref_eval(void);
 
+// Testsuite 'Query'
+void Query_setup(void);
+void Query_one_term(void);
+void Query_multiple_terms(void);
+void Query_multiline(void);
+void Query_pair(void);
+void Query_not_term(void);
+void Query_optional_term_present(void);
+void Query_optional_term_absent(void);
+void Query_malformed_expr(void);
+void Query_missing_scope_close(void);
+void Query_empty_expr(void);
+void Query_unresolved_name(void);
+void Query_wait_for_unresolved_name(void);
+void Query_update_w_partial_name(void);
+void Query_query_as_member_name(void);
+void Query_query_as_entity_name(void);
+void Query_for_entity_and_two_fields(void);
+void Query_for_two_fields(void);
+void Query_for_tag_query(void);
+void Query_for_paren_vars(void);
+void Query_for_wrong_var_count(void);
+void Query_for_tag_query_wrong_var_count(void);
+void Query_for_assign_to_value(void);
+void Query_for_assign_to_member(void);
+void Query_for_continue(void);
+void Query_for_break(void);
+void Query_for_body_adds_to_iterated_table(void);
+void Query_for_paren_vars_many(void);
+void Query_for_bracket_vars(void);
+void Query_unbound_var(void);
+void Query_if_true(void);
+void Query_if_false(void);
+void Query_if_not(void);
+void Query_if_and_or(void);
+void Query_const_from_query(void);
+void Query_if_in_template(void);
+void Query_scope(void);
+void Query_redeclare(void);
+void Query_identifier_name(void);
+void Query_using(void);
+void Query_ast_to_str(void);
+
 // Testsuite 'Reactivity'
 void Reactivity_setup(void);
 void Reactivity_count_array_is_reactive(void);
@@ -3503,6 +3548,27 @@ void Reactivity_template_instance_scope_assigns_base_template_component_fails(vo
 void Reactivity_template_instance_scope_partial_assigns_template_component(void);
 void Reactivity_template_instance_scope_assigns_other_component(void);
 void Reactivity_template_instance_scope_assigns_template_component_from_other_script_fails(void);
+void Reactivity_query_loop_entity_created(void);
+void Reactivity_query_loop_component_added(void);
+void Reactivity_query_loop_component_removed(void);
+void Reactivity_query_loop_entity_deleted(void);
+void Reactivity_query_loop_value_set(void);
+void Reactivity_query_loop_childof_child_added(void);
+void Reactivity_query_loop_childof_child_deleted(void);
+void Reactivity_query_loop_childof_reparent_away(void);
+void Reactivity_query_loop_childof_reparent_in(void);
+void Reactivity_query_loop_childof_nonfragmenting(void);
+void Reactivity_query_loop_outside_not_rerun(void);
+void Reactivity_query_instance_delete_deletes_observers(void);
+void Reactivity_query_script_update_deletes_observers(void);
+void Reactivity_query_if_first_match(void);
+void Reactivity_query_if_last_match(void);
+void Reactivity_query_if_second_match_no_rerun(void);
+void Reactivity_query_if_in_template_reactive(void);
+void Reactivity_query_loop_named_instance_kept(void);
+void Reactivity_query_loop_rename(void);
+void Reactivity_query_loop_root_entities(void);
+void Reactivity_query_loop_exclude_name(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_setup(void);
@@ -10099,6 +10165,14 @@ bake_test_case Function_testcases[] = {
     {
         "void_return_in_expr",
         Function_void_return_in_expr
+    },
+    {
+        "query_as_bool_arg",
+        Function_query_as_bool_arg
+    },
+    {
+        "query_in_fn_body",
+        Function_query_in_fn_body
     }
 };
 
@@ -17450,6 +17524,169 @@ bake_test_case Refs_testcases[] = {
     }
 };
 
+bake_test_case Query_testcases[] = {
+    {
+        "one_term",
+        Query_one_term
+    },
+    {
+        "multiple_terms",
+        Query_multiple_terms
+    },
+    {
+        "multiline",
+        Query_multiline
+    },
+    {
+        "pair",
+        Query_pair
+    },
+    {
+        "not_term",
+        Query_not_term
+    },
+    {
+        "optional_term_present",
+        Query_optional_term_present
+    },
+    {
+        "optional_term_absent",
+        Query_optional_term_absent
+    },
+    {
+        "malformed_expr",
+        Query_malformed_expr
+    },
+    {
+        "missing_scope_close",
+        Query_missing_scope_close
+    },
+    {
+        "empty_expr",
+        Query_empty_expr
+    },
+    {
+        "unresolved_name",
+        Query_unresolved_name
+    },
+    {
+        "wait_for_unresolved_name",
+        Query_wait_for_unresolved_name
+    },
+    {
+        "update_w_partial_name",
+        Query_update_w_partial_name
+    },
+    {
+        "query_as_member_name",
+        Query_query_as_member_name
+    },
+    {
+        "query_as_entity_name",
+        Query_query_as_entity_name
+    },
+    {
+        "for_entity_and_two_fields",
+        Query_for_entity_and_two_fields
+    },
+    {
+        "for_two_fields",
+        Query_for_two_fields
+    },
+    {
+        "for_tag_query",
+        Query_for_tag_query
+    },
+    {
+        "for_paren_vars",
+        Query_for_paren_vars
+    },
+    {
+        "for_wrong_var_count",
+        Query_for_wrong_var_count
+    },
+    {
+        "for_tag_query_wrong_var_count",
+        Query_for_tag_query_wrong_var_count
+    },
+    {
+        "for_assign_to_value",
+        Query_for_assign_to_value
+    },
+    {
+        "for_assign_to_member",
+        Query_for_assign_to_member
+    },
+    {
+        "for_continue",
+        Query_for_continue
+    },
+    {
+        "for_break",
+        Query_for_break
+    },
+    {
+        "for_body_adds_to_iterated_table",
+        Query_for_body_adds_to_iterated_table
+    },
+    {
+        "for_paren_vars_many",
+        Query_for_paren_vars_many
+    },
+    {
+        "for_bracket_vars",
+        Query_for_bracket_vars
+    },
+    {
+        "unbound_var",
+        Query_unbound_var
+    },
+    {
+        "if_true",
+        Query_if_true
+    },
+    {
+        "if_false",
+        Query_if_false
+    },
+    {
+        "if_not",
+        Query_if_not
+    },
+    {
+        "if_and_or",
+        Query_if_and_or
+    },
+    {
+        "const_from_query",
+        Query_const_from_query
+    },
+    {
+        "if_in_template",
+        Query_if_in_template
+    },
+    {
+        "scope",
+        Query_scope
+    },
+    {
+        "redeclare",
+        Query_redeclare
+    },
+    {
+        "identifier_name",
+        Query_identifier_name
+    },
+    {
+        "using",
+        Query_using
+    },
+    {
+        "ast_to_str",
+        Query_ast_to_str
+    }
+};
+
 bake_test_case Reactivity_testcases[] = {
     {
         "count_array_is_reactive",
@@ -18202,6 +18439,90 @@ bake_test_case Reactivity_testcases[] = {
     {
         "template_instance_scope_assigns_template_component_from_other_script_fails",
         Reactivity_template_instance_scope_assigns_template_component_from_other_script_fails
+    },
+    {
+        "query_loop_entity_created",
+        Reactivity_query_loop_entity_created
+    },
+    {
+        "query_loop_component_added",
+        Reactivity_query_loop_component_added
+    },
+    {
+        "query_loop_component_removed",
+        Reactivity_query_loop_component_removed
+    },
+    {
+        "query_loop_entity_deleted",
+        Reactivity_query_loop_entity_deleted
+    },
+    {
+        "query_loop_value_set",
+        Reactivity_query_loop_value_set
+    },
+    {
+        "query_loop_childof_child_added",
+        Reactivity_query_loop_childof_child_added
+    },
+    {
+        "query_loop_childof_child_deleted",
+        Reactivity_query_loop_childof_child_deleted
+    },
+    {
+        "query_loop_childof_reparent_away",
+        Reactivity_query_loop_childof_reparent_away
+    },
+    {
+        "query_loop_childof_reparent_in",
+        Reactivity_query_loop_childof_reparent_in
+    },
+    {
+        "query_loop_childof_nonfragmenting",
+        Reactivity_query_loop_childof_nonfragmenting
+    },
+    {
+        "query_loop_outside_not_rerun",
+        Reactivity_query_loop_outside_not_rerun
+    },
+    {
+        "query_instance_delete_deletes_observers",
+        Reactivity_query_instance_delete_deletes_observers
+    },
+    {
+        "query_script_update_deletes_observers",
+        Reactivity_query_script_update_deletes_observers
+    },
+    {
+        "query_if_first_match",
+        Reactivity_query_if_first_match
+    },
+    {
+        "query_if_last_match",
+        Reactivity_query_if_last_match
+    },
+    {
+        "query_if_second_match_no_rerun",
+        Reactivity_query_if_second_match_no_rerun
+    },
+    {
+        "query_if_in_template_reactive",
+        Reactivity_query_if_in_template_reactive
+    },
+    {
+        "query_loop_named_instance_kept",
+        Reactivity_query_loop_named_instance_kept
+    },
+    {
+        "query_loop_rename",
+        Reactivity_query_loop_rename
+    },
+    {
+        "query_loop_root_entities",
+        Reactivity_query_loop_root_entities
+    },
+    {
+        "query_loop_exclude_name",
+        Reactivity_query_loop_exclude_name
     }
 };
 
@@ -21726,6 +22047,11 @@ bake_test_param Refs_params[] = {
     {"ir", (char**)Refs_ir_param, 2}
 };
 
+const char* Query_ir_param[] = {"disabled", "enabled"};
+bake_test_param Query_params[] = {
+    {"ir", (char**)Query_ir_param, 2}
+};
+
 const char* Reactivity_ir_param[] = {"disabled", "enabled"};
 bake_test_param Reactivity_params[] = {
     {"ir", (char**)Reactivity_ir_param, 2}
@@ -21840,7 +22166,7 @@ static bake_test_suite suites[] = {
         "Function",
         Function_setup,
         NULL,
-        102,
+        104,
         Function_testcases,
         1,
         Function_params
@@ -21950,10 +22276,19 @@ static bake_test_suite suites[] = {
         Refs_params
     },
     {
+        "Query",
+        Query_setup,
+        NULL,
+        40,
+        Query_testcases,
+        1,
+        Query_params
+    },
+    {
         "Reactivity",
         Reactivity_setup,
         NULL,
-        188,
+        209,
         Reactivity_testcases,
         1,
         Reactivity_params
@@ -22079,5 +22414,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 34);
+    return bake_test_run("script", argc, argv, suites, 35);
 }

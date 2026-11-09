@@ -2843,7 +2843,10 @@
                 "monitor_at_fini",
                 "monitor_other_table",
                 "monitor_component",
-                "yield_existing"
+                "yield_existing",
+                "monitor_w_not_childof_wildcard",
+                "monitor_w_neq_name",
+                "monitor_w_parent_nonfragmenting_reparent"
             ]
         }, {
             "id": "Prefab",

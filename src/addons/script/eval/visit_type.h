@@ -26,12 +26,18 @@ typedef struct ecs_script_type_interface_var_t {
     ecs_entity_t interface;
 } ecs_script_type_interface_var_t;
 
+typedef struct ecs_script_type_query_var_t {
+    int32_t sp;
+    ecs_script_query_node_t *node;
+} ecs_script_type_query_var_t;
+
 typedef struct ecs_script_type_visitor_t {
     ecs_script_eval_visitor_t *v;
     ecs_vec_t tables;
     ecs_vec_t entities;
     ecs_vec_t skipped_vars;
     ecs_vec_t interface_vars;
+    ecs_vec_t query_vars;
     ecs_hashmap_t names;
 
     int32_t table;

@@ -10339,3 +10339,771 @@ void Reactivity_template_instance_scope_assigns_template_component_from_other_sc
 
     ecs_fini(world);
 }
+
+static int32_t query_set_count = 0;
+
+static void QueryCountSet(ecs_iter_t *it) {
+    query_set_count += it->count;
+}
+
+static ecs_entity_t query_sys_component = 0;
+static int32_t query_sys_new = 0;
+
+static void QueryNewFromSystem(ecs_iter_t *it) {
+    int32_t i;
+    for (i = 0; i < query_sys_new; i ++) {
+        ecs_entity_t e = ecs_new(it->stage);
+        ecs_set_id(it->stage, e, query_sys_component, sizeof(Mass),
+            &(Mass){(float)(i + 2)});
+    }
+
+    query_sys_new = 0;
+}
+
+void Reactivity_query_loop_entity_created(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_add_id(world, a, tag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "query q { Tag }"
+            LINE "for e in q {"
+            LINE "  \"m_{e.name()}\" {}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t m_a = ecs_lookup(world, "m_a");
+    test_assert(m_a != 0);
+    test_assert(ecs_lookup(world, "m_b") == 0);
+
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+    ecs_add_id(world, b, tag);
+
+    test_uint(ecs_lookup(world, "m_a"), m_a);
+    test_assert(ecs_lookup(world, "m_b") != 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_loop_component_added(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t other = ecs_entity(world, { .name = "Other" });
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+    ecs_add_id(world, a, tag);
+    ecs_add_id(world, a, other);
+    ecs_add_id(world, b, tag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "query q { Tag, Other }"
+            LINE "for e in q {"
+            LINE "  \"m_{e.name()}\" {}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") == 0);
+
+    ecs_add_id(world, b, other);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") != 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_loop_component_removed(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t other = ecs_entity(world, { .name = "Other" });
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+    ecs_add_id(world, a, tag);
+    ecs_add_id(world, a, other);
+    ecs_add_id(world, b, tag);
+    ecs_add_id(world, b, other);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "query q { Tag, Other }"
+            LINE "for e in q {"
+            LINE "  \"m_{e.name()}\" {}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t m_a = ecs_lookup(world, "m_a");
+    test_assert(m_a != 0);
+    test_assert(ecs_lookup(world, "m_b") != 0);
+
+    ecs_remove_id(world, b, other);
+
+    test_uint(ecs_lookup(world, "m_a"), m_a);
+    test_assert(ecs_lookup(world, "m_b") == 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_loop_entity_deleted(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+    ecs_add_id(world, a, tag);
+    ecs_add_id(world, b, tag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "query q { Tag }"
+            LINE "for e in q {"
+            LINE "  \"m_{e.name()}\" {}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t m_a = ecs_lookup(world, "m_a");
+    test_assert(m_a != 0);
+    test_assert(ecs_lookup(world, "m_b") != 0);
+
+    ecs_delete(world, b);
+
+    test_uint(ecs_lookup(world, "m_a"), m_a);
+    test_assert(ecs_lookup(world, "m_b") == 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_loop_value_set(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_set_id(world, a, mass, sizeof(Mass), &(Mass){10});
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "query q { Mass }"
+            LINE "for (e, m) in q {"
+            LINE "  \"m_{e.name()}\" { Position: {m.value, 0} }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t m_a = ecs_lookup(world, "m_a");
+    test_assert(m_a != 0);
+    const Position *p = ecs_get_id(world, m_a, position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+
+    ecs_set_id(world, a, mass, sizeof(Mass), &(Mass){20});
+
+    test_uint(ecs_lookup(world, "m_a"), m_a);
+    p = ecs_get_id(world, m_a, position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_loop_childof_child_added(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity(world, { .name = "a", .parent = parent });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "query q { (flecs.core.ChildOf, parent) }"
+            LINE "for e in q {"
+            LINE "  \"m_{e.name()}\" {}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") == 0);
+
+    ecs_add_pair(world, ecs_entity(world, { .name = "b" }), EcsChildOf, parent);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") != 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_loop_childof_child_deleted(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity(world, { .name = "a", .parent = parent });
+    ecs_entity_t b = ecs_entity(world, { .name = "b", .parent = parent });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "query q { (flecs.core.ChildOf, parent) }"
+            LINE "for e in q {"
+            LINE "  \"m_{e.name()}\" {}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") != 0);
+
+    ecs_delete(world, b);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") == 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_loop_childof_reparent_away(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t other = ecs_entity(world, { .name = "other" });
+    ecs_entity(world, { .name = "a", .parent = parent });
+    ecs_entity_t b = ecs_entity(world, { .name = "b", .parent = parent });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "query q { (flecs.core.ChildOf, parent) }"
+            LINE "for e in q {"
+            LINE "  \"m_{e.name()}\" {}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") != 0);
+
+    ecs_add_pair(world, b, EcsChildOf, other);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") == 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_loop_childof_reparent_in(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t other = ecs_entity(world, { .name = "other" });
+    ecs_entity(world, { .name = "a", .parent = parent });
+    ecs_entity_t b = ecs_entity(world, { .name = "b", .parent = other });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "query q { (flecs.core.ChildOf, parent) }"
+            LINE "for e in q {"
+            LINE "  \"m_{e.name()}\" {}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") == 0);
+
+    ecs_add_pair(world, b, EcsChildOf, parent);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") != 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_loop_childof_nonfragmenting(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t other = ecs_entity(world, { .name = "other" });
+    ecs_new_w_parent(world, parent, "a");
+    ecs_entity_t b = ecs_new_w_parent(world, parent, "b");
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "query q { (flecs.core.ChildOf, parent) }"
+            LINE "for e in q {"
+            LINE "  \"m_{e.name()}\" {}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") != 0);
+
+    ecs_new_w_parent(world, parent, "c");
+    test_assert(ecs_lookup(world, "m_c") != 0);
+
+    ecs_set(world, b, EcsParent, {other});
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") == 0);
+    test_assert(ecs_lookup(world, "m_c") != 0);
+
+    ecs_set(world, b, EcsParent, {parent});
+    test_assert(ecs_lookup(world, "m_b") != 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_loop_outside_not_rerun(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_add_id(world, a, tag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "outside { Position: {1, 2} }"
+            LINE "query q { Tag }"
+            LINE "for e in q {"
+            LINE "  \"m_{e.name()}\" {}"
+            LINE "}"
+            LINE "after { Position: {3, 4} }"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t outside = ecs_lookup(world, "outside");
+    ecs_entity_t after = ecs_lookup(world, "after");
+    test_assert(outside != 0);
+    test_assert(after != 0);
+    ecs_set_id(world, outside, position, sizeof(Position), &(Position){10, 20});
+    ecs_set_id(world, after, position, sizeof(Position), &(Position){30, 40});
+
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+    ecs_add_id(world, b, tag);
+    test_assert(ecs_lookup(world, "m_b") != 0);
+
+    const Position *p = ecs_get_id(world, outside, position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get_id(world, after, position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_instance_delete_deletes_observers(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t p1 = ecs_entity(world, { .name = "p1" });
+    ecs_entity(world, { .name = "a", .parent = p1 });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Children {"
+            LINE "  prop target: entity = 0"
+            LINE "  query q { (flecs.core.ChildOf, p1) }"
+            LINE "  for e in q {"
+            LINE "    \"m_{e.name()}\" {}"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t children = ecs_lookup(world, "Children");
+    test_assert(children != 0);
+
+    int32_t observer_count = 0;
+    ecs_iter_t it = ecs_each_id(world, EcsObserver);
+    observer_count = 0;
+    while (ecs_each_next(&it)) {
+        observer_count += it.count;
+    }
+
+    ecs_entity_t ui = ecs_entity(world, { .name = "ui" });
+    ecs_set_id(world, ui, children, sizeof(ecs_entity_t), &p1);
+    test_assert(ecs_lookup(world, "ui.m_a") != 0);
+
+    int32_t instance_observer_count = 0;
+    it = ecs_each_id(world, EcsObserver);
+    while (ecs_each_next(&it)) {
+        instance_observer_count += it.count;
+    }
+    test_assert(instance_observer_count > observer_count);
+
+    ecs_delete(world, ui);
+
+    int32_t after_count = 0;
+    it = ecs_each_id(world, EcsObserver);
+    while (ecs_each_next(&it)) {
+        after_count += it.count;
+    }
+    test_int(after_count, observer_count);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_script_update_deletes_observers(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_add_id(world, a, tag);
+
+    int32_t observer_count = 0;
+    ecs_iter_t it = ecs_each_id(world, EcsObserver);
+    while (ecs_each_next(&it)) {
+        observer_count += it.count;
+    }
+
+    const char *code =
+        HEAD "query q { Tag }"
+        LINE "for e in q {"
+        LINE "  \"m_{e.name()}\" {}"
+        LINE "}";
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = code
+    });
+    test_assert(script != 0);
+
+    int32_t script_count = 0;
+    it = ecs_each_id(world, EcsObserver);
+    while (ecs_each_next(&it)) {
+        script_count += it.count;
+    }
+    test_assert(script_count > observer_count);
+
+    int32_t i;
+    for (i = 0; i < 5; i ++) {
+        test_int(ecs_script_update(world, script, 0, code), 0);
+    }
+
+    int32_t update_count = 0;
+    it = ecs_each_id(world, EcsObserver);
+    while (ecs_each_next(&it)) {
+        update_count += it.count;
+    }
+    test_int(update_count, script_count);
+
+    ecs_delete(world, script);
+
+    int32_t after_count = 0;
+    it = ecs_each_id(world, EcsObserver);
+    while (ecs_each_next(&it)) {
+        after_count += it.count;
+    }
+    test_int(after_count, observer_count);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_if_first_match(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "query q { Tag }"
+            LINE "if q {"
+            LINE "  yes {}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "yes") == 0);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_add_id(world, a, tag);
+
+    test_assert(ecs_lookup(world, "yes") != 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_if_last_match(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t a = ecs_new(world);
+    ecs_add_id(world, a, tag);
+    ecs_entity_t b = ecs_new(world);
+    ecs_add_id(world, b, tag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "query q { Tag }"
+            LINE "if q {"
+            LINE "  yes {}"
+            LINE "} else {"
+            LINE "  no {}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "yes") != 0);
+    test_assert(ecs_lookup(world, "no") == 0);
+
+    ecs_delete(world, a);
+    test_assert(ecs_lookup(world, "yes") != 0);
+    test_assert(ecs_lookup(world, "no") == 0);
+
+    ecs_remove_id(world, b, tag);
+    test_assert(ecs_lookup(world, "yes") == 0);
+    test_assert(ecs_lookup(world, "no") != 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_if_second_match_no_rerun(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t a = ecs_new(world);
+    ecs_add_id(world, a, tag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "query q { Tag }"
+            LINE "if q {"
+            LINE "  yes { Position: {1, 2} }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t yes = ecs_lookup(world, "yes");
+    test_assert(yes != 0);
+    ecs_set_id(world, yes, position, sizeof(Position), &(Position){10, 20});
+
+    ecs_entity_t b = ecs_new(world);
+    ecs_add_id(world, b, tag);
+
+    const Position *p = ecs_get_id(world, yes, position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_delete(world, b);
+
+    p = ecs_get_id(world, yes, position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_if_in_template_reactive(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Node {"
+            LINE "  query kids { (flecs.core.ChildOf, parent) }"
+            LINE "  if kids {"
+            LINE "    chevron {}"
+            LINE "  }"
+            LINE "}"
+            LINE "n { Node }"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "n.chevron") == 0);
+
+    ecs_entity_t a = ecs_entity(world, { .name = "a", .parent = parent });
+    test_assert(ecs_lookup(world, "n.chevron") != 0);
+
+    ecs_entity_t b = ecs_entity(world, { .name = "b", .parent = parent });
+    test_assert(ecs_lookup(world, "n.chevron") != 0);
+
+    ecs_delete(world, a);
+    test_assert(ecs_lookup(world, "n.chevron") != 0);
+
+    ecs_delete(world, b);
+    test_assert(ecs_lookup(world, "n.chevron") == 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_loop_named_instance_kept(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_add_id(world, a, tag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "query q { Tag }"
+            LINE "for e in q {"
+            LINE "  \"m_{e.name()}\" {}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t m_a = ecs_lookup(world, "m_a");
+    test_assert(m_a != 0);
+
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+    ecs_add_id(world, b, tag);
+
+    test_uint(ecs_lookup(world, "m_a"), m_a);
+    ecs_entity_t m_b = ecs_lookup(world, "m_b");
+    test_assert(m_b != 0);
+
+    ecs_entity_t c = ecs_entity(world, { .name = "c" });
+    ecs_add_id(world, c, tag);
+
+    test_uint(ecs_lookup(world, "m_a"), m_a);
+    test_uint(ecs_lookup(world, "m_b"), m_b);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_loop_rename(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_add_id(world, a, tag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "query q { Tag, (flecs.core.Identifier, flecs.core.Name) }"
+            LINE "for (e, n) in q {"
+            LINE "  \"m_{n.value}\" {}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+
+    ecs_set_name(world, a, "b");
+
+    test_assert(ecs_lookup(world, "m_a") == 0);
+    test_assert(ecs_lookup(world, "m_b") != 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_loop_root_entities(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_add_id(world, a, tag);
+    ecs_entity_t b = ecs_entity(world, { .name = "b", .parent = parent });
+    ecs_add_id(world, b, tag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "query roots { Tag, !(flecs.core.ChildOf, *) }"
+            LINE "for e in roots {"
+            LINE "  \"m_{e.name()}\" {}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") == 0);
+
+    ecs_remove_pair(world, b, EcsChildOf, parent);
+    test_assert(ecs_lookup(world, "m_b") != 0);
+
+    ecs_add_pair(world, a, EcsChildOf, parent);
+    test_assert(ecs_lookup(world, "m_a") == 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_loop_exclude_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_add_id(world, a, tag);
+    ecs_entity_t excluded = ecs_entity(world, { .name = "excluded" });
+    ecs_add_id(world, excluded, tag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "query q { Tag, $this != excluded }"
+            LINE "for e in q {"
+            LINE "  \"m_{e.name()}\" {}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_excluded") == 0);
+
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+    ecs_add_id(world, b, tag);
+    test_assert(ecs_lookup(world, "m_b") != 0);
+    test_assert(ecs_lookup(world, "m_excluded") == 0);
+
+    ecs_fini(world);
+}

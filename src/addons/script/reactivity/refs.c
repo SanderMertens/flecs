@@ -410,14 +410,41 @@ static void flecs_script_ref_ctx_free(
     ecs_os_free(ctx);
 }
 
+static ecs_entity_t flecs_script_ref_observer_init(
+    ecs_world_t *world,
+    ecs_entity_t script,
+    ecs_entity_t instance,
+    ecs_observer_desc_t *desc,
+    uint64_t input,
+    const char *name)
+{
+    ecs_entity_t prev_scope = ecs_set_scope(world, script);
+
+    ecs_script_ref_ctx_t *ctx = ecs_os_malloc_t(ecs_script_ref_ctx_t);
+    ctx->script = script;
+    ctx->instance = instance;
+    ctx->name = name ? ecs_os_strdup(name) : NULL;
+    ctx->input = input;
+
+    desc->ctx = ctx;
+    desc->ctx_free = flecs_script_ref_ctx_free;
+
+    ecs_entity_t observer = ecs_observer_init(world, desc);
+    if (!observer) {
+        flecs_script_ref_ctx_free(ctx);
+    }
+
+    ecs_set_scope(world, prev_scope);
+
+    return observer;
+}
+
 static ecs_entity_t flecs_script_create_ref_observer(
     ecs_world_t *world,
     ecs_entity_t script,
     ecs_entity_t instance,
     const ecs_script_ref_t *ref)
 {
-    ecs_entity_t prev_scope = ecs_set_scope(world, script);
-
     ecs_observer_desc_t desc = {
         .events = { EcsOnSet },
         .callback = ref->is_resolve
@@ -425,12 +452,7 @@ static ecs_entity_t flecs_script_create_ref_observer(
             : flecs_script_ref_on_set
     };
 
-    ecs_script_ref_ctx_t *ctx = ecs_os_malloc_t(ecs_script_ref_ctx_t);
-    ctx->script = script;
-    ctx->instance = instance;
-    ctx->name = NULL;
-    ctx->input = ref->is_resolve ? 0 : ref->input;
-
+    const char *name = NULL;
     if (ref->is_resolve && ref->name) {
         desc.query.terms[0].id = ecs_pair_t(EcsIdentifier, EcsName);
         if (ref->component) {
@@ -439,7 +461,7 @@ static ecs_entity_t flecs_script_create_ref_observer(
             desc.query.terms[2].oper = EcsOptional;
         }
 
-        ctx->name = ecs_os_strdup(ref->name);
+        name = ref->name;
     } else {
         desc.query.terms[0].id = ref->component;
         desc.query.terms[0].src.id = ref->entity;
@@ -451,17 +473,26 @@ static ecs_entity_t flecs_script_create_ref_observer(
         }
     }
 
-    desc.ctx = ctx;
-    desc.ctx_free = flecs_script_ref_ctx_free;
+    return flecs_script_ref_observer_init(world, script, instance, &desc,
+        ref->is_resolve ? 0 : ref->input, name);
+}
 
-    ecs_entity_t observer = ecs_observer_init(world, &desc);
-    if (!observer) {
-        flecs_script_ref_ctx_free(ctx);
-    }
+ecs_entity_t flecs_script_query_observer_init(
+    ecs_world_t *world,
+    ecs_entity_t script,
+    ecs_entity_t instance,
+    const ecs_query_desc_t *query,
+    ecs_entity_t event,
+    uint64_t input)
+{
+    ecs_observer_desc_t desc = {
+        .query = *query,
+        .events = { event },
+        .callback = flecs_script_ref_on_set
+    };
 
-    ecs_set_scope(world, prev_scope);
-
-    return observer;
+    return flecs_script_ref_observer_init(
+        world, script, instance, &desc, input, NULL);
 }
 
 static void flecs_script_update_ref_observers(

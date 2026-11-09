@@ -56,6 +56,7 @@ static void flecs_script_type_init(
     ecs_vec_init_t(NULL, &t->skipped_vars, const char*, 0);
     ecs_vec_init_t(NULL, &t->interface_vars,
         ecs_script_type_interface_var_t, 0);
+    ecs_vec_init_t(NULL, &t->query_vars, ecs_script_type_query_var_t, 0);
     flecs_hashmap_init(&t->names, flecs_script_type_name_t, int32_t,
         flecs_script_type_name_hash, flecs_script_type_name_compare, NULL);
     flecs_script_type_table_new(t, -1, NULL);
@@ -67,6 +68,7 @@ static void flecs_script_type_fini(
     flecs_hashmap_fini(&t->names);
     ecs_vec_fini_t(NULL, &t->interface_vars,
         ecs_script_type_interface_var_t);
+    ecs_vec_fini_t(NULL, &t->query_vars, ecs_script_type_query_var_t);
     ecs_vec_fini_t(NULL, &t->skipped_vars, const char*);
     ecs_vec_fini_t(NULL, &t->entities, ecs_script_type_entity_t);
     ecs_vec_fini_t(NULL, &t->tables, ecs_script_type_table_t);
@@ -1682,6 +1684,60 @@ static ecs_entity_t flecs_script_type_for_interface(
     return flecs_script_template_member_interface(t->v->template, sp);
 }
 
+static int flecs_script_type_query(
+    ecs_script_type_visitor_t *t,
+    ecs_script_query_node_t *node)
+{
+    if (flecs_script_query_init(t->v, node)) {
+        return -1;
+    }
+
+    ecs_script_var_t *var = ecs_script_vars_declare(t->v->vars, node->name);
+    if (!var) {
+        flecs_script_eval_error(t->v, node,
+            "variable '%s' redeclared", node->name);
+        return -1;
+    }
+
+    var->value.type = ecs_id(EcsScriptQuery);
+    var->type_info = ecs_get_type_info(t->v->world, ecs_id(EcsScriptQuery));
+    var->is_const = true;
+    node->sp = var->sp;
+
+    ecs_script_type_query_var_t *qv = ecs_vec_append_t(
+        NULL, &t->query_vars, ecs_script_type_query_var_t);
+    qv->sp = var->sp;
+    qv->node = node;
+    return 0;
+}
+
+static ecs_script_query_node_t* flecs_script_type_for_query(
+    ecs_script_type_visitor_t *t,
+    ecs_script_for_t *node,
+    int32_t *sp_out)
+{
+    if (!node->expr || node->expr->kind != EcsExprIdentifier) {
+        return NULL;
+    }
+
+    const char *name = ((ecs_expr_identifier_t*)node->expr)->value;
+    ecs_script_var_t *var = ecs_script_vars_lookup(t->v->vars, name);
+    if (!var || var->value.type != ecs_id(EcsScriptQuery)) {
+        return NULL;
+    }
+
+    const ecs_script_type_query_var_t *qv = ecs_vec_first(&t->query_vars);
+    int32_t i;
+    for (i = ecs_vec_count(&t->query_vars) - 1; i >= 0; i --) {
+        if (qv[i].sp == var->sp) {
+            *sp_out = var->sp;
+            return qv[i].node;
+        }
+    }
+
+    return NULL;
+}
+
 static int flecs_script_type_for(
     ecs_script_type_visitor_t *t,
     ecs_script_for_t *node)
@@ -1689,7 +1745,9 @@ static int flecs_script_type_for(
     flecs_script_for_state_t state = {0};
     ecs_value_t collection = {0};
     int expr_result;
-    if (!node->expr) {
+    node->query = flecs_script_type_for_query(t, node, &node->query_sp);
+    if (node->query) {
+    } else if (!node->expr) {
         ecs_entity_t type = ecs_id(ecs_i32_t);
         expr_result = flecs_script_type_check_expr(t, &node->from, &type);
         if (expr_result) {
@@ -1710,11 +1768,14 @@ static int flecs_script_type_for(
     }
 
     if (flecs_script_for_init(t->v, node, &state,
-            node->expr ? &collection : NULL) ||
+            node->expr && !node->query ? &collection : NULL) ||
         flecs_script_for_declare_vars(t->v, node, &state, true))
     {
+        flecs_script_for_fini(t->v, &state);
         return -1;
     }
+
+    flecs_script_for_fini(t->v, &state);
 
     int32_t i;
     for (i = 0; i < node->loop_var_count; i ++) {
@@ -1722,8 +1783,10 @@ static int flecs_script_type_for(
     }
 
     int32_t interface_var_count = ecs_vec_count(&t->interface_vars);
-    ecs_entity_t elem_interface = flecs_script_type_for_interface(
-        t, node, state.var_types[state.elem_var]);
+    int32_t query_var_count = ecs_vec_count(&t->query_vars);
+    ecs_entity_t elem_interface = node->query ? 0 :
+        flecs_script_type_for_interface(
+            t, node, state.var_types[state.elem_var]);
     if (elem_interface) {
         ecs_script_type_interface_var_t *iv = ecs_vec_append_t(NULL,
             &t->interface_vars, ecs_script_type_interface_var_t);
@@ -1742,6 +1805,8 @@ static int flecs_script_type_for(
     t->for_entity = old_for_entity;
     ecs_vec_set_count_t(NULL, &t->interface_vars,
         ecs_script_type_interface_var_t, interface_var_count);
+    ecs_vec_set_count_t(NULL, &t->query_vars,
+        ecs_script_type_query_var_t, query_var_count);
     t->v->vars = ecs_script_vars_pop(t->v->vars);
     return result;
 }
@@ -2875,6 +2940,8 @@ static int flecs_script_type_node(
         return flecs_script_type_while(t, (ecs_script_while_t*)node);
     case EcsAstAssign:
         return flecs_script_type_assign(t, (ecs_script_assign_t*)node);
+    case EcsAstQuery:
+        return flecs_script_type_query(t, (ecs_script_query_node_t*)node);
     }
     ecs_abort(ECS_INTERNAL_ERROR, "corrupt AST node kind");
 }

@@ -795,3 +795,145 @@ void Monitor_yield_existing(void) {
 
     ecs_fini(world);
 }
+
+typedef struct {
+    int32_t count;
+    ecs_entity_t events[16];
+    ecs_entity_t entities[16];
+} MonitorEvents;
+
+static void Monitor_record_events(ecs_iter_t *it) {
+    MonitorEvents *ctx = it->ctx;
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        test_assert(ctx->count < 16);
+        ctx->events[ctx->count] = it->event;
+        ctx->entities[ctx->count] = it->entities[i];
+        ctx->count ++;
+    }
+}
+
+void Monitor_monitor_w_not_childof_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t parent = ecs_new(world);
+
+    MonitorEvents ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = Tag },
+            { .id = ecs_pair(EcsChildOf, EcsWildcard), .oper = EcsNot }
+        },
+        .events = { EcsMonitor },
+        .callback = Monitor_record_events,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new_w(world, Tag);
+    test_int(ctx.count, 1);
+    test_uint(ctx.events[0], EcsOnAdd);
+    test_uint(ctx.entities[0], e);
+
+    ecs_add_pair(world, e, EcsChildOf, parent);
+    test_int(ctx.count, 2);
+    test_uint(ctx.events[1], EcsOnRemove);
+    test_uint(ctx.entities[1], e);
+
+    ecs_remove_pair(world, e, EcsChildOf, parent);
+    test_int(ctx.count, 3);
+    test_uint(ctx.events[2], EcsOnAdd);
+    test_uint(ctx.entities[2], e);
+
+    ecs_fini(world);
+}
+
+static int32_t monitor_error_count = 0;
+static ecs_os_api_log_t monitor_prev_log;
+
+static void Monitor_count_errors(
+    int32_t level,
+    const char *file,
+    int32_t line,
+    const char *msg)
+{
+    if (level <= -3) {
+        monitor_error_count ++;
+    }
+
+    monitor_prev_log(level, file, line, msg);
+}
+
+void Monitor_monitor_w_neq_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t excluded = ecs_entity(world, { .name = "excluded" });
+    ecs_add(world, excluded, Tag);
+
+    ecs_os_api_t api = ecs_os_get_api();
+    monitor_prev_log = api.log_;
+    monitor_error_count = 0;
+    api.log_ = Monitor_count_errors;
+    ecs_os_set_api(&api);
+
+    MonitorEvents ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.expr = "Tag, $this != excluded",
+        .events = { EcsMonitor },
+        .callback = Monitor_record_events,
+        .ctx = &ctx
+    });
+
+    api.log_ = monitor_prev_log;
+    ecs_os_set_api(&api);
+
+    test_assert(o != 0);
+    test_int(monitor_error_count, 0);
+
+    ecs_entity_t e = ecs_new_w(world, Tag);
+    test_int(ctx.count, 1);
+    test_uint(ctx.events[0], EcsOnAdd);
+    test_uint(ctx.entities[0], e);
+
+    ecs_remove(world, excluded, Tag);
+    ecs_add(world, excluded, Tag);
+    test_int(ctx.count, 1);
+
+    ecs_fini(world);
+}
+
+void Monitor_monitor_w_parent_nonfragmenting_reparent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t parent_b = ecs_new(world);
+
+    MonitorEvents ctx = {0};
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_pair(EcsChildOf, parent_a) }},
+        .events = { EcsMonitor },
+        .callback = Monitor_record_events,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t child = ecs_new_w_parent(world, parent_a, NULL);
+    test_int(ctx.count, 1);
+    test_uint(ctx.events[0], EcsOnAdd);
+    test_uint(ctx.entities[0], child);
+
+    ecs_set(world, child, EcsParent, {parent_b});
+    test_int(ctx.count, 2);
+    test_uint(ctx.events[1], EcsOnRemove);
+    test_uint(ctx.entities[1], child);
+
+    ecs_set(world, child, EcsParent, {parent_a});
+    test_int(ctx.count, 3);
+    test_uint(ctx.events[2], EcsOnAdd);
+    test_uint(ctx.entities[2], child);
+
+    ecs_fini(world);
+}

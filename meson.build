@@ -113,6 +113,7 @@ flecs_src = files(
     'src/addons/script/reactivity/state.c',
     'src/addons/script/reactivity/template.c',
     'src/addons/script/reactivity/deps.c',
+    'src/addons/script/reactivity/query.c',
     'src/addons/script/expr/ast.c',
     'src/addons/script/expr/format.c',
     'src/addons/script/expr/parser.c',

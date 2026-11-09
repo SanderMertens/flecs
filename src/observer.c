@@ -10,12 +10,22 @@
 
 #include "private_api.h"
 
+static bool flecs_observer_term_is_not(
+    const ecs_term_t *term)
+{
+    if (term->id == ecs_pair(EcsChildOf, 0)) {
+        return term->oper == EcsAnd;
+    }
+
+    return term->oper == EcsNot;
+}
+
 static ecs_entity_t flecs_get_observer_event(
     ecs_term_t *term,
     ecs_entity_t event)
 {
     /* If operator is Not, reverse the event */
-    if (term && term->oper == EcsNot) {
+    if (term && flecs_observer_term_is_not(term)) {
         if (event == EcsOnAdd || event == EcsOnSet) {
             event = EcsOnRemove;
         } else if (event == EcsOnRemove) {
@@ -162,6 +172,10 @@ static void flecs_inc_observer_count(
 static ecs_id_t flecs_observer_id(
     ecs_id_t id)
 {
+    if (id == ecs_pair(EcsChildOf, 0)) {
+        return ecs_pair(EcsChildOf, EcsWildcard);
+    }
+
     if (ECS_IS_PAIR(id)) {
         if (ECS_PAIR_FIRST(id) == EcsAny) {
             id = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id));
@@ -672,7 +686,7 @@ static void flecs_multi_observer_invoke(
         return;
     }
 
-    bool is_not = term->oper == EcsNot;
+    bool is_not = flecs_observer_term_is_not(term);
     if (!is_not && !ecs_term_match_this(term) &&
         (o->query->flags & EcsQueryMatchThis))
     {
@@ -1007,7 +1021,8 @@ static int flecs_multi_observer_init(
             }
         }
 
-        if ((query->terms[i].oper == EcsNot) && 
+        if (flecs_observer_term_is_not(&query->terms[i]) && 
+            !flecs_term_is_builtin_pred(&query->terms[i]) &&
             (query->terms[i].inout != EcsInOutFilter)) 
         {
             has_not = true;
@@ -1050,6 +1065,10 @@ static int flecs_multi_observer_init(
 
         /* Don't create observers for non-$this terms */
         if (!ecs_term_match_this(term) && term->src.id & EcsIsVariable) {
+            continue;
+        }
+
+        if (flecs_term_is_builtin_pred(term)) {
             continue;
         }
 
@@ -1144,9 +1163,20 @@ static int flecs_multi_observer_init(
             ecs_term_t, term_count); /* cast suppresses warning */
   
         for (i = 0; i < term_count; i ++) {
-            if (not_desc.terms[i].oper == EcsNot) {
-                not_desc.terms[i].oper = EcsOptional;
+            ecs_term_t *not_term = &not_desc.terms[i];
+            if (flecs_term_is_builtin_pred(not_term) ||
+                !flecs_observer_term_is_not(not_term))
+            {
+                continue;
             }
+
+            if (not_term->id == ecs_pair(EcsChildOf, 0)) {
+                not_term->id = ecs_pair(EcsChildOf, EcsWildcard);
+                not_term->second.id = EcsWildcard | EcsSelf | EcsIsVariable;
+                not_term->flags_ &= ~EcsTermMatchAny;
+            }
+
+            not_term->oper = EcsOptional;
         }
 
         flecs_observer_impl(o)->not_query = 

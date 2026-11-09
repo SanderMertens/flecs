@@ -223,6 +223,9 @@
 #ifndef FLECS_PARSER
 #define FLECS_PARSER
 #endif
+#ifndef FLECS_QUERY_DSL
+#define FLECS_QUERY_DSL
+#endif
 #endif
 
 #ifdef FLECS_UNITS

@@ -2822,3 +2822,55 @@ void Function_void_return_in_expr(void) {
 
     ecs_fini(world);
 }
+
+void Function_query_as_bool_arg(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct { bool a, b; } BoolPair;
+    ecs_entity_t ecs_id(BoolPair) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "BoolPair" }),
+        .members = {
+            {"a", ecs_id(ecs_bool_t)},
+            {"b", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity(world, { .name = "Other" });
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_id(world, e, tag);
+
+    const char *expr =
+    HEAD "fn negate(b: bool) -> bool { !b }"
+    LINE "query q { Tag }"
+    LINE "query r { Other }"
+    LINE "Foo { BoolPair: {negate(q), negate(r)} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    const BoolPair *p = ecs_get_id(world, foo, ecs_id(BoolPair));
+    test_assert(p != NULL);
+    test_bool(p->a, false);
+    test_bool(p->b, true);
+
+    ecs_fini(world);
+}
+
+void Function_query_in_fn_body(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "Tag" });
+
+    const char *expr =
+    HEAD "fn has_tags() -> bool {"
+    LINE "  query q { Tag }"
+    LINE "  q"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
