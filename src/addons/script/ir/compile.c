@@ -8,7 +8,6 @@
 #ifdef FLECS_SCRIPT
 #include "../script.h"
 #include "../../meta/meta.h"
-#include "../../world_guard.h"
 
 typedef struct ecs_script_ir_compiler_t {
     ecs_script_impl_t *script;
@@ -146,14 +145,7 @@ static int32_t flecs_irc_id(
         id->first_symbol != -1 || id->second_symbol != -1 ||
         id->first_sp != -1 || id->second_sp != -1 || !id->eval;
 
-    char *guard_err = NULL;
     if (!desc->dynamic && id->eval && is_component) {
-        guard_err = flecs_guard_component(c->world, id->eval);
-    }
-
-    if (guard_err) {
-        ecs_os_free(guard_err);
-    } else if (!desc->dynamic && id->eval && is_component) {
         ecs_component_record_t *cr = flecs_components_ensure(
             c->world, id->eval);
         if (cr && cr->type_info) {

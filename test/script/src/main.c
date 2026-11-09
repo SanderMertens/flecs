@@ -4273,6 +4273,7 @@ void Command_emit_wildcard_event(void);
 void Command_script_write_invalid_entity(void);
 void Command_new_hierarchy_too_deep(void);
 void Command_new_in_flecs_core(void);
+void Command_script_save_other_file(void);
 
 // Testsuite 'CommandResource'
 void CommandResource_setup(void);
@@ -21098,6 +21099,10 @@ bake_test_case Command_testcases[] = {
     {
         "new_in_flecs_core",
         Command_new_in_flecs_core
+    },
+    {
+        "script_save_other_file",
+        Command_script_save_other_file
     }
 };
 
@@ -21679,7 +21684,7 @@ static bake_test_suite suites[] = {
         "Command",
         Command_setup,
         NULL,
-        170,
+        171,
         Command_testcases
     },
     {

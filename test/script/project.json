@@ -4421,7 +4421,8 @@
                 "emit_wildcard_event",
                 "script_write_invalid_entity",
                 "new_hierarchy_too_deep",
-                "new_in_flecs_core"
+                "new_in_flecs_core",
+                "script_save_other_file"
             ]
         }, {
             "id": "CommandResource",

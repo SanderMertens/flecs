@@ -3116,12 +3116,11 @@ void Command_script_save_as(void) {
     ecs_shell_result_fini(world, &r);
 
     r = ecs_shell_run(world, session, "script_save s out.flecs");
-    test_int(ecs_vec_count(&r.errors), 0);
+    test_int(ecs_vec_count(&r.errors), 1);
     ecs_shell_result_fini(world, &r);
 
-    test_str(ecs_get(world, s, EcsScript)->filename, "out.flecs");
-    test_str(command_files[0].name, "out.flecs");
-    test_str(command_files[0].content, "a {}\n");
+    test_assert(ecs_get(world, s, EcsScript)->filename == NULL);
+    test_assert(command_files[0].name == NULL);
 
     ecs_fini(world);
 }
@@ -4749,6 +4748,39 @@ void Command_new_in_flecs_core(void) {
 
     test_assert(ecs_lookup(world, "flecs.core.Foo") == 0);
     test_assert(ecs_lookup(world, "flecs.core.Bar") == 0);
+
+    ecs_fini(world);
+}
+
+void Command_script_save_other_file(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    command_files[0].name = "s.flecs";
+    strcpy(command_files[0].content, "a {}\n");
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "s" }),
+        .filename = "s.flecs"
+    });
+    test_assert(s != 0);
+
+    ecs_log_set_level(-4);
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session,
+        "script_save s \"/tmp/evil.flecs\"");
+    test_int(ecs_vec_count(&r.errors), 1);
+    ecs_shell_result_fini(world, &r);
+
+    test_str(ecs_get(world, s, EcsScript)->filename, "s.flecs");
+    test_assert(command_files[1].name == NULL);
+
+    r = ecs_shell_run(world, session, "script_save s \"s.flecs\"");
+    test_int(ecs_vec_count(&r.errors), 0);
+    ecs_shell_result_fini(world, &r);
+
+    test_str(command_files[0].content, "a {}\n");
 
     ecs_fini(world);
 }

@@ -6,7 +6,6 @@
 #include "../private_api.h"
 #include "query_dsl/query_dsl.h"
 #include "json/json.h"
-#include "world_guard.h"
 
 #ifdef FLECS_REST
 
@@ -111,30 +110,6 @@ static void flecs_rest_string_param(
     }
 }
 
-static bool flecs_rest_guard(
-    ecs_http_reply_t *reply,
-    char *err)
-{
-    if (!err) {
-        return false;
-    }
-
-    char *escaped_err = flecs_astresc('"', err);
-    flecs_reply_error(reply, "%s", escaped_err);
-    ecs_os_free(escaped_err);
-    ecs_os_free(err);
-    reply->code = 400;
-    return true;
-}
-
-static bool flecs_rest_parent_guard(
-    ecs_world_t *world,
-    ecs_http_reply_t *reply,
-    const char *path)
-{
-    return flecs_rest_guard(reply, flecs_guard_new_path(world, 0, path, "/"));
-}
-
 static void flecs_rest_parse_json_ser_entity_params(
     ecs_world_t *world,
     ecs_entity_to_json_desc_t *desc,
@@ -231,10 +206,6 @@ static bool flecs_rest_put_entity(
     const char *path)
 {
     ecs_dbg_2("rest: create entity '%s'", path);
-
-    if (flecs_rest_parent_guard(world, reply, path)) {
-        return true;
-    }
 
     ecs_entity_t result = ecs_entity(world, {
         .name = path,
@@ -345,10 +316,6 @@ static bool flecs_rest_get_component(
         return true;
     }
 
-    if (flecs_rest_guard(reply, flecs_guard_id_valid(world, id))) {
-        return true;
-    }
-
     ecs_entity_t type = ecs_get_typeid(world, id);
     if (!type) {
         flecs_reply_error(reply, "component '%s' is not a type", component);
@@ -393,16 +360,8 @@ static bool flecs_rest_put_component(
         return true;
     }
 
-    if (flecs_rest_guard(reply, flecs_guard_id_valid(world, id))) {
-        return true;
-    }
-
     const char *data = ecs_http_get_param(req, "value");
     if (!data) {
-        if (flecs_rest_guard(reply, flecs_guard_add(world, e, id))) {
-            return true;
-        }
-
         ecs_add_id(world, e, id);
         return true;
     }
@@ -447,13 +406,8 @@ static bool flecs_rest_put_component(
 
     ecs_entity_t type = ti->component;
     bool valid = ecs_ptr_from_json(world, type, ptr, data, NULL) != NULL;
-    bool rejected = false;
     if (valid) {
-        rejected = flecs_rest_guard(reply,
-            flecs_guard_set(world, e, id, ptr));
-        if (!rejected) {
-            ecs_set_id(world, e, id, flecs_ito(size_t, ti->size), ptr);
-        }
+        ecs_set_id(world, e, id, flecs_ito(size_t, ti->size), ptr);
     }
 
     flecs_type_info_dtor(ptr, 1, ti);
@@ -492,10 +446,6 @@ static bool flecs_rest_delete_component(
         return true;
     }
 
-    if (flecs_rest_guard(reply, flecs_guard_remove(world, e, id))) {
-        return true;
-    }
-
     ecs_remove_id(world, e, id);
 
     return true;
@@ -508,10 +458,6 @@ static bool flecs_rest_delete_entity(
 {
     ecs_entity_t e;
     if (!(e = flecs_rest_entity_from_path(world, reply, path))) {
-        return true;
-    }
-
-    if (flecs_rest_guard(reply, flecs_guard_delete(world, e))) {
         return true;
     }
 
@@ -534,10 +480,6 @@ static bool flecs_rest_toggle(
     bool enable = true;
     flecs_rest_bool_param(req, "enable", &enable);
 
-    if (flecs_rest_guard(reply, flecs_guard_enable(world, e))) {
-        return true;
-    }
-
     const char *component = ecs_http_get_param(req, "component");
     if (!component) {
         ecs_enable(world, e, enable);
@@ -548,10 +490,6 @@ static bool flecs_rest_toggle(
     if (!flecs_id_parse(world, path, component, &id)) {
         flecs_reply_error(reply, "unresolved component '%s'", component);
         reply->code = 400;
-        return true;
-    }
-
-    if (flecs_rest_guard(reply, flecs_guard_id_valid(world, id))) {
         return true;
     }
 
@@ -597,20 +535,12 @@ static bool flecs_rest_script(
          * populated by the failed lookup, as the request itself is valid. */
         ecs_strbuf_reset(&reply->body);
         reply->code = 200;
-        if (flecs_rest_parent_guard(world, reply, path)) {
-            return true;
-        }
-
         script = ecs_entity(world, { .name = path, .sep = "/" });
         if (!script) {
             flecs_reply_error(reply, "invalid script name '%s'", path);
             reply->code = 400;
             return true;
         }
-    }
-
-    if (flecs_rest_guard(reply, flecs_guard_script(world, script))) {
-        return true;
     }
 
     /* If true, check if file changed */
@@ -995,10 +925,6 @@ static bool flecs_rest_command_delete_session(
     ecs_entity_t session = flecs_rest_command_session(
         world, reply, path, &remainder);
     if (session) {
-        if (flecs_rest_guard(reply, flecs_guard_delete(world, session))) {
-            return true;
-        }
-
         ecs_delete(world, session);
         ecs_strbuf_appendlit(&reply->body, "{}");
     }

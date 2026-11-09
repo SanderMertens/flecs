@@ -53,10 +53,6 @@ void flecs_command_fail(
 #define flecs_command_err(ctx, ...)\
     (ecs_err(__VA_ARGS__), flecs_command_fail(ctx))
 
-bool flecs_command_guard(
-    const ecs_function_ctx_t *ctx,
-    char *err);
-
 ecs_entity_t flecs_command_scope(
     const ecs_world_t *world);
 

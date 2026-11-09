@@ -20647,11 +20647,6 @@ int ecs_log_last_error(void)
 
 #endif /* FLECS_JSON_PRIVATE_H */
 
-#ifndef FLECS_WORLD_GUARD_H
-#define FLECS_WORLD_GUARD_H
-
-#endif
-
 #ifndef FLECS_SYSTEM_PRIVATE_H
 #define FLECS_SYSTEM_PRIVATE_H
 
