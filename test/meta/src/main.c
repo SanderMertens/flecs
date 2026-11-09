@@ -890,6 +890,7 @@ void DeserializeFromJson_entity_wildcard_parent(void);
 void DeserializeFromJson_entity_wildcard_tag(void);
 void DeserializeFromJson_entity_wildcard_pair_target(void);
 void DeserializeFromJson_entity_wildcard_component(void);
+void DeserializeFromJson_opaque_vector_wo_ensure_element(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_string_w_control_char(void);
@@ -5035,6 +5036,10 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "entity_wildcard_component",
         DeserializeFromJson_entity_wildcard_component
+    },
+    {
+        "opaque_vector_wo_ensure_element",
+        DeserializeFromJson_opaque_vector_wo_ensure_element
     }
 };
 
@@ -7782,7 +7787,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        221,
+        222,
         DeserializeFromJson_testcases
     },
     {

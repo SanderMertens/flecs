@@ -8738,3 +8738,23 @@ void DeserializeFromJson_entity_wildcard_component(void) {
 
     ecs_fini(world);
 }
+
+void DeserializeFromJson_opaque_vector_wo_ensure_element(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_lookup(world, "flecs.core.BuildInfo");
+    test_assert(t != 0);
+
+    ecs_log_set_level(-4);
+
+    ecs_build_info_t value = {0};
+    test_assert(NULL == ecs_ptr_from_json(world, t, &value,
+        "{\"addons\":[1]}", NULL));
+    test_assert(NULL == ecs_ptr_from_json(world, t, &value,
+        "{\"addons\":[1.5]}", NULL));
+    test_assert(NULL == ecs_ptr_from_json(world, t, &value,
+        "{\"addons\":[true]}", NULL));
+    test_assert(value.addons == NULL);
+
+    ecs_fini(world);
+}

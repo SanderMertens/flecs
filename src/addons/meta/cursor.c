@@ -1607,8 +1607,9 @@ static FLECS_ALWAYS_INLINE int flecs_meta_set_number(
     ecs_meta_op_t *op = flecs_cursor_get_op(scope);
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, cursor, scope);
     ecs_meta_op_kind_t kind = op->kind;
-    if (from == EcsI64 || from == EcsU64 || from == EcsF64) {
-        ecs_assert(ptr != NULL, ECS_INVALID_OPERATION, "no object to assign");
+    if (!ptr) {
+        ecs_err("no object to assign");
+        return -1;
     }
 
     if (flecs_meta_op_is_value(op)) {
