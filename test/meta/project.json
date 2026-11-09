@@ -693,7 +693,10 @@
                 "value_api_copy_ctor",
                 "value_api_move",
                 "value_api_move_ctor",
-                "value_component_lifecycle"
+                "value_component_lifecycle",
+                "set_float_to_i64_upper_bound",
+                "set_float_to_u64_upper_bound",
+                "set_nan_to_int"
             ]
         }, {
             "id": "DeserializeFromJson",

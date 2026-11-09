@@ -58551,6 +58551,9 @@ static struct {
     [EcsOpBitmask] = {0,          UINT32_MAX}
 };
 
+#define FLECS_META_U64_FLOAT_MAX (18446744073709549568.0)
+#define FLECS_META_I64_FLOAT_MAX (9223372036854774784.0)
+
 static struct {
     double min, max;
 } ecs_meta_bounds_float[EcsMetaTypeOpKindLast + 1] = {
@@ -58560,18 +58563,18 @@ static struct {
     [EcsOpU8]      = {0,          UINT8_MAX},
     [EcsOpU16]     = {0,          UINT16_MAX},
     [EcsOpU32]     = {0,          UINT32_MAX},
-    [EcsOpU64]     = {0,          (double)UINT64_MAX},
+    [EcsOpU64]     = {0,          FLECS_META_U64_FLOAT_MAX},
     [EcsOpI8]      = {INT8_MIN,   INT8_MAX},
     [EcsOpI16]     = {INT16_MIN,  INT16_MAX},
     [EcsOpI32]     = {INT32_MIN,  INT32_MAX},
-    [EcsOpI64]     = {INT64_MIN,  (double)INT64_MAX},
-    [EcsOpUPtr]    = {0, ((sizeof(void*) == 4) ? UINT32_MAX : (double)UINT64_MAX)},
+    [EcsOpI64]     = {INT64_MIN,  FLECS_META_I64_FLOAT_MAX},
+    [EcsOpUPtr]    = {0, ((sizeof(void*) == 4) ? UINT32_MAX : FLECS_META_U64_FLOAT_MAX)},
     [EcsOpIPtr]    = {
         ((sizeof(void*) == 4) ? INT32_MIN : (double)INT64_MIN), 
-        ((sizeof(void*) == 4) ? INT32_MAX : (double)INT64_MAX)
+        ((sizeof(void*) == 4) ? INT32_MAX : FLECS_META_I64_FLOAT_MAX)
     },
-    [EcsOpEntity]  = {0,          (double)UINT64_MAX},
-    [EcsOpId]      = {0,          (double)UINT64_MAX},
+    [EcsOpEntity]  = {0,          FLECS_META_U64_FLOAT_MAX},
+    [EcsOpId]      = {0,          FLECS_META_U64_FLOAT_MAX},
     [EcsOpEnum]    = {INT32_MIN,  INT32_MAX},
     [EcsOpBitmask] = {0,          UINT32_MAX}
 };
@@ -58583,7 +58586,7 @@ case kind:\
 
 #define case_T_checked(kind, T, dst, src, bounds)\
 case kind:\
-    if ((src < bounds[kind].min) || (src > bounds[kind].max)){\
+    if (!((src >= bounds[kind].min) && (src <= bounds[kind].max))){\
         ecs_err("value %.0f is out of bounds for type %s", (double)src,\
             flecs_meta_op_kind_str(kind));\
         return -1;\

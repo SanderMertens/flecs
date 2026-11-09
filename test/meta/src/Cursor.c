@@ -1,4 +1,5 @@
 #include <meta.h>
+#include <math.h>
 
 typedef struct {
     int32_t x;
@@ -9393,6 +9394,57 @@ void Cursor_value_component_lifecycle(void) {
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_float_to_i64_upper_bound(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    int64_t value = 0;
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_i64_t), &value);
+    test_fail(ecs_meta_set_float(&cur, 9223372036854775808.0));
+    test_int(value, 0);
+
+    cur = ecs_meta_cursor(world, ecs_id(ecs_i64_t), &value);
+    test_ok(ecs_meta_set_float(&cur, 9223372036854774784.0));
+    test_assert(value == 9223372036854774784LL);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_float_to_u64_upper_bound(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    uint64_t value = 0;
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_u64_t), &value);
+    test_fail(ecs_meta_set_float(&cur, 18446744073709551616.0));
+    test_uint(value, 0);
+
+    cur = ecs_meta_cursor(world, ecs_id(ecs_entity_t), &value);
+    test_fail(ecs_meta_set_float(&cur, 18446744073709551616.0));
+    test_uint(value, 0);
+
+    cur = ecs_meta_cursor(world, ecs_id(ecs_u64_t), &value);
+    test_ok(ecs_meta_set_float(&cur, 18446744073709549568.0));
+    test_assert(value == 18446744073709549568ULL);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_nan_to_int(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    int32_t value = 0;
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_i32_t), &value);
+    test_fail(ecs_meta_set_float(&cur, (double)NAN));
+    test_int(value, 0);
 
     ecs_fini(world);
 }

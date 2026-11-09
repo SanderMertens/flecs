@@ -667,6 +667,9 @@ void Cursor_value_api_copy_ctor(void);
 void Cursor_value_api_move(void);
 void Cursor_value_api_move_ctor(void);
 void Cursor_value_component_lifecycle(void);
+void Cursor_set_float_to_i64_upper_bound(void);
+void Cursor_set_float_to_u64_upper_bound(void);
+void Cursor_set_nan_to_int(void);
 
 // Testsuite 'DeserializeFromJson'
 void DeserializeFromJson_restore_removes_trailing_tag_with_observer(void);
@@ -4149,6 +4152,18 @@ bake_test_case Cursor_testcases[] = {
     {
         "value_component_lifecycle",
         Cursor_value_component_lifecycle
+    },
+    {
+        "set_float_to_i64_upper_bound",
+        Cursor_set_float_to_i64_upper_bound
+    },
+    {
+        "set_float_to_u64_upper_bound",
+        Cursor_set_float_to_u64_upper_bound
+    },
+    {
+        "set_nan_to_int",
+        Cursor_set_nan_to_int
     }
 };
 
@@ -7780,7 +7795,7 @@ static bake_test_suite suites[] = {
         "Cursor",
         NULL,
         NULL,
-        285,
+        288,
         Cursor_testcases
     },
     {
