@@ -1018,7 +1018,9 @@
                 "ecs_struct_2_members",
                 "ecs_struct_3_members",
                 "empty_value",
-                "struct_w_empty_value"
+                "struct_w_empty_value",
+                "build_info_null_addons",
+                "build_info_empty_addons"
             ]
         }, {
             "id": "SerializeEntityToJson",

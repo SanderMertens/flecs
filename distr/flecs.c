@@ -59436,9 +59436,14 @@ void flecs_meta_units_init(
 static int flecs_addon_vec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     char ***data = ECS_CONST_CAST(char***, ptr);
     char **addons = data[0];
-    do {
+    if (!addons) {
+        return 0;
+    }
+
+    for (; addons[0]; addons ++) {
         ser->value(ser, ecs_id(ecs_string_t), addons);
-    } while((++ addons)[0]);
+    }
+
     return 0;
 }
 
@@ -59446,9 +59451,14 @@ static size_t flecs_addon_vec_count(const void *ptr) {
     int32_t count = 0;
     char ***data = ECS_CONST_CAST(char***, ptr);
     char **addons = data[0];
-    do {
+    if (!addons) {
+        return 0;
+    }
+
+    while (addons[count]) {
         ++ count;
-    } while(addons[count]);
+    }
+
     return flecs_ito(size_t, count);
 }
 

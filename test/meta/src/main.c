@@ -988,6 +988,8 @@ void SerializeToJson_ecs_struct_2_members(void);
 void SerializeToJson_ecs_struct_3_members(void);
 void SerializeToJson_empty_value(void);
 void SerializeToJson_struct_w_empty_value(void);
+void SerializeToJson_build_info_null_addons(void);
+void SerializeToJson_build_info_empty_addons(void);
 
 // Testsuite 'SerializeEntityToJson'
 void SerializeEntityToJson_serialize_more_than_256_components(void);
@@ -5420,6 +5422,14 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "struct_w_empty_value",
         SerializeToJson_struct_w_empty_value
+    },
+    {
+        "build_info_null_addons",
+        SerializeToJson_build_info_null_addons
+    },
+    {
+        "build_info_empty_addons",
+        SerializeToJson_build_info_empty_addons
     }
 };
 
@@ -7779,7 +7789,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        96,
+        98,
         SerializeToJson_testcases
     },
     {
