@@ -132,16 +132,36 @@ static bool flecs_rest_parent_guard(
     ecs_http_reply_t *reply,
     const char *path)
 {
-    const char *last = strrchr(path, '/');
-    if (!last) {
-        return false;
-    }
+    char *buf = ecs_os_strdup(path);
+    ecs_entity_t parent = 0;
+    int32_t nesting = 0;
+    char *ptr;
+    for (ptr = buf; ptr[0]; ptr ++) {
+        char ch = ptr[0];
+        if (ch == '\\') {
+            if (!ptr[1]) {
+                break;
+            }
+            ptr ++;
+        } else if (ch == '<') {
+            nesting ++;
+        } else if (ch == '>') {
+            if (nesting) {
+                nesting --;
+            }
+        } else if (ch == '/' && !nesting) {
+            ptr[0] = '\0';
+            ecs_entity_t e = ecs_lookup_path_w_sep(
+                world, 0, buf, "/", NULL, false);
+            ptr[0] = '/';
+            if (!e) {
+                break;
+            }
 
-    char *parent_path = ecs_os_strdup(path);
-    parent_path[last - path] = '\0';
-    ecs_entity_t parent = ecs_lookup_path_w_sep(
-        world, 0, parent_path, "/", NULL, false);
-    ecs_os_free(parent_path);
+            parent = e;
+        }
+    }
+    ecs_os_free(buf);
 
     if (parent == EcsFlecsCore) {
         flecs_reply_error(reply,

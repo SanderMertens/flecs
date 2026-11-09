@@ -4067,3 +4067,39 @@ void Rest_put_entity_w_deleted_parent_id_not_recycled(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_put_entity_nested_in_flecs_core(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/entity/flecs/core/Foo/Bar", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_lookup(world, "flecs.core.Foo") == 0);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_put_script_nested_in_flecs_core(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/script/flecs/core/Foo/script", "Bar {}", &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_lookup(world, "flecs.core.Foo") == 0);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}

@@ -636,6 +636,8 @@ void Rest_disable_rest_module_w_uninitialized_rest(void);
 void Rest_disable_rest_module(void);
 void Rest_put_entity_w_deleted_parent_id(void);
 void Rest_put_entity_w_deleted_parent_id_not_recycled(void);
+void Rest_put_entity_nested_in_flecs_core(void);
+void Rest_put_script_nested_in_flecs_core(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -3094,6 +3096,14 @@ bake_test_case Rest_testcases[] = {
     {
         "put_entity_w_deleted_parent_id_not_recycled",
         Rest_put_entity_w_deleted_parent_id_not_recycled
+    },
+    {
+        "put_entity_nested_in_flecs_core",
+        Rest_put_entity_nested_in_flecs_core
+    },
+    {
+        "put_script_nested_in_flecs_core",
+        Rest_put_script_nested_in_flecs_core
     }
 };
 
@@ -3554,7 +3564,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        141,
+        143,
         Rest_testcases
     },
     {
