@@ -307,6 +307,20 @@ static bool flecs_guard_is_rest(
 #endif
 }
 
+static bool flecs_guard_is_rest_module(
+    const ecs_world_t *world,
+    ecs_entity_t e)
+{
+#ifdef FLECS_REST
+    return ecs_id(EcsRest) && e &&
+        (e == ecs_get_parent(world, ecs_id(EcsRest)));
+#else
+    (void)world;
+    (void)e;
+    return false;
+#endif
+}
+
 static bool flecs_guard_has_rest(
     const ecs_world_t *world,
     ecs_entity_t e)
@@ -656,6 +670,11 @@ static char* flecs_guard_add_intern(
             flecs_guard_path(world, e));
     }
 
+    if (id == EcsDisabled && flecs_guard_is_rest_module(world, e)) {
+        return flecs_asprintf("cannot disable REST module '%s'",
+            flecs_guard_path(world, e));
+    }
+
     if (ECS_IS_PAIR(id)) {
         ecs_entity_t rel = ecs_pair_first(world, id);
         if (!ECS_IS_VALUE_PAIR(id)) {
@@ -830,6 +849,11 @@ static char* flecs_guard_remove_id(
 {
     if (flecs_guard_is_rest(id)) {
         return flecs_asprintf("cannot remove REST server component from '%s'",
+            flecs_guard_path(world, e));
+    }
+
+    if (id == EcsDisabled && flecs_guard_is_rest_module(world, e)) {
+        return flecs_asprintf("cannot enable REST module '%s'",
             flecs_guard_path(world, e));
     }
 
@@ -1083,6 +1107,11 @@ char* flecs_guard_enable(
 
     if (flecs_guard_is_builtin(world, entity)) {
         return flecs_asprintf("cannot enable or disable builtin entity '%s'",
+            flecs_guard_path(world, entity));
+    }
+
+    if (flecs_guard_is_rest_module(world, entity)) {
+        return flecs_asprintf("cannot enable or disable REST module '%s'",
             flecs_guard_path(world, entity));
     }
 

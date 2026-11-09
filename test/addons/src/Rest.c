@@ -3992,3 +3992,34 @@ void Rest_disable_rest_module_w_uninitialized_rest(void) {
 
     ecs_fini(world);
 }
+
+void Rest_disable_rest_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_singleton_set(world, EcsRest, {27764});
+
+    ecs_entity_t rest_module = ecs_lookup(world, "flecs.rest");
+    test_assert(rest_module != 0);
+
+    const EcsRest *rest = ecs_singleton_get(world, EcsRest);
+    test_assert(rest != NULL);
+    test_assert(rest->impl != NULL);
+    ecs_http_server_t *srv = rest->impl->srv;
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/toggle/flecs/rest?enable=false", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+    test_assert(!ecs_has_id(world, rest_module, EcsDisabled));
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/flecs/rest?component=flecs.core.Disabled", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+    test_assert(!ecs_has_id(world, rest_module, EcsDisabled));
+
+    ecs_fini(world);
+}

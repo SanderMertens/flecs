@@ -682,7 +682,8 @@
                 "remove_rest_component",
                 "delete_rest_entity",
                 "delete_rest_entity_parent",
-                "disable_rest_module_w_uninitialized_rest"
+                "disable_rest_module_w_uninitialized_rest",
+                "disable_rest_module"
             ]
         }, {
             "id": "Metrics",
