@@ -4563,3 +4563,74 @@ void Rest_set_vector_cyclic(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_change_type_nested_in_type_in_use(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t inner = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Inner" }),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) }
+        },
+        .create_member_entities = true
+    });
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "Vec" }),
+        .type = ecs_id(ecs_f32_t)
+    });
+
+    ecs_entity_t outer = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Outer" }),
+        .members = {
+            { "i", inner },
+            { "v", vec },
+            { "s", ecs_id(ecs_string_t) }
+        }
+    });
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_id(world, foo, outer);
+
+    ecs_size_t inner_size = ecs_get(world, inner, EcsComponent)->size;
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/entity/Inner/q", NULL, &reply));
+    ecs_strbuf_reset(&reply.body);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Inner/q?component=flecs.meta.member"
+        "&value={\"type\":\"flecs.meta.string\",\"count\":8}", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_int(ecs_get(world, inner, EcsComponent)->size, inner_size);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Vec?component=flecs.meta.vector"
+        "&value={\"type\":\"flecs.meta.string\"}", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_uint(ecs_get(world, vec, EcsVector)->type, ecs_id(ecs_f32_t));
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/component/Foo?component=Outer&value={\"s\":\"hello\"}", NULL, &reply));
+    ecs_strbuf_reset(&reply.body);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/entity/Foo?values=true", NULL, &reply));
+    test_int(reply.code, 200);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}

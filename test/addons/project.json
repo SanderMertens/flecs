@@ -705,7 +705,8 @@
                 "query_and_from_empty_type",
                 "query_or_component_and_tag",
                 "set_map_on_type_in_use",
-                "set_vector_cyclic"
+                "set_vector_cyclic",
+                "change_type_nested_in_type_in_use"
             ]
         }, {
             "id": "Metrics",

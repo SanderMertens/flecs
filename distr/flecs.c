@@ -32372,7 +32372,7 @@ static bool flecs_guard_type_depends(
     return result;
 }
 
-static bool flecs_guard_type_locked(
+static bool flecs_guard_type_locked_self(
     const ecs_world_t *world,
     ecs_entity_t type)
 {
@@ -32383,6 +32383,36 @@ static bool flecs_guard_type_locked(
 
     const EcsType *t = ecs_get(world, type, EcsType);
     return t && !t->existing;
+}
+
+static bool flecs_guard_type_locked(
+    const ecs_world_t *world,
+    ecs_entity_t type)
+{
+    if (flecs_guard_type_locked_self(world, type)) {
+        return true;
+    }
+
+    bool result = false;
+    ecs_iter_t it = ecs_each(world, EcsType);
+    while (!result && ecs_each_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            ecs_entity_t cur = it.entities[i];
+            if (cur != type && flecs_guard_type_locked_self(world, cur) &&
+                flecs_guard_type_depends(world, cur, type))
+            {
+                result = true;
+                break;
+            }
+        }
+    }
+
+    if (result) {
+        ecs_iter_fini(&it);
+    }
+
+    return result;
 }
 
 static bool flecs_guard_value_changed(
