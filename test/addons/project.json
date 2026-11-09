@@ -695,7 +695,10 @@
                 "command_delete_session_builtin_entity",
                 "command_delete_session_w_panic",
                 "rename_module",
-                "command_new_session_shell_module_name_taken"
+                "command_new_session_shell_module_name_taken",
+                "add_isa_to_component_in_use",
+                "add_isa_to_trait_component",
+                "delete_base_of_component_in_use"
             ]
         }, {
             "id": "Metrics",

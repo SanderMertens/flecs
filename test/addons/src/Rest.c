@@ -4286,3 +4286,84 @@ void Rest_command_new_session_shell_module_name_taken(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_add_isa_to_component_in_use(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_set(world, foo, Position, {10, 20});
+    ecs_entity(world, { .name = "Bar" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Position?component=(flecs.core.IsA,Bar)", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(!ecs_has_pair(world, ecs_id(Position), EcsIsA, EcsWildcard));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_add_isa_to_trait_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsCanToggle);
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_id(world, foo, bar);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Bar?component=(flecs.core.IsA,Position)", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(!ecs_has_pair(world, bar, EcsIsA, EcsWildcard));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_delete_base_of_component_in_use(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_entity(world, { .name = "Base" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, bar, EcsIsA, base);
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_id(world, foo, bar);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE",
+        "/entity/Base", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_is_alive(world, base));
+    test_assert(ecs_has_pair(world, bar, EcsIsA, base));
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE",
+        "/component/Bar?component=(flecs.core.IsA,Base)", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_has_pair(world, bar, EcsIsA, base));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}

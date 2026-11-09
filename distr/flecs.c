@@ -32523,6 +32523,13 @@ static char* flecs_guard_add_intern(
         if (!ECS_IS_VALUE_PAIR(id)) {
             ecs_entity_t tgt = ecs_pair_second(world, id);
 
+            if (rel == EcsIsA && flecs_guard_in_use(world, e)) {
+                return flecs_asprintf("cannot add '%s' to '%s': "
+                    "component is already in use",
+                        flecs_guard_id_str(world, id),
+                        flecs_guard_path(world, e));
+            }
+
             if (rel == EcsChildOf) {
                 char *err = flecs_guard_parent(world, e, tgt);
                 if (err) {
@@ -32713,6 +32720,12 @@ static char* flecs_guard_remove_id(
             flecs_guard_id_str(world, id), flecs_guard_path(world, e));
     }
 
+    if (ECS_HAS_RELATION(id, EcsIsA) && flecs_guard_in_use(world, e)) {
+        return flecs_asprintf("cannot remove '%s' from '%s': "
+            "component is already in use",
+                flecs_guard_id_str(world, id), flecs_guard_path(world, e));
+    }
+
     char *err = flecs_guard_trait(world, e, id, false);
     if (err) {
         return err;
@@ -32849,6 +32862,18 @@ static char* flecs_guard_delete_usage(
                     world, table, visited, depth);
                 if (err) {
                     return err;
+                }
+            } else if (is_target && ECS_PAIR_FIRST(id) == EcsIsA) {
+                const ecs_entity_t *entities = ecs_table_entities(table);
+                int32_t j, count = ecs_table_count(table);
+                for (j = 0; j < count; j ++) {
+                    if (flecs_guard_in_use(world, entities[j])) {
+                        return flecs_asprintf("cannot delete '%s': it is a "
+                            "base of component '%s' which is already in use",
+                                flecs_guard_path(world, e),
+                                flecs_errstr_2(ecs_get_path(
+                                    world, entities[j])));
+                    }
                 }
             }
         }
