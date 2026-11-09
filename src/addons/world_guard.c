@@ -775,14 +775,19 @@ char* flecs_guard_set(
         return err;
     }
 
-    if (value) {
-        const ecs_type_info_t *ti = ecs_get_type_info(world, id);
-        if (ti && (ti->hooks.flags &
-            (ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL)))
-        {
-            return flecs_asprintf("cannot set '%s': type is not copyable",
-                flecs_guard_id_str(world, id));
-        }
+    const ecs_type_info_t *ti = ecs_get_type_info(world, id);
+    if (value && ti && (ti->hooks.flags &
+        (ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL)))
+    {
+        return flecs_asprintf("cannot set '%s': type is not copyable",
+            flecs_guard_id_str(world, id));
+    }
+
+    if (ti && (ti->hooks.flags & ECS_TYPE_HOOK_CTOR_ILLEGAL) &&
+        !ecs_owns_id(world, entity, flecs_guard_strip_flags(id)))
+    {
+        return flecs_asprintf("cannot add '%s': type is not constructible",
+            flecs_guard_id_str(world, id));
     }
 
     return flecs_guard_add_intern(

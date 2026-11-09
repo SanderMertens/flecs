@@ -624,6 +624,7 @@ void Rest_script_save_file_open_fails(void);
 void Rest_put_component_not_copyable(void);
 void Rest_put_component_not_copy_assignable(void);
 void Rest_put_component_not_constructible(void);
+void Rest_add_component_not_constructible(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -3034,6 +3035,10 @@ bake_test_case Rest_testcases[] = {
     {
         "put_component_not_constructible",
         Rest_put_component_not_constructible
+    },
+    {
+        "add_component_not_constructible",
+        Rest_add_component_not_constructible
     }
 };
 
@@ -3494,7 +3499,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        129,
+        130,
         Rest_testcases
     },
     {

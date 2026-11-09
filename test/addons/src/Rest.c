@@ -3686,3 +3686,28 @@ void Rest_put_component_not_constructible(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_add_component_not_constructible(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_CTOR_ILLEGAL
+    });
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/Foo?component=Position", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(!ecs_has(world, foo, Position));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}

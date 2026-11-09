@@ -673,7 +673,8 @@
                 "script_save_file_open_fails",
                 "put_component_not_copyable",
                 "put_component_not_copy_assignable",
-                "put_component_not_constructible"
+                "put_component_not_constructible",
+                "add_component_not_constructible"
             ]
         }, {
             "id": "Metrics",
