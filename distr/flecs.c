@@ -118179,6 +118179,12 @@ static bool flecs_command_check_id(
         return false;
     }
 
+    if (!ecs_id_is_wildcard(id) &&
+        flecs_command_guard(ctx, flecs_guard_id_valid(ctx->world, id)))
+    {
+        return false;
+    }
+
     return true;
 }
 

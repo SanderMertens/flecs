@@ -4407,7 +4407,8 @@
                 "mv_builtin_entity",
                 "mv_flecs_module",
                 "get_not_copyable",
-                "modified_not_copyable"
+                "modified_not_copyable",
+                "get_pair_w_dead_relationship"
             ]
         }, {
             "id": "CommandResource",

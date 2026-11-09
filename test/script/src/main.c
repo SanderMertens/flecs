@@ -4259,6 +4259,7 @@ void Command_mv_builtin_entity(void);
 void Command_mv_flecs_module(void);
 void Command_get_not_copyable(void);
 void Command_modified_not_copyable(void);
+void Command_get_pair_w_dead_relationship(void);
 
 // Testsuite 'CommandResource'
 void CommandResource_setup(void);
@@ -21025,6 +21026,10 @@ bake_test_case Command_testcases[] = {
     {
         "modified_not_copyable",
         Command_modified_not_copyable
+    },
+    {
+        "get_pair_w_dead_relationship",
+        Command_get_pair_w_dead_relationship
     }
 };
 
@@ -21594,7 +21599,7 @@ static bake_test_suite suites[] = {
         "Command",
         Command_setup,
         NULL,
-        162,
+        163,
         Command_testcases
     },
     {

@@ -4521,3 +4521,38 @@ void Command_modified_not_copyable(void) {
 
     ecs_fini(world);
 }
+
+void Command_get_pair_w_dead_relationship(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) }
+        }
+    });
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_set(world, foo, Position, {10, 20});
+
+    ecs_log_set_level(-4);
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session,
+        "get Foo (99999, Position)");
+    test_int(ecs_vec_count(&r.errors), 1);
+    ecs_shell_result_fini(world, &r);
+
+    r = ecs_shell_run(world, session, "modified Foo (99999, Position)");
+    test_int(ecs_vec_count(&r.errors), 1);
+    ecs_shell_result_fini(world, &r);
+
+    r = ecs_shell_run(world, session, "set Foo (99999, Position) \"{}\"");
+    test_int(ecs_vec_count(&r.errors), 1);
+    ecs_shell_result_fini(world, &r);
+
+    ecs_fini(world);
+}
