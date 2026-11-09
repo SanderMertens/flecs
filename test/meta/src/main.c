@@ -170,6 +170,7 @@ void RuntimeTypes_existing_struct_w_vector_member_no_hooks(void);
 void RuntimeTypes_existing_struct_w_vector_member_shallow_copy(void);
 void RuntimeTypes_existing_struct_w_vector_member_not_freed(void);
 void RuntimeTypes_struct_too_many_ops(void);
+void RuntimeTypes_deeply_nested_struct(void);
 
 // Testsuite 'StructTypes'
 void StructTypes_i32(void);
@@ -2208,6 +2209,10 @@ bake_test_case RuntimeTypes_testcases[] = {
     {
         "struct_too_many_ops",
         RuntimeTypes_struct_too_many_ops
+    },
+    {
+        "deeply_nested_struct",
+        RuntimeTypes_deeply_nested_struct
     }
 };
 
@@ -7759,7 +7764,7 @@ static bake_test_suite suites[] = {
         "RuntimeTypes",
         NULL,
         NULL,
-        59,
+        60,
         RuntimeTypes_testcases
     },
     {

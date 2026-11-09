@@ -3823,3 +3823,54 @@ void RuntimeTypes_struct_too_many_ops(void) {
 
     ecs_fini(world);
 }
+
+void RuntimeTypes_deeply_nested_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t prev = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "T0" }),
+        .members = {
+            { "a", ecs_id(ecs_i32_t) }
+        }
+    });
+    test_assert(prev != 0);
+
+    int32_t i;
+    for (i = 1; i <= 35; i ++) {
+        char name[16];
+        ecs_os_snprintf(name, 16, "T%d", i);
+        prev = ecs_struct(world, {
+            .entity = ecs_entity(world, { .name = name }),
+            .members = {
+                { "a", prev }
+            }
+        });
+        test_assert(prev != 0);
+    }
+
+    char *json = ecs_type_info_to_json(world, prev);
+    ecs_os_free(json);
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    for (i = 0; i <= 35; i ++) {
+        ecs_strbuf_appendlit(&buf, "{\"a\":");
+    }
+    ecs_strbuf_appendlit(&buf, "1");
+    for (i = 0; i <= 35; i ++) {
+        ecs_strbuf_appendlit(&buf, "}");
+    }
+    char *value_json = ecs_strbuf_get(&buf);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, prev);
+    test_assert(ti != NULL);
+    void *ptr = ecs_os_calloc(ti->size);
+    ecs_ptr_from_json(world, prev, ptr, value_json, NULL);
+    ecs_os_free(ptr);
+    ecs_os_free(value_json);
+
+    test_assert(true);
+
+    ecs_fini(world);
+}

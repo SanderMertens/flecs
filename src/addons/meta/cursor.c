@@ -1054,10 +1054,13 @@ int ecs_meta_push(
         }
     }
 
+    if ((cursor->depth + 1) >= ECS_META_MAX_SCOPE_DEPTH) {
+        ecs_err("value is too deeply nested");
+        return -1;
+    }
+
     void *ptr = flecs_meta_cursor_get_ptr(world, cursor, scope);
     cursor->depth ++;
-    ecs_check(cursor->depth < ECS_META_MAX_SCOPE_DEPTH,
-        ECS_INVALID_PARAMETER, NULL);
 
     ecs_meta_scope_t *next_scope = flecs_cursor_get_scope(cursor);
     *next_scope = (ecs_meta_scope_t) {0};
