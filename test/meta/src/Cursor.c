@@ -9448,3 +9448,47 @@ void Cursor_set_nan_to_int(void) {
 
     ecs_fini(world);
 }
+
+void Cursor_vector_elem_out_of_range(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_vector(world, { .type = ecs_id(ecs_f64_t) });
+
+    ecs_log_set_level(-4);
+
+    ecs_vec_t v = {0};
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &v);
+    test_ok(ecs_meta_push(&cur));
+    test_fail(ecs_meta_elem(&cur, 300000000));
+    test_fail(ecs_meta_elem(&cur, -1));
+    test_ok(ecs_meta_pop(&cur));
+
+    test_assert(ecs_vec_count(&v) == 0);
+    ecs_vec_fini_t(NULL, &v, double);
+
+    ecs_fini(world);
+}
+
+void Cursor_member_expr_index_overflow(void) {
+    typedef struct {
+        float v[2];
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .members = {
+            { "v", ecs_id(ecs_f32_t), 2 }
+        }
+    });
+
+    ecs_log_set_level(-4);
+
+    T value = {{0}};
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_ok(ecs_meta_push(&cur));
+    test_fail(ecs_meta_dotmember(&cur, "v[99999999999]"));
+    test_fail(ecs_meta_dotmember(&cur, "v[2147483647]"));
+
+    ecs_fini(world);
+}

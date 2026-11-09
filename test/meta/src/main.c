@@ -674,6 +674,8 @@ void Cursor_value_component_lifecycle(void);
 void Cursor_set_float_to_i64_upper_bound(void);
 void Cursor_set_float_to_u64_upper_bound(void);
 void Cursor_set_nan_to_int(void);
+void Cursor_vector_elem_out_of_range(void);
+void Cursor_member_expr_index_overflow(void);
 
 // Testsuite 'DeserializeFromJson'
 void DeserializeFromJson_restore_removes_trailing_tag_with_observer(void);
@@ -4185,6 +4187,14 @@ bake_test_case Cursor_testcases[] = {
     {
         "set_nan_to_int",
         Cursor_set_nan_to_int
+    },
+    {
+        "vector_elem_out_of_range",
+        Cursor_vector_elem_out_of_range
+    },
+    {
+        "member_expr_index_overflow",
+        Cursor_member_expr_index_overflow
     }
 };
 
@@ -7820,7 +7830,7 @@ static bake_test_suite suites[] = {
         "Cursor",
         NULL,
         NULL,
-        288,
+        290,
         Cursor_testcases
     },
     {

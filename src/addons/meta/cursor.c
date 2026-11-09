@@ -266,6 +266,19 @@ static int flecs_meta_array_bounds_check(
             ecs_os_free(str);
             return -1;
         }
+    } else if (kind == EcsOpPushVector) {
+        int64_t max_elem = (int64_t)parent->elem_count * 2;
+        if (max_elem < 1024) {
+            max_elem = 1024;
+        }
+
+        if (parent->elem < 0 || parent->elem > max_elem) {
+            char *str = ecs_get_path(cursor->world, parent->type);
+            ecs_err("out of collection bounds for type '%s' (index %d vs. size %d)", 
+                str, parent->elem, parent->elem_count);
+            ecs_os_free(str);
+            return -1;
+        }
     }
 
     return 0;
@@ -899,6 +912,11 @@ static const char* flecs_meta_parse_elem(
     while ((ch = ptr[0]) && ch != ']') {
         if (!isdigit((unsigned char)ch)) {
             ecs_err("invalid array index in member expression");
+            return NULL;
+        }
+
+        if (elem > ((INT32_MAX - 9) / 10)) {
+            ecs_err("array index too large in member expression");
             return NULL;
         }
 

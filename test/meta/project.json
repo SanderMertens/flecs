@@ -700,7 +700,9 @@
                 "value_component_lifecycle",
                 "set_float_to_i64_upper_bound",
                 "set_float_to_u64_upper_bound",
-                "set_nan_to_int"
+                "set_nan_to_int",
+                "vector_elem_out_of_range",
+                "member_expr_index_overflow"
             ]
         }, {
             "id": "DeserializeFromJson",
