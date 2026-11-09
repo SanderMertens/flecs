@@ -32327,6 +32327,35 @@ static bool flecs_guard_type_depends_intern(
         }
     }
 
+    const EcsVector *vec = ecs_get(world, type, EcsVector);
+    if (vec) {
+        if (flecs_guard_type_depends_intern(
+            world, vec->type, target, visited, depth + 1))
+        {
+            return true;
+        }
+    }
+
+    const EcsMap *map = ecs_get(world, type, EcsMap);
+    if (map) {
+        if (flecs_guard_type_depends_intern(
+            world, map->key_type, target, visited, depth + 1) ||
+            flecs_guard_type_depends_intern(
+            world, map->type, target, visited, depth + 1))
+        {
+            return true;
+        }
+    }
+
+    const EcsOpaque *opaque = ecs_get(world, type, EcsOpaque);
+    if (opaque) {
+        if (flecs_guard_type_depends_intern(
+            world, opaque->as_type, target, visited, depth + 1))
+        {
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -32466,6 +32495,28 @@ static char* flecs_guard_meta(
         }
 
         return flecs_guard_element_size(world, v->type, v->count, e);
+    }
+
+    if (id == ecs_id(EcsVector)) {
+        const EcsVector *v = value;
+        if (flecs_guard_type_depends(world, v->type, e)) {
+            return flecs_asprintf("cyclic type definition for '%s'",
+                flecs_guard_path(world, e));
+        }
+
+        return NULL;
+    }
+
+    if (id == ecs_id(EcsMap)) {
+        const EcsMap *v = value;
+        if (flecs_guard_type_depends(world, v->key_type, e) ||
+            flecs_guard_type_depends(world, v->type, e))
+        {
+            return flecs_asprintf("cyclic type definition for '%s'",
+                flecs_guard_path(world, e));
+        }
+
+        return NULL;
     }
 
     if (id == ecs_id(EcsStruct)) {

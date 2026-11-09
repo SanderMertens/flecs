@@ -4519,3 +4519,47 @@ void Rest_set_map_on_type_in_use(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_set_vector_cyclic(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t v = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "V" }),
+        .type = ecs_id(ecs_f32_t)
+    });
+    test_assert(v != 0);
+
+    ecs_entity_t s = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "S" }),
+        .members = {
+            { "v", v }
+        }
+    });
+    test_assert(s != 0);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/V?component=flecs.meta.vector&value={\"type\":\"S\"}",
+        NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/type_info/S", NULL, &reply));
+    test_int(reply.code, 200);
+    ecs_strbuf_reset(&reply.body);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/V?component=flecs.meta.vector&value={\"type\":\"V\"}",
+        NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}

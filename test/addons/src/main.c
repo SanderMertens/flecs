@@ -655,6 +655,7 @@ void Rest_query_info_w_value_pair(void);
 void Rest_query_and_from_empty_type(void);
 void Rest_query_or_component_and_tag(void);
 void Rest_set_map_on_type_in_use(void);
+void Rest_set_vector_cyclic(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -3189,6 +3190,10 @@ bake_test_case Rest_testcases[] = {
     {
         "set_map_on_type_in_use",
         Rest_set_map_on_type_in_use
+    },
+    {
+        "set_vector_cyclic",
+        Rest_set_vector_cyclic
     }
 };
 
@@ -3649,7 +3654,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        157,
+        158,
         Rest_testcases
     },
     {
