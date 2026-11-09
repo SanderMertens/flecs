@@ -3785,3 +3785,41 @@ void RuntimeTypes_existing_struct_w_vector_member_not_freed(void) {
 
     ecs_vec_fini_t(NULL, &owned, ecs_i32_t);
 }
+
+void RuntimeTypes_struct_too_many_ops(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t prev = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "D0" }),
+        .members = {
+            { "a", ecs_id(ecs_f32_t) },
+            { "b", ecs_id(ecs_f32_t) }
+        }
+    });
+    test_assert(prev != 0);
+
+    int32_t i;
+    for (i = 1; i <= 15; i ++) {
+        char name[16];
+        ecs_os_snprintf(name, 16, "D%d", i);
+        prev = ecs_struct(world, {
+            .entity = ecs_entity(world, { .name = name }),
+            .members = {
+                { "a", prev },
+                { "b", prev }
+            }
+        });
+    }
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_id(world, e, prev);
+
+    char *json = ecs_entity_to_json(world, e, NULL);
+    ecs_os_free(json);
+
+    test_assert(true);
+
+    ecs_fini(world);
+}

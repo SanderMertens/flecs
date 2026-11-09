@@ -169,6 +169,7 @@ void RuntimeTypes_map_cmp_illegal(void);
 void RuntimeTypes_existing_struct_w_vector_member_no_hooks(void);
 void RuntimeTypes_existing_struct_w_vector_member_shallow_copy(void);
 void RuntimeTypes_existing_struct_w_vector_member_not_freed(void);
+void RuntimeTypes_struct_too_many_ops(void);
 
 // Testsuite 'StructTypes'
 void StructTypes_i32(void);
@@ -2203,6 +2204,10 @@ bake_test_case RuntimeTypes_testcases[] = {
     {
         "existing_struct_w_vector_member_not_freed",
         RuntimeTypes_existing_struct_w_vector_member_not_freed
+    },
+    {
+        "struct_too_many_ops",
+        RuntimeTypes_struct_too_many_ops
     }
 };
 
@@ -7754,7 +7759,7 @@ static bake_test_suite suites[] = {
         "RuntimeTypes",
         NULL,
         NULL,
-        58,
+        59,
         RuntimeTypes_testcases
     },
     {

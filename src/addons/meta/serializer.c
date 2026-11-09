@@ -52,6 +52,12 @@ static int flecs_meta_serialize_scope(
                 continue;
             }
 
+            if ((ecs_vec_count(ops) - cur) > INT16_MAX || i > INT16_MAX) {
+                ecs_err("type '%s' is too complex",
+                    flecs_errstr(ecs_get_path(world, op.type)));
+                return -1;
+            }
+
             ecs_meta_op_t *member_op = ecs_vec_get_t(ops, ecs_meta_op_t, cur);
             if (!member_op->type) {
                 member_op->type = m->type;
@@ -77,6 +83,12 @@ static int flecs_meta_serialize_scope(
         .type_info = op.kind == EcsOpPushStruct ? NULL : op.type_info,
         .elem_size = array_count
     };
+    if ((ecs_vec_count(ops) - first) > INT16_MAX) {
+        ecs_err("type '%s' is too complex",
+            flecs_errstr(ecs_get_path(world, op.type)));
+        return -1;
+    }
+
     ecs_vec_get_t(ops, ecs_meta_op_t, first)->op_count =
         flecs_ito(int16_t, ecs_vec_count(ops) - first);
     return 0;
@@ -247,8 +259,17 @@ void flecs_meta_type_serializer_init(
 
         int ret = flecs_meta_serialize_type(world, type, 0, &ops, true);
 
+        if (!ret && ecs_vec_count(&ops) > INT16_MAX) {
+            ecs_err("type '%s' is too complex",
+                flecs_errstr(ecs_get_path(world, type)));
+            ret = -1;
+        }
+
         if (ret != 0) {
             ecs_vec_fini_t(NULL, &ops, ecs_meta_op_t);
+            if (ecs_has(world, type, EcsTypeSerializer)) {
+                ecs_remove(it->stage, type, EcsTypeSerializer);
+            }
             continue;
         }
 

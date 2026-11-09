@@ -179,7 +179,8 @@
                 "map_cmp_illegal",
                 "existing_struct_w_vector_member_no_hooks",
                 "existing_struct_w_vector_member_shallow_copy",
-                "existing_struct_w_vector_member_not_freed"
+                "existing_struct_w_vector_member_not_freed",
+                "struct_too_many_ops"
             ]
         }, {
             "id": "StructTypes",
