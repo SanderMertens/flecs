@@ -629,6 +629,9 @@ void Rest_get_stats_user_period(void);
 void Rest_get_pipeline_stats_after_add_system(void);
 void Rest_request_commands_nested(void);
 void Rest_request_commands_after_server_fini(void);
+void Rest_remove_rest_component(void);
+void Rest_delete_rest_entity(void);
+void Rest_delete_rest_entity_parent(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -3059,6 +3062,18 @@ bake_test_case Rest_testcases[] = {
     {
         "request_commands_after_server_fini",
         Rest_request_commands_after_server_fini
+    },
+    {
+        "remove_rest_component",
+        Rest_remove_rest_component
+    },
+    {
+        "delete_rest_entity",
+        Rest_delete_rest_entity
+    },
+    {
+        "delete_rest_entity_parent",
+        Rest_delete_rest_entity_parent
     }
 };
 
@@ -3519,7 +3534,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        134,
+        137,
         Rest_testcases
     },
     {

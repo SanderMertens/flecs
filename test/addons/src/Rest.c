@@ -3889,3 +3889,87 @@ void Rest_request_commands_after_server_fini(void) {
 
     ecs_fini(world);
 }
+
+void Rest_remove_rest_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_singleton_set(world, EcsRest, {27761});
+
+    const EcsRest *rest = ecs_singleton_get(world, EcsRest);
+    test_assert(rest != NULL);
+    test_assert(rest->impl != NULL);
+    ecs_http_server_t *srv = rest->impl->srv;
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE",
+        "/component/flecs/rest/Rest?component=flecs.rest.Rest", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_singleton_get(world, EcsRest) != NULL);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET", "/entity/flecs/rest",
+        NULL, &reply));
+    test_int(reply.code, 200);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_fini(world);
+}
+
+void Rest_delete_rest_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_entity(world, { .name = "Server" });
+    ecs_set(world, e, EcsRest, {27762});
+
+    const EcsRest *rest = ecs_get(world, e, EcsRest);
+    test_assert(rest != NULL);
+    test_assert(rest->impl != NULL);
+    ecs_http_server_t *srv = rest->impl->srv;
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE",
+        "/entity/Server", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_is_alive(world, e));
+    test_assert(ecs_has(world, e, EcsRest));
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET", "/entity/Server",
+        NULL, &reply));
+    test_int(reply.code, 200);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_fini(world);
+}
+
+void Rest_delete_rest_entity_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t p = ecs_entity(world, { .name = "Parent" });
+    ecs_entity_t e = ecs_entity(world, { .name = "Server", .parent = p });
+    ecs_set(world, e, EcsRest, {27763});
+
+    const EcsRest *rest = ecs_get(world, e, EcsRest);
+    test_assert(rest != NULL);
+    test_assert(rest->impl != NULL);
+    ecs_http_server_t *srv = rest->impl->srv;
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE",
+        "/entity/Parent", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_is_alive(world, p));
+    test_assert(ecs_is_alive(world, e));
+    test_assert(ecs_has(world, e, EcsRest));
+
+    ecs_fini(world);
+}

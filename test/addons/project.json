@@ -678,7 +678,10 @@
                 "get_stats_user_period",
                 "get_pipeline_stats_after_add_system",
                 "request_commands_nested",
-                "request_commands_after_server_fini"
+                "request_commands_after_server_fini",
+                "remove_rest_component",
+                "delete_rest_entity",
+                "delete_rest_entity_parent"
             ]
         }, {
             "id": "Metrics",

@@ -32044,6 +32044,30 @@ static char* flecs_guard_constraints(
 }
 #endif
 
+static bool flecs_guard_is_rest(
+    ecs_id_t id)
+{
+#ifdef FLECS_REST
+    return ecs_id(EcsRest) && (id == ecs_id(EcsRest));
+#else
+    (void)id;
+    return false;
+#endif
+}
+
+static bool flecs_guard_has_rest(
+    const ecs_world_t *world,
+    ecs_entity_t e)
+{
+#ifdef FLECS_REST
+    return ecs_id(EcsRest) && ecs_owns_id(world, e, ecs_id(EcsRest));
+#else
+    (void)world;
+    (void)e;
+    return false;
+#endif
+}
+
 static bool flecs_guard_is_flag_trait(
     ecs_id_t id)
 {
@@ -32375,6 +32399,11 @@ static char* flecs_guard_add_intern(
     ecs_id_t id,
     const void *value)
 {
+    if (flecs_guard_is_rest(id)) {
+        return flecs_asprintf("cannot modify REST server component of '%s'",
+            flecs_guard_path(world, e));
+    }
+
     if (ECS_IS_PAIR(id)) {
         ecs_entity_t rel = ecs_pair_first(world, id);
         if (!ECS_IS_VALUE_PAIR(id)) {
@@ -32547,6 +32576,11 @@ static char* flecs_guard_remove_id(
     ecs_entity_t e,
     ecs_id_t id)
 {
+    if (flecs_guard_is_rest(id)) {
+        return flecs_asprintf("cannot remove REST server component from '%s'",
+            flecs_guard_path(world, e));
+    }
+
     if (flecs_guard_is_builtin(world, e)) {
         return flecs_asprintf("cannot remove '%s' from builtin entity '%s'",
             flecs_guard_id_str(world, id), flecs_guard_path(world, e));
@@ -32721,6 +32755,11 @@ static char* flecs_guard_delete_intern(
     if (ecs_has_pair(world, e, EcsOnDelete, EcsPanic)) {
         return flecs_asprintf("cannot delete '%s': entity has the "
             "(OnDelete, Panic) trait", flecs_guard_path(world, e));
+    }
+
+    if (flecs_guard_has_rest(world, e)) {
+        return flecs_asprintf("cannot delete '%s': entity owns a REST server",
+            flecs_guard_path(world, e));
     }
 
     if (flecs_component_is_delete_locked(world, e)) {
