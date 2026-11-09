@@ -1943,6 +1943,7 @@ void Error_set_copy_illegal_pair(void);
 void Error_set_tree_spawner(void);
 void Error_template_set_copy_illegal_component(void);
 void Error_function_infinite_recursion(void);
+void Error_match_vector(void);
 
 // Testsuite 'Format'
 void Format_setup(void);
@@ -11948,6 +11949,10 @@ bake_test_case Error_testcases[] = {
     {
         "function_infinite_recursion",
         Error_function_infinite_recursion
+    },
+    {
+        "match_vector",
+        Error_match_vector
     }
 };
 
@@ -21387,7 +21392,7 @@ static bake_test_suite suites[] = {
         "Error",
         Error_setup,
         NULL,
-        295,
+        296,
         Error_testcases,
         1,
         Error_params

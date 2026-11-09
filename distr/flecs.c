@@ -111299,6 +111299,13 @@ static int flecs_expr_match_visit_type(
         compare_type = ecs_id(ecs_u32_t);
     }
 
+    if (!ecs_has(script->world, compare_type, EcsPrimitive)) {
+        flecs_expr_visit_error(script, node,
+            "cannot match on value of non-primitive type '%s'",
+            flecs_errstr(ecs_get_path(script->world, expr_type)));
+        goto error;
+    }
+
     if (flecs_expr_cast_to(script, &node->expr, compare_type)) {
         goto error;
     }

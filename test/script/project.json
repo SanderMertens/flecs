@@ -1994,7 +1994,8 @@
                 "set_copy_illegal_pair",
                 "set_tree_spawner",
                 "template_set_copy_illegal_component",
-                "function_infinite_recursion"
+                "function_infinite_recursion",
+                "match_vector"
             ]
         }, {
             "id": "Format",
