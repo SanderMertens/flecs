@@ -3788,3 +3788,75 @@ void Rest_get_pipeline_stats_after_add_system(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+static ecs_entity_t rest_nested_tag = 0;
+static ecs_entity_t rest_nested_tag_2 = 0;
+
+static void Rest_AddNestedTag(ecs_iter_t *it) {
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_add_id(it->stage, it->entities[i], rest_nested_tag);
+    }
+}
+
+static void Rest_OnNestedTag(ecs_iter_t *it) {
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_add_id(it->stage, it->entities[i], rest_nested_tag_2);
+    }
+}
+
+void Rest_request_commands_nested(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    rest_nested_tag = Foo;
+    rest_nested_tag_2 = Bar;
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnAdd },
+        .callback = Rest_OnNestedTag
+    });
+
+    ecs_system(world, {
+        .entity = ecs_new_w_pair(world, EcsDependsOn, EcsOnUpdate),
+        .query.terms = {{ ecs_id(Position) }},
+        .callback = Rest_AddNestedTag
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/commands/capture", NULL, &reply));
+    test_int(reply.code, 200);
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str, "{\"frame\":0}");
+    ecs_os_free(reply_str);
+
+    ecs_progress(world, 0);
+
+    test_assert(ecs_has(world, e, Foo));
+    test_assert(ecs_has(world, e, Bar));
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/commands/frame/0", NULL, &reply));
+    test_int(reply.code, 200);
+    reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+    test_assert(strstr(reply_str, "\"id\":\"Foo\"") != NULL);
+    test_assert(strstr(reply_str, "\"id\":\"Bar\"") != NULL);
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}

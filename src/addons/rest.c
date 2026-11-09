@@ -2299,7 +2299,11 @@ static void flecs_rest_server_garbage_collect_all(
         ecs_rest_cmd_sync_capture_t *syncs = ecs_vec_first(&capture->syncs);
         for (i = 0; i < count; i ++) {
             ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
-            ecs_os_free(sync->cmds);
+            if (sync->cmds) {
+                ecs_os_free(sync->cmds);
+            } else {
+                ecs_strbuf_reset(&sync->buf);
+            }
         }
 
         ecs_vec_fini_t(NULL, &capture->syncs, ecs_rest_cmd_sync_capture_t);
@@ -2325,7 +2329,11 @@ static void flecs_rest_server_garbage_collect(
             ecs_rest_cmd_sync_capture_t *syncs = ecs_vec_first(&capture->syncs);
             for (i = 0; i < count; i ++) {
                 ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
-                ecs_os_free(sync->cmds);
+                if (sync->cmds) {
+                    ecs_os_free(sync->cmds);
+                } else {
+                    ecs_strbuf_reset(&sync->buf);
+                }
             }
 
             ecs_vec_fini_t(NULL, &capture->syncs, ecs_rest_cmd_sync_capture_t);
@@ -2422,6 +2430,7 @@ static void flecs_rest_on_commands(
 
         int32_t i, count = ecs_vec_count(commands);
         ecs_cmd_t *cmds = ecs_vec_first(commands);
+        sync->cmds = NULL;
         sync->buf = ECS_STRBUF_INIT;
         ecs_strbuf_list_push(&sync->buf, "{", ",");
         ecs_strbuf_list_appendlit(&sync->buf, "\"commands\":");
@@ -2438,8 +2447,18 @@ static void flecs_rest_on_commands(
         ecs_time_measure(&sync->start_time);
     } else {
         /* Finished processing queue, measure duration */
-        ecs_rest_cmd_sync_capture_t *sync = ecs_vec_last_t(
+        ecs_rest_cmd_sync_capture_t *syncs = ecs_vec_first_t(
             &capture->syncs, ecs_rest_cmd_sync_capture_t);
+        int32_t i = ecs_vec_count(&capture->syncs) - 1;
+        while (i >= 0 && syncs[i].cmds) {
+            i --;
+        }
+
+        if (i < 0) {
+            return;
+        }
+
+        ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
         double duration = ecs_time_measure(&sync->start_time);
 
         ecs_strbuf_list_appendlit(&sync->buf, "\"duration\":");
@@ -2518,7 +2537,9 @@ static bool flecs_rest_get_commands_request(
 
     for (i = 0; i < count; i ++) {
         ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
-        ecs_strbuf_list_appendstr(&reply->body, sync->cmds);
+        if (sync->cmds) {
+            ecs_strbuf_list_appendstr(&reply->body, sync->cmds);
+        }
     }
 
     ecs_strbuf_list_pop(&reply->body, "]");
