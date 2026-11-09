@@ -4724,3 +4724,49 @@ void Rest_set_null_name(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_set_opaque_wo_serializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT", "/entity/X", NULL, &reply));
+    ecs_strbuf_reset(&reply.body);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/component/X?component=flecs.core.Component"
+        "&value={\"size\":4,\"alignment\":4}", NULL, &reply));
+    ecs_strbuf_reset(&reply.body);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/X?component=flecs.meta.opaque"
+        "&value={\"as_type\":\"flecs.meta.f32\"}", NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    ecs_http_server_request(srv, "PUT", "/component/Foo?component=X",
+        NULL, &reply);
+    ecs_strbuf_reset(&reply.body);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    ecs_http_server_request(srv, "GET", "/component/Foo?component=X",
+        NULL, &reply);
+    ecs_strbuf_reset(&reply.body);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/entity/Foo?values=true&type_info=true", NULL, &reply));
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(foo != 0);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}

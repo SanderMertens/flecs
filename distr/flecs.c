@@ -32547,6 +32547,24 @@ static char* flecs_guard_meta(
         return flecs_guard_element_size(world, v->type, v->count, e);
     }
 
+    if (id == ecs_id(EcsOpaque)) {
+        const EcsOpaque *v = value;
+        if (!v->serialize || !v->as_type ||
+            !ecs_is_alive(world, v->as_type) ||
+            !ecs_has(world, v->as_type, EcsTypeSerializer))
+        {
+            return flecs_asprintf("invalid opaque type definition for '%s'",
+                flecs_guard_path(world, e));
+        }
+
+        if (flecs_guard_type_depends(world, v->as_type, e)) {
+            return flecs_asprintf("cyclic type definition for '%s'",
+                flecs_guard_path(world, e));
+        }
+
+        return NULL;
+    }
+
     if (id == ecs_id(EcsVector)) {
         const EcsVector *v = value;
         if (flecs_guard_type_depends(world, v->type, e)) {
