@@ -214,7 +214,8 @@ void flecs_query_src_set_range(
     ecs_var_t *var = &ctx->vars[src];
     
     var->entity = 0;
-    ecs_assert(var->range.table == range->table, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ctx->query_vars[src].kind != EcsVarTable ||
+        var->range.table == range->table, ECS_INTERNAL_ERROR, NULL);
     var->range = *range;
 
     if (ctx->query_vars[src].kind != EcsVarTable) {    

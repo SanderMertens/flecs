@@ -2382,7 +2382,8 @@
                 "toggle_0_src_only_term",
                 "toggle_0_src",
                 "remove_toggle_from_table_w_other_toggle_and_entity",
-                "this_toggle_after_or_chain"
+                "this_toggle_after_or_chain",
+                "toggle_w_entity_var_src"
             ]
         }, {
             "id": "Sparse",

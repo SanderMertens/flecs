@@ -6235,3 +6235,68 @@ void Toggle_this_toggle_after_or_chain(void) {
 
     ecs_fini(world);
 }
+
+void Toggle_toggle_w_entity_var_src(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tog);
+    ecs_add_id(world, Tog, EcsCanToggle);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, Tog);
+    ecs_entity_t e2 = ecs_new_w_id(world, Tog);
+    ecs_entity_t e3 = ecs_new_w_id(world, Tog);
+    ecs_enable_id(world, e2, Tog, false);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Tog($x)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    int32_t x_var = ecs_query_find_var(q, "x");
+    test_assert(x_var != -1);
+
+    bool found_e1 = false, found_e3 = false;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        ecs_entity_t x = ecs_iter_get_var(&it, x_var);
+        test_assert(x != e2);
+        if (x == e1) found_e1 = true;
+        if (x == e3) found_e3 = true;
+    }
+
+    test_assert(found_e1);
+    test_assert(found_e3);
+
+    ecs_query_fini(q);
+
+    q = ecs_query(world, {
+        .expr = "?Tog($x), Tog($x)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) { }
+
+    ecs_query_fini(q);
+
+    ECS_TAG(world, Foo);
+    ecs_add_id(world, e1, Foo);
+    ecs_add_id(world, e2, Foo);
+
+    q = ecs_query(world, {
+        .expr = "Foo($x), !Tog($x)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(ecs_iter_get_var(&it, ecs_query_find_var(q, "x")), e2);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

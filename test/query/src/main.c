@@ -2307,6 +2307,7 @@ void Toggle_toggle_0_src_only_term(void);
 void Toggle_toggle_0_src(void);
 void Toggle_remove_toggle_from_table_w_other_toggle_and_entity(void);
 void Toggle_this_toggle_after_or_chain(void);
+void Toggle_toggle_w_entity_var_src(void);
 
 // Testsuite 'Sparse'
 void Sparse_setup(void);
@@ -12074,6 +12075,10 @@ bake_test_case Toggle_testcases[] = {
     {
         "this_toggle_after_or_chain",
         Toggle_this_toggle_after_or_chain
+    },
+    {
+        "toggle_w_entity_var_src",
+        Toggle_toggle_w_entity_var_src
     }
 };
 
@@ -15087,7 +15092,7 @@ static bake_test_suite suites[] = {
         "Toggle",
         Toggle_setup,
         NULL,
-        165,
+        166,
         Toggle_testcases,
         1,
         Toggle_params
