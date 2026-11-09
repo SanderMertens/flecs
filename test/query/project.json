@@ -2579,7 +2579,8 @@
                 "1_this_sparse_first_wildcard_w_empty_rel",
                 "this_wildcard_wildcard_pair_w_empty_pair",
                 "ecs_field_on_dont_fragment_up",
-                "ecs_field_at_on_dont_fragment_up"
+                "ecs_field_at_on_dont_fragment_up",
+                "iter_fini_wo_next"
             ]
         }, {
             "id": "NonFragmentingChildOf",

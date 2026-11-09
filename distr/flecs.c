@@ -86493,6 +86493,9 @@ void flecs_query_iter_constrain(
             } else if (flags & EcsQueryTrivialSparse) {
                 it->flags |= EcsIterTrivialSparse|
                     EcsIterTrivialChangeDetection;
+                if (ctx.op_ctx) {
+                    ctx.op_ctx[0].is.sparse_trivial.entities = NULL;
+                }
                 flecs_query_trivial_set_ids(&ctx);
             } else if ((flags & (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf))
                 == (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf))

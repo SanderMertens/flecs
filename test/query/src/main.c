@@ -2494,6 +2494,7 @@ void DontFragment_1_this_sparse_first_wildcard_w_empty_rel(void);
 void DontFragment_this_wildcard_wildcard_pair_w_empty_pair(void);
 void DontFragment_ecs_field_on_dont_fragment_up(void);
 void DontFragment_ecs_field_at_on_dont_fragment_up(void);
+void DontFragment_iter_fini_wo_next(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_setup(void);
@@ -12799,6 +12800,10 @@ bake_test_case DontFragment_testcases[] = {
     {
         "ecs_field_at_on_dont_fragment_up",
         DontFragment_ecs_field_at_on_dont_fragment_up
+    },
+    {
+        "iter_fini_wo_next",
+        DontFragment_iter_fini_wo_next
     }
 };
 
@@ -15080,7 +15085,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        150,
+        151,
         DontFragment_testcases,
         1,
         DontFragment_params
