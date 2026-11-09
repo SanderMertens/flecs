@@ -932,11 +932,18 @@ static char* flecs_guard_add_intern(
         }
     }
 
-    if (id == ecs_id(EcsParent) && value) {
-        const EcsParent *p = value;
-        char *err = flecs_guard_parent(world, e, p->value);
-        if (err) {
-            return err;
+    if (id == ecs_id(EcsParent)) {
+        if (!value) {
+            if (!ecs_owns_id(world, e, ecs_id(EcsParent))) {
+                return flecs_asprintf("cannot add '%s' to '%s' without value",
+                    flecs_guard_id_str(world, id), flecs_guard_path(world, e));
+            }
+        } else {
+            const EcsParent *p = value;
+            char *err = flecs_guard_parent(world, e, p->value);
+            if (err) {
+                return err;
+            }
         }
     }
 

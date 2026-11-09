@@ -710,7 +710,8 @@
                 "put_entity_hierarchy_too_deep",
                 "reparent_hierarchy_too_deep",
                 "set_null_name",
-                "set_opaque_wo_serializer"
+                "set_opaque_wo_serializer",
+                "add_parent_wo_value"
             ]
         }, {
             "id": "Metrics",

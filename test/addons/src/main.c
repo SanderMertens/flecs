@@ -661,6 +661,7 @@ void Rest_put_entity_hierarchy_too_deep(void);
 void Rest_reparent_hierarchy_too_deep(void);
 void Rest_set_null_name(void);
 void Rest_set_opaque_wo_serializer(void);
+void Rest_add_parent_wo_value(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -3219,6 +3220,10 @@ bake_test_case Rest_testcases[] = {
     {
         "set_opaque_wo_serializer",
         Rest_set_opaque_wo_serializer
+    },
+    {
+        "add_parent_wo_value",
+        Rest_add_parent_wo_value
     }
 };
 
@@ -3679,7 +3684,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        163,
+        164,
         Rest_testcases
     },
     {
