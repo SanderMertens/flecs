@@ -4411,7 +4411,8 @@
                 "get_pair_w_dead_relationship",
                 "script_set_invalid_id",
                 "script_remove_invalid_id",
-                "cd_wildcard"
+                "cd_wildcard",
+                "emit_wildcard_event"
             ]
         }, {
             "id": "CommandResource",

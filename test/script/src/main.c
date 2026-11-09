@@ -4263,6 +4263,7 @@ void Command_get_pair_w_dead_relationship(void);
 void Command_script_set_invalid_id(void);
 void Command_script_remove_invalid_id(void);
 void Command_cd_wildcard(void);
+void Command_emit_wildcard_event(void);
 
 // Testsuite 'CommandResource'
 void CommandResource_setup(void);
@@ -21045,6 +21046,10 @@ bake_test_case Command_testcases[] = {
     {
         "cd_wildcard",
         Command_cd_wildcard
+    },
+    {
+        "emit_wildcard_event",
+        Command_emit_wildcard_event
     }
 };
 
@@ -21614,7 +21619,7 @@ static bake_test_suite suites[] = {
         "Command",
         Command_setup,
         NULL,
-        166,
+        167,
         Command_testcases
     },
     {

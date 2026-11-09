@@ -118314,6 +118314,12 @@ static void flecs_command_emit(
         return;
     }
 
+    if (ecs_id_is_wildcard(event)) {
+        flecs_command_err(ctx, "cannot emit wildcard event '%s'",
+            flecs_errstr(ecs_get_path(world, event)));
+        return;
+    }
+
     ecs_entity_t type = flecs_command_value_type(world, event);
     if (!type) {
         if (expr) {
