@@ -50956,6 +50956,10 @@ struct ecs_script_visit_t {
 #ifndef FLECS_SCRIPT_RUNTIME_H
 #define FLECS_SCRIPT_RUNTIME_H
 
+#ifndef FLECS_SCRIPT_CALL_DEPTH_MAX
+#define FLECS_SCRIPT_CALL_DEPTH_MAX (64)
+#endif
+
 typedef struct ecs_script_with_value_t {
     ecs_value_t value;
     const ecs_type_info_t *ti;
@@ -51001,6 +51005,7 @@ struct ecs_script_runtime_t {
      * (indirectly) instantiate themselves. */
     int32_t template_depth;
     int32_t eval_depth;
+    int32_t call_depth;
 
     bool resolving;
     bool error;
@@ -98621,14 +98626,25 @@ void flecs_script_user_function_callback(
     ecs_script_user_function_t *uf = fcomp->binding_ctx;
     ecs_script_function_node_t *node = uf->node;
     ecs_script_impl_t *impl = flecs_script_impl(uf->script);
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+
+    if (runtime->call_depth >= FLECS_SCRIPT_CALL_DEPTH_MAX) {
+        ecs_err("too many nested calls to function '%s', "
+            "is the function calling itself?",
+                ecs_get_name(real_world, ctx->function));
+        runtime->error = true;
+        return;
+    }
+
+    runtime->call_depth ++;
 
     if (impl->ir_enabled) {
         flecs_script_ir_call_function(ctx, uf, argc, argv, result);
+        runtime->call_depth --;
         return;
     }
 
     ecs_script_eval_visitor_t v;
-    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
     ecs_script_eval_desc_t desc = {
         .runtime = flecs_script_runtime_acquire_call(runtime)
     };
@@ -98655,9 +98671,10 @@ done:
     v.vars = ecs_script_vars_pop(v.vars);
     flecs_script_eval_visit_fini(&v, &desc);
     flecs_script_runtime_release_call(runtime, desc.runtime);
+    runtime->call_depth --;
 
     if (failed) {
-        flecs_script_runtime_get(world)->error = true;
+        runtime->error = true;
     }
 }
 

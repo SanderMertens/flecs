@@ -6,6 +6,10 @@
 #ifndef FLECS_SCRIPT_RUNTIME_H
 #define FLECS_SCRIPT_RUNTIME_H
 
+#ifndef FLECS_SCRIPT_CALL_DEPTH_MAX
+#define FLECS_SCRIPT_CALL_DEPTH_MAX (64)
+#endif
+
 typedef struct ecs_script_with_value_t {
     ecs_value_t value;
     const ecs_type_info_t *ti;
@@ -51,6 +55,7 @@ struct ecs_script_runtime_t {
      * (indirectly) instantiate themselves. */
     int32_t template_depth;
     int32_t eval_depth;
+    int32_t call_depth;
 
     bool resolving;
     bool error;

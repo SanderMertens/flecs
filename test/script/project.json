@@ -1993,7 +1993,8 @@
                 "set_copy_illegal_component",
                 "set_copy_illegal_pair",
                 "set_tree_spawner",
-                "template_set_copy_illegal_component"
+                "template_set_copy_illegal_component",
+                "function_infinite_recursion"
             ]
         }, {
             "id": "Format",
