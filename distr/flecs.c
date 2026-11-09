@@ -39321,7 +39321,9 @@ static int flecs_query_finalize_terms(
         }
 
         nodata_term = term->src.id == EcsIsEntity || term->inout == EcsInOutNone ||
-            !ti || (term->flags_ & EcsTermIsMember) || scope_nesting;
+            !ti || (term->flags_ & EcsTermIsMember) || scope_nesting ||
+            term->oper == EcsAndFrom || term->oper == EcsOrFrom ||
+            term->oper == EcsNotFrom;
 
         if (!nodata_term && term->inout != EcsIn && term->inout != EcsInOutNone) {
             /* Non-this terms default to EcsIn */

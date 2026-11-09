@@ -701,7 +701,8 @@
                 "delete_base_of_component_in_use",
                 "add_flag_pair",
                 "set_empty_struct",
-                "query_info_w_value_pair"
+                "query_info_w_value_pair",
+                "query_and_from_empty_type"
             ]
         }, {
             "id": "Metrics",
