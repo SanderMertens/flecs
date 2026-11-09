@@ -4136,3 +4136,71 @@ void Rest_put_script_invalid_entity(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_command_delete_session_builtin_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/shell/session", NULL, &reply));
+    ecs_strbuf_reset(&reply.body);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/component/flecs/core?component=flecs.script.shell.CommandSession",
+        NULL, &reply));
+    ecs_strbuf_reset(&reply.body);
+
+    char path[128];
+    ecs_os_snprintf(path, 128, "/shell/session/%u", (uint32_t)EcsFlecsCore);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE", path, NULL, &reply));
+    test_assert(reply.code >= 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_is_alive(world, EcsFlecsCore));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_command_delete_session_w_panic(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, bar, EcsOnDelete, EcsPanic);
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_id(world, foo, bar);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/shell/session", NULL, &reply));
+    ecs_strbuf_reset(&reply.body);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/component/Bar?component=flecs.script.shell.CommandSession",
+        NULL, &reply));
+    ecs_strbuf_reset(&reply.body);
+
+    char path[128];
+    ecs_os_snprintf(path, 128, "/shell/session/%u", (uint32_t)bar);
+
+    reply = (ecs_http_reply_t)ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "DELETE", path, NULL, &reply));
+    test_int(reply.code, 400);
+    ecs_strbuf_reset(&reply.body);
+
+    test_assert(ecs_is_alive(world, bar));
+    test_assert(ecs_has_id(world, foo, bar));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}

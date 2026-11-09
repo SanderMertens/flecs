@@ -1013,6 +1013,10 @@ static bool flecs_rest_command_delete_session(
     ecs_entity_t session = flecs_rest_command_session(
         world, reply, path, &remainder);
     if (session) {
+        if (flecs_rest_guard(reply, flecs_guard_delete(world, session))) {
+            return true;
+        }
+
         ecs_delete(world, session);
         ecs_strbuf_appendlit(&reply->body, "{}");
     }
