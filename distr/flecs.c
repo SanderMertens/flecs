@@ -4717,8 +4717,10 @@ static ECS_COPY(EcsIdentifier, dst, src, {
     ecs_os_strset(&dst->value, src->value);
     dst->hash = src->hash;
     dst->length = src->length;
-    dst->index_hash = src->index_hash;
-    dst->index = src->index;
+    if (src->index) {
+        dst->index_hash = src->index_hash;
+        dst->index = src->index;
+    }
 })
 
 static ECS_MOVE(EcsIdentifier, dst, src, {
@@ -4726,8 +4728,10 @@ static ECS_MOVE(EcsIdentifier, dst, src, {
     dst->value = src->value;
     dst->hash = src->hash;
     dst->length = src->length;
-    dst->index_hash = src->index_hash;
-    dst->index = src->index;
+    if (src->index) {
+        dst->index_hash = src->index_hash;
+        dst->index = src->index;
+    }
 
     src->value = NULL;
     src->hash = 0;

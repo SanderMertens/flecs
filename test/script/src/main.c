@@ -828,6 +828,7 @@ void Eval_named_child_in_for_loop_warns(void);
 void Eval_interpolated_name_in_for_loop_no_warn(void);
 void Eval_child_of_interpolated_name_in_for_loop_no_warn(void);
 void Eval_named_entity_w_tag_in_for_loop_no_warn(void);
+void Eval_set_name_component(void);
 
 // Testsuite 'Collection'
 void Collection_setup(void);
@@ -7582,6 +7583,10 @@ bake_test_case Eval_testcases[] = {
     {
         "named_entity_w_tag_in_for_loop_no_warn",
         Eval_named_entity_w_tag_in_for_loop_no_warn
+    },
+    {
+        "set_name_component",
+        Eval_set_name_component
     }
 };
 
@@ -21371,7 +21376,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        818,
+        819,
         Eval_testcases,
         1,
         Eval_params

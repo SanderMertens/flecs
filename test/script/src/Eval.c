@@ -26335,3 +26335,24 @@ void Eval_named_entity_w_tag_in_for_loop_no_warn(void) {
     ecs_os_set_api_defaults();
     ecs_log_set_level(-1);
 }
+
+void Eval_set_name_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e1 { (flecs.core.Identifier, flecs.core.Name): {value: \"zz\"} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "zz");
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), "zz");
+    test_assert(ecs_lookup(world, "e1") == 0);
+
+    ecs_entity_t f = ecs_entity(world, { .name = "e1" });
+    test_assert(f != 0);
+    test_assert(f != e);
+    test_assert(ecs_lookup(world, "e1") == f);
+
+    ecs_fini(world);
+}
