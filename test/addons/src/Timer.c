@@ -754,3 +754,47 @@ void Timer_randomize_timers(void) {
 
     ecs_fini(world);
 }
+
+void Timer_add_rate_filter_wo_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t prev = ecs_new(world);
+    ecs_set(world, prev, EcsRateFilter, {
+        .src = ecs_pair(EcsChildOf, prev), .rate = 3, .tick_count = 7 });
+    ecs_delete(world, prev);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, EcsRateFilter);
+
+    const EcsRateFilter *f = ecs_get(world, e, EcsRateFilter);
+    test_assert(f != NULL);
+    test_uint(f->src, 0);
+    test_int(f->rate, 0);
+    test_int(f->tick_count, 0);
+
+    ecs_progress(world, 0.1);
+    ecs_progress(world, 0.1);
+
+    ecs_fini(world);
+}
+
+void Timer_rate_filter_w_invalid_src(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t src = ecs_new(world);
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, EcsRateFilter, { .src = src, .rate = 2 });
+    ecs_delete(world, src);
+
+    ecs_progress(world, 0.1);
+    ecs_progress(world, 0.1);
+
+    ecs_set(world, e, EcsRateFilter, { .src = ecs_pair(EcsChildOf, e), .rate = 2 });
+
+    ecs_progress(world, 0.1);
+    ecs_progress(world, 0.1);
+
+    test_assert(ecs_has(world, e, EcsTickSource));
+
+    ecs_fini(world);
+}

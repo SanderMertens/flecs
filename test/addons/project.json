@@ -290,7 +290,9 @@
                 "naked_tick_entity",
                 "stop_timer_w_rate",
                 "stop_timer_w_rate_same_src",
-                "randomize_timers"
+                "randomize_timers",
+                "add_rate_filter_wo_value",
+                "rate_filter_w_invalid_src"
             ]
         }, {
             "id": "SystemCascade",

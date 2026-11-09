@@ -58,7 +58,7 @@ static void ProgressRateFilters(ecs_iter_t *it) {
 
         filter[i].time_elapsed += it->delta_time;
 
-        if (src) {
+        if (src && !(src & ECS_ID_FLAGS_MASK) && ecs_is_alive(it->world, src)) {
             const EcsTickSource *tick_src = ecs_get(
                 it->stage, src, EcsTickSource);
             if (tick_src) {
@@ -72,7 +72,8 @@ static void ProgressRateFilters(ecs_iter_t *it) {
 
         if (inc) {
             filter[i].tick_count ++;
-            bool triggered = !(filter[i].tick_count % filter[i].rate);
+            bool triggered = filter[i].rate <= 0 ||
+                !(filter[i].tick_count % filter[i].rate);
             tick_dst[i].tick = triggered;
             tick_dst[i].time_elapsed = filter[i].time_elapsed;
 
@@ -295,6 +296,10 @@ void FlecsTimerImport(
     flecs_bootstrap_component(world, EcsRateFilter);
 
     ecs_set_hooks(world, EcsTimer, {
+        .ctor = flecs_default_ctor
+    });
+
+    ecs_set_hooks(world, EcsRateFilter, {
         .ctor = flecs_default_ctor
     });
 

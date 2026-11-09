@@ -279,6 +279,8 @@ void Timer_naked_tick_entity(void);
 void Timer_stop_timer_w_rate(void);
 void Timer_stop_timer_w_rate_same_src(void);
 void Timer_randomize_timers(void);
+void Timer_add_rate_filter_wo_value(void);
+void Timer_rate_filter_w_invalid_src(void);
 
 // Testsuite 'SystemCascade'
 void SystemCascade_cascade_depth_1(void);
@@ -1781,6 +1783,14 @@ bake_test_case Timer_testcases[] = {
     {
         "randomize_timers",
         Timer_randomize_timers
+    },
+    {
+        "add_rate_filter_wo_value",
+        Timer_add_rate_filter_wo_value
+    },
+    {
+        "rate_filter_w_invalid_src",
+        Timer_rate_filter_w_invalid_src
     }
 };
 
@@ -3473,7 +3483,7 @@ static bake_test_suite suites[] = {
         "Timer",
         NULL,
         NULL,
-        19,
+        21,
         Timer_testcases
     },
     {
