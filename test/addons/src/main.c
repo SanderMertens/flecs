@@ -626,6 +626,7 @@ void Rest_put_component_not_copy_assignable(void);
 void Rest_put_component_not_constructible(void);
 void Rest_add_component_not_constructible(void);
 void Rest_get_stats_user_period(void);
+void Rest_get_pipeline_stats_after_add_system(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -3044,6 +3045,10 @@ bake_test_case Rest_testcases[] = {
     {
         "get_stats_user_period",
         Rest_get_stats_user_period
+    },
+    {
+        "get_pipeline_stats_after_add_system",
+        Rest_get_pipeline_stats_after_add_system
     }
 };
 
@@ -3504,7 +3509,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        131,
+        132,
         Rest_testcases
     },
     {

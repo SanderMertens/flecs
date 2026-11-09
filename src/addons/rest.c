@@ -1592,6 +1592,9 @@ static void flecs_pipeline_stats_to_json(
     }
 
     const EcsPipeline *p = ecs_get(world, e, EcsPipeline);
+    if (!p || !p->state) {
+        goto noresults;
+    }
 
     ecs_strbuf_list_push(&reply->body, "[", ",");
 
@@ -1601,6 +1604,7 @@ static void flecs_pipeline_stats_to_json(
         &pstats->sync_points, ecs_sync_stats_t);
 
     int32_t s, o, op_count = ecs_vec_count(&p->state->ops);
+    int32_t sync_count = ecs_vec_count(&pstats->sync_points);
 
     for (o = 0; o < op_count; o ++) {
         ecs_pipeline_op_t *op = &ops[o];
@@ -1614,12 +1618,18 @@ static void flecs_pipeline_stats_to_json(
 
             ecs_system_stats_t *sys_stats = ecs_map_get_deref(
                 &system_stats->stats, ecs_system_stats_t, system);
+            if (!sys_stats) {
+                continue;
+            }
+
             ecs_strbuf_list_next(&reply->body);
             flecs_system_stats_to_json(world, &reply->body, system, sys_stats);
         }
 
-        ecs_strbuf_list_next(&reply->body);
-        flecs_sync_stats_to_json(reply, pstats, &syncs[o]);
+        if (o < sync_count) {
+            ecs_strbuf_list_next(&reply->body);
+            flecs_sync_stats_to_json(reply, pstats, &syncs[o]);
+        }
     }
 
     ecs_strbuf_list_pop(&reply->body, "]");

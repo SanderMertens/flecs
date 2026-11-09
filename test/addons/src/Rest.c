@@ -3741,3 +3741,50 @@ void Rest_get_stats_user_period(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+static void Rest_SysNoop(ecs_iter_t *it) {
+    (void)it;
+}
+
+void Rest_get_pipeline_stats_after_add_system(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsStats);
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_progress(world, 1.0);
+
+    ecs_entity_t s1 = ecs_system(world, {
+        .entity = ecs_new_w_pair(world, EcsDependsOn, EcsOnUpdate),
+        .query.terms = {{ ecs_id(Position) }},
+        .callback = Rest_SysNoop
+    });
+    test_assert(s1 != 0);
+
+    ecs_entity_t s2 = ecs_system(world, {
+        .entity = ecs_new_w_pair(world, EcsDependsOn, EcsOnUpdate),
+        .query.terms = {{ ecs_id(Position) }},
+        .callback = Rest_SysNoop,
+        .immediate = true
+    });
+    test_assert(s2 != 0);
+
+    ecs_progress(world, 0.1);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/stats/pipeline?name=flecs.pipeline.BuiltinPipeline&period=1m",
+        NULL, &reply));
+    test_int(reply.code, 200);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
