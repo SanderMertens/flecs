@@ -1338,3 +1338,79 @@ void StructTypes_struct_wo_members_add_member(void) {
 
     ecs_fini(world);
 }
+
+void StructTypes_set_member_explicit_offset_keeps_size(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "S" }),
+        .members = {
+            { "a", ecs_id(ecs_f32_t) },
+            { "b", ecs_id(ecs_f32_t) },
+            { "c", ecs_id(ecs_string_t) }
+        },
+        .create_member_entities = true
+    });
+    test_assert(s != 0);
+
+    const EcsComponent *c = ecs_get(world, s, EcsComponent);
+    test_assert(c != NULL);
+    ecs_size_t size = c->size;
+    test_assert(size >= 8 + ECS_SIZEOF(char*));
+
+    ecs_entity_t a = ecs_lookup(world, "S.a");
+    test_assert(a != 0);
+    ecs_set(world, a, EcsMember, {
+        .type = ecs_id(ecs_f32_t), .offset = 0, .use_offset = true });
+
+    c = ecs_get(world, s, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, size);
+
+    ecs_fini(world);
+}
+
+void StructTypes_set_member_invalid_explicit_offset(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "S" }),
+        .members = {
+            { "a", ecs_id(ecs_f32_t) },
+            { "b", ecs_id(ecs_f32_t) },
+            { "c", ecs_id(ecs_string_t) }
+        },
+        .create_member_entities = true
+    });
+    test_assert(s != 0);
+
+    const EcsComponent *comp = ecs_get(world, s, EcsComponent);
+    ecs_size_t size = comp->size;
+
+    ecs_entity_t c = ecs_lookup(world, "S.c");
+    test_assert(c != 0);
+
+    ecs_log_set_level(-4);
+
+    ecs_set(world, c, EcsMember, {
+        .type = ecs_id(ecs_string_t), .offset = -64, .use_offset = true });
+    test_int(ecs_get(world, s, EcsComponent)->size, size);
+    test_int(ecs_struct_get_member(world, s, "c")->offset, 8);
+
+    ecs_set(world, c, EcsMember, {
+        .type = ecs_id(ecs_string_t), .offset = 2, .use_offset = true });
+    test_int(ecs_get(world, s, EcsComponent)->size, size);
+    test_int(ecs_struct_get_member(world, s, "c")->offset, 8);
+
+    ecs_set(world, c, EcsMember, {
+        .type = ecs_id(ecs_string_t), .offset = 0, .use_offset = true });
+    test_int(ecs_get(world, s, EcsComponent)->size, size);
+    test_int(ecs_struct_get_member(world, s, "c")->offset, 8);
+
+    ecs_set(world, c, EcsMember, {
+        .type = ecs_id(ecs_string_t), .offset = 2147483640, .use_offset = true });
+    test_int(ecs_get(world, s, EcsComponent)->size, size);
+    test_int(ecs_struct_get_member(world, s, "c")->offset, 8);
+
+    ecs_fini(world);
+}

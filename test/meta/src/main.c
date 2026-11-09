@@ -213,6 +213,8 @@ void StructTypes_redefine_same_members_in_use(void);
 void StructTypes_redefine_member_after_nested_type_changed(void);
 void StructTypes_struct_wo_members(void);
 void StructTypes_struct_wo_members_add_member(void);
+void StructTypes_set_member_explicit_offset_keeps_size(void);
+void StructTypes_set_member_invalid_explicit_offset(void);
 
 // Testsuite 'NestedStructTypes'
 void NestedStructTypes_1_bool(void);
@@ -2371,6 +2373,14 @@ bake_test_case StructTypes_testcases[] = {
     {
         "struct_wo_members_add_member",
         StructTypes_struct_wo_members_add_member
+    },
+    {
+        "set_member_explicit_offset_keeps_size",
+        StructTypes_set_member_explicit_offset_keeps_size
+    },
+    {
+        "set_member_invalid_explicit_offset",
+        StructTypes_set_member_invalid_explicit_offset
     }
 };
 
@@ -7746,7 +7756,7 @@ static bake_test_suite suites[] = {
         "StructTypes",
         NULL,
         NULL,
-        42,
+        44,
         StructTypes_testcases
     },
     {

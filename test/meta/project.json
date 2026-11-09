@@ -225,7 +225,9 @@
                 "redefine_same_members_in_use",
                 "redefine_member_after_nested_type_changed",
                 "struct_wo_members",
-                "struct_wo_members_add_member"
+                "struct_wo_members_add_member",
+                "set_member_explicit_offset_keeps_size",
+                "set_member_invalid_explicit_offset"
             ]
         }, {
             "id": "NestedStructTypes",
