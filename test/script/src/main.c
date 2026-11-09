@@ -2680,6 +2680,7 @@ void Serialize_struct_w_value(void);
 void Serialize_value_roundtrip(void);
 void Serialize_string_w_interpolation_not_escaped(void);
 void Serialize_string_w_curly_brace_not_escaped(void);
+void Serialize_empty_value(void);
 
 // Testsuite 'Deserialize'
 void Deserialize_setup(void);
@@ -14871,6 +14872,10 @@ bake_test_case Serialize_testcases[] = {
     {
         "string_w_curly_brace_not_escaped",
         Serialize_string_w_curly_brace_not_escaped
+    },
+    {
+        "empty_value",
+        Serialize_empty_value
     }
 };
 
@@ -21490,7 +21495,7 @@ static bake_test_suite suites[] = {
         "Serialize",
         NULL,
         NULL,
-        93,
+        94,
         Serialize_testcases
     },
     {

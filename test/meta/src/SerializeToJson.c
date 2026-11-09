@@ -2785,3 +2785,38 @@ void SerializeToJson_ecs_struct_3_members(void) {
 
     ecs_fini(world);
 }
+
+void SerializeToJson_empty_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    char *json = ecs_ptr_to_json(world, ecs_id(ecs_value_t), &v);
+    test_assert(json != NULL);
+    test_str(json, "null");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_w_empty_value(void) {
+    typedef struct {
+        ecs_value_t v;
+    } S;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(S) = ecs_struct(world, {
+        .members = {
+            { "v", ecs_id(ecs_value_t) }
+        }
+    });
+
+    S value = {0};
+
+    char *json = ecs_ptr_to_json(world, ecs_id(S), &value);
+    test_assert(json != NULL);
+    test_str(json, "{\"v\":null}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}

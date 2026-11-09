@@ -986,6 +986,8 @@ void SerializeToJson_value_roundtrip(void);
 void SerializeToJson_ecs_struct_1_member(void);
 void SerializeToJson_ecs_struct_2_members(void);
 void SerializeToJson_ecs_struct_3_members(void);
+void SerializeToJson_empty_value(void);
+void SerializeToJson_struct_w_empty_value(void);
 
 // Testsuite 'SerializeEntityToJson'
 void SerializeEntityToJson_serialize_more_than_256_components(void);
@@ -5410,6 +5412,14 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "ecs_struct_3_members",
         SerializeToJson_ecs_struct_3_members
+    },
+    {
+        "empty_value",
+        SerializeToJson_empty_value
+    },
+    {
+        "struct_w_empty_value",
+        SerializeToJson_struct_w_empty_value
     }
 };
 
@@ -7673,7 +7683,6 @@ bake_test_case SetRttHooks_testcases[] = {
     }
 };
 
-
 static bake_test_suite suites[] = {
     {
         "PrimitiveTypes",
@@ -7770,7 +7779,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        94,
+        96,
         SerializeToJson_testcases
     },
     {

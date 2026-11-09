@@ -2751,7 +2751,8 @@
                 "struct_w_value",
                 "value_roundtrip",
                 "string_w_interpolation_not_escaped",
-                "string_w_curly_brace_not_escaped"
+                "string_w_curly_brace_not_escaped",
+                "empty_value"
             ]
         }, {
             "id": "Deserialize",
