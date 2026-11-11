@@ -124890,27 +124890,28 @@ const char* flecs_script_name_leaf(
     return last;
 }
 
-static void flecs_script_resolve_run(
+static int flecs_script_resolve_run(
     ecs_world_t *world,
     ecs_entity_t script)
 {
     const EcsScript *s = ecs_get(world, script, EcsScript);
     if (!s || !s->code) {
-        return;
+        return -1;
     }
 
     if (s->script && flecs_script_impl(s->script)->evaluating) {
-        return;
+        return -1;
     }
 
     char *code = ecs_os_strdup(s->code);
     ecs_script_runtime_t *pool = flecs_script_runtime_get(world);
     ecs_script_runtime_t *runtime = flecs_script_runtime_acquire_call(pool);
     ecs_entity_t prev_scope = ecs_set_scope(world, 0);
-    flecs_script_update(world, script, 0, code, runtime);
+    int result = flecs_script_update(world, script, 0, code, runtime);
     ecs_set_scope(world, prev_scope);
     flecs_script_runtime_release_call(pool, runtime);
     ecs_os_free(code);
+    return result;
 }
 
 static bool flecs_script_defer_resolve(
@@ -125022,18 +125023,35 @@ void flecs_script_run_pending_resolves(
     runtime->resolving = true;
 
     ecs_vec_t *pending = &runtime->pending_resolves;
+    ecs_vec_t round;
+    ecs_vec_init_t(runtime->allocator, &round, ecs_entity_t, 0);
+    bool progress = true;
 
-    while (ecs_vec_count(pending)) {
-        ecs_entity_t script = ecs_vec_first_t(pending, ecs_entity_t)[0];
-        ecs_vec_remove_t(pending, ecs_entity_t, 0);
+    while (progress && ecs_vec_count(pending)) {
+        progress = false;
 
-        if (!ecs_is_alive(world, script)) {
-            continue;
+        ecs_vec_t tmp = round;
+        round = *pending;
+        *pending = tmp;
+
+        ecs_entity_t *elems = ecs_vec_first(&round);
+        int32_t i, count = ecs_vec_count(&round);
+        for (i = 0; i < count; i ++) {
+            ecs_entity_t script = elems[i];
+            if (!ecs_is_alive(world, script)) {
+                continue;
+            }
+
+            if (!flecs_script_resolve_run(world, script)) {
+                progress = true;
+            }
         }
 
-        flecs_script_resolve_run(world, script);
+        ecs_vec_clear(&round);
     }
 
+    ecs_vec_clear(pending);
+    ecs_vec_fini_t(runtime->allocator, &round, ecs_entity_t);
     runtime->resolving = false;
 }
 

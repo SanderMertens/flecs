@@ -1503,6 +1503,48 @@ void Include_include_forward_ref_never_resolved_reports_error(void) {
     ecs_fini(world);
 }
 
+void Include_include_mutually_recursive_fns_reports_error(void) {
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "a.flecs", "fn fa(x: i32) -> i32 {\n"
+        "  x > 0 ? fb(x - 1) : 0\n"
+        "}\n", 0 };
+    test_files[1] = (test_file_t){ "b.flecs", "fn fb(x: i32) -> i32 {\n"
+        "  x > 0 ? fa(x - 1) : 1\n"
+        "}\n", 0 };
+    test_files[2] = (test_file_t){ "parent.flecs", "include a.flecs\n"
+        "include b.flecs\n", 0 };
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .filename = "parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
+
+    ecs_fini(world);
+}
+
 void Include_include_forward_ref_never_resolved_inline_reports_error(void) {
     memset(test_files, 0, sizeof(test_files));
     test_fopen_remap_from = NULL;

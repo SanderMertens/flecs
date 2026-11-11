@@ -2977,6 +2977,7 @@ void Include_include_forward_ref_to_nested_later_include(void);
 void Include_include_forward_ref_from_nested_include(void);
 void Include_include_forward_ref_chain_requires_multiple_passes(void);
 void Include_include_forward_ref_never_resolved_reports_error(void);
+void Include_include_mutually_recursive_fns_reports_error(void);
 void Include_include_forward_ref_never_resolved_inline_reports_error(void);
 void Include_include_diamond_evaluates_shared_once(void);
 void Include_include_diamond_forward_ref_is_retried(void);
@@ -16126,6 +16127,10 @@ bake_test_case Include_testcases[] = {
         Include_include_forward_ref_never_resolved_reports_error
     },
     {
+        "include_mutually_recursive_fns_reports_error",
+        Include_include_mutually_recursive_fns_reports_error
+    },
+    {
         "include_forward_ref_never_resolved_inline_reports_error",
         Include_include_forward_ref_never_resolved_inline_reports_error
     },
@@ -21921,7 +21926,7 @@ static bake_test_suite suites[] = {
         "Include",
         Include_setup,
         NULL,
-        68,
+        69,
         Include_testcases,
         1,
         Include_params
