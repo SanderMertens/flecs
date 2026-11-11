@@ -25,6 +25,22 @@ static int flecs_expr_visit_type_priv(
     return flecs_expr_visit_type_ex(script, node_ptr, cur, desc, false);
 }
 
+static int flecs_expr_check_copyable(
+    ecs_script_t *script,
+    const ecs_expr_node_t *node)
+{
+    if (!node->type_info || !(node->type_info->hooks.flags &
+        (ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL)))
+    {
+        return 0;
+    }
+
+    flecs_expr_visit_error(script, node,
+        "values of type '%s' cannot be used in expressions: type is not "
+        "copyable", flecs_errstr(ecs_get_path(script->world, node->type)));
+    return -1;
+}
+
 static void flecs_expr_visit_type_cursor(
     const ecs_world_t *world,
     ecs_meta_cursor_t *cur,
@@ -2279,6 +2295,11 @@ static int flecs_expr_function_visit_type(
             script, node, &target_cur, desc);
     }
 
+    if (!node->function_name) {
+        flecs_expr_visit_error(script, node, "expression is not callable");
+        goto error;
+    }
+
     ecs_world_t *world = script->world;
     const struct ecs_script_function_t *func_data = NULL;
     ecs_entity_t func = 0;
@@ -2955,6 +2976,13 @@ static int flecs_expr_match_visit_type(
         compare_type = ecs_id(ecs_u32_t);
     }
 
+    if (!ecs_has(script->world, compare_type, EcsPrimitive)) {
+        flecs_expr_visit_error(script, node,
+            "cannot match on value of non-primitive type '%s'",
+            flecs_errstr(ecs_get_path(script->world, expr_type)));
+        goto error;
+    }
+
     if (flecs_expr_cast_to(script, &node->expr, compare_type)) {
         goto error;
     }
@@ -3157,6 +3185,10 @@ static int flecs_expr_visit_type_ex(
     node->type_info = ecs_get_type_info(script->world, node->type);
     ecs_assert(node->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    if (flecs_expr_check_copyable(script, node)) {
+        return -1;
+    }
+
     /* Every node produces a value of its own type. Rebase the cursor on that
      * type so that members and elements resolved on the value get an offset
      * that is relative to the value. */
@@ -3187,7 +3219,7 @@ int flecs_expr_visit_type(
             }
 
             node->type_info = ecs_get_type_info(script->world, node->type);
-            return 0;
+            return flecs_expr_check_copyable(script, node);
         }
     }
 

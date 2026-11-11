@@ -278,6 +278,14 @@ static void flecs_command_cd(
         return;
     }
 
+    if (ecs_id_is_wildcard(scope) || scope == EcsThis ||
+        scope == EcsVariable)
+    {
+        flecs_command_err(ctx, "cannot use '%s' as scope",
+            flecs_errstr(ecs_get_path(world, scope)));
+        return;
+    }
+
     ecs_entity_t session = ecs_shell_get_session(world);
     EcsCommandSession *s = ecs_get_mut(world, session, EcsCommandSession);
     s->scope = scope;
@@ -310,19 +318,6 @@ static void flecs_command_clear(
     flecs_command_history_clear(s);
 }
 
-static bool flecs_command_check_id(
-    const ecs_function_ctx_t *ctx,
-    ecs_id_t id)
-{
-    if (!id || !ecs_id_is_valid(ctx->world, id)) {
-        flecs_command_err(ctx, "invalid component '%s'",
-            flecs_errstr(ecs_id_str(ctx->world, id)));
-        return false;
-    }
-
-    return true;
-}
-
 static void flecs_command_get(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
@@ -337,7 +332,7 @@ static void flecs_command_get(
         return;
     }
 
-    ecs_entity_t type = ecs_get_typeid(world, id);
+    ecs_entity_t type = flecs_command_value_type(world, id);
     const void *ptr = type ? ecs_get_id(world, e, id) : NULL;
     if (!ptr) {
         if (!type) {
@@ -393,7 +388,7 @@ static void flecs_command_modified(
         return;
     }
 
-    ecs_entity_t type = ecs_get_typeid(world, id);
+    ecs_entity_t type = flecs_command_value_type(world, id);
     if (!type) {
         flecs_command_err(ctx, "'%s' is not a component with a value",
             flecs_errstr(ecs_id_str(world, id)));
@@ -429,6 +424,12 @@ static void flecs_command_emit(
     if (!flecs_command_check_alive(ctx, e) ||
         !flecs_command_check_alive(ctx, event))
     {
+        return;
+    }
+
+    if (ecs_id_is_wildcard(event)) {
+        flecs_command_err(ctx, "cannot emit wildcard event '%s'",
+            flecs_errstr(ecs_get_path(world, event)));
         return;
     }
 

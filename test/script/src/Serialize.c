@@ -2864,3 +2864,15 @@ void Serialize_string_w_curly_brace_not_escaped(void) {
 
     ecs_fini(world);
 }
+
+void Serialize_empty_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_value_t), &v);
+    test_assert(expr != NULL);
+    test_str(expr, "null");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}

@@ -525,6 +525,10 @@ static void flecs_command_script_set(
     ecs_entity_t e = flecs_command_arg(argv, 0, ecs_entity_t);
     ecs_id_t id = flecs_command_arg(argv, 1, ecs_id_t);
     const char *expr = flecs_command_arg(argv, 2, char*);
+    if (!flecs_command_check_id(ctx, id)) {
+        return;
+    }
+
     ecs_entity_t owner = 0;
     const EcsScript *s = flecs_command_get_owner(ctx, e, &owner);
     if (!s) {
@@ -576,6 +580,11 @@ static void flecs_command_script_remove(
     (void)argc;
     (void)result;
     ecs_entity_t e = flecs_command_arg(argv, 0, ecs_entity_t);
+    ecs_id_t id = ctx->ctx ? 0 : flecs_command_arg(argv, 1, ecs_id_t);
+    if (!ctx->ctx && !flecs_command_check_id(ctx, id)) {
+        return;
+    }
+
     ecs_entity_t owner = 0;
     const EcsScript *s = flecs_command_get_owner(ctx, e, &owner);
     if (!s) {
@@ -584,7 +593,7 @@ static void flecs_command_script_remove(
 
     ecs_script_edits_t *edits = ecs_script_edits_new(s->script);
     int r = ctx->ctx ? ecs_script_edits_delete(edits, e) :
-        ecs_script_edits_remove(edits, e, flecs_command_arg(argv, 1, ecs_id_t));
+        ecs_script_edits_remove(edits, e, id);
     char *new_code = flecs_command_edits_apply(ctx, edits, r);
     if (new_code) {
         ecs_script_update(ctx->world, owner, 0, new_code);
@@ -642,32 +651,36 @@ static void flecs_command_script_save(
         return;
     }
 
-    const char *filename = argc > 1 ?
-        flecs_command_arg(argv, 1, char*) : s->filename;
+    const char *filename = s->filename;
     if (!filename || !filename[0]) {
         flecs_command_err(ctx, "script '%s' has no filename",
             flecs_errstr(ecs_get_path(world, script)));
         return;
     }
 
-    if (s->filename && !ecs_os_strcmp(filename, s->filename)) {
-        FILE *f = ecs_os_fopen(filename, "r");
-        if (f) {
-            ecs_os_fclose(f);
-            char *disk = flecs_load_from_file(filename);
-            bool changed = disk && ecs_os_strcmp(disk,
-                s->saved_code ? s->saved_code : "");
-            ecs_os_free(disk);
-            if (changed) {
-                flecs_command_err(ctx, "file '%s' changed on disk since it "
-                    "was loaded or saved, reload the script before saving",
-                    filename);
-                return;
-            }
+    if (argc > 1) {
+        const char *arg = flecs_command_arg(argv, 1, char*);
+        if (arg && ecs_os_strcmp(arg, filename)) {
+            flecs_command_err(ctx, "cannot save script '%s' to '%s': "
+                "scripts can only be saved to their own file",
+                    flecs_errstr(ecs_get_path(world, script)), arg);
+            return;
         }
-    } else {
-        EcsScript *ms = ecs_get_mut(world, script, EcsScript);
-        ecs_os_strset(&ms->filename, filename);
+    }
+
+    FILE *f = ecs_os_fopen(filename, "r");
+    if (f) {
+        ecs_os_fclose(f);
+        char *disk = flecs_load_from_file(filename);
+        bool changed = disk && ecs_os_strcmp(disk,
+            s->saved_code ? s->saved_code : "");
+        ecs_os_free(disk);
+        if (changed) {
+            flecs_command_err(ctx, "file '%s' changed on disk since it "
+                "was loaded or saved, reload the script before saving",
+                filename);
+            return;
+        }
     }
 
     if (ecs_script_save(world, script)) {
@@ -801,7 +814,7 @@ void flecs_command_script_import(
         { "script_save", flecs_command_script_save, 0, "Save script to file", {
             { "script", entity_t, false, "Script" },
             { "filename", string_t, true,
-                "File to save to (default: script file)" }}},
+                "Script file (must match the file of the script)" }}},
         { "script_reload", flecs_command_script_reload, 0,
             "Reload script from file", {
             { "script", entity_t, false, "Script" }}},

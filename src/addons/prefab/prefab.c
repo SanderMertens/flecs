@@ -26,12 +26,6 @@ void EcsTreeSpawner_free(EcsTreeSpawner *ptr) {
     }
 }
 
-static ECS_COPY(EcsTreeSpawner, dst, src, {
-    (void)dst;
-    (void)src;
-    ecs_abort(ECS_INVALID_OPERATION, "TreeSpawner component cannot be copied");
-})
-
 static ECS_MOVE(EcsTreeSpawner, dst, src, {
     EcsTreeSpawner_free(dst);
     *dst = *src;
@@ -151,9 +145,9 @@ void flecs_bootstrap_prefab(
 
     flecs_type_info_init(world, EcsTreeSpawner, {
         .ctor = flecs_default_ctor,
-        .copy = ecs_copy(EcsTreeSpawner),
         .move = ecs_move(EcsTreeSpawner),
-        .dtor = ecs_dtor(EcsTreeSpawner)
+        .dtor = ecs_dtor(EcsTreeSpawner),
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL
     });
 
     /* Observer that ensures children of a prefab are also prefabs */

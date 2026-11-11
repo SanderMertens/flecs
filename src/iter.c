@@ -945,6 +945,17 @@ bool ecs_page_next(
         ecs_os_memcpy(it, chain_it, offsetof(ecs_iter_t, priv_));
 
         if (!chain_it->table && !chain_it->count) {
+            if (iter->offset) {
+                iter->offset --;
+                continue;
+            }
+
+            if (iter->remaining) {
+                iter->remaining --;
+            } else if (iter->limit) {
+                goto done;
+            }
+
             goto yield; /* Task query */
         }
 

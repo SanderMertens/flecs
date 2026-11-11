@@ -191,64 +191,78 @@ int flecs_value_unary(
     case EcsTokLt: *(bool*)out = l < r; return 0;\
     case EcsTokLtEq: *(bool*)out = l <= r; return 0;
 
-#define FLECS_VALUE_INTEGER(T)\
-    case EcsTokMod: *(T*)out = (T)(l % r); return 0;\
+#define FLECS_VALUE_INT(T, UT, IS_SIGNED)\
+    case EcsTokAdd: *(T*)out = (T)((UT)l + (UT)r); return 0;\
+    case EcsTokSub: *(T*)out = (T)((UT)l - (UT)r); return 0;\
+    case EcsTokMul: *(T*)out = (T)((UT)l * (UT)r); return 0;\
+    case EcsTokDiv:\
+        *(T*)out = (IS_SIGNED && (r == (T)-1)) ?\
+            (T)((UT)0 - (UT)l) : (T)(l / r);\
+        return 0;\
+    case EcsTokMod:\
+        *(T*)out = (IS_SIGNED && (r == (T)-1)) ? (T)0 : (T)(l % r);\
+        return 0;\
     case EcsTokBitwiseAnd: *(T*)out = (T)(l & r); return 0;\
     case EcsTokBitwiseOr: *(T*)out = (T)(l | r); return 0;\
-    case EcsTokShiftLeft: *(T*)out = (T)(l << r); return 0;\
-    case EcsTokShiftRight: *(T*)out = (T)(l >> r); return 0;
+    case EcsTokShiftLeft:\
+        *(T*)out = ((uint64_t)r >= (uint64_t)(sizeof(T) * 8)) ?\
+            (T)0 : (T)((UT)l << r);\
+        return 0;\
+    case EcsTokShiftRight:\
+        *(T*)out = ((uint64_t)r >= (uint64_t)(sizeof(T) * 8)) ?\
+            (T)0 : (T)(l >> r);\
+        return 0;
 
-#define FLECS_VALUE_FLOAT(T)
-
-#define FLECS_VALUE_ARITHMETIC(T)\
+#define FLECS_VALUE_FLOAT_ARITHMETIC(T)\
     case EcsTokAdd: *(T*)out = (T)(l + r); return 0;\
     case EcsTokSub: *(T*)out = (T)(l - r); return 0;\
     case EcsTokMul: *(T*)out = (T)(l * r); return 0;\
     case EcsTokDiv: *(T*)out = (T)(l / r); return 0;
 
-#define FLECS_VALUE_BINARY(T, ARITHMETIC, INTEGER)\
+#define FLECS_VALUE_NONE
+
+#define FLECS_VALUE_BINARY(T, OPS)\
 static int flecs_value_binary_##T(\
     const void *left, const void *right, void *out, ecs_token_kind_t operator)\
 {\
     T l = *(const T*)left, r = *(const T*)right;\
     switch (operator) {\
     FLECS_VALUE_COMPARE(T)\
-    ARITHMETIC(T)\
-    INTEGER(T)\
+    OPS\
     default: ecs_abort(ECS_INTERNAL_ERROR, "invalid binary operator");\
     }\
     return -1;\
 }
 
-FLECS_VALUE_BINARY(ecs_i8_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_INTEGER)
-FLECS_VALUE_BINARY(ecs_i16_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_INTEGER)
-FLECS_VALUE_BINARY(ecs_i32_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_INTEGER)
-FLECS_VALUE_BINARY(ecs_i64_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_INTEGER)
-FLECS_VALUE_BINARY(ecs_u8_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_INTEGER)
-FLECS_VALUE_BINARY(ecs_u16_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_INTEGER)
-FLECS_VALUE_BINARY(ecs_u32_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_INTEGER)
-FLECS_VALUE_BINARY(ecs_u64_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_INTEGER)
-FLECS_VALUE_BINARY(ecs_iptr_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_INTEGER)
-FLECS_VALUE_BINARY(ecs_uptr_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_INTEGER)
+FLECS_VALUE_BINARY(ecs_i8_t, FLECS_VALUE_INT(ecs_i8_t, uint32_t, 1))
+FLECS_VALUE_BINARY(ecs_i16_t, FLECS_VALUE_INT(ecs_i16_t, uint32_t, 1))
+FLECS_VALUE_BINARY(ecs_i32_t, FLECS_VALUE_INT(ecs_i32_t, uint32_t, 1))
+FLECS_VALUE_BINARY(ecs_i64_t, FLECS_VALUE_INT(ecs_i64_t, uint64_t, 1))
+FLECS_VALUE_BINARY(ecs_u8_t, FLECS_VALUE_INT(ecs_u8_t, uint32_t, 0))
+FLECS_VALUE_BINARY(ecs_u16_t, FLECS_VALUE_INT(ecs_u16_t, uint32_t, 0))
+FLECS_VALUE_BINARY(ecs_u32_t, FLECS_VALUE_INT(ecs_u32_t, uint32_t, 0))
+FLECS_VALUE_BINARY(ecs_u64_t, FLECS_VALUE_INT(ecs_u64_t, uint64_t, 0))
+FLECS_VALUE_BINARY(ecs_iptr_t, FLECS_VALUE_INT(ecs_iptr_t, uintptr_t, 1))
+FLECS_VALUE_BINARY(ecs_uptr_t, FLECS_VALUE_INT(ecs_uptr_t, uintptr_t, 0))
 #if defined(ECS_TARGET_GNU) || defined(ECS_TARGET_CLANG)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
 #endif
-FLECS_VALUE_BINARY(ecs_f32_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_FLOAT)
-FLECS_VALUE_BINARY(ecs_f64_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_FLOAT)
+FLECS_VALUE_BINARY(ecs_f32_t, FLECS_VALUE_FLOAT_ARITHMETIC(ecs_f32_t))
+FLECS_VALUE_BINARY(ecs_f64_t, FLECS_VALUE_FLOAT_ARITHMETIC(ecs_f64_t))
 #if defined(ECS_TARGET_GNU) || defined(ECS_TARGET_CLANG)
 #pragma GCC diagnostic pop
 #endif
-FLECS_VALUE_BINARY(ecs_char_t, FLECS_VALUE_FLOAT, FLECS_VALUE_FLOAT)
-FLECS_VALUE_BINARY(ecs_bool_t, FLECS_VALUE_FLOAT, FLECS_VALUE_FLOAT)
-FLECS_VALUE_BINARY(ecs_entity_t, FLECS_VALUE_FLOAT, FLECS_VALUE_FLOAT)
-FLECS_VALUE_BINARY(ecs_id_t, FLECS_VALUE_FLOAT, FLECS_VALUE_FLOAT)
-FLECS_VALUE_BINARY(ecs_byte_t, FLECS_VALUE_FLOAT, FLECS_VALUE_FLOAT)
+FLECS_VALUE_BINARY(ecs_char_t, FLECS_VALUE_NONE)
+FLECS_VALUE_BINARY(ecs_bool_t, FLECS_VALUE_NONE)
+FLECS_VALUE_BINARY(ecs_entity_t, FLECS_VALUE_NONE)
+FLECS_VALUE_BINARY(ecs_id_t, FLECS_VALUE_NONE)
+FLECS_VALUE_BINARY(ecs_byte_t, FLECS_VALUE_NONE)
 
 #undef FLECS_VALUE_BINARY
-#undef FLECS_VALUE_ARITHMETIC
-#undef FLECS_VALUE_INTEGER
-#undef FLECS_VALUE_FLOAT
+#undef FLECS_VALUE_INT
+#undef FLECS_VALUE_FLOAT_ARITHMETIC
+#undef FLECS_VALUE_NONE
 #undef FLECS_VALUE_COMPARE
 
 int flecs_value_binary(

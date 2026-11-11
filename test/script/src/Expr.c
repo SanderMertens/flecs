@@ -13957,3 +13957,72 @@ void Expr_partial_nested_initializer(void) {
 
     ecs_fini(world);
 }
+
+void Expr_i64_arithmetic_overflow(void) {
+    ecs_world_t *world = ecs_init();
+
+    int64_t v = 0;
+    ecs_value_t value = { .type = ecs_id(ecs_i64_t), .ptr = &v };
+    ecs_expr_eval_desc_t desc = { .type = ecs_id(ecs_i64_t) };
+
+    test_assert(ecs_expr_run(world, "9223372036854775807 + 1", &value, &desc) != NULL);
+    test_assert(v == INT64_MIN);
+
+    test_assert(ecs_expr_run(world, "(0 - 9223372036854775807 - 1) - 1", &value, &desc) != NULL);
+    test_assert(v == INT64_MAX);
+
+    test_assert(ecs_expr_run(world, "9223372036854775807 * 2", &value, &desc) != NULL);
+    test_assert(v == -2);
+
+    test_assert(ecs_expr_run(world, "(0 - 9223372036854775807 - 1) % -1", &value, &desc) != NULL);
+    test_assert(v == 0);
+
+    ecs_fini(world);
+}
+
+void Expr_shift_out_of_range(void) {
+    ecs_world_t *world = ecs_init();
+
+    int64_t v = 0;
+    ecs_value_t value = { .type = ecs_id(ecs_i64_t), .ptr = &v };
+    ecs_expr_eval_desc_t desc = { .type = ecs_id(ecs_i64_t) };
+
+    test_assert(ecs_expr_run(world, "1 << 70", &value, &desc) != NULL);
+    test_assert(v == 0);
+
+    test_assert(ecs_expr_run(world, "1 << 64", &value, &desc) != NULL);
+    test_assert(v == 0);
+
+    test_assert(ecs_expr_run(world, "1024 >> 70", &value, &desc) != NULL);
+    test_assert(v == 0);
+
+    test_assert(ecs_expr_run(world, "1 << 3", &value, &desc) != NULL);
+    test_assert(v == 8);
+
+    ecs_fini(world);
+}
+
+void Expr_long_binary_chain(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_strbuf_appendlit(&buf, "1");
+    int32_t i;
+    for (i = 0; i < 100000; i ++) {
+        ecs_strbuf_appendlit(&buf, "+1");
+    }
+    char *expr = ecs_strbuf_get(&buf);
+
+    ecs_log_set_level(-4);
+
+    int64_t v = 0;
+    ecs_value_t value = { .type = ecs_id(ecs_i64_t), .ptr = &v };
+    ecs_expr_eval_desc_t desc = { .type = ecs_id(ecs_i64_t) };
+    test_assert(ecs_expr_run(world, expr, &value, &desc) == NULL);
+    ecs_os_free(expr);
+
+    test_assert(ecs_expr_run(world, "1+1+1+1+1+1+1+1+1+1", &value, &desc) != NULL);
+    test_int(v, 10);
+
+    ecs_fini(world);
+}

@@ -10136,8 +10136,9 @@ void Fuzzing_entity_kind_parent(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_log_set_level(-5);
-    test_int(0, ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
-    test_assert(ecs_lookup(world, "e") != 0);
+    test_assert(0 != ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL));
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(!e || !ecs_has(world, e, EcsParent));
     ecs_fini(world);
 }
 

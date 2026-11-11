@@ -240,13 +240,27 @@ bool flecs_command_check_alive(
     return true;
 }
 
+bool flecs_command_check_id(
+    const ecs_function_ctx_t *ctx,
+    ecs_id_t id)
+{
+    if (!id || !ecs_id_is_valid(ctx->world, id)) {
+        flecs_command_err(ctx, "invalid component '%s'",
+            flecs_errstr(ecs_id_str(ctx->world, id)));
+        return false;
+    }
+
+    return true;
+}
+
 ecs_entity_t flecs_command_value_type(
     const ecs_world_t *world,
     ecs_id_t id)
 {
     ecs_entity_t type = ecs_get_typeid(world, id);
     const ecs_type_info_t *ti = type ? ecs_get_type_info(world, type) : NULL;
-    if (!ti || (ti->hooks.flags & ECS_TYPE_HOOK_COPY_ILLEGAL) ||
+    if (!ti || (ti->hooks.flags & (ECS_TYPE_HOOK_CTOR_ILLEGAL|
+        ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL)) ||
         !ecs_has(world, type, EcsTypeSerializer))
     {
         return 0;

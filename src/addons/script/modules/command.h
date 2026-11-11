@@ -73,6 +73,10 @@ int flecs_command_parse_value(
     ecs_value_t *value,
     bool partial);
 
+bool flecs_command_check_id(
+    const ecs_function_ctx_t *ctx,
+    ecs_id_t id);
+
 bool flecs_command_check_alive(
     const ecs_function_ctx_t *ctx,
     ecs_entity_t entity);

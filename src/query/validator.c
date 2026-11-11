@@ -406,6 +406,11 @@ static int flecs_term_verify_eq_pred(
         goto error;
     }
 
+    if (!ecs_term_ref_is_set(second)) {
+        flecs_query_validator_error(ctx, "missing right-hand of operator");
+        goto error;
+    }
+
     if (first_id == EcsPredMatch && !(second->id & EcsIsName)) {
         flecs_query_validator_error(ctx, "right-hand of match operator must be a string");
         goto error;
@@ -619,6 +624,16 @@ int flecs_term_finalize(
     ecs_entity_t first_id = ECS_TERM_REF_ID(first);
     ecs_entity_t second_id = ECS_TERM_REF_ID(second);
     ecs_entity_t src_id = ECS_TERM_REF_ID(src);
+
+    if (ECS_IS_VALUE_PAIR(term->id) && (first->id & EcsIsEntity) && first_id &&
+        (first_id == EcsIsA || first_id == EcsChildOf ||
+         ecs_has_id(world, first_id, EcsTraversable) ||
+         ecs_has_id(world, first_id, EcsTransitive)))
+    {
+        flecs_query_validator_error(ctx,
+            "value pair cannot be used with traversable relationship");
+        return -1;
+    }
 
     if ((first->id & EcsIsVariable) && (first_id == EcsAny)) {
         term->flags_ |= EcsTermMatchAny;
@@ -1142,7 +1157,9 @@ static int flecs_query_finalize_terms(
         }
 
         nodata_term = term->src.id == EcsIsEntity || term->inout == EcsInOutNone ||
-            !ti || (term->flags_ & EcsTermIsMember) || scope_nesting;
+            !ti || (term->flags_ & EcsTermIsMember) || scope_nesting ||
+            term->oper == EcsAndFrom || term->oper == EcsOrFrom ||
+            term->oper == EcsNotFrom;
 
         if (!nodata_term && term->inout != EcsIn && term->inout != EcsInOutNone) {
             /* Non-this terms default to EcsIn */
@@ -1157,9 +1174,15 @@ static int flecs_query_finalize_terms(
             }
         }
 
-        if (!nodata_term && (term->flags_ & EcsTermIsOr)) {
-            nodata_term = other_type;
-            q->data_fields &= (ecs_termset_t)~(1llu << field);
+        if (term->flags_ & EcsTermIsOr) {
+            if (other_type) {
+                nodata_term = true;
+                q->data_fields &= (ecs_termset_t)~(1llu << field);
+                q->write_fields &= (ecs_termset_t)~(1llu << field);
+                q->read_fields &= (ecs_termset_t)~(1llu << field);
+            } else if (!nodata_term) {
+                q->data_fields &= (ecs_termset_t)~(1llu << field);
+            }
         }
 
         if (term->flags_ & EcsTermIsMember) {

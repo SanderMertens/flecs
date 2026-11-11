@@ -400,6 +400,13 @@ static const char* flecs_script_parse_rhs(
         }
 
         if (is_oper && !flecs_has_precedence(left_oper, oper)) {
+            if (++ parser->expr_chain > ECS_PARSER_MAX_EXPR_CHAIN) {
+                ecs_parser_error(parser->name, parser->code,
+                    flecs_parser_errpos(parser, pos),
+                    "expression is too complex");
+                goto error;
+            }
+
             pos = lookahead;
 
             switch(oper) {
@@ -735,10 +742,12 @@ const char* flecs_script_parse_expr(
     }
 
     parser->expr_depth ++;
+    int32_t expr_chain = parser->expr_chain;
 
     ParserBegin;
 
     pos = flecs_script_parse_lhs(parser, pos, tokenizer, left_oper, out);
+    parser->expr_chain = expr_chain;
     if (!pos) {
         parser->expr_depth --;
         if (out && *out) {

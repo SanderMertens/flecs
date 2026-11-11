@@ -1,4 +1,5 @@
 #include <meta.h>
+#include <math.h>
 
 typedef struct {
     int32_t x;
@@ -9393,6 +9394,101 @@ void Cursor_value_component_lifecycle(void) {
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_float_to_i64_upper_bound(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    int64_t value = 0;
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_i64_t), &value);
+    test_fail(ecs_meta_set_float(&cur, 9223372036854775808.0));
+    test_int(value, 0);
+
+    cur = ecs_meta_cursor(world, ecs_id(ecs_i64_t), &value);
+    test_ok(ecs_meta_set_float(&cur, 9223372036854774784.0));
+    test_assert(value == 9223372036854774784LL);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_float_to_u64_upper_bound(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    uint64_t value = 0;
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_u64_t), &value);
+    test_fail(ecs_meta_set_float(&cur, 18446744073709551616.0));
+    test_uint(value, 0);
+
+    cur = ecs_meta_cursor(world, ecs_id(ecs_entity_t), &value);
+    test_fail(ecs_meta_set_float(&cur, 18446744073709551616.0));
+    test_uint(value, 0);
+
+    cur = ecs_meta_cursor(world, ecs_id(ecs_u64_t), &value);
+    test_ok(ecs_meta_set_float(&cur, 18446744073709549568.0));
+    test_assert(value == 18446744073709549568ULL);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_nan_to_int(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    int32_t value = 0;
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_i32_t), &value);
+    test_fail(ecs_meta_set_float(&cur, (double)NAN));
+    test_int(value, 0);
+
+    ecs_fini(world);
+}
+
+void Cursor_vector_elem_out_of_range(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_vector(world, { .type = ecs_id(ecs_f64_t) });
+
+    ecs_log_set_level(-4);
+
+    ecs_vec_t v = {0};
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &v);
+    test_ok(ecs_meta_push(&cur));
+    test_fail(ecs_meta_elem(&cur, 300000000));
+    test_fail(ecs_meta_elem(&cur, -1));
+    test_ok(ecs_meta_pop(&cur));
+
+    test_assert(ecs_vec_count(&v) == 0);
+    ecs_vec_fini_t(NULL, &v, double);
+
+    ecs_fini(world);
+}
+
+void Cursor_member_expr_index_overflow(void) {
+    typedef struct {
+        float v[2];
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .members = {
+            { "v", ecs_id(ecs_f32_t), 2 }
+        }
+    });
+
+    ecs_log_set_level(-4);
+
+    T value = {{0}};
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_ok(ecs_meta_push(&cur));
+    test_fail(ecs_meta_dotmember(&cur, "v[99999999999]"));
+    test_fail(ecs_meta_dotmember(&cur, "v[2147483647]"));
 
     ecs_fini(world);
 }

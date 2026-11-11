@@ -178,7 +178,10 @@
                 "exceed_max_var_count",
                 "query_for_relationship_trait_as_component",
                 "query_for_relationship_trait_as_component_2_terms",
-                "from_op_w_pair"
+                "from_op_w_pair",
+                "validate_value_pair_as_src",
+                "validate_value_pair_w_traversable_rel",
+                "validate_eq_pred_wo_rhs"
             ]
         }, {
             "id": "Parser",
@@ -1138,7 +1141,14 @@
                 "invalid_var_name_w_neq",
                 "first_var_w_fixed_tgt_id_matching_var_id",
                 "same_src_tgt_var_w_fixed_first_id_matching_var_id",
-                "same_this_src_tgt_w_fixed_first_id_matching_var_id"
+                "same_this_src_tgt_w_fixed_first_id_matching_var_id",
+                "page_iter_entity_var_only",
+                "not_first_var_then_src",
+                "not_this_first_then_this_src",
+                "optional_this_second_not_unwritten",
+                "not_self_ref_then_transitive",
+                "optional_cond_eval_skips_var_write",
+                "anonymous_var_then_transitive"
             ]
         }, {
             "id": "Operators",
@@ -1577,7 +1587,8 @@
                 "match_any",
                 "this_neq_id_written_after_eq",
                 "this_neq_id_written_same_table_twice",
-                "2_or_w_eq_wildcard"
+                "2_or_w_eq_wildcard",
+                "unconstrained_var_eq_wildcard"
             ]
         }, {
             "id": "Scopes",
@@ -2378,7 +2389,8 @@
                 "toggle_0_src_only_term",
                 "toggle_0_src",
                 "remove_toggle_from_table_w_other_toggle_and_entity",
-                "this_toggle_after_or_chain"
+                "this_toggle_after_or_chain",
+                "toggle_w_entity_var_src"
             ]
         }, {
             "id": "Sparse",
@@ -2579,7 +2591,8 @@
                 "1_this_sparse_first_wildcard_w_empty_rel",
                 "this_wildcard_wildcard_pair_w_empty_pair",
                 "ecs_field_on_dont_fragment_up",
-                "ecs_field_at_on_dont_fragment_up"
+                "ecs_field_at_on_dont_fragment_up",
+                "iter_fini_wo_next"
             ]
         }, {
             "id": "NonFragmentingChildOf",

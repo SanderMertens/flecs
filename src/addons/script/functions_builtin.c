@@ -104,6 +104,12 @@ static void flecs_meta_entity_has(
     }
 
     ecs_id_t id = *(ecs_id_t*)argv[1].ptr;
+    if (!id) {
+        ecs_err("invalid component #0 passed to has()");
+        flecs_script_runtime_get(ctx->world)->error = true;
+        return;
+    }
+
     *(ecs_bool_t*)result->ptr = ecs_has_id(ctx->world, entity, id);
 }
 

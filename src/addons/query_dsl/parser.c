@@ -80,6 +80,11 @@ static bool flecs_term_ref(flecs_term_parser_t *p, ecs_term_ref_t *ref) {
     }
 
     if (p->token.kind == '@') {
+        if (ref != &p->parser->term->second) {
+            return flecs_term_error(p,
+                "value pair syntax is only valid for pair target");
+        }
+
         p->parser->term->id = ECS_VALUE_PAIR;
         if (!flecs_term_next(p)) return false;
         if (p->token.kind == EcsTokMul) {

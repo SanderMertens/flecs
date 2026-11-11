@@ -834,7 +834,9 @@
                 "named_child_in_for_loop_warns",
                 "interpolated_name_in_for_loop_no_warn",
                 "child_of_interpolated_name_in_for_loop_no_warn",
-                "named_entity_w_tag_in_for_loop_no_warn"
+                "named_entity_w_tag_in_for_loop_no_warn",
+                "set_name_component",
+                "i64_runtime_arithmetic_overflow"
             ]
         }, {
             "id": "Collection",
@@ -1958,7 +1960,44 @@
                 "pair_scope_unresolved_first",
                 "pair_scope_unresolved_second",
                 "compare_vector_types",
-                "divide_strings"
+                "divide_strings",
+                "add_childof_self",
+                "add_childof_cycle",
+                "with_childof_self",
+                "add_isa_self",
+                "add_isa_cycle",
+                "add_isa_final",
+                "add_target_trait_by_itself",
+                "add_relationship_trait_as_target",
+                "add_relationship_trait_by_itself",
+                "add_singleton_to_other_entity",
+                "add_trait_to_component_in_use",
+                "add_trait_to_queried_component",
+                "add_childof_flecs_core",
+                "reparent_builtin_entity",
+                "reparent_flecs_module",
+                "reparent_flecs_core_module",
+                "set_component_in_use",
+                "set_component_invalid_size",
+                "set_parent_self",
+                "set_parent_invalid",
+                "set_meta_type",
+                "entity_has_zero_id",
+                "call_variable",
+                "call_entity_variable",
+                "template_add_poly",
+                "const_poly",
+                "const_tree_spawner",
+                "const_copy_illegal_type",
+                "copy_const_w_copy_illegal_type",
+                "export_const_copy_illegal_type",
+                "get_copy_illegal_component",
+                "set_copy_illegal_component",
+                "set_copy_illegal_pair",
+                "set_tree_spawner",
+                "template_set_copy_illegal_component",
+                "function_infinite_recursion",
+                "match_vector"
             ]
         }, {
             "id": "Format",
@@ -2574,7 +2613,10 @@
                 "id_var_eq_literal",
                 "vector_func_array_of_struct_error_type_name",
                 "partial_initializer",
-                "partial_nested_initializer"
+                "partial_nested_initializer",
+                "i64_arithmetic_overflow",
+                "shift_out_of_range",
+                "long_binary_chain"
             ]
         }, {
             "id": "ExprAst",
@@ -2714,7 +2756,8 @@
                 "struct_w_value",
                 "value_roundtrip",
                 "string_w_interpolation_not_escaped",
-                "string_w_curly_brace_not_escaped"
+                "string_w_curly_brace_not_escaped",
+                "empty_value"
             ]
         }, {
             "id": "Deserialize",
@@ -4352,7 +4395,34 @@
                 "multi_command_history",
                 "multi_command_history_errors_per_command",
                 "multi_command_help",
-                "query_sparse"
+                "query_sparse",
+                "add_childof_self",
+                "add_isa_self",
+                "add_trait_to_component_in_use",
+                "add_relationship_trait_by_itself",
+                "rm_entity_w_panic",
+                "rm_builtin_entity",
+                "rm_entity_used_by_query",
+                "rm_component_from_builtin_entity",
+                "rm_component_from_component_in_use",
+                "set_component_invalid_size",
+                "set_component_in_use",
+                "set_parent_self",
+                "set_parent_invalid",
+                "mv_entity_into_builtin_module",
+                "mv_builtin_entity",
+                "mv_flecs_module",
+                "get_not_copyable",
+                "modified_not_copyable",
+                "get_pair_w_dead_relationship",
+                "script_set_invalid_id",
+                "script_remove_invalid_id",
+                "cd_wildcard",
+                "emit_wildcard_event",
+                "script_write_invalid_entity",
+                "new_hierarchy_too_deep",
+                "new_in_flecs_core",
+                "script_save_other_file"
             ]
         }, {
             "id": "CommandResource",
@@ -4396,7 +4466,10 @@
                 "roundtrip",
                 "primitive",
                 "not_a_type",
-                "opaque_dep"
+                "opaque_dep",
+                "anonymous_struct",
+                "struct_w_anonymous_parent",
+                "struct_w_anonymous_member_type"
             ]
         }]
     }

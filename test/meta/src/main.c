@@ -169,6 +169,8 @@ void RuntimeTypes_map_cmp_illegal(void);
 void RuntimeTypes_existing_struct_w_vector_member_no_hooks(void);
 void RuntimeTypes_existing_struct_w_vector_member_shallow_copy(void);
 void RuntimeTypes_existing_struct_w_vector_member_not_freed(void);
+void RuntimeTypes_struct_too_many_ops(void);
+void RuntimeTypes_deeply_nested_struct(void);
 
 // Testsuite 'StructTypes'
 void StructTypes_i32(void);
@@ -213,6 +215,8 @@ void StructTypes_redefine_same_members_in_use(void);
 void StructTypes_redefine_member_after_nested_type_changed(void);
 void StructTypes_struct_wo_members(void);
 void StructTypes_struct_wo_members_add_member(void);
+void StructTypes_set_member_explicit_offset_keeps_size(void);
+void StructTypes_set_member_invalid_explicit_offset(void);
 
 // Testsuite 'NestedStructTypes'
 void NestedStructTypes_1_bool(void);
@@ -667,6 +671,11 @@ void Cursor_value_api_copy_ctor(void);
 void Cursor_value_api_move(void);
 void Cursor_value_api_move_ctor(void);
 void Cursor_value_component_lifecycle(void);
+void Cursor_set_float_to_i64_upper_bound(void);
+void Cursor_set_float_to_u64_upper_bound(void);
+void Cursor_set_nan_to_int(void);
+void Cursor_vector_elem_out_of_range(void);
+void Cursor_member_expr_index_overflow(void);
 
 // Testsuite 'DeserializeFromJson'
 void DeserializeFromJson_restore_removes_trailing_tag_with_observer(void);
@@ -890,6 +899,8 @@ void DeserializeFromJson_entity_wildcard_parent(void);
 void DeserializeFromJson_entity_wildcard_tag(void);
 void DeserializeFromJson_entity_wildcard_pair_target(void);
 void DeserializeFromJson_entity_wildcard_component(void);
+void DeserializeFromJson_opaque_vector_wo_ensure_element(void);
+void DeserializeFromJson_value_w_not_copyable_type(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_string_w_control_char(void);
@@ -986,6 +997,10 @@ void SerializeToJson_value_roundtrip(void);
 void SerializeToJson_ecs_struct_1_member(void);
 void SerializeToJson_ecs_struct_2_members(void);
 void SerializeToJson_ecs_struct_3_members(void);
+void SerializeToJson_empty_value(void);
+void SerializeToJson_struct_w_empty_value(void);
+void SerializeToJson_build_info_null_addons(void);
+void SerializeToJson_build_info_empty_addons(void);
 
 // Testsuite 'SerializeEntityToJson'
 void SerializeEntityToJson_serialize_more_than_256_components(void);
@@ -2192,6 +2207,14 @@ bake_test_case RuntimeTypes_testcases[] = {
     {
         "existing_struct_w_vector_member_not_freed",
         RuntimeTypes_existing_struct_w_vector_member_not_freed
+    },
+    {
+        "struct_too_many_ops",
+        RuntimeTypes_struct_too_many_ops
+    },
+    {
+        "deeply_nested_struct",
+        RuntimeTypes_deeply_nested_struct
     }
 };
 
@@ -2363,6 +2386,14 @@ bake_test_case StructTypes_testcases[] = {
     {
         "struct_wo_members_add_member",
         StructTypes_struct_wo_members_add_member
+    },
+    {
+        "set_member_explicit_offset_keeps_size",
+        StructTypes_set_member_explicit_offset_keeps_size
+    },
+    {
+        "set_member_invalid_explicit_offset",
+        StructTypes_set_member_invalid_explicit_offset
     }
 };
 
@@ -4144,6 +4175,26 @@ bake_test_case Cursor_testcases[] = {
     {
         "value_component_lifecycle",
         Cursor_value_component_lifecycle
+    },
+    {
+        "set_float_to_i64_upper_bound",
+        Cursor_set_float_to_i64_upper_bound
+    },
+    {
+        "set_float_to_u64_upper_bound",
+        Cursor_set_float_to_u64_upper_bound
+    },
+    {
+        "set_nan_to_int",
+        Cursor_set_nan_to_int
+    },
+    {
+        "vector_elem_out_of_range",
+        Cursor_vector_elem_out_of_range
+    },
+    {
+        "member_expr_index_overflow",
+        Cursor_member_expr_index_overflow
     }
 };
 
@@ -5031,6 +5082,14 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "entity_wildcard_component",
         DeserializeFromJson_entity_wildcard_component
+    },
+    {
+        "opaque_vector_wo_ensure_element",
+        DeserializeFromJson_opaque_vector_wo_ensure_element
+    },
+    {
+        "value_w_not_copyable_type",
+        DeserializeFromJson_value_w_not_copyable_type
     }
 };
 
@@ -5410,6 +5469,22 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "ecs_struct_3_members",
         SerializeToJson_ecs_struct_3_members
+    },
+    {
+        "empty_value",
+        SerializeToJson_empty_value
+    },
+    {
+        "struct_w_empty_value",
+        SerializeToJson_struct_w_empty_value
+    },
+    {
+        "build_info_null_addons",
+        SerializeToJson_build_info_null_addons
+    },
+    {
+        "build_info_empty_addons",
+        SerializeToJson_build_info_empty_addons
     }
 };
 
@@ -7673,7 +7748,6 @@ bake_test_case SetRttHooks_testcases[] = {
     }
 };
 
-
 static bake_test_suite suites[] = {
     {
         "PrimitiveTypes",
@@ -7700,14 +7774,14 @@ static bake_test_suite suites[] = {
         "RuntimeTypes",
         NULL,
         NULL,
-        58,
+        60,
         RuntimeTypes_testcases
     },
     {
         "StructTypes",
         NULL,
         NULL,
-        42,
+        44,
         StructTypes_testcases
     },
     {
@@ -7756,21 +7830,21 @@ static bake_test_suite suites[] = {
         "Cursor",
         NULL,
         NULL,
-        285,
+        290,
         Cursor_testcases
     },
     {
         "DeserializeFromJson",
         NULL,
         NULL,
-        221,
+        223,
         DeserializeFromJson_testcases
     },
     {
         "SerializeToJson",
         NULL,
         NULL,
-        94,
+        98,
         SerializeToJson_testcases
     },
     {

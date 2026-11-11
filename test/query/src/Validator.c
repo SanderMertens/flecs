@@ -4295,3 +4295,59 @@ void Validator_from_op_w_pair(void) {
 
     ecs_fini(world);
 }
+
+void Validator_validate_value_pair_as_src(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, { .expr = "Foo(@99999)" });
+    test_assert(q == NULL);
+
+    q = ecs_query(world, { .expr = "Foo(@0)" });
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_value_pair_w_traversable_rel(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ecs_add_id(world, Rel, EcsTraversable);
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, { .expr = "(IsA, @99999)" });
+    test_assert(q == NULL);
+
+    q = ecs_query(world, { .expr = "(IsA, @0)" });
+    test_assert(q == NULL);
+
+    q = ecs_query(world, { .expr = "(ChildOf, @99999)" });
+    test_assert(q == NULL);
+
+    q = ecs_query(world, { .expr = "(Rel, @99999)" });
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_eq_pred_wo_rhs(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, { .expr = "flecs.core.PredEq" });
+    test_assert(q == NULL);
+
+    q = ecs_query(world, { .expr = "!flecs.core.PredEq" });
+    test_assert(q == NULL);
+
+    q = ecs_query(world, { .expr = "flecs.core.PredEq($x)" });
+    test_assert(q == NULL);
+
+    q = ecs_query(world, { .expr = "flecs.core.PredMatch($x)" });
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}

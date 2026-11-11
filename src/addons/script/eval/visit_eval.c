@@ -424,7 +424,7 @@ bool flecs_script_can_own_entity(
     return true;
 }
 
-static void flecs_script_apply_with(
+static int flecs_script_apply_with(
     ecs_script_eval_visitor_t *v,
     ecs_entity_t entity)
 {
@@ -441,6 +441,8 @@ static void flecs_script_apply_with(
             ecs_add_id(v->world, entity, value->type);
         }
     }
+
+    return 0;
 }
 
 ecs_entity_t flecs_script_new_entity(
@@ -449,6 +451,12 @@ ecs_entity_t flecs_script_new_entity(
     const char *name,
     bool non_fragmenting_parent)
 {
+    if (parent == EcsFlecsCore) {
+        flecs_script_eval_error(v, NULL,
+            "cannot create entity '%s' in builtin module", name);
+        return 0;
+    }
+
     ecs_entity_desc_t desc = {0};
     if (non_fragmenting_parent) {
         desc.id = ecs_new_w_parent(v->world, parent, name);
@@ -474,7 +482,9 @@ ecs_entity_t flecs_script_create_entity(
     ecs_entity_t result = flecs_script_new_entity(v, v->parent, name,
         v->entity && v->entity->node && v->entity->node->non_fragmenting_parent);
     if (result) {
-        flecs_script_apply_with(v, result);
+        if (flecs_script_apply_with(v, result)) {
+            return 0;
+        }
     }
 
     return result;
@@ -874,7 +884,7 @@ int flecs_script_apply_annot(
     return 0;
 }
 
-static void flecs_script_add_entity_kind(
+static int flecs_script_add_entity_kind(
     ecs_script_eval_visitor_t *v,
     ecs_entity_t entity,
     ecs_entity_t kind,
@@ -890,6 +900,7 @@ static void flecs_script_add_entity_kind(
 
     ecs_add_id(v->world, entity, kind);
     stage->ensure_add = ensure_add;
+    return 0;
 }
 
 void flecs_script_scope_add_ids(
@@ -900,6 +911,7 @@ void flecs_script_scope_add_ids(
     int32_t count)
 {
     ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(v->world));
+
     ecs_stage_t *stage = world->stages[0];
     const ecs_stage_ensure_t *ensure_add = stage->ensure_add;
     ecs_stage_ensure_t ensure_add_type = { entity, {
@@ -1011,7 +1023,9 @@ int flecs_script_eval_entity_enter_w_name(
         }
 
         if (is_ref) {
-            flecs_script_apply_with(v, eval);
+            if (flecs_script_apply_with(v, eval)) {
+                return -1;
+            }
         } else if (state->eval && state->eval != eval &&
             ecs_is_alive(v->world, state->eval))
         {
@@ -1022,11 +1036,17 @@ int flecs_script_eval_entity_enter_w_name(
         state->created = true;
     } else if (!state->eval) {
         state->eval = flecs_script_create_entity(v, node->name);
+        if (!state->eval) {
+            return -1;
+        }
+
         state->created = true;
     }
 
     if (apply_with && !node->name_expr && v->force) {
-        flecs_script_apply_with(v, state->eval);
+        if (flecs_script_apply_with(v, state->eval)) {
+            return -1;
+        }
     }
 
     if (node->symbol != -1) {
@@ -1069,8 +1089,11 @@ int flecs_script_eval_entity_enter_w_name(
             goto error;
         }
 
-        flecs_script_add_entity_kind(
-            v, state->eval, state->eval_kind, node->kind_w_expr);
+        if (flecs_script_add_entity_kind(
+            v, state->eval, state->eval_kind, node->kind_w_expr))
+        {
+            goto error;
+        }
     }
 
     int32_t i, count = ecs_vec_count(&v->r->annot);
@@ -2035,14 +2058,25 @@ void flecs_script_user_function_callback(
     ecs_script_user_function_t *uf = fcomp->binding_ctx;
     ecs_script_function_node_t *node = uf->node;
     ecs_script_impl_t *impl = flecs_script_impl(uf->script);
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+
+    if (runtime->call_depth >= FLECS_SCRIPT_CALL_DEPTH_MAX) {
+        ecs_err("too many nested calls to function '%s', "
+            "is the function calling itself?",
+                ecs_get_name(real_world, ctx->function));
+        runtime->error = true;
+        return;
+    }
+
+    runtime->call_depth ++;
 
     if (impl->ir_enabled) {
         flecs_script_ir_call_function(ctx, uf, argc, argv, result);
+        runtime->call_depth --;
         return;
     }
 
     ecs_script_eval_visitor_t v;
-    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
     ecs_script_eval_desc_t desc = {
         .runtime = flecs_script_runtime_acquire_call(runtime)
     };
@@ -2069,9 +2103,10 @@ done:
     v.vars = ecs_script_vars_pop(v.vars);
     flecs_script_eval_visit_fini(&v, &desc);
     flecs_script_runtime_release_call(runtime, desc.runtime);
+    runtime->call_depth --;
 
     if (failed) {
-        flecs_script_runtime_get(world)->error = true;
+        runtime->error = true;
     }
 }
 
@@ -2209,6 +2244,7 @@ int flecs_script_assign_value(
     ecs_ptr_copy_w_type_info(world, ti, ECS_OFFSET(copy, node->offset), src);
     ecs_set_id(world, instance, component,
         flecs_ito(size_t, comp_ti->size), copy);
+
     ecs_ptr_free_w_type_info(world, comp_ti, copy);
 
     return 0;

@@ -22,6 +22,11 @@ static void flecs_struct_dtor(
 static ECS_COPY(EcsStruct, dst, src, {
     flecs_struct_dtor(dst);
 
+    if (!src->members.array) {
+        dst->members = (ecs_vec_t){0};
+        return;
+    }
+
     dst->members = ecs_vec_copy_t(NULL, &src->members, ecs_member_t);
 
     ecs_member_t *members = ecs_vec_first_t(&dst->members, ecs_member_t);
@@ -318,6 +323,42 @@ static int flecs_add_member_to_struct(
     int32_t i, count = ecs_vec_count(&s->members);
     int32_t inherited = flecs_struct_inherited_count(world, struct_type, s);
 
+    if (m.offset || m.use_offset) {
+        const EcsComponent *mcomp = ecs_get(world, m.type, EcsComponent);
+        int64_t msize = mcomp ? (int64_t)mcomp->size * (m.count ? m.count : 1) : 0;
+        if (!mcomp || m.offset < 0 ||
+            (((int64_t)m.offset + msize) > INT32_MAX))
+        {
+            char *path = ecs_get_path(world, struct_type);
+            ecs_err("invalid offset %d for member '%s.%s'",
+                m.offset, path, name);
+            ecs_os_free(path);
+            return -1;
+        }
+
+        for (i = 0; i < count; i ++) {
+            if (member_entity && members[i].member) {
+                if (members[i].member == member_entity) {
+                    continue;
+                }
+            } else if (!ecs_os_strcmp(name, members[i].name)) {
+                continue;
+            }
+
+            int64_t start = members[i].offset;
+            int64_t end = start + members[i].size;
+            if (members[i].size && (m.offset < end) &&
+                (start < ((int64_t)m.offset + msize)))
+            {
+                char *path = ecs_get_path(world, struct_type);
+                ecs_err("member '%s.%s' overlaps with member '%s'",
+                    path, name, members[i].name);
+                ecs_os_free(path);
+                return -1;
+            }
+        }
+    }
+
     bool has_member = false;
     bool unchanged = false;
     for (i = 0; i < count; i ++) {
@@ -444,6 +485,13 @@ static int flecs_struct_layout(
     }
 
     if (explicit_offset) {
+        for (int32_t i = 0; i < count; i ++) {
+            ecs_size_t end = members[i].offset + members[i].size;
+            if (end > size) {
+                size = end;
+            }
+        }
+
         const EcsComponent *comp = ecs_get(world, struct_type, EcsComponent);
         if (comp) {
             alignment = comp->alignment;

@@ -160,6 +160,11 @@ static int flecs_json_typeinfo_ser_op(
     const ecs_member_t *member,
     ecs_strbuf_t *str)
 {
+    if (str->list_sp >= (ECS_STRBUF_MAX_LIST_DEPTH - 2)) {
+        ecs_err("type is too deeply nested to serialize");
+        return -1;
+    }
+
     if (op->kind == EcsOpForward) {
         return flecs_json_typeinfo_ser_type(world, op->type, str);
     }

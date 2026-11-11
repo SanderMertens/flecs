@@ -27,12 +27,6 @@ static ECS_CTOR(EcsPipelineStats, ptr, {
     ecs_map_init(&ptr->stats, NULL);
 })
 
-static ECS_COPY(EcsPipelineStats, dst, src, {
-    (void)dst;
-    (void)src;
-    ecs_abort(ECS_INVALID_OPERATION, "cannot copy pipeline stats component");
-})
-
 static ECS_MOVE(EcsPipelineStats, dst, src, {
     flecs_pipeline_monitor_dtor(dst);
     ecs_os_memcpy_t(dst, src, EcsPipelineStats);
@@ -101,9 +95,9 @@ void FlecsPipelineMonitorImport(
 
     ecs_set_hooks(world, EcsPipelineStats, {
         .ctor = ecs_ctor(EcsPipelineStats),
-        .copy = ecs_copy(EcsPipelineStats),
         .move = ecs_move(EcsPipelineStats),
-        .dtor = ecs_dtor(EcsPipelineStats)
+        .dtor = ecs_dtor(EcsPipelineStats),
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL
     });
 
     ecs_stats_api_t api = {

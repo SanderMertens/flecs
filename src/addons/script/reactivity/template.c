@@ -2289,7 +2289,11 @@ int flecs_script_eval_template(
         ? flecs_script_symbol_entity(v, node->symbol) : 0;
     if (!template_entity) {
         template_entity = flecs_script_create_entity(v, node->name);
-        if (node->symbol != -1 && template_entity) {
+        if (!template_entity) {
+            return -1;
+        }
+
+        if (node->symbol != -1) {
             flecs_script_symbol_set(v, node->symbol, template_entity);
         }
     }

@@ -813,10 +813,25 @@ static bool flecs_query_select_all(
             match_any.flags |= (EcsQueryIsEntity << EcsQuerySecond);
         }
 
-        match_any.written = (1ull << src_var);
+        ecs_query_impl_t *impl = flecs_query_impl(q);
+        ecs_var_id_t table_var = src_var;
+        if (impl->vars[src_var].kind == EcsVarEntity) {
+            table_var = impl->vars[src_var].table_id;
+            if (table_var == EcsVarNone) {
+                return false;
+            }
+
+            match_any.src.var = table_var;
+        }
+
+        match_any.written = (1ull << table_var);
         match_any.other = flecs_itolbl(flecs_query_to_table_flags(q));
         flecs_query_op_insert(&match_any, ctx);
-        flecs_query_write_ctx(op->src.var, ctx, false);
+        flecs_query_write_ctx(table_var, ctx, false);
+
+        if (table_var != src_var) {
+            flecs_query_insert_each(table_var, src_var, ctx, false);
+        }
 
         /* Update write administration */
         return true;
@@ -1340,6 +1355,22 @@ int flecs_query_compile_term(
         goto error;
     }
 
+    if (src_is_var && !src_is_lookup &&
+        query->vars[op.src.var].kind == EcsVarEntity &&
+        !flecs_query_is_written(op.src.var, ctx->written))
+    {
+        ecs_var_id_t tvar = query->vars[op.src.var].table_id;
+        if (tvar == EcsVarNone) {
+            ecs_err("variable '%s' is used as source before it is written",
+                query->vars[op.src.var].name);
+            goto error;
+        }
+
+        if (!flecs_query_is_written(tvar, ctx->written)) {
+            op.src.var = tvar;
+        }
+    }
+
     /* If source is Any (_) and first and/or second are unconstrained, insert an
      * ids instruction instead of an And */
     if (term->flags_ & EcsTermMatchAnySrc) {
@@ -1415,6 +1446,8 @@ int flecs_query_compile_term(
         is_not = false;
         is_optional = true;
     }
+
+    ecs_write_flags_t written_pre_not = ctx->written;
 
     /* Handle Not, Optional, Or operators */
     if (is_not) {
@@ -1519,6 +1552,7 @@ int flecs_query_compile_term(
     /* Handle closing of Not, Optional and Or operators */
     if (is_not) {
         flecs_query_end_block(ctx, true);
+        ctx->written = written_pre_not;
     } else if (is_optional) {
         flecs_query_end_block(ctx, true);
     }

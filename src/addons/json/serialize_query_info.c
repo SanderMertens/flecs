@@ -44,7 +44,7 @@ static void flecs_json_serialize_term_entity(
     flecs_json_memberl(buf, "entity");
     flecs_json_path(buf, world, e);
 
-    if (e) {
+    if (e && ecs_is_alive(world, e)) {
         const char *symbol = ecs_get_symbol(world, e);
         if (symbol) {
             flecs_json_memberl(buf, "symbol");

@@ -266,6 +266,19 @@ static int flecs_meta_array_bounds_check(
             ecs_os_free(str);
             return -1;
         }
+    } else if (kind == EcsOpPushVector) {
+        int64_t max_elem = (int64_t)parent->elem_count * 2;
+        if (max_elem < 1024) {
+            max_elem = 1024;
+        }
+
+        if (parent->elem < 0 || parent->elem > max_elem) {
+            char *str = ecs_get_path(cursor->world, parent->type);
+            ecs_err("out of collection bounds for type '%s' (index %d vs. size %d)", 
+                str, parent->elem, parent->elem_count);
+            ecs_os_free(str);
+            return -1;
+        }
     }
 
     return 0;
@@ -902,6 +915,11 @@ static const char* flecs_meta_parse_elem(
             return NULL;
         }
 
+        if (elem > ((INT32_MAX - 9) / 10)) {
+            ecs_err("array index too large in member expression");
+            return NULL;
+        }
+
         elem *= 10;
         elem += ch - '0';
         ptr ++;
@@ -1054,10 +1072,13 @@ int ecs_meta_push(
         }
     }
 
+    if ((cursor->depth + 1) >= ECS_META_MAX_SCOPE_DEPTH) {
+        ecs_err("value is too deeply nested");
+        return -1;
+    }
+
     void *ptr = flecs_meta_cursor_get_ptr(world, cursor, scope);
     cursor->depth ++;
-    ecs_check(cursor->depth < ECS_META_MAX_SCOPE_DEPTH,
-        ECS_INVALID_PARAMETER, NULL);
 
     ecs_meta_scope_t *next_scope = flecs_cursor_get_scope(cursor);
     *next_scope = (ecs_meta_scope_t) {0};
@@ -1382,6 +1403,9 @@ static struct {
     [EcsOpBitmask] = {0,          UINT32_MAX}
 };
 
+#define FLECS_META_U64_FLOAT_MAX (18446744073709549568.0)
+#define FLECS_META_I64_FLOAT_MAX (9223372036854774784.0)
+
 static struct {
     double min, max;
 } ecs_meta_bounds_float[EcsMetaTypeOpKindLast + 1] = {
@@ -1391,18 +1415,18 @@ static struct {
     [EcsOpU8]      = {0,          UINT8_MAX},
     [EcsOpU16]     = {0,          UINT16_MAX},
     [EcsOpU32]     = {0,          UINT32_MAX},
-    [EcsOpU64]     = {0,          (double)UINT64_MAX},
+    [EcsOpU64]     = {0,          FLECS_META_U64_FLOAT_MAX},
     [EcsOpI8]      = {INT8_MIN,   INT8_MAX},
     [EcsOpI16]     = {INT16_MIN,  INT16_MAX},
     [EcsOpI32]     = {INT32_MIN,  INT32_MAX},
-    [EcsOpI64]     = {INT64_MIN,  (double)INT64_MAX},
-    [EcsOpUPtr]    = {0, ((sizeof(void*) == 4) ? UINT32_MAX : (double)UINT64_MAX)},
+    [EcsOpI64]     = {INT64_MIN,  FLECS_META_I64_FLOAT_MAX},
+    [EcsOpUPtr]    = {0, ((sizeof(void*) == 4) ? UINT32_MAX : FLECS_META_U64_FLOAT_MAX)},
     [EcsOpIPtr]    = {
         ((sizeof(void*) == 4) ? INT32_MIN : (double)INT64_MIN), 
-        ((sizeof(void*) == 4) ? INT32_MAX : (double)INT64_MAX)
+        ((sizeof(void*) == 4) ? INT32_MAX : FLECS_META_I64_FLOAT_MAX)
     },
-    [EcsOpEntity]  = {0,          (double)UINT64_MAX},
-    [EcsOpId]      = {0,          (double)UINT64_MAX},
+    [EcsOpEntity]  = {0,          FLECS_META_U64_FLOAT_MAX},
+    [EcsOpId]      = {0,          FLECS_META_U64_FLOAT_MAX},
     [EcsOpEnum]    = {INT32_MIN,  INT32_MAX},
     [EcsOpBitmask] = {0,          UINT32_MAX}
 };
@@ -1414,7 +1438,7 @@ case kind:\
 
 #define case_T_checked(kind, T, dst, src, bounds)\
 case kind:\
-    if ((src < bounds[kind].min) || (src > bounds[kind].max)){\
+    if (!((src >= bounds[kind].min) && (src <= bounds[kind].max))){\
         ecs_err("value %.0f is out of bounds for type %s", (double)src,\
             flecs_meta_op_kind_str(kind));\
         return -1;\
@@ -1607,8 +1631,9 @@ static FLECS_ALWAYS_INLINE int flecs_meta_set_number(
     ecs_meta_op_t *op = flecs_cursor_get_op(scope);
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, cursor, scope);
     ecs_meta_op_kind_t kind = op->kind;
-    if (from == EcsI64 || from == EcsU64 || from == EcsF64) {
-        ecs_assert(ptr != NULL, ECS_INVALID_OPERATION, "no object to assign");
+    if (!ptr) {
+        ecs_err("no object to assign");
+        return -1;
     }
 
     if (flecs_meta_op_is_value(op)) {

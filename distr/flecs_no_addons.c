@@ -3102,8 +3102,10 @@ static ECS_COPY(EcsIdentifier, dst, src, {
     ecs_os_strset(&dst->value, src->value);
     dst->hash = src->hash;
     dst->length = src->length;
-    dst->index_hash = src->index_hash;
-    dst->index = src->index;
+    if (src->index) {
+        dst->index_hash = src->index_hash;
+        dst->index = src->index;
+    }
 })
 
 static ECS_MOVE(EcsIdentifier, dst, src, {
@@ -3111,8 +3113,10 @@ static ECS_MOVE(EcsIdentifier, dst, src, {
     dst->value = src->value;
     dst->hash = src->hash;
     dst->length = src->length;
-    dst->index_hash = src->index_hash;
-    dst->index = src->index;
+    if (src->index) {
+        dst->index_hash = src->index_hash;
+        dst->index = src->index;
+    }
 
     src->value = NULL;
     src->hash = 0;
@@ -3122,12 +3126,6 @@ static ECS_MOVE(EcsIdentifier, dst, src, {
 })
 
 /* -- Poly component -- */
-
-static ECS_COPY(EcsPoly, dst, src, {
-    (void)dst;
-    (void)src;
-    ecs_abort(ECS_INVALID_OPERATION, "poly component cannot be copied");
-})
 
 static ECS_MOVE(EcsPoly, dst, src, {
     if (dst->poly && (dst->poly != src->poly)) {
@@ -3756,9 +3754,9 @@ void flecs_bootstrap(
 
     flecs_type_info_init(world, EcsPoly, {
         .ctor = flecs_default_ctor,
-        .copy = ecs_copy(EcsPoly),
         .move = ecs_move(EcsPoly),
-        .dtor = ecs_dtor(EcsPoly)
+        .dtor = ecs_dtor(EcsPoly),
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL
     });
 
     flecs_type_info_init(world, EcsParent, {
@@ -10028,6 +10026,16 @@ static ecs_entity_t flecs_get_parent_from_path(
             return 0;
         }
 
+        if (parent) {
+            ecs_entity_t alive = flecs_entities_get_alive(world, parent);
+            if (alive) {
+                parent = alive;
+            } else if (ecs_exists(world, parent)) {
+                *error = true;
+                return 0;
+            }
+        }
+
         path ++;
         while (path[0] && isdigit(path[0])) {
             path ++; /* Skip id part of path */
@@ -10650,6 +10658,12 @@ ecs_entity_t ecs_add_path_w_sep(
     if (error) {
         /* Invalid id */
         ecs_err("invalid identifier: '%s'", path);
+        return 0;
+    }
+
+    if (entity && parent && ((uint32_t)entity == (uint32_t)parent)) {
+        ecs_err("invalid identifier: '%s' (entity cannot be its own parent)",
+            path);
         return 0;
     }
 
@@ -11882,6 +11896,17 @@ bool ecs_page_next(
         ecs_os_memcpy(it, chain_it, offsetof(ecs_iter_t, priv_));
 
         if (!chain_it->table && !chain_it->count) {
+            if (iter->offset) {
+                iter->offset --;
+                continue;
+            }
+
+            if (iter->remaining) {
+                iter->remaining --;
+            } else if (iter->limit) {
+                goto done;
+            }
+
             goto yield; /* Task query */
         }
 
@@ -25251,6 +25276,16 @@ int flecs_term_finalize(
     ecs_entity_t second_id = ECS_TERM_REF_ID(second);
     ecs_entity_t src_id = ECS_TERM_REF_ID(src);
 
+    if (ECS_IS_VALUE_PAIR(term->id) && (first->id & EcsIsEntity) && first_id &&
+        (first_id == EcsIsA || first_id == EcsChildOf ||
+         ecs_has_id(world, first_id, EcsTraversable) ||
+         ecs_has_id(world, first_id, EcsTransitive)))
+    {
+        flecs_query_validator_error(ctx,
+            "value pair cannot be used with traversable relationship");
+        return -1;
+    }
+
     if ((first->id & EcsIsVariable) && (first_id == EcsAny)) {
         term->flags_ |= EcsTermMatchAny;
     }
@@ -25698,7 +25733,9 @@ static int flecs_query_finalize_terms(
         }
 
         nodata_term = term->src.id == EcsIsEntity || term->inout == EcsInOutNone ||
-            !ti || (term->flags_ & EcsTermIsMember) || scope_nesting;
+            !ti || (term->flags_ & EcsTermIsMember) || scope_nesting ||
+            term->oper == EcsAndFrom || term->oper == EcsOrFrom ||
+            term->oper == EcsNotFrom;
 
         if (!nodata_term && term->inout != EcsIn && term->inout != EcsInOutNone) {
             /* Non-this terms default to EcsIn */
@@ -25713,9 +25750,15 @@ static int flecs_query_finalize_terms(
             }
         }
 
-        if (!nodata_term && (term->flags_ & EcsTermIsOr)) {
-            nodata_term = other_type;
-            q->data_fields &= (ecs_termset_t)~(1llu << field);
+        if (term->flags_ & EcsTermIsOr) {
+            if (other_type) {
+                nodata_term = true;
+                q->data_fields &= (ecs_termset_t)~(1llu << field);
+                q->write_fields &= (ecs_termset_t)~(1llu << field);
+                q->read_fields &= (ecs_termset_t)~(1llu << field);
+            } else if (!nodata_term) {
+                q->data_fields &= (ecs_termset_t)~(1llu << field);
+            }
         }
 
         if (term->flags_ & EcsTermIsMember) {

@@ -179,7 +179,9 @@
                 "map_cmp_illegal",
                 "existing_struct_w_vector_member_no_hooks",
                 "existing_struct_w_vector_member_shallow_copy",
-                "existing_struct_w_vector_member_not_freed"
+                "existing_struct_w_vector_member_not_freed",
+                "struct_too_many_ops",
+                "deeply_nested_struct"
             ]
         }, {
             "id": "StructTypes",
@@ -225,7 +227,9 @@
                 "redefine_same_members_in_use",
                 "redefine_member_after_nested_type_changed",
                 "struct_wo_members",
-                "struct_wo_members_add_member"
+                "struct_wo_members_add_member",
+                "set_member_explicit_offset_keeps_size",
+                "set_member_invalid_explicit_offset"
             ]
         }, {
             "id": "NestedStructTypes",
@@ -693,7 +697,12 @@
                 "value_api_copy_ctor",
                 "value_api_move",
                 "value_api_move_ctor",
-                "value_component_lifecycle"
+                "value_component_lifecycle",
+                "set_float_to_i64_upper_bound",
+                "set_float_to_u64_upper_bound",
+                "set_nan_to_int",
+                "vector_elem_out_of_range",
+                "member_expr_index_overflow"
             ]
         }, {
             "id": "DeserializeFromJson",
@@ -918,7 +927,9 @@
                 "entity_wildcard_parent",
                 "entity_wildcard_tag",
                 "entity_wildcard_pair_target",
-                "entity_wildcard_component"
+                "entity_wildcard_component",
+                "opaque_vector_wo_ensure_element",
+                "value_w_not_copyable_type"
             ]
         }, {
             "id": "SerializeToJson",
@@ -1016,7 +1027,11 @@
                 "value_roundtrip",
                 "ecs_struct_1_member",
                 "ecs_struct_2_members",
-                "ecs_struct_3_members"
+                "ecs_struct_3_members",
+                "empty_value",
+                "struct_w_empty_value",
+                "build_info_null_addons",
+                "build_info_empty_addons"
             ]
         }, {
             "id": "SerializeEntityToJson",

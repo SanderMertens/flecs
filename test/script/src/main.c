@@ -828,6 +828,8 @@ void Eval_named_child_in_for_loop_warns(void);
 void Eval_interpolated_name_in_for_loop_no_warn(void);
 void Eval_child_of_interpolated_name_in_for_loop_no_warn(void);
 void Eval_named_entity_w_tag_in_for_loop_no_warn(void);
+void Eval_set_name_component(void);
+void Eval_i64_runtime_arithmetic_overflow(void);
 
 // Testsuite 'Collection'
 void Collection_setup(void);
@@ -1907,6 +1909,43 @@ void Error_pair_scope_unresolved_first(void);
 void Error_pair_scope_unresolved_second(void);
 void Error_compare_vector_types(void);
 void Error_divide_strings(void);
+void Error_add_childof_self(void);
+void Error_add_childof_cycle(void);
+void Error_with_childof_self(void);
+void Error_add_isa_self(void);
+void Error_add_isa_cycle(void);
+void Error_add_isa_final(void);
+void Error_add_target_trait_by_itself(void);
+void Error_add_relationship_trait_as_target(void);
+void Error_add_relationship_trait_by_itself(void);
+void Error_add_singleton_to_other_entity(void);
+void Error_add_trait_to_component_in_use(void);
+void Error_add_trait_to_queried_component(void);
+void Error_add_childof_flecs_core(void);
+void Error_reparent_builtin_entity(void);
+void Error_reparent_flecs_module(void);
+void Error_reparent_flecs_core_module(void);
+void Error_set_component_in_use(void);
+void Error_set_component_invalid_size(void);
+void Error_set_parent_self(void);
+void Error_set_parent_invalid(void);
+void Error_set_meta_type(void);
+void Error_entity_has_zero_id(void);
+void Error_call_variable(void);
+void Error_call_entity_variable(void);
+void Error_template_add_poly(void);
+void Error_const_poly(void);
+void Error_const_tree_spawner(void);
+void Error_const_copy_illegal_type(void);
+void Error_copy_const_w_copy_illegal_type(void);
+void Error_export_const_copy_illegal_type(void);
+void Error_get_copy_illegal_component(void);
+void Error_set_copy_illegal_component(void);
+void Error_set_copy_illegal_pair(void);
+void Error_set_tree_spawner(void);
+void Error_template_set_copy_illegal_component(void);
+void Error_function_infinite_recursion(void);
+void Error_match_vector(void);
 
 // Testsuite 'Format'
 void Format_setup(void);
@@ -2512,6 +2551,9 @@ void Expr_id_var_eq_literal(void);
 void Expr_vector_func_array_of_struct_error_type_name(void);
 void Expr_partial_initializer(void);
 void Expr_partial_nested_initializer(void);
+void Expr_i64_arithmetic_overflow(void);
+void Expr_shift_out_of_range(void);
+void Expr_long_binary_chain(void);
 
 // Testsuite 'ExprAst'
 void ExprAst_setup(void);
@@ -2643,6 +2685,7 @@ void Serialize_struct_w_value(void);
 void Serialize_value_roundtrip(void);
 void Serialize_string_w_interpolation_not_escaped(void);
 void Serialize_string_w_curly_brace_not_escaped(void);
+void Serialize_empty_value(void);
 
 // Testsuite 'Deserialize'
 void Deserialize_setup(void);
@@ -4204,6 +4247,33 @@ void Command_multi_command_history(void);
 void Command_multi_command_history_errors_per_command(void);
 void Command_multi_command_help(void);
 void Command_query_sparse(void);
+void Command_add_childof_self(void);
+void Command_add_isa_self(void);
+void Command_add_trait_to_component_in_use(void);
+void Command_add_relationship_trait_by_itself(void);
+void Command_rm_entity_w_panic(void);
+void Command_rm_builtin_entity(void);
+void Command_rm_entity_used_by_query(void);
+void Command_rm_component_from_builtin_entity(void);
+void Command_rm_component_from_component_in_use(void);
+void Command_set_component_invalid_size(void);
+void Command_set_component_in_use(void);
+void Command_set_parent_self(void);
+void Command_set_parent_invalid(void);
+void Command_mv_entity_into_builtin_module(void);
+void Command_mv_builtin_entity(void);
+void Command_mv_flecs_module(void);
+void Command_get_not_copyable(void);
+void Command_modified_not_copyable(void);
+void Command_get_pair_w_dead_relationship(void);
+void Command_script_set_invalid_id(void);
+void Command_script_remove_invalid_id(void);
+void Command_cd_wildcard(void);
+void Command_emit_wildcard_event(void);
+void Command_script_write_invalid_entity(void);
+void Command_new_hierarchy_too_deep(void);
+void Command_new_in_flecs_core(void);
+void Command_script_save_other_file(void);
 
 // Testsuite 'CommandResource'
 void CommandResource_setup(void);
@@ -4244,6 +4314,9 @@ void SerializeType_roundtrip(void);
 void SerializeType_primitive(void);
 void SerializeType_not_a_type(void);
 void SerializeType_opaque_dep(void);
+void SerializeType_anonymous_struct(void);
+void SerializeType_struct_w_anonymous_parent(void);
+void SerializeType_struct_w_anonymous_member_type(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -7517,6 +7590,14 @@ bake_test_case Eval_testcases[] = {
     {
         "named_entity_w_tag_in_for_loop_no_warn",
         Eval_named_entity_w_tag_in_for_loop_no_warn
+    },
+    {
+        "set_name_component",
+        Eval_set_name_component
+    },
+    {
+        "i64_runtime_arithmetic_overflow",
+        Eval_i64_runtime_arithmetic_overflow
     }
 };
 
@@ -11752,6 +11833,154 @@ bake_test_case Error_testcases[] = {
     {
         "divide_strings",
         Error_divide_strings
+    },
+    {
+        "add_childof_self",
+        Error_add_childof_self
+    },
+    {
+        "add_childof_cycle",
+        Error_add_childof_cycle
+    },
+    {
+        "with_childof_self",
+        Error_with_childof_self
+    },
+    {
+        "add_isa_self",
+        Error_add_isa_self
+    },
+    {
+        "add_isa_cycle",
+        Error_add_isa_cycle
+    },
+    {
+        "add_isa_final",
+        Error_add_isa_final
+    },
+    {
+        "add_target_trait_by_itself",
+        Error_add_target_trait_by_itself
+    },
+    {
+        "add_relationship_trait_as_target",
+        Error_add_relationship_trait_as_target
+    },
+    {
+        "add_relationship_trait_by_itself",
+        Error_add_relationship_trait_by_itself
+    },
+    {
+        "add_singleton_to_other_entity",
+        Error_add_singleton_to_other_entity
+    },
+    {
+        "add_trait_to_component_in_use",
+        Error_add_trait_to_component_in_use
+    },
+    {
+        "add_trait_to_queried_component",
+        Error_add_trait_to_queried_component
+    },
+    {
+        "add_childof_flecs_core",
+        Error_add_childof_flecs_core
+    },
+    {
+        "reparent_builtin_entity",
+        Error_reparent_builtin_entity
+    },
+    {
+        "reparent_flecs_module",
+        Error_reparent_flecs_module
+    },
+    {
+        "reparent_flecs_core_module",
+        Error_reparent_flecs_core_module
+    },
+    {
+        "set_component_in_use",
+        Error_set_component_in_use
+    },
+    {
+        "set_component_invalid_size",
+        Error_set_component_invalid_size
+    },
+    {
+        "set_parent_self",
+        Error_set_parent_self
+    },
+    {
+        "set_parent_invalid",
+        Error_set_parent_invalid
+    },
+    {
+        "set_meta_type",
+        Error_set_meta_type
+    },
+    {
+        "entity_has_zero_id",
+        Error_entity_has_zero_id
+    },
+    {
+        "call_variable",
+        Error_call_variable
+    },
+    {
+        "call_entity_variable",
+        Error_call_entity_variable
+    },
+    {
+        "template_add_poly",
+        Error_template_add_poly
+    },
+    {
+        "const_poly",
+        Error_const_poly
+    },
+    {
+        "const_tree_spawner",
+        Error_const_tree_spawner
+    },
+    {
+        "const_copy_illegal_type",
+        Error_const_copy_illegal_type
+    },
+    {
+        "copy_const_w_copy_illegal_type",
+        Error_copy_const_w_copy_illegal_type
+    },
+    {
+        "export_const_copy_illegal_type",
+        Error_export_const_copy_illegal_type
+    },
+    {
+        "get_copy_illegal_component",
+        Error_get_copy_illegal_component
+    },
+    {
+        "set_copy_illegal_component",
+        Error_set_copy_illegal_component
+    },
+    {
+        "set_copy_illegal_pair",
+        Error_set_copy_illegal_pair
+    },
+    {
+        "set_tree_spawner",
+        Error_set_tree_spawner
+    },
+    {
+        "template_set_copy_illegal_component",
+        Error_template_set_copy_illegal_component
+    },
+    {
+        "function_infinite_recursion",
+        Error_function_infinite_recursion
+    },
+    {
+        "match_vector",
+        Error_match_vector
     }
 };
 
@@ -14154,6 +14383,18 @@ bake_test_case Expr_testcases[] = {
     {
         "partial_nested_initializer",
         Expr_partial_nested_initializer
+    },
+    {
+        "i64_arithmetic_overflow",
+        Expr_i64_arithmetic_overflow
+    },
+    {
+        "shift_out_of_range",
+        Expr_shift_out_of_range
+    },
+    {
+        "long_binary_chain",
+        Expr_long_binary_chain
     }
 };
 
@@ -14659,6 +14900,10 @@ bake_test_case Serialize_testcases[] = {
     {
         "string_w_curly_brace_not_escaped",
         Serialize_string_w_curly_brace_not_escaped
+    },
+    {
+        "empty_value",
+        Serialize_empty_value
     }
 };
 
@@ -20750,6 +20995,114 @@ bake_test_case Command_testcases[] = {
     {
         "query_sparse",
         Command_query_sparse
+    },
+    {
+        "add_childof_self",
+        Command_add_childof_self
+    },
+    {
+        "add_isa_self",
+        Command_add_isa_self
+    },
+    {
+        "add_trait_to_component_in_use",
+        Command_add_trait_to_component_in_use
+    },
+    {
+        "add_relationship_trait_by_itself",
+        Command_add_relationship_trait_by_itself
+    },
+    {
+        "rm_entity_w_panic",
+        Command_rm_entity_w_panic
+    },
+    {
+        "rm_builtin_entity",
+        Command_rm_builtin_entity
+    },
+    {
+        "rm_entity_used_by_query",
+        Command_rm_entity_used_by_query
+    },
+    {
+        "rm_component_from_builtin_entity",
+        Command_rm_component_from_builtin_entity
+    },
+    {
+        "rm_component_from_component_in_use",
+        Command_rm_component_from_component_in_use
+    },
+    {
+        "set_component_invalid_size",
+        Command_set_component_invalid_size
+    },
+    {
+        "set_component_in_use",
+        Command_set_component_in_use
+    },
+    {
+        "set_parent_self",
+        Command_set_parent_self
+    },
+    {
+        "set_parent_invalid",
+        Command_set_parent_invalid
+    },
+    {
+        "mv_entity_into_builtin_module",
+        Command_mv_entity_into_builtin_module
+    },
+    {
+        "mv_builtin_entity",
+        Command_mv_builtin_entity
+    },
+    {
+        "mv_flecs_module",
+        Command_mv_flecs_module
+    },
+    {
+        "get_not_copyable",
+        Command_get_not_copyable
+    },
+    {
+        "modified_not_copyable",
+        Command_modified_not_copyable
+    },
+    {
+        "get_pair_w_dead_relationship",
+        Command_get_pair_w_dead_relationship
+    },
+    {
+        "script_set_invalid_id",
+        Command_script_set_invalid_id
+    },
+    {
+        "script_remove_invalid_id",
+        Command_script_remove_invalid_id
+    },
+    {
+        "cd_wildcard",
+        Command_cd_wildcard
+    },
+    {
+        "emit_wildcard_event",
+        Command_emit_wildcard_event
+    },
+    {
+        "script_write_invalid_entity",
+        Command_script_write_invalid_entity
+    },
+    {
+        "new_hierarchy_too_deep",
+        Command_new_hierarchy_too_deep
+    },
+    {
+        "new_in_flecs_core",
+        Command_new_in_flecs_core
+    },
+    {
+        "script_save_other_file",
+        Command_script_save_other_file
     }
 };
 
@@ -20896,6 +21249,18 @@ bake_test_case SerializeType_testcases[] = {
     {
         "opaque_dep",
         SerializeType_opaque_dep
+    },
+    {
+        "anonymous_struct",
+        SerializeType_anonymous_struct
+    },
+    {
+        "struct_w_anonymous_parent",
+        SerializeType_struct_w_anonymous_parent
+    },
+    {
+        "struct_w_anonymous_member_type",
+        SerializeType_struct_w_anonymous_member_type
     }
 };
 
@@ -21046,7 +21411,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        818,
+        820,
         Eval_testcases,
         1,
         Eval_params
@@ -21127,7 +21492,7 @@ static bake_test_suite suites[] = {
         "Error",
         Error_setup,
         NULL,
-        259,
+        296,
         Error_testcases,
         1,
         Error_params
@@ -21145,7 +21510,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        451,
+        454,
         Expr_testcases,
         2,
         Expr_params
@@ -21170,7 +21535,7 @@ static bake_test_suite suites[] = {
         "Serialize",
         NULL,
         NULL,
-        93,
+        94,
         Serialize_testcases
     },
     {
@@ -21319,7 +21684,7 @@ static bake_test_suite suites[] = {
         "Command",
         Command_setup,
         NULL,
-        144,
+        171,
         Command_testcases
     },
     {
@@ -21333,7 +21698,7 @@ static bake_test_suite suites[] = {
         "SerializeType",
         NULL,
         NULL,
-        18,
+        21,
         SerializeType_testcases
     }
 };

@@ -174,6 +174,9 @@ void Validator_exceed_max_var_count(void);
 void Validator_query_for_relationship_trait_as_component(void);
 void Validator_query_for_relationship_trait_as_component_2_terms(void);
 void Validator_from_op_w_pair(void);
+void Validator_validate_value_pair_as_src(void);
+void Validator_validate_value_pair_w_traversable_rel(void);
+void Validator_validate_eq_pred_wo_rhs(void);
 
 // Testsuite 'Parser'
 void Parser_resolve_this(void);
@@ -1109,6 +1112,13 @@ void Variables_invalid_var_name_w_neq(void);
 void Variables_first_var_w_fixed_tgt_id_matching_var_id(void);
 void Variables_same_src_tgt_var_w_fixed_first_id_matching_var_id(void);
 void Variables_same_this_src_tgt_w_fixed_first_id_matching_var_id(void);
+void Variables_page_iter_entity_var_only(void);
+void Variables_not_first_var_then_src(void);
+void Variables_not_this_first_then_this_src(void);
+void Variables_optional_this_second_not_unwritten(void);
+void Variables_not_self_ref_then_transitive(void);
+void Variables_optional_cond_eval_skips_var_write(void);
+void Variables_anonymous_var_then_transitive(void);
 
 // Testsuite 'Operators'
 void Operators_setup(void);
@@ -1531,6 +1541,7 @@ void BuiltinPredicates_match_any(void);
 void BuiltinPredicates_this_neq_id_written_after_eq(void);
 void BuiltinPredicates_this_neq_id_written_same_table_twice(void);
 void BuiltinPredicates_2_or_w_eq_wildcard(void);
+void BuiltinPredicates_unconstrained_var_eq_wildcard(void);
 
 // Testsuite 'Scopes'
 void Scopes_setup(void);
@@ -2303,6 +2314,7 @@ void Toggle_toggle_0_src_only_term(void);
 void Toggle_toggle_0_src(void);
 void Toggle_remove_toggle_from_table_w_other_toggle_and_entity(void);
 void Toggle_this_toggle_after_or_chain(void);
+void Toggle_toggle_w_entity_var_src(void);
 
 // Testsuite 'Sparse'
 void Sparse_setup(void);
@@ -2494,6 +2506,7 @@ void DontFragment_1_this_sparse_first_wildcard_w_empty_rel(void);
 void DontFragment_this_wildcard_wildcard_pair_w_empty_pair(void);
 void DontFragment_ecs_field_on_dont_fragment_up(void);
 void DontFragment_ecs_field_at_on_dont_fragment_up(void);
+void DontFragment_iter_fini_wo_next(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_setup(void);
@@ -3671,6 +3684,18 @@ bake_test_case Validator_testcases[] = {
     {
         "from_op_w_pair",
         Validator_from_op_w_pair
+    },
+    {
+        "validate_value_pair_as_src",
+        Validator_validate_value_pair_as_src
+    },
+    {
+        "validate_value_pair_w_traversable_rel",
+        Validator_validate_value_pair_w_traversable_rel
+    },
+    {
+        "validate_eq_pred_wo_rhs",
+        Validator_validate_eq_pred_wo_rhs
     }
 };
 
@@ -7365,6 +7390,34 @@ bake_test_case Variables_testcases[] = {
     {
         "same_this_src_tgt_w_fixed_first_id_matching_var_id",
         Variables_same_this_src_tgt_w_fixed_first_id_matching_var_id
+    },
+    {
+        "page_iter_entity_var_only",
+        Variables_page_iter_entity_var_only
+    },
+    {
+        "not_first_var_then_src",
+        Variables_not_first_var_then_src
+    },
+    {
+        "not_this_first_then_this_src",
+        Variables_not_this_first_then_this_src
+    },
+    {
+        "optional_this_second_not_unwritten",
+        Variables_optional_this_second_not_unwritten
+    },
+    {
+        "not_self_ref_then_transitive",
+        Variables_not_self_ref_then_transitive
+    },
+    {
+        "optional_cond_eval_skips_var_write",
+        Variables_optional_cond_eval_skips_var_write
+    },
+    {
+        "anonymous_var_then_transitive",
+        Variables_anonymous_var_then_transitive
     }
 };
 
@@ -9021,6 +9074,10 @@ bake_test_case BuiltinPredicates_testcases[] = {
     {
         "2_or_w_eq_wildcard",
         BuiltinPredicates_2_or_w_eq_wildcard
+    },
+    {
+        "unconstrained_var_eq_wildcard",
+        BuiltinPredicates_unconstrained_var_eq_wildcard
     }
 };
 
@@ -12053,6 +12110,10 @@ bake_test_case Toggle_testcases[] = {
     {
         "this_toggle_after_or_chain",
         Toggle_this_toggle_after_or_chain
+    },
+    {
+        "toggle_w_entity_var_src",
+        Toggle_toggle_w_entity_var_src
     }
 };
 
@@ -12799,6 +12860,10 @@ bake_test_case DontFragment_testcases[] = {
     {
         "ecs_field_at_on_dont_fragment_up",
         DontFragment_ecs_field_at_on_dont_fragment_up
+    },
+    {
+        "iter_fini_wo_next",
+        DontFragment_iter_fini_wo_next
     }
 };
 
@@ -14916,7 +14981,7 @@ static bake_test_suite suites[] = {
         "Validator",
         NULL,
         NULL,
-        165,
+        168,
         Validator_testcases
     },
     {
@@ -14964,7 +15029,7 @@ static bake_test_suite suites[] = {
         "Variables",
         Variables_setup,
         NULL,
-        230,
+        237,
         Variables_testcases,
         1,
         Variables_params
@@ -14998,7 +15063,7 @@ static bake_test_suite suites[] = {
         "BuiltinPredicates",
         BuiltinPredicates_setup,
         NULL,
-        96,
+        97,
         BuiltinPredicates_testcases,
         1,
         BuiltinPredicates_params
@@ -15062,7 +15127,7 @@ static bake_test_suite suites[] = {
         "Toggle",
         Toggle_setup,
         NULL,
-        165,
+        166,
         Toggle_testcases,
         1,
         Toggle_params
@@ -15080,7 +15145,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        150,
+        151,
         DontFragment_testcases,
         1,
         DontFragment_params

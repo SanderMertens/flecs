@@ -2785,3 +2785,71 @@ void SerializeToJson_ecs_struct_3_members(void) {
 
     ecs_fini(world);
 }
+
+void SerializeToJson_empty_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    char *json = ecs_ptr_to_json(world, ecs_id(ecs_value_t), &v);
+    test_assert(json != NULL);
+    test_str(json, "null");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_w_empty_value(void) {
+    typedef struct {
+        ecs_value_t v;
+    } S;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(S) = ecs_struct(world, {
+        .members = {
+            { "v", ecs_id(ecs_value_t) }
+        }
+    });
+
+    S value = {0};
+
+    char *json = ecs_ptr_to_json(world, ecs_id(S), &value);
+    test_assert(json != NULL);
+    test_str(json, "{\"v\":null}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_build_info_null_addons(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_lookup(world, "flecs.core.BuildInfo");
+    test_assert(t != 0);
+
+    ecs_build_info_t value = {0};
+    char *json = ecs_ptr_to_json(world, t, &value);
+    test_assert(json != NULL);
+    test_assert(strstr(json, "\"addons\":[]") != NULL);
+    test_assert(strstr(json, "\"flags\":[]") != NULL);
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_build_info_empty_addons(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_lookup(world, "flecs.core.BuildInfo");
+    test_assert(t != 0);
+
+    const char *empty[] = { NULL };
+    ecs_build_info_t value = { .addons = empty, .flags = empty };
+    char *json = ecs_ptr_to_json(world, t, &value);
+    test_assert(json != NULL);
+    test_assert(strstr(json, "\"addons\":[]") != NULL);
+    test_assert(strstr(json, "\"flags\":[]") != NULL);
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}

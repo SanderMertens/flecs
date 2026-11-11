@@ -183,10 +183,8 @@ static int flecs_meta_write_value(
     const ecs_value_t *value = base;
 
     if (!value->type || !value->ptr) {
-        ecs_assert(false, ECS_INVALID_PARAMETER,
-            "cannot serialize value without value");
-        ecs_err("cannot serialize value without value");
-        return -1;
+        ecs_strbuf_appendlit(str, "null");
+        return 0;
     }
 
     bool json = format == EcsMetaJson;
