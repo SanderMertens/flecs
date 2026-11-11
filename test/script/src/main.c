@@ -1479,6 +1479,12 @@ void Function_emit_is_mut(void);
 void Function_no_return_type(void);
 void Function_no_return_type_in_expr(void);
 void Function_native_mut(void);
+void Function_redeclare_fn(void);
+void Function_redeclare_native_fn(void);
+void Function_redeclare_fn_in_scope(void);
+void Function_same_fn_name_in_different_scopes(void);
+void Function_update_script_w_fn(void);
+void Function_update_script_w_fn_twice(void);
 
 // Testsuite 'Template'
 void Template_setup(void);
@@ -10308,6 +10314,30 @@ bake_test_case Function_testcases[] = {
     {
         "native_mut",
         Function_native_mut
+    },
+    {
+        "redeclare_fn",
+        Function_redeclare_fn
+    },
+    {
+        "redeclare_native_fn",
+        Function_redeclare_native_fn
+    },
+    {
+        "redeclare_fn_in_scope",
+        Function_redeclare_fn_in_scope
+    },
+    {
+        "same_fn_name_in_different_scopes",
+        Function_same_fn_name_in_different_scopes
+    },
+    {
+        "update_script_w_fn",
+        Function_update_script_w_fn
+    },
+    {
+        "update_script_w_fn_twice",
+        Function_update_script_w_fn_twice
     }
 };
 
@@ -22301,7 +22331,7 @@ static bake_test_suite suites[] = {
         "Function",
         Function_setup,
         NULL,
-        113,
+        119,
         Function_testcases,
         1,
         Function_params
