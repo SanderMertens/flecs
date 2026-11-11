@@ -9305,3 +9305,233 @@ void AsyncBlock_error_fn(void) {
 
     ecs_fini(world);
 }
+
+void AsyncBlock_progress_resumes_only_resolved(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ecs_os_zeromem(ab_args);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "async {"
+            LINE "  await fetch(1)"
+            LINE "  await fetch(11)"
+            LINE "}"
+            LINE "async {"
+            LINE "  await fetch(2)"
+            LINE "  await fetch(12)"
+            LINE "}"
+            LINE "async {"
+            LINE "  await fetch(3)"
+            LINE "  await fetch(13)"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    test_int(ecs_script_tasks_progress(world), 3);
+    test_int(ab_future_count, 3);
+    test_int(ecs_script_tasks_progress(world), 0);
+
+    ecs_value_t v = ecs_value(ecs_i32_t, {0});
+    test_int(ecs_script_future_resolve(ab_futures[1], &v), 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+    test_int(ab_future_count, 4);
+    test_int(ab_args[3], 12);
+    test_int(ecs_script_tasks_progress(world), 0);
+
+    test_int(ecs_script_future_resolve(ab_futures[0], &v), 0);
+    test_int(ecs_script_future_resolve(ab_futures[2], &v), 0);
+
+    test_int(ecs_script_tasks_progress(world), 2);
+    test_int(ab_future_count, 6);
+    test_int(ab_args[4], 11);
+    test_int(ab_args[5], 13);
+    test_int(ecs_script_tasks_progress(world), 0);
+
+    for (int32_t i = 0; i < ab_future_count; i ++) {
+        ecs_script_future_release(ab_futures[i]);
+    }
+
+    ecs_delete(world, s);
+    test_int(ab_cancel_count, 3);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_resolve_after_delete_while_awaiting(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ecs_os_zeromem(ab_args);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "async {"
+            LINE "  await fetch(1)"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+    test_int(ab_future_count, 1);
+    test_int(ecs_script_tasks_progress(world), 0);
+
+    ecs_delete(world, s);
+    test_int(ab_cancel_count, 1);
+
+    ecs_value_t v = ecs_value(ecs_i32_t, {0});
+    test_assert(ecs_script_future_resolve(ab_futures[0], &v) != 0);
+    test_int(ecs_script_future_status(ab_futures[0]),
+        EcsScriptFutureCancelled);
+    ecs_script_future_release(ab_futures[0]);
+
+    test_int(ecs_script_tasks_progress(world), 0);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_delete_keeps_resolved_block_ready(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ecs_os_zeromem(ab_args);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t s1 = ecs_script(world, {
+        .code = HEAD "async {"
+            LINE "  await fetch(1)"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s1 != 0);
+
+    ecs_entity_t s2 = ecs_script(world, {
+        .code = HEAD "async {"
+            LINE "  await fetch(2)"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s2 != 0);
+
+    ecs_entity_t s3 = ecs_script(world, {
+        .code = HEAD "async {"
+            LINE "  await fetch(3)"
+            LINE "  await fetch(13)"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s3 != 0);
+
+    test_int(ecs_script_tasks_progress(world), 3);
+    test_int(ab_future_count, 3);
+    test_int(ab_args[2], 3);
+
+    ecs_value_t v = ecs_value(ecs_i32_t, {0});
+    test_int(ecs_script_future_resolve(ab_futures[2], &v), 0);
+
+    ecs_delete(world, s1);
+    test_int(ab_cancel_count, 1);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+    test_int(ab_future_count, 4);
+    test_int(ab_args[3], 13);
+    test_int(ecs_script_tasks_progress(world), 0);
+
+    for (int32_t i = 0; i < ab_future_count; i ++) {
+        ecs_script_future_release(ab_futures[i]);
+    }
+
+    ecs_delete(world, s2);
+    ecs_delete(world, s3);
+    test_int(ab_cancel_count, 3);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_finished_block_keeps_resolved_block_ready(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ecs_os_zeromem(ab_args);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Build(slot: i32)"
+            LINE "export mut got: i32 = 0"
+            LINE "async {"
+            LINE "  await fetch(1)"
+            LINE "}"
+            LINE "async {"
+            LINE "  const e = await Build"
+            LINE "  got = e.slot"
+            LINE "}"
+            LINE "async {"
+            LINE "  await fetch(3)"
+            LINE "  emit Build(slot: 7)"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    test_int(ecs_script_tasks_progress(world), 3);
+    test_int(ab_future_count, 2);
+
+    ecs_value_t v = ecs_value(ecs_i32_t, {0});
+    test_int(ecs_script_future_resolve(ab_futures[0], &v), 0);
+    test_int(ecs_script_future_resolve(ab_futures[1], &v), 0);
+    ecs_script_future_release(ab_futures[0]);
+    ecs_script_future_release(ab_futures[1]);
+
+    test_int(ecs_script_tasks_progress(world), 2);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "got")).ptr, 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "got")).ptr, 7);
+    test_int(ecs_script_tasks_progress(world), 0);
+    test_int(ab_cancel_count, 0);
+
+    ecs_fini(world);
+}

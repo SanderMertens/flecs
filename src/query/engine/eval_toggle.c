@@ -12,24 +12,6 @@ typedef struct {
     bool has_bitset;
 } flecs_query_row_mask_t;
 
-/* Portable count-trailing-zeros for 64-bit values. Input must be nonzero. */
-static inline int32_t flecs_ctz64(uint64_t v) {
-#if defined(__clang__) || defined(__GNUC__)
-    return (int32_t)__builtin_ctzll(v);
-#elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_ARM64))
-    unsigned long idx;
-    _BitScanForward64(&idx, v);
-    return (int32_t)idx;
-#else
-    int32_t count = 0;
-    while ((v & 1u) == 0u) {
-        v >>= 1;
-        count ++;
-    }
-    return count;
-#endif
-}
-
 static flecs_query_row_mask_t flecs_query_get_row_mask(
     ecs_iter_t *it,
     ecs_table_t *table,

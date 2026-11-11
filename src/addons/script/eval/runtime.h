@@ -35,6 +35,9 @@ struct ecs_script_runtime_t {
     /* Tasks created by async blocks. Only used by the world runtime, and
      * advanced by ecs_script_tasks_progress(). */
     ecs_vec_t async_tasks;
+    ecs_vec_t async_ready;
+    ecs_os_mutex_t async_lock;
+    bool async_holes;
 #ifdef FLECS_SCRIPT_ASYNC
     ecs_script_task_t *current_task;
     uint64_t event_pass;

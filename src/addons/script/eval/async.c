@@ -82,6 +82,82 @@ static void flecs_script_future_unlock(
     }
 }
 
+static void flecs_script_sched_lock(
+    ecs_script_runtime_t *rt)
+{
+    if (rt->async_lock) {
+        ecs_os_mutex_lock(rt->async_lock);
+    }
+}
+
+static void flecs_script_sched_unlock(
+    ecs_script_runtime_t *rt)
+{
+    if (rt->async_lock) {
+        ecs_os_mutex_unlock(rt->async_lock);
+    }
+}
+
+static bool flecs_script_sched_is_ready(
+    const ecs_script_runtime_t *rt,
+    int32_t index)
+{
+    int32_t word = index >> 6;
+    if (word >= ecs_vec_count(&rt->async_ready)) {
+        return false;
+    }
+
+    uint64_t bits = ecs_vec_first_t(&rt->async_ready, uint64_t)[word];
+    return (bits & (1ull << (index & 63))) != 0;
+}
+
+static void flecs_script_sched_set_ready(
+    ecs_script_runtime_t *rt,
+    int32_t index,
+    bool ready)
+{
+    int32_t word = index >> 6;
+    uint64_t bit = 1ull << (index & 63);
+    if (ready) {
+        ecs_vec_set_min_count_zeromem_t(
+            NULL, &rt->async_ready, uint64_t, word + 1);
+        ecs_vec_first_t(&rt->async_ready, uint64_t)[word] |= bit;
+    } else if (word < ecs_vec_count(&rt->async_ready)) {
+        ecs_vec_first_t(&rt->async_ready, uint64_t)[word] &= ~bit;
+    }
+}
+
+static void flecs_script_task_wake(
+    ecs_script_task_t *task)
+{
+    ecs_script_runtime_t *rt = flecs_script_runtime_get(task->script->world);
+    flecs_script_sched_lock(rt);
+    if (task->sched_index >= 0) {
+        flecs_script_sched_set_ready(rt, task->sched_index, true);
+    }
+    flecs_script_sched_unlock(rt);
+}
+
+static void flecs_script_future_wake(
+    ecs_script_future_t *future)
+{
+    ecs_script_task_t *task = future->waiter;
+    if (task) {
+        future->waiter = NULL;
+        flecs_script_task_wake(task);
+    }
+}
+
+static void flecs_script_future_unwait(
+    ecs_script_future_t *future)
+{
+    if (future) {
+        flecs_script_future_lock(future);
+        future->waiter = NULL;
+        flecs_script_future_unlock(future);
+    }
+}
+
 ecs_expr_function_t* flecs_script_await_call(
     ecs_script_eval_visitor_t *v,
     const ecs_script_node_t *stmt,
@@ -187,6 +263,7 @@ void ecs_script_future_cancel(
     bool cancel = future->status == EcsScriptFuturePending;
     if (cancel) {
         future->status = EcsScriptFutureCancelled;
+        flecs_script_future_wake(future);
     }
 
     flecs_script_future_unlock(future);
@@ -258,6 +335,7 @@ int ecs_script_future_resolve(
     ecs_ptr_copy(future->function_ctx.world, future->type,
         future->value.ptr, value->ptr);
     future->status = EcsScriptFutureResolved;
+    flecs_script_future_wake(future);
     flecs_script_future_unlock(future);
     return 0;
 error:
@@ -291,6 +369,7 @@ int ecs_script_future_reject_id(
     future->error = ecs_os_strdup(msg ? msg : "async function failed");
     future->error_id = error;
     future->status = EcsScriptFutureRejected;
+    flecs_script_future_wake(future);
     flecs_script_future_unlock(future);
     return 0;
 error:
@@ -337,6 +416,7 @@ void flecs_script_throw_clear(
 void flecs_script_async_fini(
     flecs_script_async_state_t *state)
 {
+    flecs_script_future_unwait(state->future);
     ecs_script_future_release(state->future);
     state->future = NULL;
     flecs_script_throw_clear(state);
@@ -815,6 +895,7 @@ static void flecs_script_task_cancel_future(
     ecs_script_future_t *future = task->async->future;
     task->async->future = NULL;
     if (future) {
+        flecs_script_future_unwait(future);
         ecs_script_future_cancel(future);
         ecs_script_future_release(future);
     }
@@ -1046,8 +1127,15 @@ static void flecs_script_task_sched_add(
     ecs_script_task_t *task)
 {
     ecs_script_runtime_t *rt = flecs_script_runtime_get(task->script->world);
+    if (!rt->async_lock && ecs_os_has_threading()) {
+        rt->async_lock = ecs_os_mutex_new();
+    }
+
+    flecs_script_sched_lock(rt);
     task->sched_index = ecs_vec_count(&rt->async_tasks);
     ecs_vec_append_t(NULL, &rt->async_tasks, ecs_script_task_t*)[0] = task;
+    flecs_script_sched_set_ready(rt, task->sched_index, true);
+    flecs_script_sched_unlock(rt);
 }
 
 static void flecs_script_task_sched_remove(
@@ -1058,25 +1146,32 @@ static void flecs_script_task_sched_remove(
         return;
     }
 
+    ecs_script_runtime_t *rt = flecs_script_runtime_get(task->script->world);
+    flecs_script_sched_lock(rt);
     task->sched_index = -1;
 
-    ecs_script_runtime_t *rt = flecs_script_runtime_get(task->script->world);
     ecs_script_task_t **tasks = ecs_vec_first(&rt->async_tasks);
-    int32_t count = ecs_vec_count(&rt->async_tasks);
-    ecs_assert(index < count && tasks[index] == task,
+    int32_t last = ecs_vec_count(&rt->async_tasks) - 1;
+    ecs_assert(index <= last && tasks[index] == task,
         ECS_INTERNAL_ERROR, NULL);
+    flecs_script_sched_set_ready(rt, index, false);
     if (rt->async_progressing) {
         tasks[index] = NULL;
-        return;
+        rt->async_holes = true;
+    } else {
+        if (index != last) {
+            tasks[index] = tasks[last];
+            tasks[index]->sched_index = index;
+            if (flecs_script_sched_is_ready(rt, last)) {
+                flecs_script_sched_set_ready(rt, last, false);
+                flecs_script_sched_set_ready(rt, index, true);
+            }
+        }
+
+        ecs_vec_remove_last(&rt->async_tasks);
     }
 
-    ecs_script_task_t *last = tasks[count - 1];
-    tasks[index] = last;
-    if (last) {
-        last->sched_index = index;
-    }
-
-    ecs_vec_remove_last(&rt->async_tasks);
+    flecs_script_sched_unlock(rt);
 }
 
 static ecs_script_vars_t* flecs_script_vars_snapshot(
@@ -1674,6 +1769,81 @@ static void flecs_script_events_flush(
     }
 }
 
+static ecs_script_task_t* flecs_script_sched_next(
+    ecs_script_runtime_t *rt,
+    int32_t *cursor)
+{
+    ecs_script_task_t *result = NULL;
+    flecs_script_sched_lock(rt);
+
+    uint64_t *words = ecs_vec_first_t(&rt->async_ready, uint64_t);
+    int32_t w, word_count = ecs_vec_count(&rt->async_ready);
+    uint64_t mask = ~0ull << (*cursor & 63);
+    for (w = *cursor >> 6; w < word_count; w ++, mask = ~0ull) {
+        uint64_t bits = words[w] & mask;
+        if (bits) {
+            int32_t index = (w << 6) + flecs_ctz64(bits);
+            words[w] &= ~(1ull << (index & 63));
+            *cursor = index + 1;
+            result = ecs_vec_get_t(
+                &rt->async_tasks, ecs_script_task_t*, index)[0];
+            ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
+            break;
+        }
+    }
+
+    flecs_script_sched_unlock(rt);
+    return result;
+}
+
+static void flecs_script_task_sched_wait(
+    ecs_script_task_t *task)
+{
+    ecs_script_future_t *future = task->async->future;
+    if (future) {
+        flecs_script_future_lock(future);
+        bool pending = future->status == EcsScriptFuturePending;
+        if (pending) {
+            future->waiter = task;
+        }
+
+        flecs_script_future_unlock(future);
+        if (pending) {
+            return;
+        }
+    }
+
+    flecs_script_task_wake(task);
+}
+
+static void flecs_script_sched_compact(
+    ecs_script_runtime_t *rt)
+{
+    flecs_script_sched_lock(rt);
+    ecs_script_task_t **tasks = ecs_vec_first(&rt->async_tasks);
+    int32_t i, count = ecs_vec_count(&rt->async_tasks), dst = 0;
+    for (i = 0; i < count; i ++) {
+        ecs_script_task_t *task = tasks[i];
+        if (!task) {
+            continue;
+        }
+
+        if (dst != i) {
+            bool ready = flecs_script_sched_is_ready(rt, i);
+            flecs_script_sched_set_ready(rt, i, false);
+            flecs_script_sched_set_ready(rt, dst, ready);
+            task->sched_index = dst;
+            tasks[dst] = task;
+        }
+
+        dst ++;
+    }
+
+    ecs_vec_set_count_t(NULL, &rt->async_tasks, ecs_script_task_t*, dst);
+    rt->async_holes = false;
+    flecs_script_sched_unlock(rt);
+}
+
 int32_t ecs_script_tasks_progress(
     ecs_world_t *world)
 {
@@ -1699,17 +1869,10 @@ int32_t ecs_script_tasks_progress(
         flecs_script_events_flush(rt);
     }
 
-    int32_t i, resumed = 0;
-    for (i = 0; i < ecs_vec_count(&rt->async_tasks); i ++) {
-        ecs_script_task_t *task = ecs_vec_get_t(
-            &rt->async_tasks, ecs_script_task_t*, i)[0];
-        if (!task) {
-            continue;
-        }
-
-        if (task->status != EcsScriptTaskPending ||
-            !ecs_script_task_is_ready(task))
-        {
+    int32_t cursor = 0, resumed = 0;
+    ecs_script_task_t *task;
+    while ((task = flecs_script_sched_next(rt, &cursor))) {
+        if (task->status != EcsScriptTaskPending) {
             continue;
         }
 
@@ -1726,21 +1889,16 @@ int32_t ecs_script_tasks_progress(
         } else if (status != EcsScriptTaskPending) {
             flecs_script_task_detach(task);
             ecs_script_task_free(task);
+        } else {
+            flecs_script_task_sched_wait(task);
         }
 
         ecs_script_free(&impl->pub);
     }
 
-    ecs_script_task_t **tasks = ecs_vec_first(&rt->async_tasks);
-    int32_t count = ecs_vec_count(&rt->async_tasks), dst = 0;
-    for (i = 0; i < count; i ++) {
-        if (tasks[i]) {
-            tasks[i]->sched_index = dst;
-            tasks[dst ++] = tasks[i];
-        }
+    if (rt->async_holes) {
+        flecs_script_sched_compact(rt);
     }
-
-    ecs_vec_set_count_t(NULL, &rt->async_tasks, ecs_script_task_t*, dst);
 
     rt->async_progressing = false;
 
