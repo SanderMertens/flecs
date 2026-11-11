@@ -755,3 +755,40 @@ void Singleton_try_get_mut_R_T(void) {
     test_int(p->x, 10);
     test_int(p->y, 20);
 }
+
+void Singleton_set_singleton_w_implicit_conversion(void) {
+    flecs::world world;
+
+    world.set<double>(10);
+
+    test_flt(world.get<double>(), 10.0);
+}
+
+void Singleton_set_singleton_unique_ptr_w_derived(void) {
+    flecs::world world;
+
+    struct Base { virtual ~Base() = default; virtual int value() const { return 1; } };
+    struct Derived : Base { int value() const override { return 2; } };
+
+    world.component<std::unique_ptr<Base>>();
+
+    world.set<std::unique_ptr<Base>>(std::make_unique<Derived>());
+
+    const std::unique_ptr<Base>& ptr = world.get<std::unique_ptr<Base>>();
+    test_assert(ptr != nullptr);
+    test_int(ptr->value(), 2);
+}
+
+void Singleton_set_singleton_pair_unique_ptr(void) {
+    flecs::world world;
+
+    world.component<std::unique_ptr<int>>();
+
+    flecs::entity tgt = world.entity();
+
+    world.set<std::unique_ptr<int>>(tgt, std::make_unique<int>(10));
+
+    const std::unique_ptr<int>& ptr = world.get<std::unique_ptr<int>>(tgt);
+    test_assert(ptr != nullptr);
+    test_int(*ptr, 10);
+}

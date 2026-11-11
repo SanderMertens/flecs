@@ -430,6 +430,10 @@ void Entity_defer_set_existing_parent_to_deleted(void);
 void Entity_defer_set_existing_parent_to_deleted_batched(void);
 void Entity_defer_assign_parent_to_deleted(void);
 void Entity_defer_assign_parent_to_deleted_batched(void);
+void Entity_set_w_implicit_conversion(void);
+void Entity_set_unique_ptr_w_derived(void);
+void Entity_assign_w_implicit_conversion(void);
+void Entity_set_auto_override_w_implicit_conversion(void);
 
 // Testsuite 'OrderedChildren'
 void OrderedChildren_iter_no_children(void);
@@ -1626,6 +1630,9 @@ void Singleton_try_get_mut_T(void);
 void Singleton_try_get_mut_r_t(void);
 void Singleton_try_get_mut_R_t(void);
 void Singleton_try_get_mut_R_T(void);
+void Singleton_set_singleton_w_implicit_conversion(void);
+void Singleton_set_singleton_unique_ptr_w_derived(void);
+void Singleton_set_singleton_pair_unique_ptr(void);
 
 // Testsuite 'Meta'
 void Meta_struct(void);
@@ -3461,6 +3468,22 @@ bake_test_case Entity_testcases[] = {
     {
         "defer_assign_parent_to_deleted_batched",
         Entity_defer_assign_parent_to_deleted_batched
+    },
+    {
+        "set_w_implicit_conversion",
+        Entity_set_w_implicit_conversion
+    },
+    {
+        "set_unique_ptr_w_derived",
+        Entity_set_unique_ptr_w_derived
+    },
+    {
+        "assign_w_implicit_conversion",
+        Entity_assign_w_implicit_conversion
+    },
+    {
+        "set_auto_override_w_implicit_conversion",
+        Entity_set_auto_override_w_implicit_conversion
     }
 };
 
@@ -8146,6 +8169,18 @@ bake_test_case Singleton_testcases[] = {
     {
         "try_get_mut_R_T",
         Singleton_try_get_mut_R_T
+    },
+    {
+        "set_singleton_w_implicit_conversion",
+        Singleton_set_singleton_w_implicit_conversion
+    },
+    {
+        "set_singleton_unique_ptr_w_derived",
+        Singleton_set_singleton_unique_ptr_w_derived
+    },
+    {
+        "set_singleton_pair_unique_ptr",
+        Singleton_set_singleton_pair_unique_ptr
     }
 };
 
@@ -8798,7 +8833,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        402,
+        406,
         Entity_testcases
     },
     {
@@ -8933,7 +8968,7 @@ static bake_test_suite suites[] = {
         "Singleton",
         NULL,
         NULL,
-        49,
+        52,
         Singleton_testcases
     },
     {

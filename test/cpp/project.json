@@ -442,7 +442,11 @@
                 "defer_set_existing_parent_to_deleted",
                 "defer_set_existing_parent_to_deleted_batched",
                 "defer_assign_parent_to_deleted",
-                "defer_assign_parent_to_deleted_batched"
+                "defer_assign_parent_to_deleted_batched",
+                "set_w_implicit_conversion",
+                "set_unique_ptr_w_derived",
+                "assign_w_implicit_conversion",
+                "set_auto_override_w_implicit_conversion"
             ]
         }, {
             "id": "OrderedChildren",
@@ -1679,7 +1683,10 @@
                 "try_get_mut_T",
                 "try_get_mut_r_t",
                 "try_get_mut_R_t",
-                "try_get_mut_R_T"
+                "try_get_mut_R_T",
+                "set_singleton_w_implicit_conversion",
+                "set_singleton_unique_ptr_w_derived",
+                "set_singleton_pair_unique_ptr"
             ]
         }, {
             "id": "Meta",

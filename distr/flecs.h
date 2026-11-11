@@ -26484,6 +26484,16 @@ template <typename... T>
 using value_type_t = typename value_type<T...>::type;
 
 template <typename... T, typename A>
+decltype(auto) value_cast(A&& value) {
+    if constexpr (sizeof...(T) == 0 || is_same_v<decay_t<A>, value_type_t<T...>>) {
+        return FLECS_FWD(value);
+    } else {
+        value_type_t<T...> result = FLECS_FWD(value);
+        return result;
+    }
+}
+
+template <typename... T, typename A>
 auto value_id(world_t *world, const A&) {
     if constexpr (sizeof...(T)) {
         return make_id<T...>(world);
@@ -26725,12 +26735,12 @@ inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::i
 
 template <typename T, typename A>
 inline void set(world_t *world, entity_t entity, A&& value) {
-    flecs::set(world, entity, FLECS_FWD(value), _::type<T>::id(world));
+    flecs::set(world, entity, _::value_cast<T>(FLECS_FWD(value)), _::type<T>::id(world));
 }
 
 template <typename T, typename A>
 inline void set(world_t *world, entity_t entity, const A& value) {
-    flecs::set(world, entity, value, _::type<T>::id(world));
+    flecs::set(world, entity, _::value_cast<T>(value), _::type<T>::id(world));
 }
 
 template <typename T>
@@ -26745,12 +26755,12 @@ inline void assign(world_t *world, flecs::entity_t entity, const T& value, flecs
 
 template <typename T, typename A>
 inline void assign(world_t *world, entity_t entity, A&& value) {
-    flecs::assign(world, entity, FLECS_FWD(value), _::type<T>::id(world));
+    flecs::assign(world, entity, _::value_cast<T>(FLECS_FWD(value)), _::type<T>::id(world));
 }
 
 template <typename T, typename A>
 inline void assign(world_t *world, entity_t entity, const A& value) {
-    flecs::assign(world, entity, value, _::type<T>::id(world));
+    flecs::assign(world, entity, _::value_cast<T>(value), _::type<T>::id(world));
 }
 
 /** Emplace a component value, constructing it in place.
@@ -27192,13 +27202,13 @@ struct world {
     template <typename... T, typename A = _::value_type_t<T...>, if_not_t<is_callable<A>::value> = 0>
     void set(A&& value) const {
         auto id = _::value_id<T...>(world_, value);
-        flecs::set(world_, id.owner(world_), FLECS_FWD(value), id.id);
+        flecs::set(world_, id.owner(world_), _::value_cast<T...>(FLECS_FWD(value)), id.id);
     }
 
     template <typename... T, typename A = _::value_type_t<T...>, if_not_t<is_callable<A>::value> = 0>
     void set(const A& value) const {
         auto id = _::value_id<T...>(world_, value);
-        flecs::set(world_, id.owner(world_), value, id.id);
+        flecs::set(world_, id.owner(world_), _::value_cast<T...>(value), id.id);
     }
 
     template <typename First, typename Second>
@@ -30388,7 +30398,7 @@ struct entity_builder : entity_view {
     const Self& set_auto_override(A&& value) const {
         auto id = _::value_id<T...>(this->world_, value);
         this->auto_override(id.id);
-        flecs::set(this->world_, this->id_, FLECS_FWD(value), id.id);
+        flecs::set(this->world_, this->id_, _::value_cast<T...>(FLECS_FWD(value)), id.id);
         return to_base();
     }
 
@@ -30396,7 +30406,7 @@ struct entity_builder : entity_view {
     const Self& set_auto_override(const A& value) const {
         auto id = _::value_id<T...>(this->world_, value);
         this->auto_override(id.id);
-        flecs::set(this->world_, this->id_, value, id.id);
+        flecs::set(this->world_, this->id_, _::value_cast<T...>(value), id.id);
         return to_base();
     }
 
@@ -30572,14 +30582,14 @@ struct entity_builder : entity_view {
     template <typename... T, typename A = _::value_type_t<T...>>
     const Self& set(A&& value) const {
         auto id = _::value_id<T...>(this->world_, value);
-        flecs::set(this->world_, this->id_, FLECS_FWD(value), id.id);
+        flecs::set(this->world_, this->id_, _::value_cast<T...>(FLECS_FWD(value)), id.id);
         return to_base();
     }
 
     template <typename... T, typename A = _::value_type_t<T...>>
     const Self& set(const A& value) const {
         auto id = _::value_id<T...>(this->world_, value);
-        flecs::set(this->world_, this->id_, value, id.id);
+        flecs::set(this->world_, this->id_, _::value_cast<T...>(value), id.id);
         return to_base();
     }
 
@@ -30620,14 +30630,14 @@ struct entity_builder : entity_view {
     template <typename... T, typename A = _::value_type_t<T...>>
     const Self& assign(A&& value) const {
         auto id = _::value_id<T...>(this->world_, value);
-        flecs::assign(this->world_, this->id_, FLECS_FWD(value), id.id);
+        flecs::assign(this->world_, this->id_, _::value_cast<T...>(FLECS_FWD(value)), id.id);
         return to_base();
     }
 
     template <typename... T, typename A = _::value_type_t<T...>>
     const Self& assign(const A& value) const {
         auto id = _::value_id<T...>(this->world_, value);
-        flecs::assign(this->world_, this->id_, value, id.id);
+        flecs::assign(this->world_, this->id_, _::value_cast<T...>(value), id.id);
         return to_base();
     }
 

@@ -83,6 +83,16 @@ template <typename... T>
 using value_type_t = typename value_type<T...>::type;
 
 template <typename... T, typename A>
+decltype(auto) value_cast(A&& value) {
+    if constexpr (sizeof...(T) == 0 || is_same_v<decay_t<A>, value_type_t<T...>>) {
+        return FLECS_FWD(value);
+    } else {
+        value_type_t<T...> result = FLECS_FWD(value);
+        return result;
+    }
+}
+
+template <typename... T, typename A>
 auto value_id(world_t *world, const A&) {
     if constexpr (sizeof...(T)) {
         return make_id<T...>(world);

@@ -44,12 +44,12 @@ inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::i
 
 template <typename T, typename A>
 inline void set(world_t *world, entity_t entity, A&& value) {
-    flecs::set(world, entity, FLECS_FWD(value), _::type<T>::id(world));
+    flecs::set(world, entity, _::value_cast<T>(FLECS_FWD(value)), _::type<T>::id(world));
 }
 
 template <typename T, typename A>
 inline void set(world_t *world, entity_t entity, const A& value) {
-    flecs::set(world, entity, value, _::type<T>::id(world));
+    flecs::set(world, entity, _::value_cast<T>(value), _::type<T>::id(world));
 }
 
 template <typename T>
@@ -64,12 +64,12 @@ inline void assign(world_t *world, flecs::entity_t entity, const T& value, flecs
 
 template <typename T, typename A>
 inline void assign(world_t *world, entity_t entity, A&& value) {
-    flecs::assign(world, entity, FLECS_FWD(value), _::type<T>::id(world));
+    flecs::assign(world, entity, _::value_cast<T>(FLECS_FWD(value)), _::type<T>::id(world));
 }
 
 template <typename T, typename A>
 inline void assign(world_t *world, entity_t entity, const A& value) {
-    flecs::assign(world, entity, value, _::type<T>::id(world));
+    flecs::assign(world, entity, _::value_cast<T>(value), _::type<T>::id(world));
 }
 
 /** Emplace a component value, constructing it in place.
@@ -511,13 +511,13 @@ struct world {
     template <typename... T, typename A = _::value_type_t<T...>, if_not_t<is_callable<A>::value> = 0>
     void set(A&& value) const {
         auto id = _::value_id<T...>(world_, value);
-        flecs::set(world_, id.owner(world_), FLECS_FWD(value), id.id);
+        flecs::set(world_, id.owner(world_), _::value_cast<T...>(FLECS_FWD(value)), id.id);
     }
 
     template <typename... T, typename A = _::value_type_t<T...>, if_not_t<is_callable<A>::value> = 0>
     void set(const A& value) const {
         auto id = _::value_id<T...>(world_, value);
-        flecs::set(world_, id.owner(world_), value, id.id);
+        flecs::set(world_, id.owner(world_), _::value_cast<T...>(value), id.id);
     }
 
     template <typename First, typename Second>
