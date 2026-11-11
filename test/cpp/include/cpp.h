@@ -3,6 +3,7 @@
 
 /* This generated file contains includes for project dependencies */
 #include <cpp/bake_config.h>
+#include <memory>
 #include <string>
 #include <optional>
 #include <vector>

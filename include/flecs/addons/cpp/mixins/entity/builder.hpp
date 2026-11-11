@@ -203,7 +203,7 @@ struct entity_builder : entity_view {
     const Self& set_auto_override(A&& value) const {
         auto id = _::value_id<T...>(this->world_, value);
         this->auto_override(id.id);
-        flecs::set(this->world_, this->id_, FLECS_FWD(value), id.id);
+        flecs::set(this->world_, this->id_, _::value_cast<T...>(FLECS_FWD(value)), id.id);
         return to_base();
     }
 
@@ -211,7 +211,7 @@ struct entity_builder : entity_view {
     const Self& set_auto_override(const A& value) const {
         auto id = _::value_id<T...>(this->world_, value);
         this->auto_override(id.id);
-        flecs::set(this->world_, this->id_, value, id.id);
+        flecs::set(this->world_, this->id_, _::value_cast<T...>(value), id.id);
         return to_base();
     }
 
@@ -387,14 +387,14 @@ struct entity_builder : entity_view {
     template <typename... T, typename A = _::value_type_t<T...>>
     const Self& set(A&& value) const {
         auto id = _::value_id<T...>(this->world_, value);
-        flecs::set(this->world_, this->id_, FLECS_FWD(value), id.id);
+        flecs::set(this->world_, this->id_, _::value_cast<T...>(FLECS_FWD(value)), id.id);
         return to_base();
     }
 
     template <typename... T, typename A = _::value_type_t<T...>>
     const Self& set(const A& value) const {
         auto id = _::value_id<T...>(this->world_, value);
-        flecs::set(this->world_, this->id_, value, id.id);
+        flecs::set(this->world_, this->id_, _::value_cast<T...>(value), id.id);
         return to_base();
     }
 
@@ -435,14 +435,14 @@ struct entity_builder : entity_view {
     template <typename... T, typename A = _::value_type_t<T...>>
     const Self& assign(A&& value) const {
         auto id = _::value_id<T...>(this->world_, value);
-        flecs::assign(this->world_, this->id_, FLECS_FWD(value), id.id);
+        flecs::assign(this->world_, this->id_, _::value_cast<T...>(FLECS_FWD(value)), id.id);
         return to_base();
     }
 
     template <typename... T, typename A = _::value_type_t<T...>>
     const Self& assign(const A& value) const {
         auto id = _::value_id<T...>(this->world_, value);
-        flecs::assign(this->world_, this->id_, value, id.id);
+        flecs::assign(this->world_, this->id_, _::value_cast<T...>(value), id.id);
         return to_base();
     }
 

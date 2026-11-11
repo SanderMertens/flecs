@@ -7449,3 +7449,45 @@ void Entity_defer_assign_parent_to_deleted_batched(void) {
     test_assert(!parent_b.is_alive());
     test_assert(!child.is_alive());
 }
+
+void Entity_set_w_implicit_conversion(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity().set<double>(10);
+
+    test_flt(e.get<double>(), 10.0);
+}
+
+void Entity_set_unique_ptr_w_derived(void) {
+    flecs::world world;
+
+    struct Base { virtual ~Base() = default; virtual int value() const { return 1; } };
+    struct Derived : Base { int value() const override { return 2; } };
+
+    world.component<std::unique_ptr<Base>>();
+
+    flecs::entity e = world.entity()
+        .set<std::unique_ptr<Base>>(std::make_unique<Derived>());
+
+    const std::unique_ptr<Base>& ptr = e.get<std::unique_ptr<Base>>();
+    test_assert(ptr != nullptr);
+    test_int(ptr->value(), 2);
+}
+
+void Entity_assign_w_implicit_conversion(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity().set<double>(1.0);
+    e.assign<double>(10);
+
+    test_flt(e.get<double>(), 10.0);
+}
+
+void Entity_set_auto_override_w_implicit_conversion(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity().set_auto_override<double>(10);
+
+    test_flt(e.get<double>(), 10.0);
+    test_assert(e.has(flecs::AUTO_OVERRIDE | world.id<double>()));
+}
