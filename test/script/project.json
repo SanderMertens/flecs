@@ -981,7 +981,8 @@
                 "const_vector_to_component_vector_member",
                 "untyped_const_vector_to_component_vector_member",
                 "const_vector_to_c_component_vector_member",
-                "untyped_const_vector_to_c_component_vector_member"
+                "untyped_const_vector_to_c_component_vector_member",
+                "untyped_vector_to_array_in_fn"
             ]
         }, {
             "id": "Await",
@@ -1238,7 +1239,20 @@
                 "event_from_c_without_value",
                 "event_script_update_delivers_once",
                 "event_no_members_await_value",
-                "error_event"
+                "error_event",
+                "fn_call_stmt",
+                "fn_call_stmt_no_args",
+                "fn_control_flow",
+                "fn_call_fn",
+                "fn_recursion",
+                "fn_infinite_recursion",
+                "fn_error_stops_caller",
+                "fn_from_template_block",
+                "fn_mut_return_value",
+                "fn_pure_call_stmt",
+                "event_from_fn",
+                "local_mut_array_from_array_in_fn",
+                "error_fn"
             ]
         }, {
             "id": "Input",
@@ -1488,7 +1502,16 @@
                 "void_return_call",
                 "void_return_in_expr",
                 "query_as_bool_arg",
-                "query_in_fn_body"
+                "query_in_fn_body",
+                "control_flow_w_return",
+                "return_local_from_if",
+                "read_mut_var_is_not_mut",
+                "assign_mut_var_is_mut",
+                "call_mut_fn_is_mut",
+                "emit_is_mut",
+                "no_return_type",
+                "no_return_type_in_expr",
+                "native_mut"
             ]
         }, {
             "id": "Template",

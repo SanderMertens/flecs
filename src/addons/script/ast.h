@@ -33,6 +33,8 @@ typedef enum ecs_script_node_kind_t {
     EcsAstContinue,
     EcsAstBreak,
     EcsAstEmit,
+    EcsAstCall,
+    EcsAstReturn,
     EcsAstAsync,
     EcsAstWhile,
     EcsAstAssign,
@@ -220,6 +222,16 @@ typedef struct ecs_script_break_t {
     ecs_script_node_t node;
 } ecs_script_break_t;
 
+typedef struct ecs_script_call_t {
+    ecs_script_node_t node;
+    ecs_expr_node_t *expr;
+} ecs_script_call_t;
+
+typedef struct ecs_script_return_t {
+    ecs_script_node_t node;
+    ecs_expr_node_t *expr;
+} ecs_script_return_t;
+
 typedef struct ecs_script_emit_t {
     ecs_script_node_t node;
     const char *name;
@@ -256,6 +268,7 @@ typedef struct ecs_script_while_t {
 } ecs_script_while_t;
 
 #define FLECS_SCRIPT_ASSIGN_INDEX_MAX (8)
+#define FLECS_SCRIPT_FN_DEPTH_MAX (64)
 
 typedef struct ecs_script_assign_step_t {
     const char *member;    /* Member path, NULL if step is an index */
@@ -339,9 +352,10 @@ typedef struct ecs_script_function_node_t {
     const char *return_type;
     ecs_vec_t params;
     ecs_script_scope_t *body;
-    ecs_expr_node_t *return_expr;
     ecs_entity_t eval_return_type;
     int32_t symbol;
+    bool is_mut;
+    bool is_simple;
 } ecs_script_function_node_t;
 
 bool flecs_scope_is_empty(
@@ -390,6 +404,12 @@ ecs_script_continue_t* flecs_script_insert_continue(
     ecs_parser_t *parser);
 
 ecs_script_break_t* flecs_script_insert_break(
+    ecs_parser_t *parser);
+
+ecs_script_call_t* flecs_script_insert_call(
+    ecs_parser_t *parser);
+
+ecs_script_return_t* flecs_script_insert_return(
     ecs_parser_t *parser);
 
 ecs_script_emit_t* flecs_script_insert_emit(

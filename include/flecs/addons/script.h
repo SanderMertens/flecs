@@ -266,6 +266,7 @@ struct ecs_script_function_t {
     void *binding_ctx;
     ecs_ctx_free_t binding_ctx_free;
     bool is_event;
+    bool is_mut;
 };
 
 /** Function component.
@@ -1581,6 +1582,8 @@ typedef struct ecs_function_desc_t {
 
     /** Context passed to function implementation. */
     void *ctx;
+
+    bool is_mut;
 } ecs_function_desc_t;
 
 /** Create new function.

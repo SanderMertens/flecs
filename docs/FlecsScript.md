@@ -1021,7 +1021,7 @@ Foo { Position: {add(1, 2), add(10, 20)} }
 
 Script functions are created and called in the same way as functions created with the API.
 
-Function bodies may only contain expressions and const variables, for example:
+The last expression of a function body is its return value. A function body can contain `const` and local `mut` variables, assignments, `if`, `for` and `while`:
 
 ```rust
 fn poly(x: i32) -> i32 {
@@ -1029,9 +1029,17 @@ fn poly(x: i32) -> i32 {
     const x3: i32 = x2 * x
     x3 + x2
 }
+
+fn clamp(v: i32, max: i32) -> i32 {
+    mut r = v
+    if v > max {
+        r = max
+    }
+    r
+}
 ```
 
-Control flow statement such as `if` and `for` are not allowed inside of a function. To expression conditional logic, functions can use `match` expressions:
+Functions can also use `match` expressions for conditional logic:
 
 ```rust
 fn factorial(n: i32) -> i32 {
@@ -1041,6 +1049,8 @@ fn factorial(n: i32) -> i32 {
     }
 }
 ```
+
+The return type of a function is optional. A function without a return type doesn't return a value, and can only be called as a statement in an async block or in another function (see [Mutable functions](#mutable-functions)). A function can call itself up to a depth of 64 nested calls, after which the call fails with an error. Arguments are passed by value. Functions can't use `await` or `try`.
 
 ### Methods
 Methods are functions that are called on instances of the method's type. The first argument of a method is the instance on which the method is called. The following snippet shows examples of method calls:
@@ -1754,6 +1764,27 @@ async {
 `next_frame()` resolves once per `ecs_progress` call. `delay(seconds)` resolves on the first frame at or after the specified amount of time has passed. A zero or negative duration resolves on the next frame, never in the same frame, so `while true { await delay(0) }` doesn't hang the application.
 
 Delays use scaled world time, so `ecs_set_time_scale` speeds up delays, and a time scale of 0 pauses them. `next_frame()` isn't affected by the time scale. Both functions are resolved by a system in the `EcsPreUpdate` phase of the default pipeline, and are not available in builds without the pipeline addon. Calling `ecs_script_tasks_progress` without `ecs_progress` doesn't advance time.
+
+### Mutable functions
+A function that changes state is a mutable function. A function is mutable when it assigns an exported `mut` variable, emits an event, or calls another mutable function. Assigning local `mut` variables of the function does not make it mutable. Flecs determines whether a function is mutable from its body:
+
+```cpp
+export mut alert_text: string = ""
+export mut alert_time: f64 = 0
+
+fn alert(message: string, seconds: f64) {
+  alert_text = message
+  alert_time = seconds
+}
+
+async {
+  alert("A freighter docked", 4)
+}
+```
+
+Mutable functions can only be called from async blocks and from other functions. Calling a mutable function from a template body or from an expression outside of an async block is an error. A function call can be used as a statement in an async block or function, in which case the return value, if any, is discarded.
+
+Functions created with the C API can be marked as mutable by setting `is_mut` in `ecs_function_desc_t`. Whether a function is mutable is stored in the `is_mut` member of the `EcsScriptFunction` component.
 
 ### Events
 Async blocks can send each other messages with events. An `event` statement defines an event type with the same syntax as a struct. `emit` sends an event, and `await` waits for it:
@@ -2843,7 +2874,7 @@ template Button {
 
 Async blocks don't run immediately when the script runs or the template is instantiated. They start and resume during `ecs_progress`. Applications that don't use `ecs_progress` can run them with `ecs_script_tasks_progress`. An async block stops when it reaches the end, when its script is updated or deleted, or when the template instance is deleted. When a prop of the template instance changes, its async blocks restart from the beginning.
 
-Async blocks can't create entities or assign components. Instead they assign `mut` variables, and the rest of the script reacts to those changes (see [Reactivity](#reactivity)). Async blocks can contain `const` variables, `if`, `for`, `while`, `try`/`catch`, `await` and assignments. They can't be nested, and can't be placed inside an `if` or a regular entity scope.
+Async blocks can't create entities or assign components. Instead they assign `mut` variables, and the rest of the script reacts to those changes (see [Reactivity](#reactivity)). Async blocks can contain `const` variables, `if`, `for`, `while`, `try`/`catch`, `await`, assignments and function calls. They can't be nested, and can't be placed inside an `if` or a regular entity scope.
 
 ### Await
 The `await` keyword calls an async function and pauses the block until the function completes. An await can be used as a statement, or to store the result in a variable:

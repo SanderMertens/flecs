@@ -331,6 +331,18 @@ ecs_script_continue_t* flecs_script_insert_continue(
     return flecs_ast_insert(parser, ecs_script_continue_t, EcsAstContinue);
 }
 
+ecs_script_call_t* flecs_script_insert_call(
+    ecs_parser_t *parser)
+{
+    return flecs_ast_insert(parser, ecs_script_call_t, EcsAstCall);
+}
+
+ecs_script_return_t* flecs_script_insert_return(
+    ecs_parser_t *parser)
+{
+    return flecs_ast_insert(parser, ecs_script_return_t, EcsAstReturn);
+}
+
 ecs_script_emit_t* flecs_script_insert_emit(
     ecs_parser_t *parser,
     const char *name)

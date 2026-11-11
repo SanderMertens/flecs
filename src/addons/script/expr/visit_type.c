@@ -2270,6 +2270,27 @@ error:
     return -1;
 }
 
+static int flecs_expr_function_mut_check(
+    ecs_script_t *script,
+    ecs_expr_function_t *node,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_script_eval_visitor_t *v = desc ? desc->script_visitor : NULL;
+    ecs_script_type_visitor_t *t = v ? v->type_visitor : NULL;
+    if (!t || !t->async_scope) {
+        flecs_expr_visit_error(script, node,
+            "function '%s' modifies state and can only be called from an "
+            "async block or a function", node->function_name);
+        return -1;
+    }
+
+    if (t->fn_node) {
+        t->fn_node->is_mut = true;
+    }
+
+    return 0;
+}
+
 static int flecs_expr_function_visit_type(
     ecs_script_t *script,
     ecs_expr_function_t *node,
@@ -2430,10 +2451,16 @@ try_function:
     node->calldata.ctx = func_data->ctx;
     node->calldata.vector_elem_count = 0;
 
-    if (!func_data->return_type) {
+    if (!func_data->return_type && !node->is_stmt) {
         flecs_expr_visit_error(script, node,
             "function '%s' does not return a value",
             flecs_errstr(ecs_get_path(world, func)));
+        goto error;
+    }
+
+    if (func_data->is_mut &&
+        flecs_expr_function_mut_check(script, node, desc))
+    {
         goto error;
     }
 
@@ -3226,7 +3253,14 @@ static int flecs_expr_visit_type_ex(
 
     node = *node_ptr;
 
-    ecs_assert(node->type != 0, ECS_INTERNAL_ERROR, NULL);
+    if (!node->type) {
+        ecs_assert((node->kind == EcsExprFunction ||
+            node->kind == EcsExprMethod) &&
+                ((ecs_expr_function_t*)node)->is_stmt,
+                    ECS_INTERNAL_ERROR, NULL);
+        return 0;
+    }
+
     node->type_info = ecs_get_type_info(script->world, node->type);
     ecs_assert(node->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
 

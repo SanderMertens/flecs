@@ -1923,7 +1923,8 @@ static int flecs_script_type_function(
 
     flecs_script_type_declare(
         t, node->name, NULL, &node->symbol, false);
-    if (flecs_script_type_resolve_type(
+    node->eval_return_type = 0;
+    if (node->return_type && flecs_script_type_resolve_type(
         t, node->return_type, &node->eval_return_type))
     {
         if (!flecs_script_skip_unknown_drop_fn(t, node, node->return_type)) {
@@ -2006,18 +2007,38 @@ static int flecs_script_type_function(
         &t->v->base.script->unresolved_refs);
     int32_t prev_skip_count = t->skip_count;
     bool old_function_scope = t->function_scope;
+    bool old_async_scope = t->async_scope;
+    ecs_script_async_t *old_async_node = t->async_node;
+    ecs_script_function_node_t *old_fn_node = t->fn_node;
+    int32_t old_for_depth = t->for_depth;
     t->function_scope = true;
+    t->async_scope = true;
+    t->async_node = NULL;
+    t->fn_node = node;
+    t->for_depth = 0;
+    node->is_mut = false;
     result = flecs_script_type_scope(t, node->body, table, false, false);
-    if (!result && node->return_expr) {
-        ecs_entity_t return_type = node->eval_return_type;
-        result = flecs_script_type_check_expr(
-            t, &node->return_expr, &return_type);
+    t->function_scope = old_function_scope;
+    t->async_scope = old_async_scope;
+    t->async_node = old_async_node;
+    t->fn_node = old_fn_node;
+    t->for_depth = old_for_depth;
+
+    node->is_simple = true;
+    ecs_script_node_t **stmts = ecs_vec_first(&node->body->stmts);
+    int32_t stmt_count = ecs_vec_count(&node->body->stmts);
+    for (i = 0; i < stmt_count; i ++) {
+        if (stmts[i]->kind != EcsAstConst && stmts[i]->kind != EcsAstReturn) {
+            node->is_simple = false;
+            break;
+        }
     }
 
-    t->function_scope = old_function_scope;
     if (!result && t->skip_count == prev_skip_count &&
         ecs_vec_count(&t->v->base.script->unresolved_refs) == prev_unresolved)
     {
+        ecs_get_mut(t->v->world, fn_entity, EcsScriptFunction)->is_mut =
+            node->is_mut;
         result = flecs_script_eval_function(t->v, node, fn_entity);
         keep = !result;
     } else if (result != -1) {
@@ -2506,6 +2527,10 @@ static int flecs_script_type_emit(
         return -1;
     }
 
+    if (t->fn_node) {
+        t->fn_node->is_mut = true;
+    }
+
     node->event = symbol.entity;
     node->eval_type = f->return_type;
     node->has_payload = node->eval_type == symbol.entity;
@@ -2522,6 +2547,24 @@ static int flecs_script_type_emit(
 
     ecs_entity_t type = node->eval_type;
     int result = flecs_script_type_check_expr(t, &node->expr, &type);
+    if (result == 1) {
+        node->node.skip = true;
+        return 0;
+    }
+
+    return result;
+}
+
+static int flecs_script_type_call(
+    ecs_script_type_visitor_t *t,
+    ecs_script_call_t *node)
+{
+    if (node->expr->kind != EcsExprFunction) {
+        flecs_script_eval_error(t->v, node, "expected function call");
+        return -1;
+    }
+
+    int result = flecs_script_type_check_expr(t, &node->expr, NULL);
     if (result == 1) {
         node->node.skip = true;
         return 0;
@@ -2727,6 +2770,17 @@ static int flecs_script_type_assign(
         goto done;
     }
 
+    if (t->fn_node) {
+        if (node->global) {
+            t->fn_node->is_mut = true;
+        } else if (!node->local) {
+            flecs_script_eval_error(v, node,
+                "cannot assign to '%s': functions can only assign local "
+                "variables and exported mut variables", node->name);
+            goto done;
+        }
+    }
+
     ecs_script_template_t *template = v->template;
     ecs_entity_t var_type = node->global ? root.global_type
         : node->parent ? root.member->type
@@ -2805,9 +2859,13 @@ static int flecs_script_type_node(
     ecs_script_node_t *node,
     bool allow_type)
 {
-    if (t->function_scope && node->kind != EcsAstConst) {
+    if (t->fn_node && (node->kind == EcsAstAwait ||
+        node->kind == EcsAstTry || (node->kind == EcsAstConst &&
+            ((ecs_script_var_node_t*)node)->is_await)))
+    {
         flecs_script_eval_error(t->v, node,
-            "only const declarations are allowed in fn body");
+            "%s is not allowed in function body",
+            node->kind == EcsAstTry ? "try" : "await");
         return -1;
     }
 
@@ -2823,6 +2881,8 @@ static int flecs_script_type_node(
         case EcsAstContinue:
         case EcsAstBreak:
         case EcsAstEmit:
+        case EcsAstCall:
+        case EcsAstReturn:
         case EcsAstAssign:
             break;
         default:
@@ -2918,6 +2978,13 @@ static int flecs_script_type_node(
     }
     case EcsAstEmit:
         return flecs_script_type_emit(t, (ecs_script_emit_t*)node);
+    case EcsAstCall:
+        return flecs_script_type_call(t, (ecs_script_call_t*)node);
+    case EcsAstReturn: {
+        ecs_entity_t type = t->fn_node->eval_return_type;
+        return flecs_script_type_check_expr(
+            t, &((ecs_script_return_t*)node)->expr, &type);
+    }
     case EcsAstTry:
         return flecs_script_type_try(t, (ecs_script_try_t*)node);
     case EcsAstContinue:
@@ -3030,13 +3097,19 @@ int flecs_script_visit_type_entity_expr(
     if (v && v->type_visitor) {
         ecs_script_type_visitor_t *t = v->type_visitor;
         bool old_function_scope = t->function_scope;
+        bool old_async_scope = t->async_scope;
+        ecs_script_function_node_t *old_fn_node = t->fn_node;
         t->function_scope = false;
+        t->async_scope = old_fn_node ? false : old_async_scope;
+        t->fn_node = NULL;
         int result = flecs_script_type_entity(t, entity, false);
         if (old_function_scope) {
             entity->symbol = -1;
         }
 
         t->function_scope = old_function_scope;
+        t->async_scope = old_async_scope;
+        t->fn_node = old_fn_node;
         return result;
     }
 

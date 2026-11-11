@@ -94,6 +94,12 @@ int flecs_script_visit_free_node(
     case EcsAstEmit:
         flecs_expr_visit_free(script, ((ecs_script_emit_t*)node)->expr);
         break;
+    case EcsAstCall:
+        flecs_expr_visit_free(script, ((ecs_script_call_t*)node)->expr);
+        break;
+    case EcsAstReturn:
+        flecs_expr_visit_free(script, ((ecs_script_return_t*)node)->expr);
+        break;
     case EcsAstAssign: {
         ecs_script_assign_t *assign = (ecs_script_assign_t*)node;
         ecs_script_assign_step_t *steps = ecs_vec_first(&assign->steps);
@@ -120,7 +126,6 @@ int flecs_script_visit_free_node(
     }
     case EcsAstFunction: {
         ecs_script_function_node_t *fn = (ecs_script_function_node_t*)node;
-        flecs_expr_visit_free(script, fn->return_expr);
         ecs_vec_fini_t(a, &fn->params, ecs_script_fn_param_t);
         break;
     }

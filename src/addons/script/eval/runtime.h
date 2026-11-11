@@ -58,6 +58,7 @@ struct ecs_script_runtime_t {
      * (indirectly) instantiate themselves. */
     int32_t template_depth;
     int32_t eval_depth;
+    int32_t fn_depth;
 
     bool resolving;
     bool error;
