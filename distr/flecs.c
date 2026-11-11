@@ -50296,6 +50296,12 @@ int flecs_script_symbol_lookup(
     ecs_flags32_t lookup_kind,
     flecs_script_symbol_t *symbol);
 
+int flecs_script_global_var_lookup(
+    const ecs_script_t *script,
+    const ecs_expr_eval_desc_t *desc,
+    const char *name,
+    flecs_script_symbol_t *symbol);
+
 int flecs_script_id_elem_lookup(
     const ecs_script_t *script,
     const ecs_expr_eval_desc_t *desc,
@@ -50325,6 +50331,11 @@ void flecs_script_symbol_set(
     ecs_entity_t entity);
 
 int flecs_script_type_symbol_lookup(
+    void *ctx,
+    const char *name,
+    flecs_script_symbol_t *symbol);
+
+int flecs_script_type_global_var_lookup(
     void *ctx,
     const char *name,
     flecs_script_symbol_t *symbol);
@@ -95574,6 +95585,94 @@ int flecs_script_symbol_lookup(
     return 0;
 }
 
+static bool flecs_script_global_var_found(
+    const ecs_world_t *world,
+    ecs_entity_t e,
+    flecs_script_symbol_t *symbol)
+{
+    if (!e || !flecs_script_global_var_get(world, e, NULL).ptr) {
+        return false;
+    }
+
+    *symbol = (flecs_script_symbol_t){
+        .kind = FlecsScriptSymbolGlobalVariable,
+        .entity = e,
+        .slot = -1,
+        .sp = -1
+    };
+
+    return true;
+}
+
+/* Look up the global (exported) variable for a $name reference. This is the
+ * same lookup as for an entity name, except that an entity that isn't a
+ * variable doesn't hide a variable of the same name in an enclosing scope:
+ *
+ *   export const size = 10
+ *   parent {
+ *     size { Size: {w: $size} }
+ *   }
+ *
+ * Here the name lookup finds parent.size, while $size can only mean the
+ * exported variable. */
+int flecs_script_global_var_lookup(
+    const ecs_script_t *script,
+    const ecs_expr_eval_desc_t *desc,
+    const char *name,
+    flecs_script_symbol_t *symbol)
+{
+    int result = flecs_script_symbol_lookup(
+        script, desc, 0, name, FlecsScriptLookupAll, symbol);
+    if (result || symbol->kind == FlecsScriptSymbolVariable ||
+        symbol->kind == FlecsScriptSymbolGlobalVariable)
+    {
+        return result;
+    }
+
+    ecs_script_eval_visitor_t *v = desc ? desc->script_visitor : NULL;
+    if (!v || !flecs_script_valid_lookup_path(name)) {
+        return 0;
+    }
+
+    flecs_script_symbol_t found;
+    if (v->type_visitor && !flecs_script_type_global_var_lookup(
+        v->type_visitor, name, &found))
+    {
+        *symbol = found;
+        return 0;
+    }
+
+    ecs_world_t *world = script->world;
+    ecs_entity_t scope = v->parent;
+    for (;;) {
+        ecs_entity_t e = ecs_lookup_path_w_sep(
+            world, scope, name, NULL, NULL, false);
+        if (flecs_script_global_var_found(world, e, symbol)) {
+            return 0;
+        }
+
+        if (!scope) {
+            break;
+        }
+
+        scope = ecs_get_parent(world, scope);
+    }
+
+    int32_t i, using_count = ecs_vec_count(&v->r->using);
+    ecs_entity_t *using = ecs_vec_first(&v->r->using);
+    for (i = using_count - 1; i >= 0; i --) {
+        ecs_entity_t e = ecs_lookup_path_w_sep(
+            world, using[i], name, NULL, NULL, false);
+        if (flecs_script_global_var_found(world, e, symbol)) {
+            return 0;
+        }
+    }
+
+    /* No variable of this name is in scope. Leave the entity in symbol, so
+     * the caller can say what the name resolved to. */
+    return 0;
+}
+
 int flecs_script_id_elem_lookup(
     const ecs_script_t *script,
     const ecs_expr_eval_desc_t *desc,
@@ -100237,6 +100336,95 @@ static int flecs_script_type_ensure_node(
     }
 
     return 0;
+}
+
+/* Find the entity a scope in the script evaluates to, if it already exists.
+ * Unlike flecs_script_type_ensure_node this doesn't create entities. */
+static ecs_entity_t flecs_script_type_existing_node_entity(
+    ecs_script_type_visitor_t *t,
+    ecs_script_entity_t *node)
+{
+    ecs_world_t *world = t->v->world;
+    ecs_entity_t e = flecs_script_type_node_entity(t, node);
+    if (e) {
+        return ecs_is_alive(world, e) ? e : 0;
+    }
+
+    if (node->name_expr || !node->name) {
+        return 0;
+    }
+
+    ecs_script_type_entity_t *entry = flecs_script_type_entity_from_node(
+        t, node);
+    ecs_entity_t parent = entry ? entry->parent : 0;
+    if (entry && entry->parent_node) {
+        parent = flecs_script_type_existing_node_entity(
+            t, entry->parent_node);
+        if (!parent) {
+            return 0;
+        }
+    }
+
+    return ecs_lookup_path_w_sep(world, parent, node->name, NULL, NULL, false);
+}
+
+static bool flecs_script_type_is_global_var(
+    ecs_script_type_visitor_t *t,
+    ecs_entity_t e)
+{
+    return e && flecs_script_global_var_get(t->v->world, e, NULL).ptr;
+}
+
+int flecs_script_type_global_var_lookup(
+    void *ctx,
+    const char *name,
+    flecs_script_symbol_t *symbol)
+{
+    ecs_script_type_visitor_t *t = ctx;
+    const char *sep;
+    ecs_size_t length = flecs_script_type_path_elem(name, &sep);
+
+    /* Same walk as flecs_script_type_find, except that an entity that isn't a
+     * variable doesn't end it. Each scope is checked for variables declared by
+     * this script, then for variables that already exist in the world, such as
+     * ones exported by a previous script. */
+    int32_t table = t->table;
+    while (table != -1) {
+        ecs_script_type_table_t *elem = ecs_vec_get_t(
+            &t->tables, ecs_script_type_table_t, table);
+
+        ecs_script_type_entity_t *entity = sep ? NULL :
+            flecs_script_type_find_in(t, (uint64_t)table, true, name, length);
+        if (entity) {
+            ecs_entity_t e = flecs_script_symbol_entity(t->v, entity->slot);
+            if (flecs_script_type_is_global_var(t, e)) {
+                symbol->kind = FlecsScriptSymbolGlobalVariable;
+                symbol->slot = entity->slot;
+                symbol->sp = -1;
+                symbol->entity = e;
+                return 0;
+            }
+        }
+
+        ecs_entity_t scope = elem->owner
+            ? flecs_script_type_existing_node_entity(t, elem->owner)
+            : 0;
+        if (scope) {
+            ecs_entity_t e = ecs_lookup_path_w_sep(
+                t->v->world, scope, name, NULL, NULL, false);
+            if (flecs_script_type_is_global_var(t, e)) {
+                symbol->kind = FlecsScriptSymbolGlobalVariable;
+                symbol->slot = -1;
+                symbol->sp = -1;
+                symbol->entity = e;
+                return 0;
+            }
+        }
+
+        table = elem->parent;
+    }
+
+    return -1;
 }
 
 static int flecs_script_type_ensure_entities(
@@ -108900,8 +109088,7 @@ static int flecs_expr_global_variable_resolve(
 {
     ecs_world_t *world = script->world;
     flecs_script_symbol_t symbol;
-    if (flecs_script_symbol_lookup(script, desc, 0, node->name,
-        FlecsScriptLookupAll, &symbol) ||
+    if (flecs_script_global_var_lookup(script, desc, node->name, &symbol) ||
         symbol.kind != FlecsScriptSymbolGlobalVariable)
     {
         if (!flecs_expr_unresolved_ref(script, desc,

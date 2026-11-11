@@ -871,6 +871,95 @@ static int flecs_script_type_ensure_node(
     return 0;
 }
 
+/* Find the entity a scope in the script evaluates to, if it already exists.
+ * Unlike flecs_script_type_ensure_node this doesn't create entities. */
+static ecs_entity_t flecs_script_type_existing_node_entity(
+    ecs_script_type_visitor_t *t,
+    ecs_script_entity_t *node)
+{
+    ecs_world_t *world = t->v->world;
+    ecs_entity_t e = flecs_script_type_node_entity(t, node);
+    if (e) {
+        return ecs_is_alive(world, e) ? e : 0;
+    }
+
+    if (node->name_expr || !node->name) {
+        return 0;
+    }
+
+    ecs_script_type_entity_t *entry = flecs_script_type_entity_from_node(
+        t, node);
+    ecs_entity_t parent = entry ? entry->parent : 0;
+    if (entry && entry->parent_node) {
+        parent = flecs_script_type_existing_node_entity(
+            t, entry->parent_node);
+        if (!parent) {
+            return 0;
+        }
+    }
+
+    return ecs_lookup_path_w_sep(world, parent, node->name, NULL, NULL, false);
+}
+
+static bool flecs_script_type_is_global_var(
+    ecs_script_type_visitor_t *t,
+    ecs_entity_t e)
+{
+    return e && flecs_script_global_var_get(t->v->world, e, NULL).ptr;
+}
+
+int flecs_script_type_global_var_lookup(
+    void *ctx,
+    const char *name,
+    flecs_script_symbol_t *symbol)
+{
+    ecs_script_type_visitor_t *t = ctx;
+    const char *sep;
+    ecs_size_t length = flecs_script_type_path_elem(name, &sep);
+
+    /* Same walk as flecs_script_type_find, except that an entity that isn't a
+     * variable doesn't end it. Each scope is checked for variables declared by
+     * this script, then for variables that already exist in the world, such as
+     * ones exported by a previous script. */
+    int32_t table = t->table;
+    while (table != -1) {
+        ecs_script_type_table_t *elem = ecs_vec_get_t(
+            &t->tables, ecs_script_type_table_t, table);
+
+        ecs_script_type_entity_t *entity = sep ? NULL :
+            flecs_script_type_find_in(t, (uint64_t)table, true, name, length);
+        if (entity) {
+            ecs_entity_t e = flecs_script_symbol_entity(t->v, entity->slot);
+            if (flecs_script_type_is_global_var(t, e)) {
+                symbol->kind = FlecsScriptSymbolGlobalVariable;
+                symbol->slot = entity->slot;
+                symbol->sp = -1;
+                symbol->entity = e;
+                return 0;
+            }
+        }
+
+        ecs_entity_t scope = elem->owner
+            ? flecs_script_type_existing_node_entity(t, elem->owner)
+            : 0;
+        if (scope) {
+            ecs_entity_t e = ecs_lookup_path_w_sep(
+                t->v->world, scope, name, NULL, NULL, false);
+            if (flecs_script_type_is_global_var(t, e)) {
+                symbol->kind = FlecsScriptSymbolGlobalVariable;
+                symbol->slot = -1;
+                symbol->sp = -1;
+                symbol->entity = e;
+                return 0;
+            }
+        }
+
+        table = elem->parent;
+    }
+
+    return -1;
+}
+
 static int flecs_script_type_ensure_entities(
     ecs_script_type_visitor_t *t)
 {
