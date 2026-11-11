@@ -828,6 +828,10 @@ void Eval_named_child_in_for_loop_warns(void);
 void Eval_interpolated_name_in_for_loop_no_warn(void);
 void Eval_child_of_interpolated_name_in_for_loop_no_warn(void);
 void Eval_named_entity_w_tag_in_for_loop_no_warn(void);
+void Eval_scoped_prefab_inherit_from_prev_script(void);
+void Eval_scoped_entity_ref_from_prev_script(void);
+void Eval_scoped_component_from_prev_script(void);
+void Eval_nested_scope_component_from_prev_script(void);
 
 // Testsuite 'Collection'
 void Collection_setup(void);
@@ -7517,6 +7521,22 @@ bake_test_case Eval_testcases[] = {
     {
         "named_entity_w_tag_in_for_loop_no_warn",
         Eval_named_entity_w_tag_in_for_loop_no_warn
+    },
+    {
+        "scoped_prefab_inherit_from_prev_script",
+        Eval_scoped_prefab_inherit_from_prev_script
+    },
+    {
+        "scoped_entity_ref_from_prev_script",
+        Eval_scoped_entity_ref_from_prev_script
+    },
+    {
+        "scoped_component_from_prev_script",
+        Eval_scoped_component_from_prev_script
+    },
+    {
+        "nested_scope_component_from_prev_script",
+        Eval_nested_scope_component_from_prev_script
     }
 };
 
@@ -21046,7 +21066,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        818,
+        822,
         Eval_testcases,
         1,
         Eval_params
