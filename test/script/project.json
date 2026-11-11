@@ -1515,7 +1515,13 @@
                 "emit_is_mut",
                 "no_return_type",
                 "no_return_type_in_expr",
-                "native_mut"
+                "native_mut",
+                "redeclare_fn",
+                "redeclare_native_fn",
+                "redeclare_fn_in_scope",
+                "same_fn_name_in_different_scopes",
+                "update_script_w_fn",
+                "update_script_w_fn_twice"
             ]
         }, {
             "id": "Template",

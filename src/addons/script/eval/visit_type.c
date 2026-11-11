@@ -1904,6 +1904,23 @@ static int flecs_script_type_try(
     return 0;
 }
 
+static bool flecs_script_type_function_exists(
+    ecs_script_type_visitor_t *t,
+    ecs_script_function_node_t *node,
+    ecs_entity_t parent)
+{
+    ecs_world_t *world = t->v->world;
+    ecs_entity_t scope = parent ? parent : ecs_get_scope(world);
+    ecs_entity_t existing = ecs_lookup_path_w_sep(
+        world, scope, node->name, ".", NULL, false);
+    if (!existing) {
+        return false;
+    }
+
+    return ecs_has(world, existing, EcsScriptFunction) ||
+        ecs_has(world, existing, EcsScriptMethod);
+}
+
 static int flecs_script_type_function(
     ecs_script_type_visitor_t *t,
     ecs_script_function_node_t *node)
@@ -1978,6 +1995,12 @@ static int flecs_script_type_function(
             t->v->world, params[i].eval_type);
     }
 
+    if (flecs_script_type_function_exists(t, node, parent)) {
+        flecs_script_eval_error(t->v, node,
+            "function '%s' is already defined", node->name);
+        goto done;
+    }
+
     ecs_function_desc_t fn_desc = {
         .name = node->name,
         .parent = parent,
@@ -1994,6 +2017,12 @@ static int flecs_script_type_function(
         flecs_script_eval_error(t->v, node,
             "failed to register function '%s'", node->name);
         goto done;
+    }
+
+    if (t->v->script_tag && flecs_script_can_own_entity(
+        t->v->world, t->v->script_entity, fn_entity))
+    {
+        ecs_add_id(t->v->world, fn_entity, t->v->script_tag);
     }
 
     flecs_script_symbol_set(t->v, node->symbol, fn_entity);

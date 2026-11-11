@@ -3143,3 +3143,153 @@ void Function_native_mut(void) {
 
     ecs_fini(world);
 }
+
+void Function_redeclare_fn(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "fn add(a: i32, b: i32) -> i32 { a + b }"
+    LINE "fn add(a: i32, b: i32) -> i32 { a - b }";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Function_redeclare_native_fn(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t function = ecs_function(world, {
+        .name = "bump",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Function_mut_callback
+    });
+
+    const char *expr =
+    HEAD "fn bump() -> i32 { 10 }";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
+
+    const EcsScriptFunction *f = ecs_get(world, function, EcsScriptFunction);
+    test_assert(f != NULL);
+    test_assert(f->callback == Function_mut_callback);
+
+    ecs_fini(world);
+}
+
+void Function_redeclare_fn_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "parent {"
+    LINE "  fn add(a: i32, b: i32) -> i32 { a + b }"
+    LINE "  fn add(a: i32, b: i32) -> i32 { a - b }"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Function_same_fn_name_in_different_scopes(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "fn add(a: i32, b: i32) -> i32 { a + b }"
+    LINE "parent {"
+    LINE "  fn add(a: i32, b: i32) -> i32 { a - b }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "add") != 0);
+    test_assert(ecs_lookup(world, "parent.add") != 0);
+    test_assert(ecs_lookup(world, "add") != ecs_lookup(world, "parent.add"));
+
+    ecs_fini(world);
+}
+
+void Function_update_script_w_fn(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "fn add(a: i32, b: i32) -> i32 { a + b }"
+            LINE "Foo { Position: {add(2, 3), add(10, 20)} }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 5);
+    test_int(p->y, 30);
+
+    test_int(ecs_script_update(world, s, 0,
+        HEAD "fn add(a: i32, b: i32) -> i32 { a - b }"
+        LINE "Foo { Position: {add(2, 3), add(10, 20)} }"), 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, -1);
+    test_int(p->y, -10);
+
+    ecs_fini(world);
+}
+
+void Function_update_script_w_fn_twice(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "fn add(a: i32, b: i32) -> i32 { a + b }"
+            LINE "Foo { Position: {add(2, 3), add(10, 20)} }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_update(world, s, 0,
+        HEAD "fn add(a: i32, b: i32) -> i32 { a + b }"
+        LINE "fn add(a: i32, b: i32) -> i32 { a - b }"
+        LINE "Foo { Position: {add(2, 3), add(10, 20)} }") != 0);
+    ecs_log_set_level(-1);
+
+    test_int(ecs_script_update(world, s, 0,
+        HEAD "fn add(a: i32, b: i32) -> i32 { a * b }"
+        LINE "Foo { Position: {add(2, 3), add(10, 20)} }"), 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 6);
+    test_int(p->y, 200);
+
+    ecs_fini(world);
+}
