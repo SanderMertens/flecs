@@ -18,6 +18,7 @@ struct ecs_script_future_t {
     ecs_async_function_cancel_t cancel;
     ecs_function_ctx_t function_ctx;
     ecs_os_mutex_t mutex;
+    ecs_script_task_t *waiter;
     int32_t refs;
     ecs_script_future_status_t status;
 };

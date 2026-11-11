@@ -1231,6 +1231,10 @@ void AsyncBlock_fn_pure_call_stmt(void);
 void AsyncBlock_event_from_fn(void);
 void AsyncBlock_local_mut_array_from_array_in_fn(void);
 void AsyncBlock_error_fn(void);
+void AsyncBlock_progress_resumes_only_resolved(void);
+void AsyncBlock_resolve_after_delete_while_awaiting(void);
+void AsyncBlock_delete_keeps_resolved_block_ready(void);
+void AsyncBlock_finished_block_keeps_resolved_block_ready(void);
 
 // Testsuite 'Input'
 void Input_setup(void);
@@ -9339,6 +9343,22 @@ bake_test_case AsyncBlock_testcases[] = {
     {
         "error_fn",
         AsyncBlock_error_fn
+    },
+    {
+        "progress_resumes_only_resolved",
+        AsyncBlock_progress_resumes_only_resolved
+    },
+    {
+        "resolve_after_delete_while_awaiting",
+        AsyncBlock_resolve_after_delete_while_awaiting
+    },
+    {
+        "delete_keeps_resolved_block_ready",
+        AsyncBlock_delete_keeps_resolved_block_ready
+    },
+    {
+        "finished_block_keeps_resolved_block_ready",
+        AsyncBlock_finished_block_keeps_resolved_block_ready
     }
 };
 
@@ -22254,7 +22274,7 @@ static bake_test_suite suites[] = {
         "AsyncBlock",
         AsyncBlock_setup,
         NULL,
-        177,
+        181,
         AsyncBlock_testcases,
         1,
         AsyncBlock_params

@@ -1252,7 +1252,11 @@
                 "fn_pure_call_stmt",
                 "event_from_fn",
                 "local_mut_array_from_array_in_fn",
-                "error_fn"
+                "error_fn",
+                "progress_resumes_only_resolved",
+                "resolve_after_delete_while_awaiting",
+                "delete_keeps_resolved_block_ready",
+                "finished_block_keeps_resolved_block_ready"
             ]
         }, {
             "id": "Input",

@@ -35,6 +35,7 @@ ecs_script_runtime_t* flecs_script_runtime_new_shared(
     ecs_vec_init_t(NULL, &r->call_runtimes, ecs_script_runtime_t*, 0);
     ecs_vec_init_t(NULL, &r->pending, ecs_script_pending_t, 0);
     ecs_vec_init_t(NULL, &r->async_tasks, void*, 0);
+    ecs_vec_init_t(NULL, &r->async_ready, uint64_t, 0);
     return r;
 }
 
@@ -76,6 +77,11 @@ void ecs_script_runtime_free(
     flecs_script_ir_vm_pool_fini(r);
     ecs_vec_fini_t(NULL, &r->pending, ecs_script_pending_t);
     ecs_vec_fini_t(NULL, &r->async_tasks, void*);
+    ecs_vec_fini_t(NULL, &r->async_ready, uint64_t);
+    if (r->async_lock) {
+        ecs_os_mutex_free(r->async_lock);
+    }
+
     ecs_vec_fini_t(r->allocator, &r->pending_resolves, ecs_entity_t);
     ecs_vec_fini_t(r->allocator, &r->missing_component_refs,
         ecs_script_unresolved_component_ref_t);
