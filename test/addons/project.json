@@ -539,7 +539,8 @@
                 "query_params_max",
                 "headers_and_body",
                 "headers_max_with_body",
-                "empty_target_encoded_path"
+                "empty_target_encoded_path",
+                "fragmented_request"
             ]
         }, {
             "id": "Rest",

@@ -97,9 +97,8 @@ static const char* flecs_type_kind_str(
 }
 
 
-#ifdef FLECS_DEBUG
 static bool flecs_meta_detect_cycles_w_stack(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t type,
     ecs_entity_t target,
     ecs_vec_t *visited)
@@ -146,7 +145,19 @@ static bool flecs_meta_detect_cycles_w_stack(
 
     return false;
 }
-#endif
+
+static bool flecs_meta_has_cycle(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_entity_t target)
+{
+    ecs_vec_t visited;
+    ecs_vec_init_t(NULL, &visited, ecs_entity_t, 0);
+    bool cycles_detected = flecs_meta_detect_cycles_w_stack(
+        world, type, target, &visited);
+    ecs_vec_fini_t(NULL, &visited, ecs_entity_t);
+    return cycles_detected;
+}
 
 void flecs_meta_detect_cycles(
     ecs_world_t *world,
@@ -156,20 +167,42 @@ void flecs_meta_detect_cycles(
     (void)world;
     (void)type;
     (void)target;
-#ifdef FLECS_DEBUG
-    ecs_vec_t visited;
-    ecs_vec_init_t(NULL, &visited, ecs_entity_t, 0);
-    bool cycles_detected = flecs_meta_detect_cycles_w_stack(
-        world, type, target, &visited);
-    ecs_vec_fini_t(NULL, &visited, ecs_entity_t);
-
     ecs_assert(
-        !cycles_detected,
+        !flecs_meta_has_cycle(world, type, target),
         ECS_CYCLE_DETECTED,
         "cyclic type definition: '%s' depends on '%s'",
         flecs_errstr(ecs_get_path(world, target)),
         flecs_errstr_1(ecs_get_path(world, type)));
-#endif
+}
+
+char* flecs_meta_value_constraint_error(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    const void *value)
+{
+    if (!entity) {
+        return NULL;
+    }
+
+    ecs_entity_t type = 0, target = 0;
+    if (id == ecs_id(EcsMember)) {
+        type = ((const EcsMember*)value)->type;
+        target = ecs_get_parent(world, entity);
+    } else if (id == ecs_id(EcsArray)) {
+        type = ((const EcsArray*)value)->type;
+        target = entity;
+    }
+
+    if (!type || !target || !ecs_is_alive(world, type) ||
+        !flecs_meta_has_cycle(world, type, target))
+    {
+        return NULL;
+    }
+
+    return flecs_asprintf("cyclic type definition: '%s' depends on '%s'",
+        flecs_errstr(ecs_get_path(world, target)),
+        flecs_errstr_1(ecs_get_path(world, type)));
 }
 
 int flecs_init_type(

@@ -767,6 +767,8 @@ static void http_recv_connection(
     char *recv_buf = ecs_os_malloc(ECS_HTTP_SEND_RECV_BUFFER_SIZE);
     ecs_http_fragment_t frag = {0};
     int32_t retries = 0;
+    int32_t max_retries = ECS_HTTP_REQUEST_RECV_RETRY;
+    bool incomplete = false;
 
     ecs_os_sleep(0, 10 * 1000 * 1000);
 
@@ -780,6 +782,7 @@ static void http_recv_connection(
                 goto done;
             }
 
+            incomplete = false;
             if (http_parse_request(&frag, recv_buf, bytes_read)) {
                 if (frag.method == EcsHttpOptions) {
                     ecs_http_reply_t reply;
@@ -809,20 +812,28 @@ static void http_recv_connection(
                         ecs_os_mutex_unlock(srv->lock);
                     }
                 }
-            } else {
+            } else if (frag.invalid) {
                 ecs_os_linc(&ecs_http_request_invalid_count);
+            } else {
+                incomplete = true;
+                max_retries = ECS_HTTP_REQUEST_FRAGMENT_RECV_RETRY;
             }
         }
 
         ecs_os_sleep(0, 10 * 1000 * 1000);
-    } while ((bytes_read == -1) && (++retries < ECS_HTTP_REQUEST_RECV_RETRY));
+    } while (((bytes_read == -1) || (incomplete && bytes_read > 0)) &&
+        (++retries < max_retries));
+
+    if (incomplete) {
+        ecs_os_linc(&ecs_http_request_invalid_count);
+    }
 
     if (bytes_read == ECS_HTTP_SEND_RECV_BUFFER_SIZE) {
         ecs_warn("request exceeded receive buffer size (%d)",
             ECS_HTTP_SEND_RECV_BUFFER_SIZE);
     }
 
-    if (retries == ECS_HTTP_REQUEST_RECV_RETRY) {
+    if (retries == max_retries) {
         ecs_os_mutex_lock(srv->lock);
         bool still_owns_sock = conn->pub.id == conn_id;
         if (still_owns_sock) {

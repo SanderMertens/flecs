@@ -78,35 +78,56 @@ static void flecs_register_symmetric(ecs_iter_t *it) {
     }
 }
 
+char* flecs_singleton_constraint_error(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    ecs_entity_t component = ecs_get_alive(
+        world, ECS_IS_PAIR(id) ? ECS_PAIR_FIRST(id) : id);
+    if (!component || (uint32_t)component == (uint32_t)entity ||
+        !ecs_has_id(world, component, EcsSingleton) ||
+        ecs_has_id(world, entity, EcsDisabled))
+    {
+        return NULL;
+    }
+
+#ifdef FLECS_PREFAB
+    if (ecs_has_id(world, entity, EcsPrefab)) {
+        return NULL;
+    }
+#endif
+
+    if (ECS_IS_PAIR(id)) {
+        return flecs_asprintf(
+            "cannot add singleton pair '%s' to entity '%s': singleton "
+            "component '%s' must be added to itself",
+                flecs_errstr(ecs_id_str(world, id)),
+                flecs_errstr_1(ecs_get_path(world, entity)),
+                flecs_errstr_2(ecs_get_path(world, component)));
+    }
+
+    return flecs_asprintf(
+        "cannot add singleton component '%s' to entity '%s': singleton"
+        " component must be added to itself",
+            flecs_errstr(ecs_get_path(world, component)),
+            flecs_errstr_1(ecs_get_path(world, entity)));
+}
+
 #ifdef FLECS_DEBUG
 static void flecs_on_singleton_add_remove(ecs_iter_t *it) {
     ecs_entity_t component = ecs_field_id(it, 0);
-    ecs_world_t *world = it->world;
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
-
-        if (ECS_IS_PAIR(component)) {
-            ecs_entity_t relationship = ECS_PAIR_FIRST(component);
-            e = (uint32_t)e;
-            ecs_check(relationship == e, ECS_CONSTRAINT_VIOLATED,
-                "cannot add singleton pair '%s' to entity '%s': singleton "
-                "component '%s' must be added to itself",
-                    flecs_errstr(ecs_id_str(world, component)),
-                    flecs_errstr_1(ecs_get_path(world, it->entities[i])),
-                    flecs_errstr_2(ecs_get_path(it->stage, relationship)));
-            (void)relationship;
-        } else {
-            ecs_check(component == e, ECS_CONSTRAINT_VIOLATED,
-                "cannot add singleton component '%s' to entity '%s': singleton"
-                " component must be added to itself",
-                    flecs_errstr(ecs_get_path(it->stage, component)),
-                    flecs_errstr_1(ecs_get_path(it->stage, it->entities[i])));
+        char *err = flecs_singleton_constraint_error(
+            it->world, it->entities[i], component);
+        if (err) {
+            ecs_throw(ECS_CONSTRAINT_VIOLATED, "%s", err);
         }
 
     error:
-        continue;
+        ecs_os_free(err);
     }
 }
 #endif
@@ -162,34 +183,33 @@ ecs_entity_t flecs_get_oneof(
     }
 }
 
-#ifdef FLECS_DEBUG
-int flecs_check_constraint_traits(
-    ecs_world_t *world,
-    ecs_component_record_t *cr,
+char* flecs_constraint_traits_error(
+    const ecs_world_t *world,
+    ecs_id_t id,
     ecs_entity_t rel,
     ecs_entity_t tgt)
 {
-    if (ECS_IS_PAIR(cr->id)) {
+    if (ECS_IS_PAIR(id)) {
         if (tgt) {
             /* Can't use relationship as target */
             if (ecs_has_id(world, tgt, EcsRelationship)) {
                 if (!ecs_id_is_wildcard(rel) &&
                     !ecs_has_id(world, rel, EcsTrait))
                 {
-                    ecs_throw(ECS_CONSTRAINT_VIOLATED, "cannot use '%s' as target"
+                    return flecs_asprintf("cannot use '%s' as target"
                         " in pair '%s': '%s' has the Relationship trait",
                             flecs_errstr(ecs_get_path(world, tgt)),
-                            flecs_errstr_1(ecs_id_str(world, cr->id)),
+                            flecs_errstr_1(ecs_id_str(world, id)),
                             flecs_errstr_2(ecs_get_path(world, tgt)));
                 }
             }
         }
 
         if (ecs_has_id(world, rel, EcsTarget)) {
-            ecs_throw(ECS_CONSTRAINT_VIOLATED, "cannot use '%s' as relationship "
+            return flecs_asprintf("cannot use '%s' as relationship "
                 "in pair '%s': '%s' has the Target trait",
                     flecs_errstr(ecs_get_path(world, rel)),
-                    flecs_errstr_1(ecs_id_str(world, cr->id)),
+                    flecs_errstr_1(ecs_id_str(world, id)),
                     flecs_errstr_2(ecs_get_path(world, rel)));
         }
 
@@ -199,22 +219,20 @@ int flecs_check_constraint_traits(
             if (oneof) {
                 if (!ecs_has_pair(world, tgt, EcsChildOf, oneof)) {
                     if (oneof == rel) {
-                        ecs_throw(ECS_CONSTRAINT_VIOLATED,
-                            "cannot use '%s' as target in pair '%s': "
+                        return flecs_asprintf("cannot use '%s' as target in pair '%s': "
                             "relationship '%s' has the OneOf trait and '%s' "
                             "is not a child of '%s'",
                                 flecs_errstr(ecs_get_path(world, tgt)),
-                                flecs_errstr_1(ecs_id_str(world, cr->id)),
+                                flecs_errstr_1(ecs_id_str(world, id)),
                                 flecs_errstr_2(ecs_get_path(world, rel)),
                                 flecs_errstr_3(ecs_get_path(world, tgt)),
                                 flecs_errstr_4(ecs_get_path(world, rel)));
                     } else {
-                        ecs_throw(ECS_CONSTRAINT_VIOLATED,
-                            "cannot use '%s' as target in pair '%s': "
+                        return flecs_asprintf("cannot use '%s' as target in pair '%s': "
                             "relationship '%s' has (OneOf, %s) and '%s' "
                             "is not a child of '%s'",
                                 flecs_errstr(ecs_get_path(world, tgt)),
-                                flecs_errstr_1(ecs_id_str(world, cr->id)),
+                                flecs_errstr_1(ecs_id_str(world, id)),
                                 flecs_errstr_2(ecs_get_path(world, rel)),
                                 flecs_errstr_3(ecs_get_path(world, oneof)),
                                 flecs_errstr_4(ecs_get_path(world, tgt)),
@@ -225,8 +243,7 @@ int flecs_check_constraint_traits(
 
             /* Check if we're not trying to inherit from a final target */
             if (rel == EcsIsA && ecs_has_id(world, tgt, EcsFinal)) {
-                ecs_throw(ECS_CONSTRAINT_VIOLATED,
-                    "cannot add '(IsA, %s)': '%s' has the Final trait",
+                return flecs_asprintf("cannot add '(IsA, %s)': '%s' has the Final trait",
                         flecs_errstr(ecs_get_path(world, tgt)),
                         flecs_errstr_1(ecs_get_path(world, tgt)));
             }
@@ -237,24 +254,19 @@ int flecs_check_constraint_traits(
             (is_tgt = ecs_has_id(world, rel, EcsTarget)))
         {
             if (is_tgt) {
-                ecs_throw(ECS_CONSTRAINT_VIOLATED,
-                    "cannot use '%s' by itself: it has the Target trait and "
+                return flecs_asprintf("cannot use '%s' by itself: it has the Target trait and "
                     "must be used in pair with relationship",
                         flecs_errstr(ecs_get_path(world, rel)));
             } else {
-                ecs_throw(ECS_CONSTRAINT_VIOLATED,
-                    "cannot use '%s' by itself: it has the Relationship trait "
+                return flecs_asprintf("cannot use '%s' by itself: it has the Relationship trait "
                     "and must be used in pair with target",
                         flecs_errstr(ecs_get_path(world, rel)));
             }
         }
     }
 
-    return 0;
-error:
-    return -1;
+    return NULL;
 }
-#endif
 
 void flecs_bootstrap_constraint_traits(
     ecs_world_t *world)

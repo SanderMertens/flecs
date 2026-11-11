@@ -313,6 +313,20 @@ int flecs_script_eval_interface_id(
     const ecs_script_id_t *id,
     ecs_id_t *out);
 
+int flecs_script_eval_check_id(
+    ecs_script_eval_visitor_t *v,
+    const void *node,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    bool w_value);
+
+int flecs_script_eval_check_value(
+    ecs_script_eval_visitor_t *v,
+    const void *node,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    const void *value);
+
 int flecs_script_eval_tag_id(
     ecs_script_eval_visitor_t *v,
     const ecs_script_tag_t *node,

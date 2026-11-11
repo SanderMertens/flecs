@@ -1,5 +1,12 @@
 #include <addons.h>
 
+#ifdef ECS_TARGET_POSIX
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#endif
+
 static bool OnRequest(
     const ecs_http_request_t* request, 
     ecs_http_reply_t *reply,
@@ -211,4 +218,60 @@ void Http_empty_target_encoded_path(void) {
     test_int(reply.code, 400);
 
     ecs_http_server_fini(srv);
+}
+
+void Http_fragmented_request(void) {
+#ifdef ECS_TARGET_POSIX
+    ecs_set_os_api_impl();
+
+    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
+        .port = 27755,
+        .ipaddr = "127.0.0.1",
+        .callback = OnRequestEcho
+    });
+
+    test_assert(srv != NULL);
+    test_int(0, ecs_http_server_start(srv));
+
+    struct sockaddr_in addr = {0};
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(27755);
+    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+    int sock = -1;
+    int connected = -1;
+    for (int i = 0; i < 100 && connected; i ++) {
+        sock = socket(AF_INET, SOCK_STREAM, 0);
+        test_assert(sock >= 0);
+        connected = connect(sock, (struct sockaddr*)&addr, sizeof(addr));
+        if (connected) {
+            close(sock);
+            ecs_os_sleep(0, 10 * 1000 * 1000);
+        }
+    }
+    test_int(connected, 0);
+
+    const char *part_1 = "GET /frag HT";
+    const char *part_2 = "TP/1.1\r\nHost: x\r\n\r\n";
+    test_assert(send(sock, part_1, strlen(part_1), 0) > 0);
+    ecs_os_sleep(0, 200 * 1000 * 1000);
+    test_assert(send(sock, part_2, strlen(part_2), 0) > 0);
+
+    fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK);
+
+    char buf[1024];
+    ssize_t received = 0;
+    for (int i = 0; i < 200 && received <= 0; i ++) {
+        ecs_http_server_dequeue(srv, 0.1f);
+        ecs_os_sleep(0, 10 * 1000 * 1000);
+        received = recv(sock, buf, sizeof(buf), 0);
+    }
+
+    close(sock);
+    ecs_http_server_fini(srv);
+
+    test_assert(received > 0);
+#else
+    test_assert(true);
+#endif
 }
