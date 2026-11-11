@@ -708,7 +708,8 @@ typedef bool (*ecs_equals_t)(
 typedef bool (*ecs_on_validate_t)(
     ecs_world_t *world,
     ecs_entity_t entity,
-    void *ptr);
+    void *ptr,
+    const ecs_type_info_t *type_info);
 
 /** Destructor function for poly objects. */
 typedef void (*flecs_poly_dtor_t)(

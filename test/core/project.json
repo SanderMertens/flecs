@@ -1981,6 +1981,7 @@
                 "on_validate_true_invokes_on_set_observer",
                 "on_validate_false_blocks_on_set_observer",
                 "on_validate_receives_value",
+                "on_validate_receives_type_info",
                 "on_validate_blocks_modified",
                 "on_validate_per_entity_in_bulk",
                 "on_validate_false_blocks_on_set_deferred",
@@ -3718,6 +3719,7 @@
             "id": "Table",
             "testcases": [
                 "get_index",
+                "get_index_from_stage",
                 "get_index_after_tag",
                 "get_index_not_in_table",
                 "get_index_tag",

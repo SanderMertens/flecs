@@ -18,6 +18,31 @@ void Table_get_index(void) {
     ecs_fini(world);
 }
 
+void Table_get_index_from_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_set(world, e, Velocity, {10, 20});
+
+    ecs_table_t *table = ecs_get_table(world, e);
+    test_assert(table != NULL);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    test_assert(stage != NULL);
+    test_assert(stage != world);
+
+    test_int(ecs_table_get_type_index(stage, table, ecs_id(Position)), 0);
+    test_int(ecs_table_get_type_index(stage, table, ecs_id(Velocity)), 1);
+    test_int(ecs_table_get_column_index(stage, table, ecs_id(Position)), 0);
+    test_int(ecs_table_get_column_index(stage, table, ecs_id(Velocity)), 1);
+
+    ecs_fini(world);
+}
+
 void Table_get_index_after_tag(void) {
     ecs_world_t *world = ecs_mini();
 

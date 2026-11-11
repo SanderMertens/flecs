@@ -554,7 +554,7 @@ void flecs_notify_on_set_ids(
             for (j = 0; j < count; j ++) {
                 ecs_entity_t e = entities[j];
                 void *ptr = flecs_get_component(world, table, row + j, cr);
-                if (!on_validate(world, e, ptr)) {
+                if (!on_validate(world, e, ptr, ti)) {
                     continue;
                 }
 
@@ -664,7 +664,7 @@ void flecs_notify_on_set_w_cr(
             ptr = flecs_get_component(world, table, row, cr);
         }
 
-        if (!on_validate(world, entities[0], ptr)) {
+        if (!on_validate(world, entities[0], ptr, ti)) {
             return;
         }
     }

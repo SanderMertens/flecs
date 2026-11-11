@@ -41,7 +41,7 @@ void menu_scene(flecs::iter& it, size_t, ActiveScene) {
         .set(Position{ 50, 50 })
         .child_of(scene);
 
-    ecs.set_pipeline(ecs.get<MenuScene>().pip);
+    it.world().set_pipeline(ecs.get<MenuScene>().pip);
 }
 
 void game_scene(flecs::iter& it, size_t, ActiveScene) {
@@ -60,7 +60,7 @@ void game_scene(flecs::iter& it, size_t, ActiveScene) {
         .set(Position{ 0, 0 })
         .child_of(scene);
 
-    ecs.set_pipeline(ecs.get<GameScene>().pip);
+    it.world().set_pipeline(ecs.get<GameScene>().pip);
 }
 
 void init_scenes(flecs::world& ecs) {

@@ -2445,8 +2445,10 @@ int32_t ecs_table_get_type_index(
     const ecs_table_t *table,
     ecs_id_t id)
 {
-    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    world = ecs_get_world(world);
 
     if (id < FLECS_HI_COMPONENT_ID) {
         int16_t res = table->component_map[id];
@@ -2477,9 +2479,11 @@ int32_t ecs_table_get_column_index(
     const ecs_table_t *table,
     ecs_id_t id)
 {
-    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+
+    world = ecs_get_world(world);
 
     if (id < FLECS_HI_COMPONENT_ID) {
         int16_t res = table->component_map[id];
