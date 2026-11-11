@@ -4804,3 +4804,38 @@ void Collection_untyped_const_vector_to_c_component_vector_member(void) {
 
     ecs_fini(world);
 }
+
+void Collection_untyped_vector_to_array_in_fn(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export const kind = [1, 2, 3]"
+            LINE "export mut out: i32 = 0"
+            LINE "export mut res: i32[3] = {}"
+            LINE "fn update() {"
+            LINE "  const c: i32[3] = kind"
+            LINE "  mut k: i32[3] = kind"
+            LINE "  k[1] = 10"
+            LINE "  out = c[1] + k[0] + k[1] + k[2]"
+            LINE "  res = kind"
+            LINE "}"
+            LINE "async { update() }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(
+        world, ecs_lookup(world, "out")).ptr, 16);
+
+    int32_t *a = ecs_mut_var_get(world, ecs_lookup(world, "res")).ptr;
+    test_int(a[0], 1);
+    test_int(a[1], 2);
+    test_int(a[2], 3);
+
+    ecs_fini(world);
+}

@@ -138,6 +138,8 @@ const char* flecs_script_node_kind_str(
     case EcsAstContinue:           return "continue";
     case EcsAstBreak:              return "break";
     case EcsAstEmit:               return "emit";
+    case EcsAstCall:               return "call";
+    case EcsAstReturn:             return "return";
     case EcsAstAsync:              return "async";
     case EcsAstWhile:              return "while";
     case EcsAstAssign:             return "assign";
@@ -392,6 +394,12 @@ static void flecs_script_stmt_to_str(
         flecs_scriptbuf_append(v, "%s ", ((ecs_script_emit_t*)node)->name);
         flecs_expr_to_str(v, ((ecs_script_emit_t*)node)->expr);
         break;
+    case EcsAstCall:
+        flecs_expr_to_str(v, ((ecs_script_call_t*)node)->expr);
+        break;
+    case EcsAstReturn:
+        flecs_expr_to_str(v, ((ecs_script_return_t*)node)->expr);
+        break;
     case EcsAstAssign: {
         ecs_script_assign_t *stmt = (ecs_script_assign_t*)node;
         flecs_scriptbuf_append(v, "%s", stmt->name);
@@ -448,12 +456,13 @@ static void flecs_script_stmt_to_str(
                 params[i].name, params[i].type);
         }
 
-        flecs_scriptbuf_append(v, ") -> %s ", fn->return_type);
-        flecs_script_scope_to_str(v, fn->body);
-        if (fn->return_expr) {
-            flecs_expr_to_str(v, fn->return_expr);
+        if (fn->return_type) {
+            flecs_scriptbuf_append(v, ") -> %s ", fn->return_type);
+        } else {
+            flecs_scriptbuf_appendstr(v, ") ");
         }
 
+        flecs_script_scope_to_str(v, fn->body);
         break;
     }
     }

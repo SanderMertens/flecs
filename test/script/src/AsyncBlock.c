@@ -8906,3 +8906,402 @@ void AsyncBlock_event_no_members_await_value(void) {
 
     ecs_fini(world);
 }
+
+void AsyncBlock_fn_call_stmt(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut text: string = \"\""
+            LINE "export mut count: i32 = 0"
+            LINE "fn alert(message: string, n: i32) {"
+            LINE "  text = message"
+            LINE "  count += n"
+            LINE "}"
+            LINE "async {"
+            LINE "  alert(\"foo\", 1)"
+            LINE "  alert(\"bar\", 2)"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    const EcsScriptFunction *f = ecs_get(
+        world, ecs_lookup(world, "alert"), EcsScriptFunction);
+    test_assert(f != NULL);
+    test_bool(f->is_mut, true);
+    test_uint(f->return_type, 0);
+
+    ecs_script_tasks_progress(world);
+
+    test_str(*(char**)ecs_mut_var_get(world, ecs_lookup(world, "text")).ptr, "bar");
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 3);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_fn_call_stmt_no_args(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut count: i32 = 0"
+            LINE "fn tick() { count += 1 }"
+            LINE "async { tick(); tick() }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 2);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_fn_control_flow(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut out: i32 = 0"
+            LINE "fn sum(limit: i32) {"
+            LINE "  const start = 1"
+            LINE "  mut total: i32 = start"
+            LINE "  for i in 0..10 {"
+            LINE "    if i == limit {"
+            LINE "      break"
+            LINE "    }"
+            LINE "    if i == 1 {"
+            LINE "      continue"
+            LINE "    }"
+            LINE "    total += i"
+            LINE "  }"
+            LINE "  mut n: i32 = 0"
+            LINE "  while n < 2 {"
+            LINE "    n += 1"
+            LINE "    total *= 2"
+            LINE "  }"
+            LINE "  out = total"
+            LINE "}"
+            LINE "async { sum(4) }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "out")).ptr, 24);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_fn_call_fn(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut out: i32 = 0"
+            LINE "fn add(v: i32) { out += v }"
+            LINE "fn add_twice(v: i32) {"
+            LINE "  add(v)"
+            LINE "  add(v * 2)"
+            LINE "}"
+            LINE "async { add_twice(3) }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    const EcsScriptFunction *f = ecs_get(
+        world, ecs_lookup(world, "add_twice"), EcsScriptFunction);
+    test_assert(f != NULL);
+    test_bool(f->is_mut, true);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "out")).ptr, 9);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_fn_recursion(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut out: i32 = 0"
+            LINE "fn count(n: i32) {"
+            LINE "  if n > 0 {"
+            LINE "    out += 1"
+            LINE "    count(n - 1)"
+            LINE "  }"
+            LINE "}"
+            LINE "async { count(10) }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "out")).ptr, 10);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_fn_infinite_recursion(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut out: i32 = 0"
+            LINE "export mut after: i32 = 0"
+            LINE "fn loop() {"
+            LINE "  out += 1"
+            LINE "  loop()"
+            LINE "}"
+            LINE "async {"
+            LINE "  loop()"
+            LINE "  after = 1"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "out")).ptr, 64);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "after")).ptr, 0);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_fn_error_stops_caller(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut v: i32[2] = {}"
+            LINE "export mut after: i32 = 0"
+            LINE "fn write(i: i32) {"
+            LINE "  v[i] = 1"
+            LINE "}"
+            LINE "async {"
+            LINE "  write(5)"
+            LINE "  after = 1"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "after")).ptr, 0);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_fn_from_template_block(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut out: i32 = 0"
+            LINE "fn add(v: i32) { out += v }"
+            LINE "template T {"
+            LINE "  prop p: i32 = 0"
+            LINE "  async {"
+            LINE "    add(p)"
+            LINE "  }"
+            LINE "}"
+            LINE "T a(p: 2)"
+            LINE "T b(p: 3)",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "out")).ptr, 5);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_fn_mut_return_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut counter: i32 = 0"
+            LINE "export mut a: i32 = 0"
+            LINE "export mut b: i32 = 0"
+            LINE "fn next() -> i32 {"
+            LINE "  counter += 1"
+            LINE "  counter * 10"
+            LINE "}"
+            LINE "async {"
+            LINE "  a = next()"
+            LINE "  const x = next()"
+            LINE "  b = x"
+            LINE "  next()"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "a")).ptr, 10);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "b")).ptr, 20);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "counter")).ptr, 3);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_fn_pure_call_stmt(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut out: i32 = 0"
+            LINE "fn five() -> i32 { 5 }"
+            LINE "async {"
+            LINE "  five()"
+            LINE "  out = five()"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "out")).ptr, 5);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_event_from_fn(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Build(slot: i32)"
+            LINE "export mut got: i32 = 0"
+            LINE "fn build(i: i32) {"
+            LINE "  emit Build(slot: i * 2)"
+            LINE "}"
+            LINE "async {"
+            LINE "  const e = await Build"
+            LINE "  got = e.slot"
+            LINE "}"
+            LINE "async {"
+            LINE "  build(4)"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    const EcsScriptFunction *f = ecs_get(
+        world, ecs_lookup(world, "build"), EcsScriptFunction);
+    test_assert(f != NULL);
+    test_bool(f->is_mut, true);
+
+    ecs_script_tasks_progress(world);
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "got")).ptr, 8);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_local_mut_array_from_array_in_fn(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut kind: i32[3] = [1, 2, 3]"
+            LINE "export mut out: i32 = 0"
+            LINE "fn update() {"
+            LINE "  mut k: i32[3] = kind"
+            LINE "  k[1] = 10"
+            LINE "  out = k[0] + k[1] + k[2]"
+            LINE "}"
+            LINE "async { update() }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "out")).ptr, 14);
+
+    int32_t *kind = ecs_mut_var_get(world, ecs_lookup(world, "kind")).ptr;
+    test_int(kind[0], 1);
+    test_int(kind[1], 2);
+    test_int(kind[2], 3);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_error_fn(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    const char *scripts[] = {
+        HEAD "fn p() { await fetch(1) }",
+        HEAD "fn p() { const x = await fetch(1) }",
+        HEAD "fn p() { try { } catch { } }",
+        HEAD "fn p() { }\nexport const x: bool = p()",
+        HEAD "export mut m: i32 = 0\nfn p() { }\nasync { m = p() }",
+        HEAD "fn p() { }\np()",
+        HEAD "fn p() { }\ntemplate T { p() }",
+        HEAD "fn p() { }\ntemplate T { const x: bool = p() }",
+        HEAD "async { unknown_fn() }",
+        HEAD "fn p(a: i32) { }\nasync { p() }",
+        HEAD "fn p(a: i32) { }\nasync { p(1, 2) }",
+        HEAD "fn p() { }\nasync { p() + 1 }",
+        HEAD "fn p() { continue }",
+        HEAD "fn p(a: i32) { a = 1 }",
+        HEAD "template T { fn p() { } }",
+        HEAD "fn p() -> i32 { }",
+        HEAD "fn p() { 1 + 2 }",
+        HEAD "export mut m1: i32 = 0\nfn p() -> i32 { m1 = 1\nm1 }\nexport const x = p()",
+        HEAD "export mut m2: i32 = 0\nfn p() -> i32 { m2 = 1\nm2 }\ntemplate T { const x = p() }",
+        HEAD "export mut m3: i32 = 0\nfn p() { m3 = 1 }\nfn q() -> i32 { p()\n1 }\nexport const x = q()",
+        HEAD "event E\nfn p() -> i32 { emit E\n1 }\nexport const x = p()",
+    };
+
+    int32_t i, count = sizeof(scripts) / sizeof(scripts[0]);
+    for (i = 0; i < count; i ++) {
+        test_assert(ecs_script_run_w_desc(
+            world, NULL, scripts[i], &ir_desc, NULL) != 0);
+    }
+
+    ecs_fini(world);
+}

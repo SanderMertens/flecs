@@ -1506,8 +1506,12 @@ static int flecs_ir_call(
     const ecs_script_ir_op_t *op)
 {
     const ecs_expr_function_t *node = op->node;
-    ecs_script_ir_reg_t *dst = flecs_ir_reg(vm, op->a);
-    flecs_ir_reg_out(vm, op, dst);
+    ecs_value_t none = {0}, *out = &none;
+    if (op->a != -1) {
+        ecs_script_ir_reg_t *dst = flecs_ir_reg(vm, op->a);
+        flecs_ir_reg_out(vm, op, dst);
+        out = &dst->value;
+    }
 
     int32_t i, count = op->c;
     ecs_value_t *argv = NULL;
@@ -1527,7 +1531,7 @@ static int flecs_ir_call(
     }
 
     return flecs_expr_function_call(&vm->v.base.script->pub, node,
-        (op->flags & EcsIrCallMethod) ? count - 1 : count, argv, &dst->value);
+        (op->flags & EcsIrCallMethod) ? count - 1 : count, argv, out);
 }
 
 static inline int flecs_ir_init_check(
@@ -1885,8 +1889,7 @@ static flecs_script_run_status_t flecs_ir_exec(
                         ecs_get_type_info(v->world, result->type)))
                     {
                         flecs_ir_expr_error(vm,
-                            ((const ecs_script_function_node_t*)op->node)
-                                ->return_expr,
+                            ((const ecs_script_return_t*)op->node)->expr,
                             "failed to write to output");
                         res = -1;
                         break;

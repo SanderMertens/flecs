@@ -631,7 +631,8 @@ static FLECS_SCRIPT_NOINLINE int flecs_expr_function_visit_eval(
         receiver = expr->value;
     }
 
-    ecs_assert(out->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(out->value.ptr != NULL || !node->node.type,
+        ECS_INTERNAL_ERROR, NULL);
 
     ecs_value_t *argv = NULL;
     int32_t argc = ecs_vec_count(&node->args->elements);
@@ -1178,6 +1179,13 @@ int flecs_expr_visit_eval(
 
     int result = -1;
     ecs_expr_value_t *val = &val_tmp;
+    if (!node->type) {
+        val_tmp = (ecs_expr_value_t){0};
+        result = flecs_expr_function_visit_eval(
+            &ctx, (ecs_expr_function_t*)node, val);
+        goto done;
+    }
+
     if (direct) {
         val_tmp = (ecs_expr_value_t){
             .value = *out,
@@ -1186,12 +1194,12 @@ int flecs_expr_visit_eval(
         };
 
         if (flecs_expr_visit_eval_priv(&ctx, node, val)) {
-            goto error;
+            goto done;
         }
     } else {
         val = flecs_expr_eval_result(&ctx, node, &val_tmp);
         if (!val) {
-            goto error;
+            goto done;
         }
     }
 
@@ -1214,12 +1222,12 @@ int flecs_expr_visit_eval(
             flecs_expr_value_move(out->ptr, val->value.ptr, val->type_info);
         } else if (flecs_value_copy_to(world, out, val)) {
             flecs_expr_visit_error(script, node, "failed to write to output");
-            goto error;
+            goto done;
         }
     }
 
     result = 0;
-error:
+done:
     flecs_expr_stack_pop(stack);
     if (stack == &stack_local) {
         flecs_expr_stack_fini(stack);

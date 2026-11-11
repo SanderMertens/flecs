@@ -1246,6 +1246,25 @@ static void flecs_irc_compile_stmt(
         flecs_irc_expr_end(c, begin, true);
         break;
     }
+    case EcsAstCall: {
+        ecs_expr_node_t *expr = ((ecs_script_call_t*)node)->expr;
+        int32_t begin = flecs_irc_expr_begin(c, node);
+        if (expr->type) {
+            flecs_irc_compile_tmp(c, expr);
+        } else {
+            flecs_irc_compile_call(c, (ecs_expr_function_t*)expr, -1, false);
+        }
+        flecs_irc_expr_end(c, begin, true);
+        break;
+    }
+    case EcsAstReturn: {
+        int32_t begin = flecs_irc_expr_begin(c, node);
+        int32_t value = flecs_irc_compile_tmp(
+            c, ((ecs_script_return_t*)node)->expr);
+        flecs_irc_expr_end(c, begin, false);
+        flecs_irc_emit(c, EcsIrReturn, value, 0, 0, node);
+        break;
+    }
     case EcsAstAsync:
         flecs_irc_entry_add(c, node, EcsIrEntryAsync);
         flecs_irc_emit(c, EcsIrAsync, 0, 0, 0, node);
@@ -1342,22 +1361,9 @@ static void flecs_irc_compile_function(
 {
     ecs_script_scope_t *body = node->body;
     body->parent = NULL;
-    c->scope = body;
-
-    int32_t i, count = ecs_vec_count(&body->stmts);
-    for (i = 0; i < count; i ++) {
-        flecs_irc_compile_stmt(c, body, i);
-    }
-
-    c->scope = NULL;
-    c->reg_count = c->reg_floor;
-
-    if (node->return_expr) {
-        int32_t begin = flecs_irc_expr_begin(c, node);
-        int32_t value = flecs_irc_compile_tmp(c, node->return_expr);
-        flecs_irc_expr_end(c, begin, false);
-        flecs_irc_emit(c, EcsIrReturn, value, 0, 0, node);
-    }
+    c->force_depth ++;
+    flecs_irc_compile_scope(c, body, 0);
+    c->force_depth --;
 }
 
 static void flecs_irc_compile_entry(

@@ -49,6 +49,7 @@ typedef struct ecs_script_type_visitor_t {
     bool function_scope;
     bool async_scope;
     ecs_script_async_t *async_node;
+    ecs_script_function_node_t *fn_node;
     ecs_script_entity_t *reopened;
     bool for_static;
     bool for_entity;

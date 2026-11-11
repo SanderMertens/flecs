@@ -833,6 +833,75 @@ static const char* flecs_script_fn_params(
     ParserEnd;
 }
 
+static bool flecs_script_fn_stmt_is_expr(
+    ecs_parser_t *parser,
+    const char *pos)
+{
+    ecs_parser_t scan = *parser;
+    scan.significant_newline = true;
+    ecs_token_t token;
+    int32_t depth = 0, index = 0;
+    bool emit = false;
+
+    do {
+        if (!(pos = flecs_token(&scan, pos, &token, true))) {
+            return true;
+        }
+
+        scan.token_cur = parser->token_cur;
+
+        if (!index) {
+            if (token.kind == EcsTokIdentifier) {
+                emit = !ecs_os_strcmp(token.value, "emit");
+            } else if (token.kind > EcsTokNumber &&
+                token.kind != EcsTokKeywordMatch &&
+                token.kind != EcsTokKeywordNew)
+            {
+                return false;
+            }
+        } else if (index == 1 && emit && token.kind == EcsTokIdentifier) {
+            return false;
+        }
+
+        index ++;
+
+        switch(token.kind) {
+        case EcsTokScopeOpen:
+        case EcsTokParenOpen:
+        case EcsTokBracketOpen:
+        case EcsTokHasBracketOpen:
+            depth ++;
+            break;
+        case EcsTokParenClose:
+        case EcsTokBracketClose:
+            depth --;
+            break;
+        case EcsTokScopeClose:
+            if (!depth) {
+                return true;
+            }
+            depth --;
+            break;
+        case EcsTokAssign:
+        case EcsTokAddAssign:
+        case EcsTokSubAssign:
+        case EcsTokMulAssign:
+        case EcsTokDivAssign:
+            if (!depth) {
+                return false;
+            }
+            break;
+        EcsTokEndOfStatement:
+            if (!depth || token.kind == EcsTokEnd) {
+                return true;
+            }
+            break;
+        default:
+            break;
+        }
+    } while (true);
+}
+
 static const char* flecs_script_fn_body(
     ecs_parser_t *parser,
     ecs_script_function_node_t *fn,
@@ -840,45 +909,84 @@ static const char* flecs_script_fn_body(
 {
     ParserBegin;
 
+    ecs_script_scope_t *old_scope = parser->scope;
+    bool old_async_scope = parser->async_scope;
+    parser->scope = fn->body;
+    parser->async_scope = true;
+    fn->body->open = pos - 1;
+
     Loop(
         pos = flecs_parser_skip_newlines(parser, pos);
 
         LookAhead(
             case EcsTokScopeClose: {
-                Error("function body must end with an expression");
+                if (fn->return_type) {
+                    Error("function body must end with an expression");
+                }
+
+                Consume();
+                goto done;
             }
             case EcsTokSemiColon: {
                 Consume();
                 continue;
             }
-            case EcsTokKeywordConst: {
-                parser->stmt_pos = pos;
-                Consume();
-                Scope(fn->body,
-                    pos = flecs_script_parse_var(parser, pos, EcsAstConst);
-                )
-                if (!pos) {
-                    goto error;
-                }
-                continue;
-            }
+            case EcsTokEnd:
+                Error("unexpected end of script");
         )
-        break;
+
+        if (!flecs_script_fn_stmt_is_expr(parser, pos)) {
+            pos = flecs_script_stmt_w_separator(parser, pos);
+            if (!pos) {
+                goto error;
+            }
+
+            continue;
+        }
+
+        parser->stmt_pos = pos;
+
+        Expr({
+            bool terminated = false;
+            LookAhead(
+                case EcsTokScopeClose:
+                EcsTokEndOfStatement:
+                    terminated = true;
+                    break;
+            )
+
+            if (!terminated) {
+                Error("missing ; or newline");
+            }
+
+            pos = flecs_parser_skip_newlines(parser, pos);
+
+            if (fn->return_type) {
+                LookAhead_1(EcsTokScopeClose,
+                    Consume();
+                    ecs_script_return_t *ret = flecs_script_insert_return(
+                        parser);
+                    ret->expr = EXPR;
+                    goto done;
+                )
+            }
+
+            ecs_script_call_t *call = flecs_script_insert_call(parser);
+            call->expr = EXPR;
+            if (EXPR->kind == EcsExprFunction) {
+                ((ecs_expr_function_t*)EXPR)->is_stmt = true;
+            }
+        })
     )
 
-    Expr(
-        fn->return_expr = EXPR;
-    )
-
-    pos = flecs_parser_skip_newlines(parser, pos);
-
-    LookAhead_1(EcsTokScopeClose,
-        Consume();
-        return pos;
-    )
-
-    Error("expected '}' after function body");
+done:
+    fn->body->node.end = pos;
+    parser->scope = old_scope;
+    parser->async_scope = old_async_scope;
+    return pos;
 error:
+    parser->scope = old_scope;
+    parser->async_scope = old_async_scope;
     return NULL;
 }
 
@@ -1223,25 +1331,20 @@ fn_stmt: {
 
         pos = flecs_parser_skip_newlines(parser, pos);
 
-        Parse_1(EcsTokArrow,
+        LookAhead_1(EcsTokArrow,
+            Consume();
             pos = flecs_parser_skip_newlines(parser, pos);
 
             Parse_1(EcsTokIdentifier, {
                 fn->return_type = Token(4);
                 fn->return_type_node.pos = parser->pos;
-
                 pos = flecs_parser_skip_newlines(parser, pos);
-
-                Parse_1('{', {
-                    pos = flecs_script_fn_body(parser, fn, pos);
-                    if (!pos) {
-                        goto error;
-                    }
-
-                    EndOfRule;
-                })
             })
         )
+
+        Parse_1('{', {
+            return flecs_script_fn_body(parser, fn, pos);
+        })
     })
 }
 
@@ -1328,6 +1431,19 @@ emit_stmt: {
     empty->node.kind = EcsExprEmptyInitializer;
     stmt->expr = (ecs_expr_node_t*)empty;
     EndOfRule;
+}
+
+identifier_call: {
+    pos = stmt_start;
+    Expr({
+        ecs_script_call_t *stmt = flecs_script_insert_call(parser);
+        stmt->expr = EXPR;
+        if (EXPR->kind == EcsExprFunction) {
+            ((ecs_expr_function_t*)EXPR)->is_stmt = true;
+        }
+
+        EndOfRule;
+    })
 }
 
 // value +=
@@ -1676,6 +1792,10 @@ identifier_identifier_x:
 
 // SpaceShip(
 identifier_paren: {
+    if (parser->async_scope) {
+        goto identifier_call;
+    }
+
     return flecs_script_paren_expr(parser, Token(0),
         flecs_script_insert_entity(parser, NULL), pos);
 }

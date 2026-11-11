@@ -2874,3 +2874,272 @@ void Function_query_in_fn_body(void) {
 
     ecs_fini(world);
 }
+
+void Function_control_flow_w_return(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "fn sum_to(n: i32) -> i32 {"
+    LINE "  mut total: i32 = 0"
+    LINE "  for i in 0..n {"
+    LINE "    if i == 2 {"
+    LINE "      continue"
+    LINE "    }"
+    LINE "    total += i"
+    LINE "  }"
+    LINE "  mut k: i32 = 0"
+    LINE "  while k < 2 {"
+    LINE "    k += 1"
+    LINE "    total *= 2"
+    LINE "  }"
+    LINE "  total"
+    LINE "}"
+    LINE "Foo { Position: {sum_to(4), sum_to(5)} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    const EcsScriptFunction *f = ecs_get(
+        world, ecs_lookup(world, "sum_to"), EcsScriptFunction);
+    test_assert(f != NULL);
+    test_bool(f->is_mut, false);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 16);
+    test_int(p->y, 32);
+
+    ecs_fini(world);
+}
+
+void Function_return_local_from_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "fn clamp(v: i32, max: i32) -> i32 {"
+    LINE "  mut r = v"
+    LINE "  if v > max {"
+    LINE "    r = max"
+    LINE "  }"
+    LINE "  r"
+    LINE "}"
+    LINE "Foo { Position: {clamp(5, 10), clamp(20, 10)} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 5);
+    test_int(p->y, 10);
+
+    ecs_fini(world);
+}
+
+void Function_read_mut_var_is_not_mut(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "export mut m: i32 = 7"
+    LINE "fn get() -> i32 { m * 2 }"
+    LINE "fn add(a: i32, b: i32) -> i32 { a + b }"
+    LINE "Foo { Position: {get(), add(1, 2)} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    const EcsScriptFunction *f = ecs_get(
+        world, ecs_lookup(world, "get"), EcsScriptFunction);
+    test_assert(f != NULL);
+    test_bool(f->is_mut, false);
+
+    f = ecs_get(world, ecs_lookup(world, "add"), EcsScriptFunction);
+    test_assert(f != NULL);
+    test_bool(f->is_mut, false);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 14);
+    test_int(p->y, 3);
+
+    ecs_fini(world);
+}
+
+void Function_assign_mut_var_is_mut(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export mut m: i32 = 0"
+    LINE "fn set(v: i32) { m = v }"
+    LINE "fn set_local(v: i32) -> i32 {"
+    LINE "  mut l = v"
+    LINE "  l = l + 1"
+    LINE "  l"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    const EcsScriptFunction *f = ecs_get(
+        world, ecs_lookup(world, "set"), EcsScriptFunction);
+    test_assert(f != NULL);
+    test_bool(f->is_mut, true);
+
+    f = ecs_get(world, ecs_lookup(world, "set_local"), EcsScriptFunction);
+    test_assert(f != NULL);
+    test_bool(f->is_mut, false);
+
+    ecs_fini(world);
+}
+
+void Function_call_mut_fn_is_mut(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export mut m: i32 = 0"
+    LINE "fn set(v: i32) { m = v }"
+    LINE "fn set_twice(v: i32) -> i32 {"
+    LINE "  set(v)"
+    LINE "  set(v * 2)"
+    LINE "  v"
+    LINE "}"
+    LINE "fn nested(v: i32) -> i32 { set_twice(v) + 1 }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    const EcsScriptFunction *f = ecs_get(
+        world, ecs_lookup(world, "set_twice"), EcsScriptFunction);
+    test_assert(f != NULL);
+    test_bool(f->is_mut, true);
+
+    f = ecs_get(world, ecs_lookup(world, "nested"), EcsScriptFunction);
+    test_assert(f != NULL);
+    test_bool(f->is_mut, true);
+
+    ecs_fini(world);
+}
+
+void Function_emit_is_mut(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "event E"
+    LINE "fn send() { emit E }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    const EcsScriptFunction *f = ecs_get(
+        world, ecs_lookup(world, "send"), EcsScriptFunction);
+    test_assert(f != NULL);
+    test_bool(f->is_mut, true);
+
+    ecs_fini(world);
+}
+
+void Function_no_return_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "fn nothing(a: i32) { const b = a }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    const EcsScriptFunction *f = ecs_get(
+        world, ecs_lookup(world, "nothing"), EcsScriptFunction);
+    test_assert(f != NULL);
+    test_uint(f->return_type, 0);
+    test_bool(f->is_mut, false);
+
+    ecs_fini(world);
+}
+
+void Function_no_return_type_in_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "fn nothing() { }\nconst v = nothing()", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+static int32_t Function_mut_invoked = 0;
+
+static void Function_mut_callback(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)ctx;
+    (void)argc;
+    (void)argv;
+    Function_mut_invoked ++;
+    *(int32_t*)result->ptr = Function_mut_invoked;
+}
+
+void Function_native_mut(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t function = ecs_function(world, {
+        .name = "bump",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Function_mut_callback,
+        .is_mut = true
+    });
+
+    const EcsScriptFunction *f = ecs_get(world, function, EcsScriptFunction);
+    test_assert(f != NULL);
+    test_bool(f->is_mut, true);
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "export const x = bump()", &ir_desc, NULL) != 0);
+    test_int(Function_mut_invoked, 0);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "fn bump_twice() {"
+            LINE "  bump()"
+            LINE "  bump()"
+            LINE "}"
+            LINE "async { bump_twice() }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    f = ecs_get(world, ecs_lookup(world, "bump_twice"), EcsScriptFunction);
+    test_assert(f != NULL);
+    test_bool(f->is_mut, true);
+
+    ecs_script_tasks_progress(world);
+    test_int(Function_mut_invoked, 2);
+
+    ecs_fini(world);
+}

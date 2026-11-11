@@ -970,6 +970,7 @@ void Collection_const_vector_to_component_vector_member(void);
 void Collection_untyped_const_vector_to_component_vector_member(void);
 void Collection_const_vector_to_c_component_vector_member(void);
 void Collection_untyped_const_vector_to_c_component_vector_member(void);
+void Collection_untyped_vector_to_array_in_fn(void);
 
 // Testsuite 'Await'
 void Await_setup(void);
@@ -1217,6 +1218,19 @@ void AsyncBlock_event_from_c_without_value(void);
 void AsyncBlock_event_script_update_delivers_once(void);
 void AsyncBlock_event_no_members_await_value(void);
 void AsyncBlock_error_event(void);
+void AsyncBlock_fn_call_stmt(void);
+void AsyncBlock_fn_call_stmt_no_args(void);
+void AsyncBlock_fn_control_flow(void);
+void AsyncBlock_fn_call_fn(void);
+void AsyncBlock_fn_recursion(void);
+void AsyncBlock_fn_infinite_recursion(void);
+void AsyncBlock_fn_error_stops_caller(void);
+void AsyncBlock_fn_from_template_block(void);
+void AsyncBlock_fn_mut_return_value(void);
+void AsyncBlock_fn_pure_call_stmt(void);
+void AsyncBlock_event_from_fn(void);
+void AsyncBlock_local_mut_array_from_array_in_fn(void);
+void AsyncBlock_error_fn(void);
 
 // Testsuite 'Input'
 void Input_setup(void);
@@ -1452,6 +1466,15 @@ void Function_void_return_call(void);
 void Function_void_return_in_expr(void);
 void Function_query_as_bool_arg(void);
 void Function_query_in_fn_body(void);
+void Function_control_flow_w_return(void);
+void Function_return_local_from_if(void);
+void Function_read_mut_var_is_not_mut(void);
+void Function_assign_mut_var_is_mut(void);
+void Function_call_mut_fn_is_mut(void);
+void Function_emit_is_mut(void);
+void Function_no_return_type(void);
+void Function_no_return_type_in_expr(void);
+void Function_native_mut(void);
 
 // Testsuite 'Template'
 void Template_setup(void);
@@ -8290,6 +8313,10 @@ bake_test_case Collection_testcases[] = {
     {
         "untyped_const_vector_to_c_component_vector_member",
         Collection_untyped_const_vector_to_c_component_vector_member
+    },
+    {
+        "untyped_vector_to_array_in_fn",
+        Collection_untyped_vector_to_array_in_fn
     }
 };
 
@@ -9260,6 +9287,58 @@ bake_test_case AsyncBlock_testcases[] = {
     {
         "error_event",
         AsyncBlock_error_event
+    },
+    {
+        "fn_call_stmt",
+        AsyncBlock_fn_call_stmt
+    },
+    {
+        "fn_call_stmt_no_args",
+        AsyncBlock_fn_call_stmt_no_args
+    },
+    {
+        "fn_control_flow",
+        AsyncBlock_fn_control_flow
+    },
+    {
+        "fn_call_fn",
+        AsyncBlock_fn_call_fn
+    },
+    {
+        "fn_recursion",
+        AsyncBlock_fn_recursion
+    },
+    {
+        "fn_infinite_recursion",
+        AsyncBlock_fn_infinite_recursion
+    },
+    {
+        "fn_error_stops_caller",
+        AsyncBlock_fn_error_stops_caller
+    },
+    {
+        "fn_from_template_block",
+        AsyncBlock_fn_from_template_block
+    },
+    {
+        "fn_mut_return_value",
+        AsyncBlock_fn_mut_return_value
+    },
+    {
+        "fn_pure_call_stmt",
+        AsyncBlock_fn_pure_call_stmt
+    },
+    {
+        "event_from_fn",
+        AsyncBlock_event_from_fn
+    },
+    {
+        "local_mut_array_from_array_in_fn",
+        AsyncBlock_local_mut_array_from_array_in_fn
+    },
+    {
+        "error_fn",
+        AsyncBlock_error_fn
     }
 };
 
@@ -10173,6 +10252,42 @@ bake_test_case Function_testcases[] = {
     {
         "query_in_fn_body",
         Function_query_in_fn_body
+    },
+    {
+        "control_flow_w_return",
+        Function_control_flow_w_return
+    },
+    {
+        "return_local_from_if",
+        Function_return_local_from_if
+    },
+    {
+        "read_mut_var_is_not_mut",
+        Function_read_mut_var_is_not_mut
+    },
+    {
+        "assign_mut_var_is_mut",
+        Function_assign_mut_var_is_mut
+    },
+    {
+        "call_mut_fn_is_mut",
+        Function_call_mut_fn_is_mut
+    },
+    {
+        "emit_is_mut",
+        Function_emit_is_mut
+    },
+    {
+        "no_return_type",
+        Function_no_return_type
+    },
+    {
+        "no_return_type_in_expr",
+        Function_no_return_type_in_expr
+    },
+    {
+        "native_mut",
+        Function_native_mut
     }
 };
 
@@ -22121,7 +22236,7 @@ static bake_test_suite suites[] = {
         "Collection",
         Collection_setup,
         NULL,
-        139,
+        140,
         Collection_testcases,
         1,
         Collection_params
@@ -22139,7 +22254,7 @@ static bake_test_suite suites[] = {
         "AsyncBlock",
         AsyncBlock_setup,
         NULL,
-        164,
+        177,
         AsyncBlock_testcases,
         1,
         AsyncBlock_params
@@ -22166,7 +22281,7 @@ static bake_test_suite suites[] = {
         "Function",
         Function_setup,
         NULL,
-        104,
+        113,
         Function_testcases,
         1,
         Function_params

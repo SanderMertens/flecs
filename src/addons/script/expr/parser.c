@@ -727,10 +727,13 @@ static const char* flecs_script_parse_lhs(
             int32_t stmt_count = ecs_vec_count(&parser->scope->stmts);
 
             bool old_significant_newline = parser->significant_newline;
+            bool old_async_scope = parser->async_scope;
             const char *old_stmt_pos = parser->stmt_pos;
             parser->significant_newline = true;
+            parser->async_scope = false;
             pos = flecs_script_stmt(parser, pos);
             parser->significant_newline = old_significant_newline;
+            parser->async_scope = old_async_scope;
             parser->stmt_pos = old_stmt_pos;
             if (!pos) {
                 goto error;

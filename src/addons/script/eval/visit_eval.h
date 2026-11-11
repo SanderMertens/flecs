@@ -38,6 +38,7 @@ typedef struct ecs_script_eval_visitor_t {
     int32_t for_slot;
     bool force;
     const ecs_script_template_ref_t *id_ref;
+    ecs_value_t *fn_result;
 } ecs_script_eval_visitor_t;
 
 int flecs_script_eval(
