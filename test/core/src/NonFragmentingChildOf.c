@@ -3993,6 +3993,46 @@ void NonFragmentingChildOf_instantiate_tree_at_depth_1_w_parent(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_bulk_init_w_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    EcsParent parent_values[] = {
+        {parent},
+        {parent},
+        {parent}
+    };
+    void *data[] = {parent_values};
+
+    const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 3,
+        .ids = {ecs_id(EcsParent)},
+        .data = data
+    });
+    test_assert(entities != NULL);
+
+    ecs_entity_t children[] = {entities[0], entities[1], entities[2]};
+    int32_t i;
+    for (i = 0; i < 3; i ++) {
+        test_assert(ecs_has_id(world, children[i],
+            ecs_value_pair(EcsParentDepth, 1)));
+    }
+
+    ecs_iter_t it = ecs_children(world, parent);
+    int32_t child_count = 0;
+    while (ecs_children_next(&it)) {
+        child_count += it.count;
+    }
+    test_int(child_count, 3);
+
+    ecs_delete(world, parent);
+    for (i = 0; i < 3; i ++) {
+        test_assert(!ecs_is_alive(world, children[i]));
+    }
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_instantiate_tree_at_depth_2_w_parent(void) {
     ecs_world_t *world = ecs_mini();
 

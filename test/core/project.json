@@ -998,6 +998,7 @@
                 "instantiate_tree_twice",
                 "instantiate_tree_twice_different_table",
                 "instantiate_tree_at_depth_1_w_parent",
+                "bulk_init_w_parent",
                 "instantiate_tree_at_depth_2_w_parent",
                 "instantiate_tree_at_depth_n_w_parent",
                 "instantiate_tree_at_depth_1_w_childof",
