@@ -710,6 +710,19 @@ void Eval_ir_managed_script_update_keeps_runtime(void);
 void Eval_string_interpolation_of_scalar_types(void);
 void Eval_string_interpolation_of_const_parts(void);
 void Eval_string_interpolation_of_const_parts_w_leading_literal(void);
+void Eval_string_interpolation_of_vector(void);
+void Eval_string_interpolation_of_vector_of_strings(void);
+void Eval_string_interpolation_of_vector_of_vectors(void);
+void Eval_string_interpolation_of_array(void);
+void Eval_string_interpolation_of_map(void);
+void Eval_string_interpolation_of_struct(void);
+void Eval_string_interpolation_of_nested_struct(void);
+void Eval_string_interpolation_of_enum(void);
+void Eval_string_interpolation_of_bitmask(void);
+void Eval_string_interpolation_of_collection_expr(void);
+void Eval_string_interpolation_of_collection_in_function(void);
+void Eval_interpolated_name_w_collection_literal(void);
+void Eval_interpolated_name_w_vector_in_for(void);
 void Eval_while_count(void);
 void Eval_while_count_vars(void);
 void Eval_while_count_1_4(void);
@@ -2014,7 +2027,6 @@ void Error_failing_script_update_does_not_delete_shared_module(void);
 void Error_deleted_script_does_not_delete_shared_module(void);
 void Error_failing_script_does_not_delete_shared_scope(void);
 void Error_parse_error_in_large_script_reports_position(void);
-void Error_interpolated_string_w_struct_value(void);
 void Error_function_w_too_many_params(void);
 void Error_struct_member_count_size_overflow(void);
 void Error_member_of_tag_component_in_function(void);
@@ -7477,6 +7489,58 @@ bake_test_case Eval_testcases[] = {
         Eval_string_interpolation_of_const_parts_w_leading_literal
     },
     {
+        "string_interpolation_of_vector",
+        Eval_string_interpolation_of_vector
+    },
+    {
+        "string_interpolation_of_vector_of_strings",
+        Eval_string_interpolation_of_vector_of_strings
+    },
+    {
+        "string_interpolation_of_vector_of_vectors",
+        Eval_string_interpolation_of_vector_of_vectors
+    },
+    {
+        "string_interpolation_of_array",
+        Eval_string_interpolation_of_array
+    },
+    {
+        "string_interpolation_of_map",
+        Eval_string_interpolation_of_map
+    },
+    {
+        "string_interpolation_of_struct",
+        Eval_string_interpolation_of_struct
+    },
+    {
+        "string_interpolation_of_nested_struct",
+        Eval_string_interpolation_of_nested_struct
+    },
+    {
+        "string_interpolation_of_enum",
+        Eval_string_interpolation_of_enum
+    },
+    {
+        "string_interpolation_of_bitmask",
+        Eval_string_interpolation_of_bitmask
+    },
+    {
+        "string_interpolation_of_collection_expr",
+        Eval_string_interpolation_of_collection_expr
+    },
+    {
+        "string_interpolation_of_collection_in_function",
+        Eval_string_interpolation_of_collection_in_function
+    },
+    {
+        "interpolated_name_w_collection_literal",
+        Eval_interpolated_name_w_collection_literal
+    },
+    {
+        "interpolated_name_w_vector_in_for",
+        Eval_interpolated_name_w_vector_in_for
+    },
+    {
         "while_count",
         Eval_while_count
     },
@@ -12610,10 +12674,6 @@ bake_test_case Error_testcases[] = {
     {
         "parse_error_in_large_script_reports_position",
         Error_parse_error_in_large_script_reports_position
-    },
-    {
-        "interpolated_string_w_struct_value",
-        Error_interpolated_string_w_struct_value
     },
     {
         "function_w_too_many_params",
@@ -23180,7 +23240,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        818,
+        831,
         Eval_testcases,
         1,
         Eval_params
@@ -23261,7 +23321,7 @@ static bake_test_suite suites[] = {
         "Error",
         Error_setup,
         NULL,
-        259,
+        258,
         Error_testcases,
         1,
         Error_params

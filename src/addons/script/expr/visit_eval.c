@@ -92,8 +92,11 @@ static int flecs_expr_interpolated_fragment_eval(
             format, width, precision, buf);
     }
 
-    ecs_assert(val->value.type == ecs_id(ecs_string_t),
-        ECS_INTERNAL_ERROR, NULL);
+    if (val->value.type != ecs_id(ecs_string_t)) {
+        return ecs_ptr_to_expr_buf(
+            ctx->world, val->value.type, val->value.ptr, buf);
+    }
+
     const char *str = *(char**)val->value.ptr;
     if (str) {
         ecs_strbuf_appendstr(buf, str);

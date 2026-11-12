@@ -108976,8 +108976,11 @@ static int flecs_expr_interpolated_fragment_eval(
             format, width, precision, buf);
     }
 
-    ecs_assert(val->value.type == ecs_id(ecs_string_t),
-        ECS_INTERNAL_ERROR, NULL);
+    if (val->value.type != ecs_id(ecs_string_t)) {
+        return ecs_ptr_to_expr_buf(
+            ctx->world, val->value.type, val->value.ptr, buf);
+    }
+
     const char *str = *(char**)val->value.ptr;
     if (str) {
         ecs_strbuf_appendstr(buf, str);
@@ -111652,6 +111655,19 @@ static int flecs_expr_cast_to(
     return 0;
 }
 
+static bool flecs_expr_is_serialized_fragment(
+    ecs_world_t *world,
+    ecs_entity_t type)
+{
+    if (!type || flecs_expr_explicit_cast_allowed(
+        world, type, ecs_id(ecs_string_t)))
+    {
+        return false;
+    }
+
+    return ecs_has(world, type, EcsTypeSerializer);
+}
+
 static bool flecs_expr_unresolved_ref(
     ecs_script_t *script,
     const ecs_expr_eval_desc_t *desc,
@@ -112372,9 +112388,8 @@ static int flecs_expr_interpolated_string_visit_type(
             priv_desc.allow_unresolved_identifiers = true;
 
             ecs_meta_cursor_t value_cur = {0};
-            ecs_meta_cursor_t *result_cur = format->is_present ? &value_cur : cur;
             if (flecs_expr_visit_type_priv(
-                script, result, result_cur, &priv_desc))
+                script, result, &value_cur, &priv_desc))
             {
                 goto error;
             }
@@ -112439,8 +112454,9 @@ static int flecs_expr_interpolated_string_visit_type(
                         goto error;
                     }
                 }
-            } else if (flecs_expr_cast_to(
-                script, result, ecs_id(ecs_string_t)))
+            } else if (!flecs_expr_is_serialized_fragment(
+                script->world, (*result)->type) &&
+                flecs_expr_cast_to(script, result, ecs_id(ecs_string_t)))
             {
                 goto error;
             }
@@ -119629,12 +119645,16 @@ static flecs_script_run_status_t flecs_ir_exec(
             break;
         case EcsIrStrValue: {
             ecs_script_ir_reg_t *reg = flecs_ir_reg(vm, op->a);
-            ecs_assert(reg->value.type == ecs_id(ecs_string_t),
-                ECS_INTERNAL_ERROR, NULL);
+            ecs_strbuf_t *buf = ecs_vec_last_t(&vm->strbufs, ecs_strbuf_t);
+            if (reg->value.type != ecs_id(ecs_string_t)) {
+                res = ecs_ptr_to_expr_buf(
+                    v->world, reg->value.type, reg->value.ptr, buf);
+                break;
+            }
+
             const char *str = *(char**)reg->value.ptr;
             if (str) {
-                ecs_strbuf_appendstr(
-                    ecs_vec_last_t(&vm->strbufs, ecs_strbuf_t), str);
+                ecs_strbuf_appendstr(buf, str);
             }
 
             break;
