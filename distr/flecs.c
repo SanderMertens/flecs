@@ -49073,6 +49073,8 @@ typedef struct ecs_script_assign_t {
     const char *name;
     ecs_vec_t steps;       /* vec<ecs_script_assign_step_t> */
     ecs_expr_node_t *expr;
+    ecs_expr_node_t *entity; /* Entity expression if first step is a component */
+    int32_t entity_reg;    /* Register with entity value, used by IR */
     ecs_entity_t eval_type;
     ecs_entity_t root_type;
     ecs_entity_t component;
@@ -50408,6 +50410,7 @@ int flecs_script_eval_expr(
 int flecs_script_assign_value(
     ecs_script_eval_visitor_t *v,
     ecs_script_assign_t *node,
+    ecs_entity_t entity,
     const int64_t *indices,
     const void *src);
 
@@ -72037,6 +72040,14 @@ identifier_assign_target: {
         goto error;
     }
 
+    ecs_script_assign_step_t *first = ecs_vec_first(&stmt->steps);
+    if (first->index && first->index->kind == EcsExprIdentifier) {
+        stmt->entity = (ecs_expr_node_t*)flecs_expr_identifier(
+            parser, stmt->name);
+        stmt->entity->pos = target;
+        stmt->entity->end = target + ecs_os_strlen(stmt->name);
+    }
+
     Parse(
         // value[0] = expr\n
         case '=': {
@@ -74521,6 +74532,7 @@ int flecs_script_visit_free_node(
 
         ecs_vec_fini_t(a, &assign->steps, ecs_script_assign_step_t);
         flecs_expr_visit_free(script, assign->expr);
+        flecs_expr_visit_free(script, assign->entity);
         break;
     }
     case EcsAstTry:
@@ -99833,7 +99845,7 @@ static void* flecs_script_assign_target(
     void *ptr = ECS_OFFSET(base, node->offset);
     ecs_script_assign_step_t *steps = ecs_vec_first(&node->steps);
     int32_t i, count = ecs_vec_count(&node->steps), index = 0;
-    for (i = 0; i < count; i ++) {
+    for (i = node->entity != NULL; i < count; i ++) {
         ecs_script_assign_step_t *step = &steps[i];
         if (step->member) {
             ptr = ECS_OFFSET(ptr, step->offset);
@@ -99865,6 +99877,7 @@ static void* flecs_script_assign_target(
 int flecs_script_assign_value(
     ecs_script_eval_visitor_t *v,
     ecs_script_assign_t *node,
+    ecs_entity_t entity,
     const int64_t *indices,
     const void *src)
 {
@@ -99916,7 +99929,25 @@ int flecs_script_assign_value(
     }
 
     ecs_entity_t instance = v->template_instance;
-    if (node->parent && instance && ecs_is_alive(world, instance)) {
+    if (node->entity) {
+        instance = entity;
+        if (!instance || !ecs_is_alive(world, instance)) {
+            flecs_script_eval_error(v, node,
+                "cannot assign to '%s': entity is not alive", node->name);
+            return -1;
+        }
+
+        if (!ecs_has_id(world, instance, node->component)) {
+            char *entity_str = ecs_get_path(world, instance);
+            char *component_str = ecs_get_path(world, node->component);
+            flecs_script_eval_error(v, node,
+                "cannot assign to '%s': entity '%s' does not have "
+                "component '%s'", node->name, entity_str, component_str);
+            ecs_os_free(entity_str);
+            ecs_os_free(component_str);
+            return -1;
+        }
+    } else if (node->parent && instance && ecs_is_alive(world, instance)) {
         instance = ecs_get_parent(world, instance);
     }
 
@@ -99962,10 +99993,22 @@ static FLECS_SCRIPT_NOINLINE int flecs_script_eval_assign(
     const ecs_type_info_t *ti = ecs_get_type_info(v->world, type);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_entity_t entity = 0;
+    if (node->entity) {
+        ecs_value_t entity_value = {
+            .type = ecs_id(ecs_entity_t), .ptr = &entity };
+        if (flecs_script_eval_expr(v, &node->entity, &entity_value)) {
+            flecs_script_eval_error(v, node,
+                "failed to evaluate entity for assignment to '%s'",
+                node->name);
+            return -1;
+        }
+    }
+
     int64_t indices[FLECS_SCRIPT_ASSIGN_INDEX_MAX];
     ecs_script_assign_step_t *steps = ecs_vec_first(&node->steps);
     int32_t i, count = ecs_vec_count(&node->steps), index_count = 0;
-    for (i = 0; i < count; i ++) {
+    for (i = node->entity != NULL; i < count; i ++) {
         if (steps[i].member) {
             continue;
         }
@@ -99991,7 +100034,8 @@ static FLECS_SCRIPT_NOINLINE int flecs_script_eval_assign(
             node->name);
         result = -1;
     } else {
-        result = flecs_script_assign_value(v, node, indices, value.ptr);
+        result = flecs_script_assign_value(
+            v, node, entity, indices, value.ptr);
     }
 
     if (ti->hooks.dtor) {
@@ -104952,7 +104996,7 @@ static int flecs_script_type_assign_steps(
     ecs_world_t *world = t->v->world;
     ecs_script_assign_step_t *steps = ecs_vec_first(&node->steps);
     int32_t i, count = ecs_vec_count(&node->steps), index_count = 0;
-    for (i = 0; i < count; i ++) {
+    for (i = node->entity != NULL; i < count; i ++) {
         ecs_script_assign_step_t *step = &steps[i];
         if (step->member) {
             step->offset = 0;
@@ -105004,26 +105048,92 @@ static int flecs_script_type_assign_steps(
     return 0;
 }
 
-static int flecs_script_type_assign(
+static bool flecs_script_type_assign_is_component(
     ecs_script_type_visitor_t *t,
     ecs_script_assign_t *node)
 {
+    if (!node->entity) {
+        return false;
+    }
+
+    flecs_script_assign_root_t root = {0};
+    bool found = flecs_script_type_assign_root(t, node, node->name, &root);
+    node->local = false;
+    node->parent = false;
+    node->global = 0;
+    if (!found) {
+        return true;
+    }
+
+    ecs_entity_t type = root.global_type;
+    if (root.member) {
+        type = root.member->type;
+    } else if (root.var) {
+        type = root.var->value.type;
+    }
+
+    return type == ecs_id(ecs_entity_t);
+}
+
+static int flecs_script_type_assign_component(
+    ecs_script_type_visitor_t *t,
+    ecs_script_assign_t *node,
+    ecs_entity_t *component)
+{
     ecs_script_eval_visitor_t *v = t->v;
-    if (!t->async_scope) {
+    ecs_entity_t entity_type = ecs_id(ecs_entity_t);
+    int result = flecs_script_type_check_expr(t, &node->entity, &entity_type);
+    if (result) {
+        return result;
+    }
+
+    if (entity_type != ecs_id(ecs_entity_t)) {
         flecs_script_eval_error(v, node,
-            "assignment is only allowed in async blocks");
+            "cannot assign to '%s': expression of type %s is not an entity",
+            node->name, flecs_errstr(ecs_get_path(v->world, entity_type)));
         return -1;
     }
 
+    ecs_script_assign_step_t *step = ecs_vec_first(&node->steps);
+    const char *name = ((ecs_expr_identifier_t*)step->index)->value;
+    ecs_expr_eval_desc_t desc = flecs_script_expr_desc(v, 0);
+    flecs_script_symbol_t symbol;
+    if (flecs_script_symbol_lookup(&v->base.script->pub, &desc, 0, name,
+        FlecsScriptLookupEntity, &symbol) || !symbol.entity)
+    {
+        flecs_script_eval_error(v, node,
+            "cannot assign to '%s': unresolved component identifier '%s'",
+            node->name, name);
+        return -1;
+    }
+
+    if (!ecs_get_type_info(v->world, symbol.entity)) {
+        flecs_script_eval_error(v, node,
+            "cannot assign to '%s': '%s' is not a component with a value",
+            node->name, name);
+        return -1;
+    }
+
+    *component = symbol.entity;
+    return 0;
+}
+
+static int flecs_script_type_assign_var(
+    ecs_script_type_visitor_t *t,
+    ecs_script_assign_t *node,
+    flecs_script_assign_root_t *root,
+    ecs_entity_t *var_type,
+    ecs_entity_t *target_type)
+{
+    ecs_script_eval_visitor_t *v = t->v;
     char *name = ecs_os_strdup(node->name);
     int result = -1;
 
     /* The name can contain members, and the name of an exported variable can
      * contain a module path. Find the longest prefix that is a variable. */
-    flecs_script_assign_root_t root = {0};
     char *member = NULL;
     bool found;
-    while (!(found = flecs_script_type_assign_root(t, node, name, &root))) {
+    while (!(found = flecs_script_type_assign_root(t, node, name, root))) {
         char *dot = strrchr(name, '.');
         if (!dot) {
             break;
@@ -105037,7 +105147,7 @@ static int flecs_script_type_assign(
         member = dot + 1;
     }
 
-    if (!found || (!root.member && !node->global && !node->local)) {
+    if (!found || (!root->member && !node->global && !node->local)) {
         flecs_script_eval_error(v, node,
             "cannot assign to '%s': only mut variables of a template or "
             "exported mut variables can be assigned", node->name);
@@ -105056,28 +105166,82 @@ static int flecs_script_type_assign(
     }
 
     ecs_script_template_t *template = v->template;
-    ecs_entity_t var_type = node->global ? root.global_type
-        : node->parent ? root.member->type
-        : root.var->value.type;
-    int32_t sp = node->global ? -1
-        : node->parent ? template->parent_sp : root.var->sp;
-    int32_t offset = root.member ? root.member->offset : 0;
+    *var_type = node->global ? root->global_type
+        : node->parent ? root->member->type
+        : root->var->value.type;
+    node->sp = node->global ? -1
+        : node->parent ? template->parent_sp : root->var->sp;
+    node->offset = root->member ? root->member->offset : 0;
+    node->component = node->global
+        ? ecs_id(EcsScriptMutVar) : root->component;
 
-    ecs_entity_t target_type = var_type;
+    *target_type = *var_type;
     if (member && flecs_script_type_assign_member(
-        t, node, member, &target_type, &offset))
+        t, node, member, target_type, &node->offset))
     {
         goto done;
+    }
+
+    result = 0;
+done:
+    ecs_os_free(name);
+    return result;
+}
+
+static int flecs_script_type_assign(
+    ecs_script_type_visitor_t *t,
+    ecs_script_assign_t *node)
+{
+    ecs_script_eval_visitor_t *v = t->v;
+    if (!t->async_scope) {
+        flecs_script_eval_error(v, node,
+            "assignment is only allowed in async blocks");
+        return -1;
+    }
+
+    flecs_script_assign_root_t root = {0};
+    ecs_entity_t var_type = 0, target_type = 0;
+
+    if (flecs_script_type_assign_is_component(t, node)) {
+        int result = flecs_script_type_assign_component(t, node, &var_type);
+        if (result) {
+            if (result == 1) {
+                node->node.skip = true;
+                return 0;
+            }
+
+            return -1;
+        }
+
+        if (t->fn_node) {
+            t->fn_node->is_mut = true;
+        }
+
+        node->sp = -1;
+        node->offset = 0;
+        node->component = var_type;
+        target_type = var_type;
+    } else {
+        if (node->entity) {
+            flecs_expr_visit_free(&v->base.script->pub, node->entity);
+            node->entity = NULL;
+        }
+
+        if (flecs_script_type_assign_var(
+            t, node, &root, &var_type, &target_type))
+        {
+            return -1;
+        }
     }
 
     int steps_result = flecs_script_type_assign_steps(t, node, &target_type);
     if (steps_result) {
         if (steps_result == 1) {
             node->node.skip = true;
-            result = 0;
+            return 0;
         }
 
-        goto done;
+        return -1;
     }
 
     ecs_entity_t type = target_type;
@@ -105085,10 +105249,10 @@ static int flecs_script_type_assign(
     if (expr_result) {
         if (expr_result == 1) {
             node->node.skip = true;
-            result = 0;
+            return 0;
         }
 
-        goto done;
+        return -1;
     }
 
     if (type != target_type &&
@@ -105098,7 +105262,7 @@ static int flecs_script_type_assign(
         ecs_expr_cast_t *cast = flecs_expr_cast(
             &v->base.script->pub, node->expr, target_type);
         if (!cast) {
-            goto done;
+            return -1;
         }
 
         node->expr = (ecs_expr_node_t*)cast;
@@ -105114,18 +105278,12 @@ static int flecs_script_type_assign(
             "variable '%s'",
             flecs_errstr(ecs_get_path(v->world, type)),
             flecs_errstr_1(ecs_get_path(v->world, target_type)), node->name);
-        goto done;
+        return -1;
     }
 
     node->eval_type = target_type;
     node->root_type = var_type;
-    node->sp = sp;
-    node->component = node->global ? ecs_id(EcsScriptMutVar) : root.component;
-    node->offset = offset;
-    result = 0;
-done:
-    ecs_os_free(name);
-    return result;
+    return 0;
 }
 
 static int flecs_script_type_node(
@@ -115299,9 +115457,13 @@ static void flecs_irc_compile_assign(
     ecs_script_assign_t *node)
 {
     int32_t begin = flecs_irc_expr_begin(c, node);
+    if (node->entity) {
+        node->entity_reg = flecs_irc_compile_tmp(c, node->entity);
+    }
+
     ecs_script_assign_step_t *steps = ecs_vec_first(&node->steps);
     int32_t i, count = ecs_vec_count(&node->steps);
-    for (i = 0; i < count; i ++) {
+    for (i = node->entity != NULL; i < count; i ++) {
         if (!steps[i].member) {
             steps[i].reg = flecs_irc_compile_tmp(c, steps[i].index);
         }
@@ -117115,10 +117277,20 @@ static int flecs_ir_assign(
     const ecs_type_info_t *ti = ecs_get_type_info(v->world, node->eval_type);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_entity_t entity = 0;
+    if (node->entity && flecs_ir_value_to(vm,
+        flecs_ir_reg(vm, node->entity_reg), ecs_id(ecs_entity_t), &entity,
+        ecs_get_type_info(v->world, ecs_id(ecs_entity_t))))
+    {
+        flecs_ir_expr_error(vm, node->entity,
+            "failed to evaluate entity for assignment to '%s'", node->name);
+        return -1;
+    }
+
     int64_t indices[FLECS_SCRIPT_ASSIGN_INDEX_MAX];
     ecs_script_assign_step_t *steps = ecs_vec_first(&node->steps);
     int32_t i, count = ecs_vec_count(&node->steps), index_count = 0;
-    for (i = 0; i < count; i ++) {
+    for (i = node->entity != NULL; i < count; i ++) {
         if (!steps[i].member && flecs_ir_value_to(vm,
             flecs_ir_reg(vm, steps[i].reg), ecs_id(ecs_i64_t),
             &indices[index_count ++], ecs_get_type_info(
@@ -117146,7 +117318,7 @@ static int flecs_ir_assign(
         src = tmp;
     }
 
-    int result = flecs_script_assign_value(v, node, indices, src);
+    int result = flecs_script_assign_value(v, node, entity, indices, src);
     if (tmp) {
         ecs_ptr_free_w_type_info(v->world, ti, tmp);
     }
@@ -126755,9 +126927,13 @@ static int flecs_script_dep_node_impl(
         break;
     case EcsAstAssign: {
         ecs_script_assign_t *n = (ecs_script_assign_t*)node;
+        if (flecs_script_dep_expr(ctx, n->entity, node)) {
+            return -1;
+        }
+
         ecs_script_assign_step_t *steps = ecs_vec_first(&n->steps);
         int32_t i, count = ecs_vec_count(&n->steps);
-        for (i = 0; i < count; i ++) {
+        for (i = n->entity != NULL; i < count; i ++) {
             if (flecs_script_dep_expr(ctx, steps[i].index, node)) {
                 return -1;
             }

@@ -282,6 +282,8 @@ typedef struct ecs_script_assign_t {
     const char *name;
     ecs_vec_t steps;       /* vec<ecs_script_assign_step_t> */
     ecs_expr_node_t *expr;
+    ecs_expr_node_t *entity; /* Entity expression if first step is a component */
+    int32_t entity_reg;    /* Register with entity value, used by IR */
     ecs_entity_t eval_type;
     ecs_entity_t root_type;
     ecs_entity_t component;

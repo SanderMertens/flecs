@@ -112,6 +112,7 @@ int flecs_script_visit_free_node(
 
         ecs_vec_fini_t(a, &assign->steps, ecs_script_assign_step_t);
         flecs_expr_visit_free(script, assign->expr);
+        flecs_expr_visit_free(script, assign->entity);
         break;
     }
     case EcsAstTry:
