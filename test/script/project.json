@@ -3509,7 +3509,13 @@
                 "redeclare",
                 "identifier_name",
                 "using",
-                "ast_to_str"
+                "ast_to_str",
+                "bind_const",
+                "bind_prop",
+                "bind_loop_var",
+                "bind_src",
+                "bind_unset",
+                "bind_not_entity"
             ]
         }, {
             "id": "Reactivity",
@@ -3726,7 +3732,13 @@
                 "query_loop_named_instance_kept",
                 "query_loop_rename",
                 "query_loop_root_entities",
-                "query_loop_exclude_name"
+                "query_loop_exclude_name",
+                "query_bind_child_added",
+                "query_bind_child_deleted",
+                "query_bind_prop_changed",
+                "query_bind_if",
+                "query_bind_optional_prefab",
+                "query_bind_recursive_template"
             ]
         }, {
             "id": "ConstVar",

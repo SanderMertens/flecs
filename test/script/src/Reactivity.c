@@ -11107,3 +11107,208 @@ void Reactivity_query_loop_exclude_name(void) {
 
     ecs_fini(world);
 }
+
+void Reactivity_query_bind_child_added(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t other = ecs_entity(world, { .name = "other" });
+    ecs_entity(world, { .name = "a", .parent = parent });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Children {"
+            LINE "  prop target: entity = 0"
+            LINE "  query q { (flecs.core.ChildOf, $target) }"
+            LINE "  for e in q {"
+            LINE "    \"m_{e.name()}\" {}"
+            LINE "  }"
+            LINE "}"
+            LINE "n { Children: {target: parent} }"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "n.m_a") != 0);
+    test_assert(ecs_lookup(world, "n.m_b") == 0);
+
+    ecs_add_pair(world, ecs_entity(world, { .name = "b" }), EcsChildOf, parent);
+    test_assert(ecs_lookup(world, "n.m_a") != 0);
+    test_assert(ecs_lookup(world, "n.m_b") != 0);
+
+    ecs_add_pair(world, ecs_entity(world, { .name = "c" }), EcsChildOf, other);
+    test_assert(ecs_lookup(world, "n.m_c") == 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_bind_child_deleted(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity(world, { .name = "a", .parent = parent });
+    ecs_entity_t b = ecs_entity(world, { .name = "b", .parent = parent });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Children {"
+            LINE "  prop target: entity = 0"
+            LINE "  query q { (flecs.core.ChildOf, $target) }"
+            LINE "  for e in q {"
+            LINE "    \"m_{e.name()}\" {}"
+            LINE "  }"
+            LINE "}"
+            LINE "n { Children: {target: parent} }"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "n.m_a") != 0);
+    test_assert(ecs_lookup(world, "n.m_b") != 0);
+
+    ecs_delete(world, b);
+    test_assert(ecs_lookup(world, "n.m_a") != 0);
+    test_assert(ecs_lookup(world, "n.m_b") == 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_bind_prop_changed(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t other = ecs_entity(world, { .name = "other" });
+    ecs_entity(world, { .name = "a", .parent = parent });
+    ecs_entity(world, { .name = "b", .parent = other });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Children {"
+            LINE "  prop target: entity = 0"
+            LINE "  query q { (flecs.core.ChildOf, $target) }"
+            LINE "  for e in q {"
+            LINE "    \"m_{e.name()}\" {}"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t children = ecs_lookup(world, "Children");
+    test_assert(children != 0);
+
+    ecs_entity_t n = ecs_entity(world, { .name = "n" });
+    ecs_set_id(world, n, children, sizeof(ecs_entity_t), &parent);
+    test_assert(ecs_lookup(world, "n.m_a") != 0);
+    test_assert(ecs_lookup(world, "n.m_b") == 0);
+
+    ecs_set_id(world, n, children, sizeof(ecs_entity_t), &other);
+    test_assert(ecs_lookup(world, "n.m_a") == 0);
+    test_assert(ecs_lookup(world, "n.m_b") != 0);
+
+    ecs_add_pair(world, ecs_entity(world, { .name = "c" }), EcsChildOf, parent);
+    test_assert(ecs_lookup(world, "n.m_c") == 0);
+
+    ecs_add_pair(world, ecs_entity(world, { .name = "d" }), EcsChildOf, other);
+    test_assert(ecs_lookup(world, "n.m_d") != 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_bind_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Node {"
+            LINE "  prop target: entity = 0"
+            LINE "  query kids { (flecs.core.ChildOf, $target) }"
+            LINE "  if kids {"
+            LINE "    chevron {}"
+            LINE "  }"
+            LINE "}"
+            LINE "n { Node: {target: parent} }"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "n.chevron") == 0);
+
+    ecs_entity_t a = ecs_entity(world, { .name = "a", .parent = parent });
+    test_assert(ecs_lookup(world, "n.chevron") != 0);
+
+    ecs_delete(world, a);
+    test_assert(ecs_lookup(world, "n.chevron") == 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_bind_optional_prefab(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity(world, { .name = "a", .parent = parent });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Children {"
+            LINE "  prop target: entity = 0"
+            LINE "  query q { (flecs.core.ChildOf, $target), ?flecs.core.Prefab }"
+            LINE "  for e in q {"
+            LINE "    \"m_{e.name()}\" {}"
+            LINE "  }"
+            LINE "}"
+            LINE "n { Children: {target: parent} }"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "n.m_a") != 0);
+
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+    ecs_add_id(world, b, EcsPrefab);
+    ecs_add_pair(world, b, EcsChildOf, parent);
+    test_assert(ecs_lookup(world, "n.m_a") != 0);
+    test_assert(ecs_lookup(world, "n.m_b") != 0);
+
+    ecs_delete(world, b);
+    test_assert(ecs_lookup(world, "n.m_b") == 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_query_bind_recursive_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t a = ecs_entity(world, { .name = "a", .parent = parent });
+    ecs_entity(world, { .name = "b", .parent = a });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Node {"
+            LINE "  prop target: entity = 0"
+            LINE "  query kids { (flecs.core.ChildOf, $target) }"
+            LINE "  for e in kids {"
+            LINE "    \"n_{e.name()}\" { Node: {target: e} }"
+            LINE "  }"
+            LINE "}"
+            LINE "tree { Node: {target: parent} }"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "tree.n_a") != 0);
+    test_assert(ecs_lookup(world, "tree.n_a.n_b") != 0);
+
+    ecs_add_pair(world, ecs_entity(world, { .name = "c" }), EcsChildOf, a);
+    test_assert(ecs_lookup(world, "tree.n_a.n_b") != 0);
+    test_assert(ecs_lookup(world, "tree.n_a.n_c") != 0);
+
+    ecs_delete(world, a);
+    test_assert(ecs_lookup(world, "tree.n_a") == 0);
+
+    ecs_fini(world);
+}

@@ -1081,3 +1081,165 @@ void Query_ast_to_str(void) {
 
     ecs_fini(world);
 }
+
+void Query_bind_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t other = ecs_entity(world, { .name = "other" });
+    ecs_entity(world, { .name = "a", .parent = parent });
+    ecs_entity(world, { .name = "b", .parent = other });
+
+    const char *expr =
+    HEAD "const p: entity = parent"
+    LINE "query q { (flecs.core.ChildOf, $p) }"
+    LINE "for e in q {"
+    LINE "  \"m_{e.name()}\" {}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") == 0);
+
+    ecs_fini(world);
+}
+
+void Query_bind_prop(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t other = ecs_entity(world, { .name = "other" });
+    ecs_entity(world, { .name = "a", .parent = parent });
+    ecs_entity(world, { .name = "b", .parent = other });
+
+    const char *expr =
+    HEAD "template Children {"
+    LINE "  prop target: entity = 0"
+    LINE "  query q { (flecs.core.ChildOf, $target) }"
+    LINE "  for e in q {"
+    LINE "    \"m_{e.name()}\" {}"
+    LINE "  }"
+    LINE "}"
+    LINE "n1 { Children: {target: parent} }"
+    LINE "n2 { Children: {target: other} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "n1.m_a") != 0);
+    test_assert(ecs_lookup(world, "n1.m_b") == 0);
+    test_assert(ecs_lookup(world, "n2.m_a") == 0);
+    test_assert(ecs_lookup(world, "n2.m_b") != 0);
+
+    ecs_fini(world);
+}
+
+void Query_bind_loop_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t p1 = ecs_entity(world, { .name = "p1" });
+    ecs_entity_t p2 = ecs_entity(world, { .name = "p2" });
+    ecs_add_id(world, p1, tag);
+    ecs_add_id(world, p2, tag);
+    ecs_entity(world, { .name = "a", .parent = p1 });
+    ecs_entity(world, { .name = "b", .parent = p2 });
+
+    const char *expr =
+    HEAD "query parents { Tag }"
+    LINE "for p in parents {"
+    LINE "  \"m_{p.name()}\" {"
+    LINE "    query kids { (flecs.core.ChildOf, $p) }"
+    LINE "    for e in kids {"
+    LINE "      \"c_{e.name()}\" {}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "m_p1.c_a") != 0);
+    test_assert(ecs_lookup(world, "m_p1.c_b") == 0);
+    test_assert(ecs_lookup(world, "m_p2.c_a") == 0);
+    test_assert(ecs_lookup(world, "m_p2.c_b") != 0);
+
+    ecs_fini(world);
+}
+
+void Query_bind_src(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t likes = ecs_entity(world, { .name = "Likes" });
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t bob = ecs_entity(world, { .name = "bob" });
+    ecs_entity_t alice = ecs_entity(world, { .name = "alice" });
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+    ecs_entity_t c = ecs_entity(world, { .name = "c" });
+    ecs_add_id(world, a, tag);
+    ecs_add_id(world, b, tag);
+    ecs_add_id(world, c, tag);
+    ecs_add_pair(world, bob, likes, a);
+    ecs_add_pair(world, bob, likes, b);
+    ecs_add_pair(world, alice, likes, c);
+
+    const char *expr =
+    HEAD "const p: entity = bob"
+    LINE "query q { Tag, Likes($p, $this) }"
+    LINE "for e in q {"
+    LINE "  \"m_{e.name()}\" {}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") != 0);
+    test_assert(ecs_lookup(world, "m_c") == 0);
+
+    ecs_fini(world);
+}
+
+void Query_bind_unset(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity(world, { .name = "a", .parent = parent });
+
+    const char *expr =
+    HEAD "template Children {"
+    LINE "  prop target: entity = 0"
+    LINE "  query q { (flecs.core.ChildOf, $target) }"
+    LINE "  for e in q {"
+    LINE "    \"m_{e.name()}\" {}"
+    LINE "  }"
+    LINE "  if q {"
+    LINE "    any {}"
+    LINE "  }"
+    LINE "}"
+    LINE "n { Children }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "n") != 0);
+    test_assert(ecs_lookup(world, "n.m_a") == 0);
+    test_assert(ecs_lookup(world, "n.any") == 0);
+
+    ecs_fini(world);
+}
+
+void Query_bind_not_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "parent" });
+
+    const char *expr =
+    HEAD "const p: i32 = 10"
+    LINE "query q { (flecs.core.ChildOf, $p) }"
+    LINE "for e in q {"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
