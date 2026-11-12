@@ -506,7 +506,7 @@ int flecs_script_eval_id_elem(
         if (var && var->value.ptr) {
             if (var->value.type == ecs_id(ecs_entity_t)) {
                 result = *(ecs_entity_t*)var->value.ptr;
-            } else if (var->value.type == ecs_id(ecs_script_template_ref_t)) {
+            } else if (flecs_type_is_value(v->world, var->value.type)) {
                 v->id_ref = var->value.ptr;
                 result = v->id_ref->type;
             }
@@ -542,8 +542,7 @@ static FLECS_SCRIPT_NOINLINE int flecs_script_eval_index_elem(
         return -1;
     }
 
-    const ecs_script_template_ref_t *ref = ecs_vec_get_t(
-        vec, ecs_script_template_ref_t, index);
+    const ecs_value_t *ref = ecs_vec_get_t(vec, ecs_value_t, index);
     ecs_entity_t elem = ref->type;
     if (!elem || !ecs_is_alive(v->world, elem) || (id->interface &&
         !flecs_script_template_interface_accepts(v->world, elem, id->interface)))
@@ -1337,7 +1336,7 @@ int flecs_script_eval_tag_id(
     }
 
     ecs_entity_t src = flecs_script_get_src(v->world, v->entity->eval, id);
-    if (node->id.interface && v->id_ref && v->id_ref->value) {
+    if (node->id.interface && v->id_ref && v->id_ref->ptr) {
         if (flecs_script_set_template_ref(v, node, src, id)) {
             return -1;
         }
@@ -1522,7 +1521,7 @@ static int flecs_script_eval_component(
             flecs_type_info_ctor(value.ptr, 1, ti);
         }
 
-        if (node->id.interface && v->id_ref && v->id_ref->value) {
+        if (node->id.interface && v->id_ref && v->id_ref->ptr) {
             if (flecs_script_template_ref_apply(
                 v->world, v->id_ref, ti, value.ptr))
             {
@@ -1570,7 +1569,7 @@ int flecs_script_eval_with_tag_id(
     const ecs_script_tag_t *node,
     ecs_id_t id)
 {
-    if (node->id.interface && v->id_ref && v->id_ref->value) {
+    if (node->id.interface && v->id_ref && v->id_ref->ptr) {
         const ecs_type_info_t *ti = flecs_script_get_type_info(v, node, id);
         if (!ti) {
             return -1;

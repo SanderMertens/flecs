@@ -47,6 +47,7 @@ using MemberRanges = EcsMemberRanges;
 using Struct = EcsStruct;
 using Array = EcsArray;
 using Vector = EcsVector;
+using Value = EcsValue;
 using Unit = EcsUnit;
 
 /** Base type for bitmasks. */

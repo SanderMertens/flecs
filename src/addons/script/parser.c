@@ -669,29 +669,6 @@ static const char* flecs_script_parse_var(
             }
 
             case ':': {
-                LookAhead_1(EcsTokKeywordTemplate,
-                    if (!is_prop) {
-                        Error("'%s %s: template ...' is invalid, template "
-                            "types are only allowed for prop variables",
-                            kind_str, var->name);
-                    }
-
-                    Consume();
-                    var->type_is_template = true;
-
-                    LookAhead_1(EcsTokIdentifier,
-                        var->type = Token(3);
-                        Consume();
-                    )
-
-                    LookAhead_2('[', ']',
-                        Consume();
-                        var->type_is_vector = true;
-                    )
-
-                    goto var_type;
-                )
-
                 LookAhead_1(EcsTokIdentifier,
                     Consume();
 
@@ -705,29 +682,34 @@ static const char* flecs_script_parse_var(
         )
 
     var_type: {
-        if (!var->type_is_template) {
-            // const value: i32[
-            LookAhead_1('[',
-                Consume();
-                Parse(
-                    // const value: i32[]
-                    case ']':
-                        var->type_count = -1;
-                        break;
-                    // const value: i32[10]
-                    case EcsTokNumber: {
-                        int64_t count = atoll(t->value);
-                        if (count <= 0 || count > INT32_MAX) {
-                            Error("invalid array size '%s'", t->value);
-                        }
-
-                        var->type_count = flecs_ito(int32_t, count);
-                        Parse_1(']', {});
-                        break;
-                    }
-                )
+        LookAhead_1('(',
+            Consume();
+            Initializer(')',
+                var->type_args = INITIALIZER;
             )
-        }
+        )
+
+        // const value: i32[
+        LookAhead_1('[',
+            Consume();
+            Parse(
+                // const value: i32[]
+                case ']':
+                    var->type_count = -1;
+                    break;
+                // const value: i32[10]
+                case EcsTokNumber: {
+                    int64_t count = atoll(t->value);
+                    if (count <= 0 || count > INT32_MAX) {
+                        Error("invalid array size '%s'", t->value);
+                    }
+
+                    var->type_count = flecs_ito(int32_t, count);
+                    Parse_1(']', {});
+                    break;
+                }
+            )
+        )
 
         LookAhead(
             case '=': {

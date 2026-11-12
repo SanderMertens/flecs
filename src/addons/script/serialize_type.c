@@ -28,8 +28,52 @@ static bool flecs_type_to_script_is_builtin(
 static void flecs_type_to_script_ref(
     const ecs_world_t *world,
     ecs_entity_t type,
+    ecs_strbuf_t *buf);
+
+static void flecs_type_to_script_anonymous(
+    const ecs_world_t *world,
+    ecs_entity_t type,
     ecs_strbuf_t *buf)
 {
+    const EcsVector *vt = ecs_get(world, type, EcsVector);
+    const EcsArray *at = ecs_get(world, type, EcsArray);
+    const EcsMap *mt = ecs_get(world, type, EcsMap);
+    const EcsValue *valt = ecs_get(world, type, EcsValue);
+    if (vt) {
+        ecs_strbuf_appendlit(buf, "vector(");
+        flecs_type_to_script_ref(world, vt->type, buf);
+    } else if (at) {
+        ecs_strbuf_appendlit(buf, "array(");
+        flecs_type_to_script_ref(world, at->type, buf);
+        ecs_strbuf_append(buf, ", %d", at->count);
+    } else if (mt) {
+        ecs_strbuf_appendlit(buf, "map(");
+        flecs_type_to_script_ref(world, mt->key_type, buf);
+        ecs_strbuf_appendlit(buf, ", ");
+        flecs_type_to_script_ref(world, mt->type, buf);
+    } else if (valt) {
+        ecs_strbuf_appendlit(buf, "value(");
+        flecs_type_to_script_ref(world, valt->type, buf);
+    } else {
+        char *path = ecs_get_path(world, type);
+        ecs_strbuf_appendstr(buf, path);
+        ecs_os_free(path);
+        return;
+    }
+
+    ecs_strbuf_appendch(buf, ')');
+}
+
+static void flecs_type_to_script_ref(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_strbuf_t *buf)
+{
+    if (flecs_script_is_anonymous_type(world, type)) {
+        flecs_type_to_script_anonymous(world, type, buf);
+        return;
+    }
+
     if (ecs_get_parent(world, type) == FlecsMeta) {
         ecs_strbuf_appendstr(buf, ecs_get_name(world, type));
         return;
@@ -207,9 +251,24 @@ static int flecs_type_to_script_decl(
         ecs_strbuf_appendch(buf, ')');
         return 0;
     }
+    case EcsValueType: {
+        const EcsValue *v = ecs_get(world, type, EcsValue);
+        if (!v) {
+            ecs_err("type '%s' cannot be declared in a script",
+                flecs_errstr(ecs_get_path(world, type)));
+            return -1;
+        }
+
+        ecs_strbuf_append(buf, "value %s(", ecs_get_name(world, type));
+        if (v->type) {
+            ecs_strbuf_appendlit(buf, "type: ");
+            flecs_type_to_script_ref(world, v->type, buf);
+        }
+        ecs_strbuf_appendch(buf, ')');
+        return 0;
+    }
     case EcsPrimitiveType:
     case EcsOpaqueType:
-    case EcsValueType:
     default: {
         ecs_err("type '%s' cannot be declared in a script",
             flecs_errstr(ecs_get_path(world, type)));
@@ -262,7 +321,31 @@ static int flecs_type_to_script_dep(
     ecs_vec_t *visited,
     ecs_strbuf_t *buf)
 {
-    if (!type || flecs_type_to_script_is_builtin(world, type)) {
+    if (!type) {
+        return 0;
+    }
+
+    if (flecs_script_is_anonymous_type(world, type)) {
+        const EcsVector *vt = ecs_get(world, type, EcsVector);
+        const EcsArray *at = ecs_get(world, type, EcsArray);
+        const EcsMap *mt = ecs_get(world, type, EcsMap);
+        const EcsValue *valt = ecs_get(world, type, EcsValue);
+        ecs_entity_t deps[2] = {
+            vt ? vt->type : at ? at->type : mt ? mt->key_type :
+                valt ? valt->type : 0,
+            mt ? mt->type : 0
+        };
+
+        if (flecs_type_to_script_dep(world, deps[0], visited, buf) ||
+            flecs_type_to_script_dep(world, deps[1], visited, buf))
+        {
+            return -1;
+        }
+
+        return 0;
+    }
+
+    if (flecs_type_to_script_is_builtin(world, type)) {
         return 0;
     }
 
@@ -329,11 +412,15 @@ static int flecs_type_to_script_visit(
         deps[0] = ecs_get(world, type, EcsMap)->key_type;
         deps[1] = ecs_get(world, type, EcsMap)->type;
         break;
+    case EcsValueType: {
+        const EcsValue *v = ecs_get(world, type, EcsValue);
+        deps[0] = v ? v->type : 0;
+        break;
+    }
     case EcsPrimitiveType:
     case EcsBitmaskType:
     case EcsEnumType:
     case EcsOpaqueType:
-    case EcsValueType:
     default:
         break;
     }

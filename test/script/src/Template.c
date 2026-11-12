@@ -9326,7 +9326,7 @@ void Template_template_interface_prop_in_scope_instantiates_once(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL,
         HEAD "template Building {"
-        LINE "  prop roof: template Roof = FlatRoof"
+        LINE "  prop roof: value(Roof) = FlatRoof"
         LINE "  roof { roof: {footprint: [{10, 20}, {30, 40}]} }"
         LINE "}", &ir_desc, NULL) == 0);
 
@@ -9403,7 +9403,7 @@ void Template_template_interface_prop_in_scope_instantiates_once_deferred(void) 
 
     test_assert(ecs_script_run_w_desc(world, NULL,
         HEAD "template Building {"
-        LINE "  prop roof: template Roof = FlatRoof"
+        LINE "  prop roof: value(Roof) = FlatRoof"
         LINE "  roof { roof: {footprint: [{10, 20}, {30, 40}]} }"
         LINE "}", &ir_desc, NULL) == 0);
 
@@ -9485,7 +9485,7 @@ void Template_template_vector_interface_prop_in_scope_instantiates_once(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL,
         HEAD "template Building {"
-        LINE "  prop roofs: template Roof[] = [FlatRoof]"
+        LINE "  prop roofs: value(Roof)[] = [FlatRoof]"
         LINE "  roof { roofs[0]: {footprint: [{10, 20}, {30, 40}]} }"
         LINE "}", &ir_desc, NULL) == 0);
 

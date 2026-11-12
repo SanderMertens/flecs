@@ -117,6 +117,16 @@ ecs_value_t ecs_value_init(
     return result;
 }
 
+void ecs_value_set_type(
+    const ecs_world_t *world,
+    ecs_value_t *v,
+    ecs_entity_t type)
+{
+    ecs_assert(v != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_value_fini(world, v);
+    v->type = type;
+}
+
 void ecs_value_fini(
     const ecs_world_t *world,
     ecs_value_t *v)
@@ -124,8 +134,6 @@ void ecs_value_fini(
     ecs_assert(v != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (!v->ptr) {
-        ecs_assert(v->type == 0, ECS_INVALID_PARAMETER,
-            "value has a type but no value");
         v->type = 0;
         return;
     }
@@ -153,7 +161,7 @@ void ecs_value_copy(
     ecs_assert(src != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (!src->ptr) {
-        ecs_value_fini(world, dst);
+        ecs_value_set_type(world, dst, src->type);
         return;
     }
 
@@ -353,6 +361,139 @@ static void flecs_value_fini_lifecycle_ctx(
     (void)ctx;
 }
 
+void flecs_value_hooks(
+    ecs_world_t *world,
+    ecs_type_hooks_t *hooks)
+{
+    hooks->flags = 0;
+    hooks->ctor = flecs_default_ctor;
+    hooks->dtor = flecs_value_dtor;
+    hooks->move = flecs_value_move;
+    hooks->copy = flecs_value_copy;
+    hooks->copy_ctor = NULL;
+    hooks->move_ctor = NULL;
+    hooks->ctor_move_dtor = NULL;
+    hooks->move_dtor = NULL;
+    hooks->cmp = flecs_value_cmp;
+    hooks->equals = flecs_value_equals;
+    hooks->lifecycle_ctx = world;
+    hooks->lifecycle_ctx_free = flecs_value_fini_lifecycle_ctx;
+}
+
+bool flecs_type_is_value(
+    const ecs_world_t *world,
+    ecs_entity_t type)
+{
+    if (!type) {
+        return false;
+    }
+
+    if (type == ecs_id(ecs_value_t)) {
+        return true;
+    }
+
+    const EcsType *t = ecs_get(world, type, EcsType);
+    return t && t->kind == EcsValueType;
+}
+
+ecs_entity_t flecs_value_type_constraint(
+    const ecs_world_t *world,
+    ecs_entity_t value_type)
+{
+    if (!value_type || value_type == ecs_id(ecs_value_t)) {
+        return 0;
+    }
+
+    const EcsValue *v = ecs_get(world, value_type, EcsValue);
+    return v ? v->type : 0;
+}
+
+bool ecs_value_type_accepts(
+    const ecs_world_t *world,
+    ecs_entity_t value_type,
+    ecs_entity_t type)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (!type || !ecs_is_alive(world, type)) {
+        return false;
+    }
+
+    if (flecs_type_is_value(world, type)) {
+        return false;
+    }
+
+    ecs_entity_t constraint = flecs_value_type_constraint(world, value_type);
+    if (!constraint) {
+        return ecs_get_type_info(world, type) != NULL;
+    }
+
+    if (type == constraint) {
+        return true;
+    }
+
+    return flecs_struct_is_derived_from(world, type, constraint);
+}
+
+static void flecs_set_value_type(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    EcsValue *value = ecs_field(it, EcsValue, 0);
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_entity_t type = value[i].type;
+
+        if (type) {
+            if (!ecs_is_alive(world, type)) {
+                ecs_err("value type '%s' has invalid type constraint",
+                    ecs_get_name(world, e));
+                continue;
+            }
+
+            if (!ecs_get_type_info(world, type)) {
+                ecs_err("type constraint '%s' of value type '%s' is not a type",
+                    flecs_errstr(ecs_get_path(world, type)),
+                    ecs_get_name(world, e));
+                continue;
+            }
+
+            if (flecs_type_is_value(world, type)) {
+                ecs_err("type constraint of value type '%s' cannot be a "
+                    "value type", ecs_get_name(world, e));
+                continue;
+            }
+        }
+
+        if (flecs_init_type_t(it->stage, e, EcsValueType, ecs_value_t)) {
+            continue;
+        }
+    }
+}
+
+ecs_entity_t ecs_value_type_init(
+    ecs_world_t *world,
+    const ecs_value_type_desc_t *desc)
+{
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
+
+    ecs_entity_t t = desc->entity;
+    if (!t) {
+        t = ecs_new_low_id(world);
+    }
+
+    ecs_set(world, t, EcsValue, { .type = desc->type });
+
+    flecs_resume_readonly(world, &rs);
+
+    if (!ecs_has(world, t, EcsType)) {
+        return 0;
+    }
+
+    return t;
+}
+
 void flecs_meta_value_init(
     ecs_world_t *world)
 {
@@ -367,20 +508,28 @@ void flecs_meta_value_init(
     });
 
     ecs_type_hooks_t hooks = *ecs_get_hooks_id(world, ecs_id(ecs_value_t));
-    hooks.flags = 0;
-    hooks.ctor = flecs_default_ctor;
-    hooks.dtor = flecs_value_dtor;
-    hooks.move = flecs_value_move;
-    hooks.copy = flecs_value_copy;
-    hooks.cmp = flecs_value_cmp;
-    hooks.equals = flecs_value_equals;
-    hooks.lifecycle_ctx = world;
-    hooks.lifecycle_ctx_free = flecs_value_fini_lifecycle_ctx;
+    flecs_value_hooks(world, &hooks);
     hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, ecs_id(ecs_value_t), &hooks);
 
     flecs_init_type_t(world, ecs_id(ecs_value_t),
         EcsValueType, ecs_value_t);
+
+    ecs_entity_t value_component = ecs_entity(world, {
+        .id = ecs_id(EcsValue), .name = "value_type", .symbol = "EcsValue" });
+    ecs_add_pair(world, value_component, EcsOnInstantiate, EcsDontInherit);
+    ecs_component(world, {
+        .entity = value_component,
+        .type.size = sizeof(EcsValue),
+        .type.alignment = ECS_ALIGNOF(EcsValue)
+    });
+
+    ecs_observer(world, {
+        .query.terms[0] = { .id = ecs_id(EcsValue) },
+        .events = {EcsOnSet},
+        .callback = flecs_set_value_type,
+        .global_observer = true
+    });
 }
 
 #endif

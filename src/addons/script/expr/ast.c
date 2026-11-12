@@ -392,19 +392,25 @@ bool flecs_expr_explicit_cast_allowed(
         return true;
     }
 
-    if (from == ecs_id(ecs_script_template_ref_t) &&
-        ecs_has(world, to, EcsStruct))
-    {
+    if (flecs_type_is_value(world, from)) {
         return true;
     }
 
-    /* Any type can be cast to and from a value */
-    if (to == ecs_id(ecs_value_t) || from == ecs_id(ecs_value_t)) {
-        return true;
-    }
+    if (flecs_type_is_value(world, to)) {
+        ecs_entity_t constraint = flecs_value_type_constraint(world, to);
+        if (!constraint) {
+            return true;
+        }
 
-    if (to == ecs_id(ecs_script_template_ref_t)) {
-        return from == ecs_id(ecs_entity_t) || from == ecs_id(ecs_string_t);
+        if (from == ecs_id(ecs_entity_t) || from == ecs_id(ecs_string_t)) {
+            return true;
+        }
+
+        if (ecs_has(world, constraint, EcsStruct)) {
+            return ecs_value_type_accepts(world, to, from);
+        }
+
+        return flecs_expr_explicit_cast_allowed(world, from, constraint);
     }
 
     const EcsType *from_type = ecs_get(world, from, EcsType);
@@ -479,9 +485,13 @@ ecs_expr_cast_t* flecs_expr_cast(
     ecs_entity_t type)
 {
     if (!flecs_expr_explicit_cast_allowed(script->world, expr->type, type)) {
-        if (type == ecs_id(ecs_script_template_ref_t)) {
-            flecs_expr_visit_error(script, expr, "expected template or struct, got value of type %s",
-                flecs_errstr(ecs_id_str(script->world, expr->type)));
+        ecs_entity_t constraint = flecs_value_type_constraint(
+            script->world, type);
+        if (constraint) {
+            flecs_expr_visit_error(script, expr,
+                "expected value of type '%s', got value of type '%s'",
+                flecs_errstr(ecs_get_path(script->world, constraint)),
+                flecs_errstr_1(ecs_id_str(script->world, expr->type)));
             return NULL;
         }
 

@@ -649,14 +649,14 @@ template Shopfront {
 
 @tree Parent
 template Building {
-  prop facade: template Facade = TimberFacade
+  prop facade: value(Facade) = TimberFacade
   prop floors: i32 = 2
   prop width: f32 = 4.4
   prop depth: f32 = 4.2
   prop floorHeight: f32 = 2.5
   prop color: Rgb = {242, 218, 177}
   prop accent: Rgb = {181, 81, 72}
-  prop roof: template Roof = TiledRoof
+  prop roof: value(Roof) = TiledRoof
   prop roofColor: Rgb = {66, 83, 99}
   prop shop: bool = true
 

@@ -13,36 +13,31 @@ ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);
 ECS_DECLARE(EcsScriptTemplate);
 ECS_DECLARE(EcsScriptTemplateManual);
 ECS_DECLARE(EcsScriptTemplatePending);
-ECS_COMPONENT_DECLARE(ecs_script_template_ref_t);
-
-static void flecs_script_template_ref_clear(
-    ecs_world_t *world,
-    ecs_script_template_ref_t *ref)
-{
-    if (ref->value) {
-        ecs_ptr_free(world, ref->type, ref->value);
-        ref->value = NULL;
-    }
-}
-
 void flecs_script_template_ref_set(
     ecs_world_t *world,
-    ecs_script_template_ref_t *ref,
+    ecs_value_t *ref,
     ecs_entity_t type,
     void *value)
 {
-    flecs_script_template_ref_clear(world, ref);
+    ecs_value_fini(world, ref);
     ref->type = type;
-    ref->value = value;
+    if (!value) {
+        return;
+    }
+
+    ecs_value_t owned = ecs_value_new(world, type);
+    ecs_ptr_move(world, type, owned.ptr, value);
+    ecs_ptr_free(world, type, value);
+    ref->ptr = owned.ptr;
 }
 
 int flecs_script_template_ref_apply(
     ecs_world_t *world,
-    const ecs_script_template_ref_t *ref,
+    const ecs_value_t *ref,
     const ecs_type_info_t *ti,
     void *dst)
 {
-    if (!ref || !ref->value) {
+    if (!ref || !ref->ptr) {
         return 0;
     }
 
@@ -50,132 +45,36 @@ int flecs_script_template_ref_apply(
         return -1;
     }
 
-    ecs_ptr_copy_w_type_info(world, ti, dst, ref->value);
+    ecs_ptr_copy_w_type_info(world, ti, dst, ref->ptr);
     return 0;
 }
 
-static void flecs_script_template_ref_copy(
-    void *dst_ptr,
-    const void *src_ptr,
-    int32_t count,
-    const ecs_type_info_t *ti)
-{
-    ecs_world_t *world = ti->hooks.ctx;
-    ecs_script_template_ref_t *dst = dst_ptr;
-    const ecs_script_template_ref_t *src = src_ptr;
-    int32_t i;
-    for (i = 0; i < count; i ++) {
-        void *value = NULL;
-        if (src[i].value) {
-            value = ecs_ptr_new(world, src[i].type);
-            ecs_ptr_copy(world, src[i].type, value, src[i].value);
-        }
-
-        flecs_script_template_ref_set(world, &dst[i], src[i].type, value);
-    }
-}
-
-static void flecs_script_template_ref_move(
-    void *dst_ptr,
-    void *src_ptr,
-    int32_t count,
-    const ecs_type_info_t *ti)
-{
-    ecs_world_t *world = ti->hooks.ctx;
-    ecs_script_template_ref_t *dst = dst_ptr;
-    ecs_script_template_ref_t *src = src_ptr;
-    int32_t i;
-    for (i = 0; i < count; i ++) {
-        flecs_script_template_ref_set(
-            world, &dst[i], src[i].type, src[i].value);
-        src[i].value = NULL;
-    }
-}
-
-static void flecs_script_template_ref_dtor(
-    void *ptr,
-    int32_t count,
-    const ecs_type_info_t *ti)
-{
-    ecs_world_t *world = ti->hooks.ctx;
-    ecs_script_template_ref_t *refs = ptr;
-    int32_t i;
-    for (i = 0; i < count; i ++) {
-        flecs_script_template_ref_clear(world, &refs[i]);
-    }
-}
-
-static int flecs_script_template_ref_value_cmp(
+ecs_entity_t flecs_script_template_type_interface(
     const ecs_world_t *world,
     ecs_entity_t type,
-    const void *a,
-    const void *b)
+    bool *is_vector)
 {
-    if (a == b) {
+    if (is_vector) {
+        *is_vector = false;
+    }
+
+    if (!type) {
         return 0;
     }
 
-    if (!a) {
-        return -1;
+    if (flecs_type_is_value(world, type)) {
+        return type;
     }
 
-    if (!b) {
-        return 1;
+    const EcsVector *vt = ecs_get(world, type, EcsVector);
+    if (vt && flecs_type_is_value(world, vt->type)) {
+        if (is_vector) {
+            *is_vector = true;
+        }
+        return vt->type;
     }
 
-    const ecs_type_info_t *ti = ecs_get_type_info(world, type);
-    if (!ti) {
-        return 0;
-    }
-
-    if (ti->hooks.cmp && !(ti->hooks.flags & ECS_TYPE_HOOK_CMP_ILLEGAL)) {
-        return flecs_type_info_cmp(a, b, ti);
-    }
-
-    if (ti->hooks.equals && !(ti->hooks.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL)) {
-        return flecs_type_info_equals(a, b, ti) ? 0 : 1;
-    }
-
-    return ecs_os_memcmp(a, b, ti->size);
-}
-
-static int flecs_script_template_ref_cmp(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    const ecs_script_template_ref_t *a = a_ptr;
-    const ecs_script_template_ref_t *b = b_ptr;
-    if (a->type != b->type) {
-        return a->type < b->type ? -1 : 1;
-    }
-
-    return flecs_script_template_ref_value_cmp(
-        ti->hooks.ctx, a->type, a->value, b->value);
-}
-
-static bool flecs_script_template_ref_equals(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    return flecs_script_template_ref_cmp(a_ptr, b_ptr, ti) == 0;
-}
-
-static int flecs_script_template_ref_serialize(
-    const ecs_serializer_t *ser,
-    const void *ptr)
-{
-    const ecs_script_template_ref_t *ref = ptr;
-    return ser->value(ser, ecs_id(ecs_entity_t), &ref->type);
-}
-
-static void flecs_script_template_ref_assign_entity(
-    void *ptr,
-    ecs_world_t *world,
-    ecs_entity_t entity)
-{
-    flecs_script_template_ref_set(world, ptr, entity, NULL);
+    return 0;
 }
 
 static ecs_script_template_t* flecs_script_template_get(
@@ -885,7 +784,7 @@ static int flecs_script_template_validate_interfaces(
         const ecs_member_t *member = ecs_vec_get_t(
             &st->members, ecs_member_t, tm->index);
         const void *ptr = ECS_OFFSET(data, member->offset);
-        const ecs_script_template_ref_t *elems = ptr;
+        const ecs_value_t *elems = ptr;
         int32_t e, elem_count = 1;
         if (tm->is_vector) {
             elems = ecs_vec_first(ptr);
@@ -1611,13 +1510,7 @@ static int flecs_script_template_override_var(
 
     ecs_entity_t member_type = flecs_script_template_member_type(
         v->world, &members[index]);
-    const ecs_script_template_member_t *member = 
-        flecs_script_template_member(template, index, false);
-    ecs_assert(member != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (node->eval_type != member_type || 
-        node->eval_interface != member->interface)
-    {
+    if (node->eval_type != member_type) {
         flecs_script_eval_error(v, node,
             "type of prop '%s' of template '%s' does not match the type "
             "of the base prop it overrides", node->name,
@@ -1716,20 +1609,24 @@ int flecs_script_template_eval_var(
         if (flecs_script_eval_expr(v, &node->expr, &var->value)) {
             return -1;
         }
-    } else if (node->eval_interface && !node->type_is_vector &&
-        node->eval_interface != ecs_id(EcsStruct))
-    {
-        ((ecs_script_template_ref_t*)var->value.ptr)->type =
-            node->eval_interface;
     }
 
-    if (node->type_is_vector && node->eval_interface) {
+    bool is_vector = false;
+    ecs_entity_t interface = flecs_script_template_type_interface(
+        v->world, type, &is_vector);
+
+    if (!node->expr && interface && !is_vector) {
+        ecs_value_set_type(v->world, var->value.ptr,
+            flecs_value_type_constraint(v->world, interface));
+    }
+
+    if (is_vector) {
         const ecs_vec_t *vec = var->value.ptr;
-        const ecs_script_template_ref_t *elems = ecs_vec_first(vec);
+        const ecs_value_t *elems = ecs_vec_first(vec);
         int32_t e, elem_count = ecs_vec_count(vec);
         for (e = 0; e < elem_count; e ++) {
             const char *expected = flecs_script_template_interface_error(
-                v->world, elems[e].type, node->eval_interface);
+                v->world, elems[e].type, interface);
             if (expected) {
                 flecs_script_eval_error(v, node,
                     "'%s' at index %d of prop '%s' is not %s",
@@ -1775,8 +1672,8 @@ int flecs_script_template_eval_var(
     member->sp = var->sp;
     member->input = 0;
     member->is_mut = mut;
-    member->is_vector = node->type_is_vector;
-    member->interface = node->eval_interface;
+    member->interface = interface;
+    member->is_vector = is_vector;
 
     if (member->interface) {
         template->has_interface_members = true;
@@ -1892,10 +1789,8 @@ static int flecs_script_template_inherit_members(
         member->sp = sp + i;
         member->input = 0;
         member->is_mut = mut;
-        const ecs_script_template_member_t *base_member =
-            flecs_script_template_member(base_template, i, mut);
-        member->is_vector = base_member && base_member->is_vector;
-        member->interface = base_member ? base_member->interface : 0;
+        member->interface = flecs_script_template_type_interface(
+            world, members[i].type, &member->is_vector);
         if (member->interface) {
             template->has_interface_members = true;
         }
@@ -1989,28 +1884,27 @@ bool flecs_script_template_interface_accepts(
     ecs_entity_t value,
     ecs_entity_t interface)
 {
-    if (interface == ecs_id(EcsStruct)) {
-        return ecs_has(world, value, EcsStruct);
-    }
-
-    if (value == interface) {
-        return true;
-    }
-
-    return flecs_script_template_get(world, value) &&
-        flecs_struct_is_derived_from(world, value, interface);
+    return ecs_value_type_accepts(world, interface, value);
 }
 
 char* flecs_script_template_expected_str(
     const ecs_world_t *world,
     ecs_entity_t interface)
 {
-    if (interface == ecs_id(EcsStruct)) {
-        return ecs_os_strdup("a struct type");
+    ecs_entity_t constraint = flecs_value_type_constraint(world, interface);
+    if (!constraint) {
+        return ecs_os_strdup("a type");
     }
 
-    char *path = ecs_get_path(world, interface);
-    char *result = flecs_asprintf("a template derived from '%s'", path);
+    char *path = ecs_get_path(world, constraint);
+    char *result;
+    if (ecs_has(world, constraint, EcsStruct)) {
+        result = flecs_asprintf("'%s' or a type derived from '%s'",
+            path, path);
+    } else {
+        result = flecs_asprintf("'%s'", path);
+    }
+
     ecs_os_free(path);
     return result;
 }
@@ -2027,31 +1921,6 @@ const char* flecs_script_template_interface_error(
     }
 
     return flecs_errstr_5(flecs_script_template_expected_str(world, interface));
-}
-
-ecs_entity_t flecs_script_template_prop_interface(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    const char *member)
-{
-    const ecs_script_template_t *template = flecs_script_template_get(
-        world, type);
-    const EcsStruct *st = template ? ecs_get(world, type, EcsStruct) : NULL;
-    if (!st || !member) {
-        return 0;
-    }
-
-    const ecs_member_t *members = ecs_vec_first(&st->members);
-    int32_t i, count = ecs_vec_count(&st->members);
-    for (i = 0; i < count; i ++) {
-        if (!ecs_os_strcmp(members[i].name, member)) {
-            const ecs_script_template_member_t *m =
-                flecs_script_template_member(template, i, false);
-            return m ? m->interface : 0;
-        }
-    }
-
-    return 0;
 }
 
 ecs_entity_t flecs_script_template_member_interface(
@@ -2527,24 +2396,6 @@ void flecs_script_template_import(
     ecs_world_t *world)
 {
     ECS_COMPONENT_DEFINE(world, EcsScriptTemplateRoot);
-    ECS_COMPONENT_DEFINE(world, ecs_script_template_ref_t);
-
-    ecs_set_hooks(world, ecs_script_template_ref_t, {
-        .ctor = flecs_default_ctor,
-        .copy = flecs_script_template_ref_copy,
-        .move = flecs_script_template_ref_move,
-        .dtor = flecs_script_template_ref_dtor,
-        .cmp = flecs_script_template_ref_cmp,
-        .equals = flecs_script_template_ref_equals,
-        .ctx = world
-    });
-
-    ecs_opaque(world, {
-        .entity = ecs_id(ecs_script_template_ref_t),
-        .type.as_type = ecs_id(ecs_entity_t),
-        .type.serialize = flecs_script_template_ref_serialize,
-        .type.assign_entity = flecs_script_template_ref_assign_entity
-    });
     ECS_TAG_DEFINE(world, EcsScriptTemplate);
     ECS_TAG_DEFINE(world, EcsScriptTemplateManual);
     ECS_TAG_DEFINE(world, EcsScriptTemplatePending);

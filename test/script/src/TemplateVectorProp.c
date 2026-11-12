@@ -30,7 +30,7 @@ void TemplateVectorProp_declaration_w_default(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade, GlassFacade]"
     LINE "  a { facade[0]: {height: 10} }"
     LINE "  b { facade[1]: {height: 20} }"
     LINE "}"
@@ -88,7 +88,7 @@ void TemplateVectorProp_declaration_wo_default(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[]"
+    LINE "  prop facade: value(Facade)[]"
     LINE "  Position: {facade.count(), 0}"
     LINE "}"
     LINE "Building e()";
@@ -125,7 +125,7 @@ void TemplateVectorProp_count(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade, GlassFacade]"
     LINE "  Position: {facade.count(), 0}"
     LINE "}"
     LINE "Building e()"
@@ -174,7 +174,7 @@ void TemplateVectorProp_index_instantiate_w_initializer(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade, GlassFacade]"
     LINE "  prop floors: i32 = 3"
     LINE "  for i in 0..floors {"
     LINE "    \"floor_{i}\" {"
@@ -238,7 +238,7 @@ void TemplateVectorProp_index_tag_form(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade, GlassFacade]"
     LINE "  a { facade[0] }"
     LINE "  b {"
     LINE "    facade[1]"
@@ -287,11 +287,11 @@ void TemplateVectorProp_pass_element_to_interface_prop(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Wall {"
-    LINE "  prop facade: template Facade"
+    LINE "  prop facade: value(Facade)"
     LINE "  side { facade: {height: 7} }"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade, GlassFacade]"
     LINE "  wall { Wall: {facade: facade[1]} }"
     LINE "}"
     LINE "Building e()";
@@ -328,7 +328,7 @@ void TemplateVectorProp_iterate_w_for(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade, GlassFacade]"
     LINE "  for (i, f) in facade {"
     LINE "    \"side_{i}\" { f: {height: 5} }"
     LINE "  }"
@@ -381,7 +381,7 @@ void TemplateVectorProp_index_by_rng(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade, GlassFacade]"
     LINE "  const rng: flecs.script.math.Rng = {seed: 7}"
     LINE "  for i in 0..4 {"
     LINE "    \"floor_{i}\" {"
@@ -404,7 +404,7 @@ void TemplateVectorProp_index_by_rng(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade, GlassFacade]"
     LINE "  for i in 0..4 {"
     LINE "    \"floor_{i}\" {"
     LINE "      facade[(i * 7 + 3) % facade.count()]: {height: 2}"
@@ -450,7 +450,7 @@ void TemplateVectorProp_override_kind_syntax(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade, GlassFacade]"
     LINE "  a { facade[0]: {height: 1} }"
     LINE "  b { facade[1]: {height: 2} }"
     LINE "}"
@@ -499,7 +499,7 @@ void TemplateVectorProp_override_component_syntax(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade, GlassFacade]"
     LINE "  a { facade[0]: {height: 1} }"
     LINE "}"
     LINE "e { Building: {facade: [WoodFacade]} }";
@@ -536,7 +536,7 @@ void TemplateVectorProp_native_set_id(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade]"
     LINE "  a { facade[0]: {height: 4} }"
     LINE "}";
 
@@ -552,14 +552,14 @@ void TemplateVectorProp_native_set_id(void) {
     test_int(ti->size, ECS_SIZEOF(ecs_vec_t));
 
     ecs_vec_t vec;
-    ecs_vec_init_t(NULL, &vec, ecs_script_template_ref_t, 1);
-    ecs_vec_append_t(NULL, &vec, ecs_script_template_ref_t)[0] =
-        (ecs_script_template_ref_t){ .type = glass };
+    ecs_vec_init_t(NULL, &vec, ecs_value_t, 1);
+    ecs_vec_append_t(NULL, &vec, ecs_value_t)[0] =
+        (ecs_value_t){ .type = glass };
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set_id(world, e, building, ECS_SIZEOF(ecs_vec_t), &vec);
 
-    ecs_vec_fini_t(NULL, &vec, ecs_script_template_ref_t);
+    ecs_vec_fini_t(NULL, &vec, ecs_value_t);
 
     ecs_entity_t inst = ecs_lookup(world, "e.a");
     test_assert(inst != 0);
@@ -591,7 +591,7 @@ void TemplateVectorProp_expr_run_props(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade]"
     LINE "  a { facade[0]: {height: 8} }"
     LINE "  b { facade[1]: {height: 9} }"
     LINE "}";
@@ -658,7 +658,7 @@ void TemplateVectorProp_index_out_of_range_fails(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade]"
     LINE "  a { facade[2]: {height: 1} }"
     LINE "}"
     LINE "Building e()";
@@ -686,7 +686,7 @@ void TemplateVectorProp_index_empty_vector_fails(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[]"
+    LINE "  prop facade: value(Facade)[]"
     LINE "  a { facade[0]: {height: 1} }"
     LINE "}"
     LINE "Building e()";
@@ -717,7 +717,7 @@ void TemplateVectorProp_default_not_derived_fails(void) {
     LINE "  prop x: f32 = 1"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade, Unrelated]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade, Unrelated]"
     LINE "  a { facade[0]: {height: 1} }"
     LINE "}";
 
@@ -747,7 +747,7 @@ void TemplateVectorProp_value_not_derived_fails(void) {
     LINE "  prop x: f32 = 1"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade]"
     LINE "  a { facade[0]: {height: 1} }"
     LINE "}"
     LINE "e { Building: {facade: [Unrelated]} }";
@@ -778,7 +778,7 @@ void TemplateVectorProp_value_not_derived_from_c_fails(void) {
     LINE "  prop x: f32 = 1"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade]"
     LINE "  a { facade[0]: {height: 1} }"
     LINE "}";
 
@@ -790,16 +790,16 @@ void TemplateVectorProp_value_not_derived_from_c_fails(void) {
     test_assert(unrelated != 0);
 
     ecs_vec_t vec;
-    ecs_vec_init_t(NULL, &vec, ecs_script_template_ref_t, 1);
-    ecs_vec_append_t(NULL, &vec, ecs_script_template_ref_t)[0] =
-        (ecs_script_template_ref_t){ .type = unrelated };
+    ecs_vec_init_t(NULL, &vec, ecs_value_t, 1);
+    ecs_vec_append_t(NULL, &vec, ecs_value_t)[0] =
+        (ecs_value_t){ .type = unrelated };
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_log_set_level(-4);
     ecs_set_id(world, e, building, ECS_SIZEOF(ecs_vec_t), &vec);
     ecs_log_set_level(-1);
 
-    ecs_vec_fini_t(NULL, &vec, ecs_script_template_ref_t);
+    ecs_vec_fini_t(NULL, &vec, ecs_value_t);
 
     test_assert(ecs_lookup(world, "e.a") == 0);
 
@@ -814,7 +814,7 @@ void TemplateVectorProp_template_type_vector(void) {
     LINE "  prop x: f32 = 1"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop points: template Point[] = [Point(x: 5), Point]"
+    LINE "  prop points: value(Point)[] = [Point(x: 5), Point]"
     LINE "  a { points[0] }"
     LINE "  b { points[1] }"
     LINE "}"
@@ -852,7 +852,7 @@ void TemplateVectorProp_bare_vector_prop_as_component_fails(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade]"
     LINE "  a { facade: {height: 1} }"
     LINE "}";
 
@@ -879,7 +879,7 @@ void TemplateVectorProp_reactive_prop_change(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade]"
     LINE "  a { facade[0]: {height: 6} }"
     LINE "}"
     LINE "Building e()";
@@ -903,13 +903,13 @@ void TemplateVectorProp_reactive_prop_change(void) {
     test_assert(glass != 0);
 
     ecs_vec_t vec;
-    ecs_vec_init_t(NULL, &vec, ecs_script_template_ref_t, 1);
-    ecs_vec_append_t(NULL, &vec, ecs_script_template_ref_t)[0] =
-        (ecs_script_template_ref_t){ .type = glass };
+    ecs_vec_init_t(NULL, &vec, ecs_value_t, 1);
+    ecs_vec_append_t(NULL, &vec, ecs_value_t)[0] =
+        (ecs_value_t){ .type = glass };
 
     ecs_entity_t e = ecs_lookup(world, "e");
     ecs_set_id(world, e, building, ECS_SIZEOF(ecs_vec_t), &vec);
-    ecs_vec_fini_t(NULL, &vec, ecs_script_template_ref_t);
+    ecs_vec_fini_t(NULL, &vec, ecs_value_t);
 
     inst = ecs_lookup(world, "e.a");
     test_assert(inst != 0);
@@ -941,7 +941,7 @@ void TemplateVectorProp_reactive_prop_change_from_script(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade]"
     LINE "  a { facade[0]: {height: 6} }"
     LINE "}"
     LINE "Building e()";
@@ -992,11 +992,11 @@ void TemplateVectorProp_nested_template(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Wing {"
-    LINE "  prop facade: template Facade[] = [BrickFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade]"
     LINE "  side { facade[0]: {height: 11} }"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [GlassFacade, WoodFacade]"
+    LINE "  prop facade: value(Facade)[] = [GlassFacade, WoodFacade]"
     LINE "  left { Wing: {facade: [facade[0]]} }"
     LINE "  right { Wing: {facade: [facade[1]]} }"
     LINE "}"
@@ -1046,7 +1046,7 @@ void TemplateVectorProp_template_inheritance(void) {
     LINE "}"
     LINE "struct Base(scale: f32)"
     LINE "template BaseBuilding : Base {"
-    LINE "  prop facade: template Facade[] = [BrickFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade]"
     LINE "}"
     LINE "template Tower : BaseBuilding {"
     LINE "  a { facade[0]: {height: scale} }"
@@ -1097,7 +1097,7 @@ void TemplateVectorProp_index_in_interpolated_string(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade, GlassFacade]"
     LINE "  \"named_{facade[1]}\" {}"
     LINE "}"
     LINE "Building e()";
@@ -1131,7 +1131,7 @@ void TemplateVectorProp_collection_value_still_parses(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade, GlassFacade]"
     LINE "  a { facade[1]: {height: 3} }"
     LINE "  Vec: [10, 20, 30]"
     LINE "}"
@@ -1176,14 +1176,14 @@ void TemplateVectorProp_to_str(void) {
         LINE "  Position: {$height, 3}"
         LINE "}"
         LINE "template Building {"
-        LINE "  prop facade: template Facade[] = [BrickFacade]"
+        LINE "  prop facade: value(Facade)[] = [BrickFacade]"
         LINE "  a { facade[0]: {height: 1} }"
         LINE "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     char *str = ecs_script_ast_to_str(script, false);
     test_assert(str != NULL);
-    test_assert(strstr(str, "template Facade[]") != NULL);
+    test_assert(strstr(str, "value(@Facade)[]") != NULL);
     test_assert(strstr(str, "facade[0]") != NULL);
     ecs_os_free(str);
 
@@ -1207,7 +1207,7 @@ void TemplateVectorProp_index_tag_form_instantiates(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade, GlassFacade]"
     LINE "  a { facade[0] }"
     LINE "  b { facade[1] }"
     LINE "}"
@@ -1256,7 +1256,7 @@ void TemplateVectorProp_index_empty_initializer(void) {
     LINE "  Position: {$height, 3}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade, GlassFacade]"
     LINE "  a { facade[0]: {} }"
     LINE "  b { facade[1]: {} }"
     LINE "}"
@@ -1328,7 +1328,7 @@ void TemplateVectorProp_template_ref_call_default(void) {
     const char *expr =
     FACADE_HEAD
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade(scale: 5), GlassFacade]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade(scale: 5), GlassFacade]"
     LINE "  a { facade[0]: {height: 10} }"
     LINE "  b { facade[1]: {height: 20} }"
     LINE "}"
@@ -1348,7 +1348,7 @@ void TemplateVectorProp_template_ref_call_positional(void) {
     const char *expr =
     FACADE_HEAD
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade(0, 5), GlassFacade(0, 6)]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade(0, 5), GlassFacade(0, 6)]"
     LINE "  a { facade[0]: {height: 10} }"
     LINE "  b { facade[1]: {height: 20} }"
     LINE "}"
@@ -1368,7 +1368,7 @@ void TemplateVectorProp_template_ref_call_instance(void) {
     const char *expr =
     FACADE_HEAD
     LINE "template Building {"
-    LINE "  prop facade: template Facade[]"
+    LINE "  prop facade: value(Facade)[]"
     LINE "  a { facade[0]: {height: 10} }"
     LINE "  b { facade[1]: {height: 20} }"
     LINE "}"
@@ -1384,13 +1384,13 @@ void TemplateVectorProp_template_ref_call_instance(void) {
     const ecs_vec_t *vec = ecs_get_id(world, e, building);
     test_assert(vec != NULL);
     test_int(ecs_vec_count(vec), 2);
-    const ecs_script_template_ref_t *refs = ecs_vec_first(vec);
+    const ecs_value_t *refs = ecs_vec_first(vec);
     test_assert(refs[0].type == ecs_lookup(world, "BrickFacade"));
-    test_assert(refs[0].value != NULL);
-    test_flt(((BrickFacadeValue*)refs[0].value)->scale, 3);
+    test_assert(refs[0].ptr != NULL);
+    test_flt(((BrickFacadeValue*)refs[0].ptr)->scale, 3);
     test_assert(refs[1].type == ecs_lookup(world, "GlassFacade"));
-    test_assert(refs[1].value != NULL);
-    test_flt(((BrickFacadeValue*)refs[1].value)->scale, 4);
+    test_assert(refs[1].ptr != NULL);
+    test_flt(((BrickFacadeValue*)refs[1].ptr)->scale, 4);
 
     ecs_fini(world);
 }
@@ -1401,7 +1401,7 @@ void TemplateVectorProp_template_ref_call_tag_form(void) {
     const char *expr =
     FACADE_HEAD
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade(scale: 5)]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade(scale: 5)]"
     LINE "  a { facade[0] }"
     LINE "}"
     LINE "Building e()";
@@ -1419,7 +1419,7 @@ void TemplateVectorProp_template_ref_call_iterate_w_for(void) {
     const char *expr =
     FACADE_HEAD
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade(scale: 7), GlassFacade(scale: 8)]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade(scale: 7), GlassFacade(scale: 8)]"
     LINE "  for (i, f) in facade {"
     LINE "    \"side_{i}\" { f: {height: 5} }"
     LINE "  }"
@@ -1440,11 +1440,11 @@ void TemplateVectorProp_template_ref_call_pass_element_to_interface_prop(void) {
     const char *expr =
     FACADE_HEAD
     LINE "template Wall {"
-    LINE "  prop facade: template Facade"
+    LINE "  prop facade: value(Facade)"
     LINE "  side { facade: {height: 7} }"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade(scale: 9)]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade, GlassFacade(scale: 9)]"
     LINE "  wall { Wall: {facade: facade[1]} }"
     LINE "}"
     LINE "Building e()";
@@ -1462,7 +1462,7 @@ void TemplateVectorProp_template_ref_call_index_in_interpolated_string(void) {
     const char *expr =
     FACADE_HEAD
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade(scale: 9)]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade, GlassFacade(scale: 9)]"
     LINE "  \"named_{facade[1]}\" {}"
     LINE "}"
     LINE "Building e()";
@@ -1480,7 +1480,7 @@ void TemplateVectorProp_template_ref_call_update(void) {
     const char *expr =
     FACADE_HEAD
     LINE "template Building {"
-    LINE "  prop facade: template Facade[]"
+    LINE "  prop facade: value(Facade)[]"
     LINE "  a { facade[0]: {height: 10} }"
     LINE "}"
     LINE "Building e(facade: [BrickFacade(scale: 3)])";
@@ -1508,7 +1508,7 @@ void TemplateVectorProp_template_ref_from_c_w_value(void) {
     const char *expr =
     FACADE_HEAD
     LINE "template Building {"
-    LINE "  prop facade: template Facade[]"
+    LINE "  prop facade: value(Facade)[]"
     LINE "  a { facade[0]: {height: 4} }"
     LINE "}";
 
@@ -1524,14 +1524,14 @@ void TemplateVectorProp_template_ref_from_c_w_value(void) {
     value->scale = 6;
 
     ecs_vec_t vec;
-    ecs_vec_init_t(NULL, &vec, ecs_script_template_ref_t, 1);
-    ecs_vec_append_t(NULL, &vec, ecs_script_template_ref_t)[0] =
-        (ecs_script_template_ref_t){ .type = brick, .value = value };
+    ecs_vec_init_t(NULL, &vec, ecs_value_t, 1);
+    ecs_vec_append_t(NULL, &vec, ecs_value_t)[0] =
+        (ecs_value_t){ .type = brick, .ptr = value };
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set_id(world, e, building, ECS_SIZEOF(ecs_vec_t), &vec);
 
-    ecs_vec_fini_t(NULL, &vec, ecs_script_template_ref_t);
+    ecs_vec_fini_t(NULL, &vec, ecs_value_t);
     ecs_ptr_free(world, brick, value);
 
     test_position(world, "e.a", 4, 6);
@@ -1545,13 +1545,13 @@ void TemplateVectorProp_template_ref_call_nested(void) {
     const char *expr =
     FACADE_HEAD
     LINE "template Street {"
-    LINE "  prop facades: template Facade[]"
+    LINE "  prop facades: value(Facade)[]"
     LINE "  for (i, f) in facades {"
     LINE "    \"b_{i}\" { f: {height: 3} }"
     LINE "  }"
     LINE "}"
     LINE "template City {"
-    LINE "  prop street: template Street"
+    LINE "  prop street: value(Street)"
     LINE "  s { street }"
     LINE "}"
     LINE "City c(street: Street(facades: [BrickFacade(scale: 4), GlassFacade(scale: 5)]))"
@@ -1574,13 +1574,13 @@ void TemplateVectorProp_template_ref_call_nested_ref(void) {
     FACADE_HEAD
     LINE "struct Street(width: f32)"
     LINE "template MyStreet : Street {"
-    LINE "  prop facades: template Facade[]"
+    LINE "  prop facades: value(Facade)[]"
     LINE "  for (i, f) in facades {"
     LINE "    \"b_{i}\" { f: {height: $width} }"
     LINE "  }"
     LINE "}"
     LINE "template City {"
-    LINE "  prop street: template Street"
+    LINE "  prop street: value(Street)"
     LINE "  s { street: {width: 3} }"
     LINE "}"
     LINE "City c(street: MyStreet(facades: [BrickFacade(scale: 4), GlassFacade(scale: 5)]))";
@@ -1602,7 +1602,7 @@ void TemplateVectorProp_template_ref_call_not_derived_fails(void) {
     LINE "  prop x: f32 = 1"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade[] = [BrickFacade(scale: 5), Unrelated(x: 2)]"
+    LINE "  prop facade: value(Facade)[] = [BrickFacade(scale: 5), Unrelated(x: 2)]"
     LINE "  a { facade[0]: {height: 1} }"
     LINE "}";
 

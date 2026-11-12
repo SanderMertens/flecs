@@ -748,7 +748,7 @@ static int flecs_ir_component_alloc(
     ecs_script_ir_reg_t *tmp = flecs_ir_reg(vm, op->b);
     void *ptr = flecs_ir_reg_alloc(vm, tmp, ti);
 
-    if (node->id.interface && v->id_ref && v->id_ref->value) {
+    if (node->id.interface && v->id_ref && v->id_ref->ptr) {
         if (flecs_script_template_ref_apply(v->world, v->id_ref, ti, ptr)) {
             return -1;
         }
@@ -1476,11 +1476,11 @@ static int flecs_ir_template_ref(
 {
     ecs_script_eval_visitor_t *v = &vm->v;
     ecs_script_ir_reg_t *dst = flecs_ir_reg(vm, op->a);
-    ecs_script_template_ref_t *ref = flecs_ir_reg_out(vm, op, dst);
+    ecs_value_t *ref = flecs_ir_reg_out(vm, op, dst);
     ecs_entity_t tmpl = op->imm.entity;
     void *value = NULL;
     if (op->flags & EcsIrTemplateRefVar) {
-        const ecs_script_template_ref_t *src_ref =
+        const ecs_value_t *src_ref =
             flecs_ir_reg(vm, op->b)->value.ptr;
         value = flecs_expr_template_ref_value(
             &v->base.script->pub, op->node, src_ref);
@@ -2555,9 +2555,9 @@ static flecs_script_run_status_t flecs_ir_exec(
             break;
         case EcsIrTemplateRefValue: {
             const ecs_expr_node_t *node = op->node;
-            ecs_script_template_ref_t *ref = flecs_ir_reg(vm, op->b)->value.ptr;
+            ecs_value_t *ref = flecs_ir_reg(vm, op->b)->value.ptr;
             flecs_ir_reg_borrow(flecs_ir_reg(vm, op->a), node, node->type,
-                ref->value);
+                ref->ptr);
             break;
         }
         case EcsIrToBool: {

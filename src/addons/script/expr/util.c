@@ -292,6 +292,30 @@ static int flecs_value_copy_collection(
     return ecs_meta_pop(&cur);
 }
 
+static bool flecs_expr_value_is_struct(
+    const ecs_world_t *world,
+    const ecs_value_t *value,
+    ecs_entity_t type)
+{
+    if (!value->type) {
+        return true;
+    }
+
+    return value->type == type ||
+        flecs_struct_is_derived_from(world, value->type, type);
+}
+
+static bool flecs_expr_value_is_type_name(
+    const ecs_world_t *world,
+    const ecs_value_t *value)
+{
+    if (!value->type) {
+        return false;
+    }
+
+    return !value->ptr || ecs_has(world, value->type, EcsStruct);
+}
+
 int flecs_value_copy_to(
     ecs_world_t *world,
     ecs_value_t *dst,
@@ -305,20 +329,28 @@ int flecs_value_copy_to(
         ecs_assert(src->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_ptr_copy_w_type_info(
             world, src->type_info, dst->ptr, src->value.ptr);
-    } else if (src->value.type == ecs_id(ecs_script_template_ref_t) &&
-        ecs_has(world, dst->type, EcsStruct))
+    } else if (flecs_type_is_value(world, src->value.type) &&
+        ecs_has(world, dst->type, EcsStruct) &&
+        flecs_expr_value_is_struct(world, src->value.ptr, dst->type))
     {
-        const ecs_script_template_ref_t *ref = src->value.ptr;
+        const ecs_value_t *ref = src->value.ptr;
         const ecs_type_info_t *ti = ecs_get_type_info(world, dst->type);
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (ref->value) {
-            ecs_ptr_copy_w_type_info(world, ti, dst->ptr, ref->value);
+        if (ref->ptr) {
+            ecs_ptr_copy_w_type_info(world, ti, dst->ptr, ref->ptr);
         } else {
             ecs_entity_t type = ref->type ? ref->type : dst->type;
             void *defaults = ecs_ptr_new(world, type);
             ecs_ptr_copy_w_type_info(world, ti, dst->ptr, defaults);
             ecs_ptr_free(world, type, defaults);
         }
+    } else if (dst->type == ecs_id(ecs_string_t) &&
+        flecs_type_is_value(world, src->value.type) &&
+        flecs_expr_value_is_type_name(world, src->value.ptr))
+    {
+        const ecs_value_t *ref = src->value.ptr;
+        ecs_os_free(*(char**)dst->ptr);
+        *(char**)dst->ptr = ecs_get_path(world, ref->type);
     } else if ((src->value.type == ecs_id(ecs_bool_t) ||
         flecs_expr_is_type_number(src->value.type)) &&
         flecs_expr_is_type_number(dst->type))
@@ -768,7 +800,7 @@ bool flecs_expr_has_eval(
 void* flecs_expr_template_ref_value(
     const ecs_script_t *script,
     const ecs_expr_function_t *node,
-    const ecs_script_template_ref_t *ref)
+    const ecs_value_t *ref)
 {
     if (!ref->type) {
         flecs_expr_visit_error(script, node,
@@ -777,8 +809,8 @@ void* flecs_expr_template_ref_value(
     }
 
     void *value = ecs_ptr_new(script->world, ref->type);
-    if (ref->value) {
-        ecs_ptr_copy(script->world, ref->type, value, ref->value);
+    if (ref->ptr) {
+        ecs_ptr_copy(script->world, ref->type, value, ref->ptr);
     }
 
     return value;

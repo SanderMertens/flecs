@@ -662,21 +662,21 @@ static FLECS_SCRIPT_NOINLINE int flecs_expr_template_visit_eval(
 {
     ecs_world_t *world = ctx->world;
     ecs_entity_t tmpl = node->calldata.function;
-    bool is_ref = node->node.type == ecs_id(ecs_script_template_ref_t);
+    bool is_ref = flecs_type_is_value(world, node->node.type);
     bool has_args = node->args && ecs_vec_count(&node->args->elements) != 0;
     bool has_type = node->args && node->args->node.type_info != NULL;
     void *value = NULL;
 
     ecs_assert(out->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (flecs_expr_template_ref_var(node->left)) {
+    if (flecs_expr_template_ref_var(world, node->left)) {
         ecs_expr_value_t *ref_value = flecs_expr_eval_result(
             ctx, node->left, &(ecs_expr_value_t){0});
         if (!ref_value) {
             return -1;
         }
 
-        const ecs_script_template_ref_t *ref = ref_value->value.ptr;
+        const ecs_value_t *ref = ref_value->value.ptr;
         value = flecs_expr_template_ref_value(ctx->script, node, ref);
         if (!value) {
             return -1;

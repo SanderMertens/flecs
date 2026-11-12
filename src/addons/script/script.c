@@ -821,6 +821,10 @@ void FlecsScriptImport(
         .visit = flecs_script_map_visit
     });
 
+    ecs_set(world, ecs_id(EcsValue), EcsScriptVisitor, {
+        .visit = flecs_script_value_type_visit
+    });
+
     ecs_set(world, ecs_id(EcsPrimitive), EcsScriptVisitor, {
         .visit = flecs_script_primitive_visit
     });

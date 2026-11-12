@@ -62,6 +62,9 @@ int flecs_script_vector_visit(
 int flecs_script_array_visit(
     const ecs_script_visitor_ctx_t *ctx);
 
+int flecs_script_value_type_visit(
+    const ecs_script_visitor_ctx_t *ctx);
+
 int flecs_script_map_visit(
     const ecs_script_visitor_ctx_t *ctx);
 

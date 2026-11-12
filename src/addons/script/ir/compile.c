@@ -562,8 +562,8 @@ static void flecs_irc_compile_expr(
         ecs_expr_node_t *args = (ecs_expr_node_t*)n->args;
         bool has_type = n->args && n->args->node.type_info != NULL;
         bool has_args = n->args && ecs_vec_count(&n->args->elements) != 0;
-        bool from_var = flecs_expr_template_ref_var(n->left) != NULL;
-        if (!from_var && node->type != ecs_id(ecs_script_template_ref_t)) {
+        bool from_var = flecs_expr_template_ref_var(c->world, n->left) != NULL;
+        if (!from_var && !flecs_type_is_value(c->world, node->type)) {
             flecs_irc_compile_expr(c, args, dst, in_place);
             return;
         }

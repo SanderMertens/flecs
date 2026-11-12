@@ -125,6 +125,7 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsStruct);          /**< ID for comp
 FLECS_API extern const ecs_entity_t ecs_id(EcsArray);           /**< ID for component that stores reflection data for an array type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsVector);          /**< ID for component that stores reflection data for a vector type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsMap);             /**< ID for component that stores reflection data for a map type. */
+FLECS_API extern const ecs_entity_t ecs_id(EcsValue);           /**< ID for component that stores reflection data for a value type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsOpaque);          /**< ID for component that stores reflection data for an opaque type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsUnit);            /**< ID for component that stores unit data. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsUnitPrefix);      /**< ID for component that stores unit prefix data. */
@@ -338,6 +339,14 @@ typedef struct EcsMap {
     ecs_entity_t key_type; /**< Key type. Must be a primitive (other than string, f32 or f64), enum or bitmask type. */
     ecs_entity_t type;     /**< Value type. */
 } EcsMap;
+
+/** Component added to value type entities.
+ * A value type stores a value of a dynamic type. If type is set, the value
+ * type only accepts values of that type. If the type is a struct, the value
+ * type also accepts values of structs that derive from it. */
+typedef struct EcsValue {
+    ecs_entity_t type; /**< Type constraint (optional). */
+} EcsValue;
 
 
 /* Opaque type support */
@@ -1289,10 +1298,10 @@ int ecs_ptr_move_ctor(
     void *src);
 
 
-/* Value utilities. A value is a value that holds a value of a dynamic
- * type. Values own the value they point to, and will invoke the correct
- * type hooks when a value is assigned, copied, moved or destructed. A value
- * must always hold a valid type and value. */
+/* Value utilities. A value holds a value of a dynamic type. Values own the
+ * value they point to, and will invoke the correct type hooks when a value is
+ * assigned, copied, moved or destructed. A value can be empty (no type and no
+ * value), hold a type and a value, or hold only a type (type-only value). */
 
 /** Assign value of specified type to value.
  * If the value already holds a value of a different type, the existing
@@ -1311,6 +1320,20 @@ void ecs_value_set(
     ecs_value_t *v,
     ecs_entity_t type,
     const void *ptr);
+
+/** Assign type to value without a value.
+ * This destructs the existing value (if any) and turns the value into a
+ * type-only value. A type of 0 makes the value empty.
+ *
+ * @param world The world.
+ * @param v The value to assign.
+ * @param type The type of the value.
+ */
+FLECS_API
+void ecs_value_set_type(
+    const ecs_world_t *world,
+    ecs_value_t *v,
+    ecs_entity_t type);
 
 /** Create new value with default constructed value of specified type.
  *
@@ -1575,6 +1598,40 @@ ecs_entity_t ecs_map_type_init(
     const ecs_map_desc_t *desc);
 
 
+/** Used with ecs_value_type_init(). */
+typedef struct ecs_value_type_desc_t {
+    ecs_entity_t entity;   /**< Existing entity to use for type (optional). */
+    ecs_entity_t type;     /**< Type constraint (optional). */
+} ecs_value_type_desc_t;
+
+/** Create a new value type.
+ * A value type stores values of type ecs_value_t. If a type constraint is
+ * provided, values must be of the constraint type. If the constraint is a
+ * struct, values may also be of a struct type that derives from it.
+ *
+ * @param world The world.
+ * @param desc The type descriptor.
+ * @return The new type, 0 if failed.
+ */
+FLECS_API
+ecs_entity_t ecs_value_type_init(
+    ecs_world_t *world,
+    const ecs_value_type_desc_t *desc);
+
+/** Test if value type accepts a type.
+ *
+ * @param world The world.
+ * @param value_type The value type.
+ * @param type The type to test.
+ * @return Whether values of type can be assigned to the value type.
+ */
+FLECS_API
+bool ecs_value_type_accepts(
+    const ecs_world_t *world,
+    ecs_entity_t value_type,
+    ecs_entity_t type);
+
+
 /** Used with ecs_struct_init(). */
 typedef struct ecs_struct_desc_t {
     ecs_entity_t entity; /**< Existing entity to use for type (optional). */
@@ -1768,6 +1825,10 @@ ecs_entity_t ecs_quantity_init(
 /** Create a map type. */
 #define ecs_map_type(world, ...)\
     ecs_map_type_init(world, &(ecs_map_desc_t) __VA_ARGS__ )
+
+/** Create a value type. */
+#define ecs_value_type(world, ...)\
+    ecs_value_type_init(world, &(ecs_value_type_desc_t) __VA_ARGS__ )
 
 /** Create an opaque type. */
 #define ecs_opaque(world, ...)\

@@ -26,7 +26,7 @@ static void set_point_ref(
     PointValue *value = ecs_ptr_new(world, point);
     value->x = x;
     value->y = y;
-    ecs_script_template_ref_t ref = { .type = point, .value = value };
+    ecs_value_t ref = { .type = point, .ptr = value };
     ecs_set_id(world, e, component, sizeof(ref), &ref);
     ecs_ptr_free(world, point, value);
 }
@@ -42,7 +42,7 @@ void TemplateProp_prop_template_type(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "}"
     LINE "e { Foo: {point: Point(x: 5, y: 6)} }";
 
@@ -58,17 +58,19 @@ void TemplateProp_prop_template_type(void) {
     test_int(ecs_vec_count(&st->members), 1);
     ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 0);
     test_str(m->name, "point");
-    test_uint(m->type, ecs_id(ecs_script_template_ref_t));
+    const EcsValue *vt = ecs_get(world, m->type, EcsValue);
+    test_assert(vt != NULL);
+    test_uint(vt->type, point);
 
     const EcsComponent *c = ecs_get(world, foo, EcsComponent);
-    test_int(c->size, ECS_SIZEOF(ecs_script_template_ref_t));
+    test_int(c->size, ECS_SIZEOF(ecs_value_t));
 
     ecs_entity_t e = ecs_lookup(world, "e");
-    const ecs_script_template_ref_t *ref = ecs_get_id(world, e, foo);
+    const ecs_value_t *ref = ecs_get_id(world, e, foo);
     test_assert(ref != NULL);
     test_uint(ref->type, point);
-    test_assert(ref->value != NULL);
-    const PointValue *pt = ref->value;
+    test_assert(ref->ptr != NULL);
+    const PointValue *pt = ref->ptr;
     test_flt(pt->x, 5);
     test_flt(pt->y, 6);
 
@@ -88,7 +90,7 @@ void TemplateProp_prop_template_type_default(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "}"
     LINE "e { Foo: {} }";
 
@@ -96,10 +98,10 @@ void TemplateProp_prop_template_type_default(void) {
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t e = ecs_lookup(world, "e");
-    const ecs_script_template_ref_t *ref = ecs_get_id(world, e, foo);
+    const ecs_value_t *ref = ecs_get_id(world, e, foo);
     test_assert(ref != NULL);
     test_uint(ref->type, ecs_lookup(world, "Point"));
-    test_assert(ref->value == NULL);
+    test_assert(ref->ptr == NULL);
 
     ecs_fini(world);
 }
@@ -115,7 +117,7 @@ void TemplateProp_use_as_tag(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  child { point }"
     LINE "}"
     LINE "e { Foo: {point: Point(x: 5, y: 6)} }";
@@ -156,7 +158,7 @@ void TemplateProp_interface_prop_self_template(void) {
     const char *expr =
     HEAD "struct Iface(on: bool)"
     LINE "template Light : Iface {"
-    LINE "  prop inner : template Iface = Light"
+    LINE "  prop inner : value(Iface) = Light"
     LINE "  child { inner: {on: true} }"
     LINE "}"
     LINE "e { Light: {} }";
@@ -177,7 +179,7 @@ void TemplateProp_interface_prop_in_with_w_initializer(void) {
     LINE "  Bulb {}"
     LINE "}"
     LINE "template Road {"
-    LINE "  prop light : template Iface"
+    LINE "  prop light : value(Iface)"
     LINE "  with light(on: true) {"
     LINE "    lamp {}"
     LINE "  }"
@@ -212,7 +214,7 @@ void TemplateProp_interface_prop_dollar_initializer(void) {
     LINE "  Bulb {}"
     LINE "}"
     LINE "template Road {"
-    LINE "  prop light : template Iface"
+    LINE "  prop light : value(Iface)"
     LINE "  lamp { $light: {on: true} }"
     LINE "}"
     LINE "Road r(light: Light)";
@@ -237,7 +239,7 @@ void TemplateProp_interface_prop_invalid_value(void) {
     const char *expr =
     HEAD "struct StreetLight(on_off: bool)"
     LINE "template Road {"
-    LINE "  prop light : template StreetLight"
+    LINE "  prop light : value(StreetLight)"
     LINE "  lamp { light }"
     LINE "}";
 
@@ -263,7 +265,7 @@ void TemplateProp_interface_prop_unrelated_template(void) {
     LINE "  Bulb {}"
     LINE "}"
     LINE "template Road {"
-    LINE "  prop light : template StreetLight"
+    LINE "  prop light : value(StreetLight)"
     LINE "  lamp { light }"
     LINE "}";
 
@@ -285,7 +287,7 @@ void TemplateProp_interface_prop_missing_value_defaults_to_interface(void) {
     const char *expr =
     HEAD "struct StreetLight(on_off: bool)"
     LINE "template Road {"
-    LINE "  prop light : template StreetLight"
+    LINE "  prop light : value(StreetLight)"
     LINE "  lamp { light }"
     LINE "}";
 
@@ -317,7 +319,7 @@ void TemplateProp_interface_prop_instantiates_passed_template(void) {
     LINE "  }"
     LINE "}"
     LINE "template Road {"
-    LINE "  prop street_light : template StreetLight"
+    LINE "  prop street_light : value(StreetLight)"
     LINE "  lamp { street_light: {on_off: true} }"
     LINE "}"
     LINE "e { Road: {street_light: MyStreetLight} }";
@@ -344,10 +346,10 @@ void TemplateProp_interface_prop_instantiates_passed_template(void) {
 
     ecs_entity_t road = ecs_lookup(world, "Road");
     ecs_entity_t e = ecs_lookup(world, "e");
-    const ecs_script_template_ref_t *rv = ecs_get_id(world, e, road);
+    const ecs_value_t *rv = ecs_get_id(world, e, road);
     test_assert(rv != NULL);
     test_assert(rv->type == ecs_lookup(world, "MyStreetLight"));
-    test_assert(rv->value == NULL);
+    test_assert(rv->ptr == NULL);
 
     ecs_fini(world);
 }
@@ -365,7 +367,7 @@ void TemplateProp_interface_prop_paren_syntax(void) {
     LINE "  }"
     LINE "}"
     LINE "template Road {"
-    LINE "  prop street_light : template StreetLight"
+    LINE "  prop street_light : value(StreetLight)"
     LINE "  lamp { street_light: {on_off: true} }"
     LINE "}"
     LINE "Road r(street_light: MyStreetLight)";
@@ -406,7 +408,7 @@ void TemplateProp_interface_prop_false_branch(void) {
     LINE "  }"
     LINE "}"
     LINE "template Road {"
-    LINE "  prop street_light : template StreetLight"
+    LINE "  prop street_light : value(StreetLight)"
     LINE "  lamp { street_light: {on_off: false} }"
     LINE "}"
     LINE "e { Road: {street_light: MyStreetLight} }";
@@ -446,7 +448,7 @@ void TemplateProp_interface_prop_with_other_components(void) {
     LINE "}"
     LINE "struct Velocity(x: f32, y: f32)"
     LINE "template Road {"
-    LINE "  prop street_light : template StreetLight"
+    LINE "  prop street_light : value(StreetLight)"
     LINE "  lamp { street_light: {on_off: true}; Velocity: {10, 20} }"
     LINE "}"
     LINE "e { Road: {street_light: MyStreetLight} }";
@@ -493,7 +495,7 @@ void TemplateProp_interface_prop_default_template(void) {
     LINE "  }"
     LINE "}"
     LINE "template Road {"
-    LINE "  prop street_light : template StreetLight = MyStreetLight"
+    LINE "  prop street_light : value(StreetLight) = MyStreetLight"
     LINE "  lamp { street_light: {on_off: true} }"
     LINE "}"
     LINE "e { Road: {} }";
@@ -537,7 +539,7 @@ void TemplateProp_interface_prop_default_overridden(void) {
     LINE "  prop scale: f32 = 7"
     LINE "}"
     LINE "template Road {"
-    LINE "  prop street_light : template StreetLight = MyStreetLight"
+    LINE "  prop street_light : value(StreetLight) = MyStreetLight"
     LINE "  lamp { street_light: {on_off: true} }"
     LINE "}"
     LINE "e { Road: {street_light: OtherStreetLight} }";
@@ -577,7 +579,7 @@ void TemplateProp_interface_prop_default_overridden_from_c(void) {
     LINE "  prop scale: f32 = 7"
     LINE "}"
     LINE "template Road {"
-    LINE "  prop street_light : template StreetLight = MyStreetLight"
+    LINE "  prop street_light : value(StreetLight) = MyStreetLight"
     LINE "  prop width: f32 = 3"
     LINE "  lamp { street_light: {on_off: true} }"
     LINE "}";
@@ -631,7 +633,7 @@ void TemplateProp_interface_prop_as_tag(void) {
     LINE "  }"
     LINE "}"
     LINE "template Road {"
-    LINE "  prop street_light : template StreetLight"
+    LINE "  prop street_light : value(StreetLight)"
     LINE "  lamp { street_light }"
     LINE "}"
     LINE "e { Road: {street_light: MyStreetLight} }";
@@ -670,7 +672,7 @@ void TemplateProp_interface_prop_from_c(void) {
     LINE "  }"
     LINE "}"
     LINE "template Road {"
-    LINE "  prop street_light : template StreetLight"
+    LINE "  prop street_light : value(StreetLight)"
     LINE "  lamp { street_light: {on_off: true} }"
     LINE "}";
 
@@ -679,8 +681,8 @@ void TemplateProp_interface_prop_from_c(void) {
     ecs_entity_t road = ecs_lookup(world, "Road");
     ecs_entity_t light = ecs_lookup(world, "MyStreetLight");
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
-    ecs_script_template_ref_t ref = { .type = light };
-    ecs_set_id(world, e, road, sizeof(ecs_script_template_ref_t), &ref);
+    ecs_value_t ref = { .type = light };
+    ecs_set_id(world, e, road, sizeof(ecs_value_t), &ref);
 
     ecs_entity_t inst = ecs_lookup(world, "e.lamp");
     test_assert(inst != 0);
@@ -724,7 +726,7 @@ void TemplateProp_interface_prop_change_template(void) {
     LINE "  }"
     LINE "}"
     LINE "template Road {"
-    LINE "  prop street_light : template StreetLight"
+    LINE "  prop street_light : value(StreetLight)"
     LINE "  lamp { street_light: {on_off: true} }"
     LINE "}"
     LINE "e { Road: {street_light: MyStreetLight} }";
@@ -783,7 +785,7 @@ void TemplateProp_interface_prop_not_derived_fails(void) {
     LINE "  prop x: f32 = 1"
     LINE "}"
     LINE "template Road {"
-    LINE "  prop street_light : template StreetLight"
+    LINE "  prop street_light : value(StreetLight)"
     LINE "  lamp { street_light: {on_off: true} }"
     LINE "}"
     LINE "e { Road: {street_light: Unrelated} }";
@@ -809,14 +811,20 @@ void TemplateProp_interface_prop_not_template_fails(void) {
     LINE "}"
     LINE "struct DerivedStruct : StreetLight(z: f32)"
     LINE "template Road {"
-    LINE "  prop street_light : template StreetLight"
+    LINE "  prop street_light : value(StreetLight)"
     LINE "  lamp { street_light: {on_off: true} }"
     LINE "}"
     LINE "e { Road: {street_light: DerivedStruct} }";
 
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
-    ecs_log_set_level(-1);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t lamp = ecs_lookup(world, "e.lamp");
+    ecs_entity_t derived = ecs_lookup(world, "DerivedStruct");
+    test_assert(lamp != 0);
+    test_assert(derived != 0);
+    const bool *on_off = ecs_get_id(world, lamp, derived);
+    test_assert(on_off != NULL);
+    test_bool(*on_off, true);
 
     ecs_fini(world);
 }
@@ -834,7 +842,7 @@ void TemplateProp_interface_prop_unset_defaults_to_interface(void) {
     LINE "  }"
     LINE "}"
     LINE "template Road {"
-    LINE "  prop street_light : template StreetLight"
+    LINE "  prop street_light : value(StreetLight)"
     LINE "  lamp { street_light: {on_off: true} }"
     LINE "}"
     LINE "e { Road: {} }";
@@ -869,7 +877,7 @@ void TemplateProp_interface_prop_unknown_member_fails(void) {
     LINE "  }"
     LINE "}"
     LINE "template Road {"
-    LINE "  prop street_light : template StreetLight"
+    LINE "  prop street_light : value(StreetLight)"
     LINE "  lamp { street_light: {scale: 3} }"
     LINE "}"
     LINE "e { Road: {street_light: MyStreetLight} }";
@@ -892,7 +900,7 @@ void TemplateProp_use_as_tag_dollar(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  child { $point }"
     LINE "}"
     LINE "e { Foo: {point: Point(x: 5, y: 6)} }";
@@ -931,7 +939,7 @@ void TemplateProp_use_as_tag_default(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  child { point }"
     LINE "}"
     LINE "e { Foo: {} }";
@@ -970,7 +978,7 @@ void TemplateProp_use_as_tag_on_instance(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  point"
     LINE "}"
     LINE "e { Foo: {point: Point(x: 5, y: 6)} }";
@@ -1009,7 +1017,7 @@ void TemplateProp_use_w_initializer_partial(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  child { point: {x: 10} }"
     LINE "}"
     LINE "e { Foo: {point: Point(x: 5, y: 6)} }";
@@ -1048,7 +1056,7 @@ void TemplateProp_use_w_initializer_partial_dollar(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  child { $point: {y: 20} }"
     LINE "}"
     LINE "e { Foo: {point: Point(x: 5, y: 6)} }";
@@ -1087,7 +1095,7 @@ void TemplateProp_use_w_initializer_full(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  child { point: {x: 10, y: 20} }"
     LINE "}"
     LINE "e { Foo: {point: Point(x: 5, y: 6)} }";
@@ -1126,7 +1134,7 @@ void TemplateProp_use_w_initializer_positional(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  child { point: {10, 20} }"
     LINE "  child2 { point: {10} }"
     LINE "}"
@@ -1184,7 +1192,7 @@ void TemplateProp_use_w_initializer_expr(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  prop offset: f32 = 100"
     LINE "  child { point: {x: $point.x + $offset} }"
     LINE "}"
@@ -1224,7 +1232,7 @@ void TemplateProp_use_w_empty_initializer(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  child { point: {} }"
     LINE "}"
     LINE "e { Foo: {point: Point(x: 5, y: 6)} }";
@@ -1263,7 +1271,7 @@ void TemplateProp_use_in_with(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  with point {"
     LINE "    child {}"
     LINE "    child2 {}"
@@ -1323,7 +1331,7 @@ void TemplateProp_use_in_with_dollar(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  with $point {"
     LINE "    child {}"
     LINE "  }"
@@ -1364,7 +1372,7 @@ void TemplateProp_use_in_with_w_initializer(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  with point(x: 42) {"
     LINE "    child {}"
     LINE "  }"
@@ -1426,7 +1434,7 @@ void TemplateProp_use_in_with_w_positional_initializer(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  with point(42) {"
     LINE "    child {}"
     LINE "  }"
@@ -1467,7 +1475,7 @@ void TemplateProp_member_access_in_expr(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  const px = $point.x"
     LINE "  child { Position: {$px, $point.y} }"
     LINE "}"
@@ -1504,7 +1512,7 @@ void TemplateProp_member_access_in_binary_expr_w_loop_var(void) {
     LINE "  Position: {x, y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template interface.Point"
+    LINE "  prop point : value(interface.Point)"
     LINE "  for i in 1..2 {"
     LINE "    child { Position: {point.x + (i - 1), point.y + (i - 1)} }"
     LINE "  }"
@@ -1536,7 +1544,7 @@ void TemplateProp_prop_change_updates_children(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  child { point: {x: 10} }"
     LINE "  child2 { point }"
     LINE "}"
@@ -1639,7 +1647,7 @@ void TemplateProp_prop_change_from_c_updates_children(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  child { point }"
     LINE "}"
     LINE "e { Foo: {point: Point(x: 5, y: 6)} }";
@@ -1700,8 +1708,8 @@ void TemplateProp_multiple_template_props(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop a : template Point"
-    LINE "  prop b : template Point"
+    LINE "  prop a : value(Point)"
+    LINE "  prop b : value(Point)"
     LINE "  child_a { a }"
     LINE "  child_b { b }"
     LINE "}"
@@ -1711,7 +1719,7 @@ void TemplateProp_multiple_template_props(void) {
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     const EcsComponent *c = ecs_get(world, foo, EcsComponent);
-    test_int(c->size, 2 * ECS_SIZEOF(ecs_script_template_ref_t));
+    test_int(c->size, 2 * ECS_SIZEOF(ecs_value_t));
 
     ecs_entity_t e = ecs_lookup(world, "e.child_a");
     test_assert(e != 0);
@@ -1764,7 +1772,7 @@ void TemplateProp_template_prop_w_other_props(void) {
     LINE "}"
     LINE "template Foo {"
     LINE "  prop count: i32 = 5"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  prop name: string = \"foo\""
     LINE "  child { point }"
     LINE "}"
@@ -1775,7 +1783,7 @@ void TemplateProp_template_prop_w_other_props(void) {
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t e = ecs_lookup(world, "e");
     char *str = ecs_ptr_to_expr(world, foo, ecs_get_id(world, e, foo));
-    test_str(str, "{count: 5, point: Point, name: \"foo\"}");
+    test_str(str, "{count: 5, point: {Point: {x: 1, y: 2}}, name: \"foo\"}");
     ecs_os_free(str);
 
     ecs_entity_t inst = ecs_lookup(world, "e.child");
@@ -1809,7 +1817,7 @@ void TemplateProp_template_prop_w_string_member(void) {
     LINE "  Label: {$name}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop named : template Named"
+    LINE "  prop named : value(Named)"
     LINE "  child { named }"
     LINE "  child2 { named: {name: \"other\"} }"
     LINE "}"
@@ -1837,7 +1845,7 @@ void TemplateProp_template_prop_w_string_member(void) {
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t e = ecs_lookup(world, "e");
     char *str = ecs_ptr_to_expr(world, foo, ecs_get_id(world, e, foo));
-    test_str(str, "{named: Named}");
+    test_str(str, "{named: {Named: {name: \"hello\"}}}");
     ecs_os_free(str);
 
     ecs_delete(world, e);
@@ -1857,7 +1865,7 @@ void TemplateProp_inherited_template_prop(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "}"
     LINE "template Bar : Foo {"
     LINE "  prop z: f32 = 3"
@@ -1918,7 +1926,7 @@ void TemplateProp_inherited_template_prop_dollar(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "}"
     LINE "template Bar : Foo {"
     LINE "  prop z: f32 = 3"
@@ -1979,7 +1987,7 @@ void TemplateProp_inherited_template_prop_chain(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "}"
     LINE "template Bar : Foo {"
     LINE "  prop z: f32 = 3"
@@ -2026,7 +2034,7 @@ void TemplateProp_prop_of_derived_template_type(void) {
     LINE "  prop z: f32 = 3"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point3D"
+    LINE "  prop point : value(Point3D)"
     LINE "  child { point: {z: 30} }"
     LINE "}"
     LINE "e { Foo: {point: Point3D(x: 5, y: 6)} }";
@@ -2059,7 +2067,7 @@ void TemplateProp_nested_template_instantiation(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  child { point }"
     LINE "}"
     LINE "template Bar {"
@@ -2102,7 +2110,7 @@ void TemplateProp_template_prop_in_for_loop(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  for i in 0..3 {"
     LINE "    \"child_$i\" { point: {x: $i} }"
     LINE "  }"
@@ -2179,7 +2187,7 @@ void TemplateProp_template_prop_in_if(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  prop flag: bool = true"
     LINE "  if $flag {"
     LINE "    child { point }"
@@ -2293,7 +2301,7 @@ void TemplateProp_type_not_a_template(void) {
     LINE "}"
     LINE "Tag {}"
     LINE "template Foo {"
-    LINE "  prop point : template Tag"
+    LINE "  prop point : value(Tag)"
     LINE "}";
 
     ecs_log_set_level(-4);
@@ -2308,12 +2316,19 @@ void TemplateProp_type_is_primitive(void) {
 
     const char *expr =
     HEAD "template Foo {"
-    LINE "  prop point : template f32"
+    LINE "  prop point : value(f32)"
     LINE "}";
 
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
-    ecs_log_set_level(-1);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    const EcsStruct *st = ecs_get(world, foo, EcsStruct);
+    test_assert(st != NULL);
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 0);
+    const EcsValue *vt = ecs_get(world, m->type, EcsValue);
+    test_assert(vt != NULL);
+    test_uint(vt->type, ecs_id(ecs_f32_t));
 
     ecs_fini(world);
 }
@@ -2323,7 +2338,7 @@ void TemplateProp_type_unresolved(void) {
 
     const char *expr =
     HEAD "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "}";
 
     ecs_log_set_level(-4);
@@ -2338,7 +2353,7 @@ void TemplateProp_type_is_self(void) {
 
     const char *expr =
     HEAD "template Foo {"
-    LINE "  prop point : template Foo"
+    LINE "  prop point : value(Foo)"
     LINE "}";
 
     ecs_log_set_level(-4);
@@ -2359,12 +2374,19 @@ void TemplateProp_mut_template_type(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  mut point : template Point = {}"
-    LINE "}";
+    LINE "  mut point : value(Point) = Point(x: 10)"
+    LINE "  child { point }"
+    LINE "}"
+    LINE "Foo e()";
 
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
-    ecs_log_set_level(-1);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    test_assert(child != 0);
+    const PointValue *p = ecs_get_id(world, child, ecs_lookup(world, "Position"));
+    test_assert(p != NULL);
+    test_flt(p->x, 10);
+    test_flt(p->y, 2);
 
     ecs_fini(world);
 }
@@ -2379,11 +2401,9 @@ void TemplateProp_const_template_type(void) {
     LINE "  prop y: f32 = 2"
     LINE "  Position: {$x, $y}"
     LINE "}"
-    LINE "const point : template Point = {}";
+    LINE "const point : value(Point) = Point(x: 10)";
 
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
-    ecs_log_set_level(-1);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_fini(world);
 }
@@ -2399,7 +2419,7 @@ void TemplateProp_missing_type_name(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template 5"
+    LINE "  prop point : value("
     LINE "}";
 
     ecs_log_set_level(-4);
@@ -2420,7 +2440,7 @@ void TemplateProp_use_as_pair_first(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  child { (point, Position) }"
     LINE "}";
 
@@ -2442,7 +2462,7 @@ void TemplateProp_use_as_pair_second(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  child { (Position, point) }"
     LINE "}";
 
@@ -2464,7 +2484,7 @@ void TemplateProp_use_as_pair_first_dollar(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  child { ($point, Position) }"
     LINE "}";
 
@@ -2486,7 +2506,7 @@ void TemplateProp_use_as_entity_kind(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  point child"
     LINE "}";
 
@@ -2508,7 +2528,7 @@ void TemplateProp_use_w_wrong_member(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  child { point: {z: 10} }"
     LINE "}";
 
@@ -2530,7 +2550,7 @@ void TemplateProp_prop_template_type_wo_default_required(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  child { point }"
     LINE "}"
     LINE "e { Foo: {} }";
@@ -2569,7 +2589,7 @@ void TemplateProp_run_script_twice(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  child { point: {x: 10} }"
     LINE "}";
 
@@ -2611,7 +2631,7 @@ void TemplateProp_managed_script_update(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  child { point: {x: 10} }"
     LINE "}"
     LINE "e { Foo: {point: Point(x: 5, y: 6)} }";
@@ -2668,7 +2688,7 @@ void TemplateProp_managed_script_update(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  child { point: {x: 20} }"
     LINE "}"
     LINE "e { Foo: {point: Point(x: 5, y: 6)} }";
@@ -2707,7 +2727,7 @@ void TemplateProp_ast_to_str(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  child { point: {x: 10} }"
     LINE "}";
 
@@ -2716,7 +2736,7 @@ void TemplateProp_ast_to_str(void) {
 
     char *str = ecs_script_ast_to_str(s, false);
     test_assert(str != NULL);
-    test_assert(strstr(str, "point : template Point") != NULL);
+    test_assert(strstr(str, "point : value(@Point)") != NULL);
     ecs_os_free(str);
 
     ecs_script_free(s);
@@ -2735,7 +2755,7 @@ void TemplateProp_instance_to_json(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Foo {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "}"
     LINE "e { Foo: {point: Point(x: 5, y: 6)} }";
 
@@ -2746,7 +2766,7 @@ void TemplateProp_instance_to_json(void) {
         .serialize_values = true
     });
     test_assert(json != NULL);
-    test_assert(strstr(json, "\"Foo\":{\"point\":\"Point\"}") != NULL);
+    test_assert(strstr(json, "\"Foo\":{\"point\":{\"Point\":{\"x\":5, \"y\":6}}}") != NULL);
     ecs_os_free(json);
 
     ecs_fini(world);
@@ -2764,12 +2784,12 @@ void TemplateProp_pass_to_child_template_same_type(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Inner {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  leaf { point }"
     LINE "  leaf2 { point: {x: 100} }"
     LINE "}"
     LINE "template Outer {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  inner { Inner: {point: $point} }"
     LINE "}"
     LINE "e { Outer: {point: Point(x: 5, y: 6)} }";
@@ -2779,10 +2799,10 @@ void TemplateProp_pass_to_child_template_same_type(void) {
     ecs_entity_t inner = ecs_lookup(world, "Inner");
     ecs_entity_t e_inner = ecs_lookup(world, "e.inner");
     test_assert(e_inner != 0);
-    const ecs_script_template_ref_t *ref = ecs_get_id(world, e_inner, inner);
+    const ecs_value_t *ref = ecs_get_id(world, e_inner, inner);
     test_assert(ref != NULL);
     test_uint(ref->type, ecs_lookup(world, "Point"));
-    const PointValue *pt = ref->value;
+    const PointValue *pt = ref->ptr;
     test_assert(pt != NULL);
     test_flt(pt->x, 5);
     test_flt(pt->y, 6);
@@ -2837,11 +2857,11 @@ void TemplateProp_pass_to_child_template_same_type_dollar(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Inner {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  leaf { $point }"
     LINE "}"
     LINE "template Outer {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  inner { Inner: {point: $point} }"
     LINE "}"
     LINE "e { Outer: {point: Point(x: 5, y: 6)} }";
@@ -2880,12 +2900,12 @@ void TemplateProp_pass_to_child_template_positional(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Inner {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  leaf { point }"
     LINE "  leaf2 { point: {x: 100} }"
     LINE "}"
     LINE "template Outer {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  inner { Inner: {$point} }"
     LINE "}"
     LINE "e { Outer: {point: Point(x: 5, y: 6)} }";
@@ -2942,12 +2962,12 @@ void TemplateProp_pass_to_child_template_w_expr(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Inner {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  leaf { point }"
     LINE "  leaf2 { point: {x: 100} }"
     LINE "}"
     LINE "template Outer {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  inner { Inner: {point: Point(x: $point.x + 1, y: $point.y * 2)} }"
     LINE "}"
     LINE "e { Outer: {point: Point(x: 5, y: 6)} }";
@@ -3004,12 +3024,12 @@ void TemplateProp_pass_to_child_template_w_with(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Inner {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  leaf { point }"
     LINE "  leaf2 { point: {x: 100} }"
     LINE "}"
     LINE "template Outer {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  with Inner(point: $point) {"
     LINE "    inner {}"
     LINE "  }"
@@ -3068,12 +3088,12 @@ void TemplateProp_pass_to_child_template_default(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Inner {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  leaf { point }"
     LINE "  leaf2 { point: {x: 100} }"
     LINE "}"
     LINE "template Outer {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  inner { Inner: {point: $point} }"
     LINE "}"
     LINE "e { Outer: {} }";
@@ -3130,12 +3150,12 @@ void TemplateProp_pass_to_child_template_update(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Inner {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  leaf { point }"
     LINE "  leaf2 { point: {x: 100} }"
     LINE "}"
     LINE "template Outer {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  inner { Inner: {point: $point} }"
     LINE "}"
     LINE "e { Outer: {point: Point(x: 5, y: 6)} }";
@@ -3219,12 +3239,12 @@ void TemplateProp_pass_to_child_template_from_c(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Inner {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  leaf { point }"
     LINE "  leaf2 { point: {x: 100} }"
     LINE "}"
     LINE "template Outer {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  inner { Inner: {point: $point} }"
     LINE "}";
 
@@ -3322,16 +3342,16 @@ void TemplateProp_pass_to_child_template_two_levels(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Inner {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  leaf { point }"
     LINE "  leaf2 { point: {x: 100} }"
     LINE "}"
     LINE "template Middle {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  inner { Inner: {point: $point} }"
     LINE "}"
     LINE "template Outer {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  middle { Middle: {point: $point} }"
     LINE "}"
     LINE "e { Outer: {point: Point(x: 5, y: 6)} }";
@@ -3388,12 +3408,12 @@ void TemplateProp_pass_to_child_template_and_use_in_outer(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Inner {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  leaf { point }"
     LINE "  leaf2 { point: {x: 100} }"
     LINE "}"
     LINE "template Outer {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  point: {y: 50}"
     LINE "  inner { Inner: {point: $point} }"
     LINE "}"
@@ -3454,12 +3474,12 @@ void TemplateProp_pass_derived_to_child_template_base(void) {
     LINE "  prop z: f32 = 3"
     LINE "}"
     LINE "template Inner {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  leaf { point }"
     LINE "  leaf2 { point: {x: 100} }"
     LINE "}"
     LINE "template Outer {"
-    LINE "  prop point : template Point3D"
+    LINE "  prop point : value(Point3D)"
     LINE "  inner { Inner: {point: $point} }"
     LINE "}"
     LINE "e { Outer: {point: Point3D(x: 5, y: 6, z: 7)} }";
@@ -3471,20 +3491,20 @@ void TemplateProp_pass_derived_to_child_template_base(void) {
     ecs_entity_t outer = ecs_lookup(world, "Outer");
 
     ecs_entity_t e = ecs_lookup(world, "e");
-    const ecs_script_template_ref_t *oref = ecs_get_id(world, e, outer);
+    const ecs_value_t *oref = ecs_get_id(world, e, outer);
     test_assert(oref != NULL);
     test_uint(oref->type, point3d);
-    const float *ov = oref->value;
+    const float *ov = oref->ptr;
     test_assert(ov != NULL);
     test_flt(ov[0], 5);
     test_flt(ov[1], 6);
     test_flt(ov[2], 7);
 
     ecs_entity_t e_inner = ecs_lookup(world, "e.inner");
-    const ecs_script_template_ref_t *iref = ecs_get_id(world, e_inner, inner);
+    const ecs_value_t *iref = ecs_get_id(world, e_inner, inner);
     test_assert(iref != NULL);
     test_uint(iref->type, point3d);
-    const PointValue *pt = iref->value;
+    const PointValue *pt = iref->ptr;
     test_assert(pt != NULL);
     test_flt(pt->x, 5);
     test_flt(pt->y, 6);
@@ -3551,12 +3571,12 @@ void TemplateProp_pass_derived_to_child_template_base_positional(void) {
     LINE "  prop z: f32 = 3"
     LINE "}"
     LINE "template Inner {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  leaf { point }"
     LINE "  leaf2 { point: {x: 100} }"
     LINE "}"
     LINE "template Outer {"
-    LINE "  prop point : template Point3D"
+    LINE "  prop point : value(Point3D)"
     LINE "  inner { Inner: {$point} }"
     LINE "}"
     LINE "e { Outer: {point: Point3D(x: 5, y: 6, z: 7)} }";
@@ -3624,12 +3644,12 @@ void TemplateProp_pass_derived_to_child_template_base_w_with(void) {
     LINE "  prop z: f32 = 3"
     LINE "}"
     LINE "template Inner {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  leaf { point }"
     LINE "  leaf2 { point: {x: 100} }"
     LINE "}"
     LINE "template Outer {"
-    LINE "  prop point : template Point3D"
+    LINE "  prop point : value(Point3D)"
     LINE "  with Inner(point: $point) {"
     LINE "    inner {}"
     LINE "  }"
@@ -3699,12 +3719,12 @@ void TemplateProp_pass_derived_to_child_template_base_update(void) {
     LINE "  prop z: f32 = 3"
     LINE "}"
     LINE "template Inner {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  leaf { point }"
     LINE "  leaf2 { point: {x: 100} }"
     LINE "}"
     LINE "template Outer {"
-    LINE "  prop point : template Point3D"
+    LINE "  prop point : value(Point3D)"
     LINE "  point"
     LINE "  inner { Inner: {point: $point} }"
     LINE "}"
@@ -3811,11 +3831,11 @@ void TemplateProp_pass_derived_to_child_template_derived(void) {
     LINE "  prop z: f32 = 3"
     LINE "}"
     LINE "template Inner3D {"
-    LINE "  prop point : template Point3D"
+    LINE "  prop point : value(Point3D)"
     LINE "  leaf { point }"
     LINE "}"
     LINE "template Outer {"
-    LINE "  prop point : template Point3D"
+    LINE "  prop point : value(Point3D)"
     LINE "  inner { Inner3D: {point: $point} }"
     LINE "}"
     LINE "e { Outer: {point: Point3D(x: 5, y: 6, z: 7)} }";
@@ -3849,16 +3869,16 @@ void TemplateProp_pass_derived_to_child_template_base_two_levels(void) {
     LINE "  prop z: f32 = 3"
     LINE "}"
     LINE "template Inner {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  leaf { point }"
     LINE "  leaf2 { point: {x: 100} }"
     LINE "}"
     LINE "template Middle {"
-    LINE "  prop point : template Point3D"
+    LINE "  prop point : value(Point3D)"
     LINE "  inner { Inner: {point: $point} }"
     LINE "}"
     LINE "template Outer {"
-    LINE "  prop point : template Point3D"
+    LINE "  prop point : value(Point3D)"
     LINE "  middle { Middle: {point: $point} }"
     LINE "}"
     LINE "e { Outer: {point: Point3D(x: 5, y: 6, z: 7)} }";
@@ -3926,11 +3946,11 @@ void TemplateProp_pass_base_to_child_template_derived_fails(void) {
     LINE "  prop z: f32 = 3"
     LINE "}"
     LINE "template Inner3D {"
-    LINE "  prop point : template Point3D"
+    LINE "  prop point : value(Point3D)"
     LINE "  leaf { point }"
     LINE "}"
     LINE "template Outer {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  inner { Inner3D: {point: $point} }"
     LINE "}";
 
@@ -3952,7 +3972,7 @@ void TemplateProp_pass_unrelated_to_child_template_fails(void) {
     LINE "  Position: {$x, $y}"
     LINE "}"
     LINE "template Inner {"
-    LINE "  prop point : template Point"
+    LINE "  prop point : value(Point)"
     LINE "  leaf { point }"
     LINE "  leaf2 { point: {x: 100} }"
     LINE "}"
@@ -3961,7 +3981,7 @@ void TemplateProp_pass_unrelated_to_child_template_fails(void) {
     LINE "  prop y: f32 = 2"
     LINE "}"
     LINE "template Outer {"
-    LINE "  prop other : template Other"
+    LINE "  prop other : value(Other)"
     LINE "  inner { Inner: {point: $other} }"
     LINE "}";
 
@@ -4079,7 +4099,7 @@ void TemplateProp_struct_prop_default_to_struct(void) {
     const char *expr =
     HEAD "struct Facade(height: f32)"
     LINE "template Building {"
-    LINE "  prop facade: template Facade"
+    LINE "  prop facade: value(Facade)"
     LINE "  prop floors: i32 = 2"
     LINE "  for i in 0..floors {"
     LINE "    {"
@@ -4118,7 +4138,7 @@ void TemplateProp_struct_prop_explicit_struct_default(void) {
     const char *expr =
     HEAD "struct Facade(height: f32)"
     LINE "template Building {"
-    LINE "  prop facade: template Facade = Facade"
+    LINE "  prop facade: value(Facade) = Facade"
     LINE "  prop floors: i32 = 2"
     LINE "  for i in 0..floors {"
     LINE "    {"
@@ -4167,7 +4187,7 @@ void TemplateProp_struct_prop_default_and_derived_template(void) {
     LINE "  Point: {height, 1}"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade"
+    LINE "  prop facade: value(Facade)"
     LINE "  child {"
     LINE "    facade: {height: 3}"
     LINE "  }"
@@ -4227,7 +4247,7 @@ void TemplateProp_interface_prop_as_tag_instantiates(void) {
     LINE "  Position: {$scale, $scale + 1}"
     LINE "}"
     LINE "template Road {"
-    LINE "  prop street_light : template StreetLight"
+    LINE "  prop street_light : value(StreetLight)"
     LINE "  lamp { street_light }"
     LINE "}"
     LINE "e { Road: {street_light: MyStreetLight} }";
@@ -4259,7 +4279,7 @@ void TemplateProp_interface_prop_empty_initializer(void) {
     LINE "  Bulb {}"
     LINE "}"
     LINE "template Road {"
-    LINE "  prop light : template Iface"
+    LINE "  prop light : value(Iface)"
     LINE "  lamp { light: {} }"
     LINE "}"
     LINE "Road r(light: Light)";
@@ -4745,7 +4765,7 @@ typedef struct {
     LINE "  prop color: Rgb = {0, 0, 0}" \
     LINE "}" \
     LINE "template City {" \
-    LINE "  prop block: template Block" \
+    LINE "  prop block: value(Block)" \
     LINE "  b { block: {x: 1, y: 2} }" \
     LINE "}"
 
@@ -4788,7 +4808,7 @@ void TemplateProp_template_ref_call_empty(void) {
 
     ecs_entity_t c = ecs_lookup(world, "c");
     ecs_entity_t city = ecs_lookup(world, "City");
-    const ecs_script_template_ref_t *ref = ecs_get_id(world, c, city);
+    const ecs_value_t *ref = ecs_get_id(world, c, city);
     test_assert(ref != NULL);
     test_assert(ref->type == ecs_lookup(world, "MyBlock"));
 
@@ -4808,11 +4828,11 @@ void TemplateProp_template_ref_call_positional(void) {
 
     ecs_entity_t c = ecs_lookup(world, "c");
     ecs_entity_t city = ecs_lookup(world, "City");
-    const ecs_script_template_ref_t *ref = ecs_get_id(world, c, city);
+    const ecs_value_t *ref = ecs_get_id(world, c, city);
     test_assert(ref != NULL);
     test_assert(ref->type == ecs_lookup(world, "MyBlock"));
-    test_assert(ref->value != NULL);
-    const MyBlockValue *v = ref->value;
+    test_assert(ref->ptr != NULL);
+    const MyBlockValue *v = ref->ptr;
     test_int(v->x, 0);
     test_int(v->y, 0);
     test_int(v->color.r, 50);
@@ -4846,7 +4866,7 @@ void TemplateProp_template_ref_call_named_inherited_member(void) {
     LINE "  prop color: Rgb = {0, 0, 0}"
     LINE "}"
     LINE "template City {"
-    LINE "  prop block: template Block"
+    LINE "  prop block: value(Block)"
     LINE "  b { block: {y: 2} }"
     LINE "}"
     LINE "City c(block: MyBlock(x: 10, color: {1, 2, 3}))";
@@ -4868,7 +4888,7 @@ void TemplateProp_template_ref_call_use_site_overrides(void) {
     LINE "  prop color: Rgb = {0, 0, 0}"
     LINE "}"
     LINE "template City {"
-    LINE "  prop block: template Block"
+    LINE "  prop block: value(Block)"
     LINE "  b { block: {x: 1} }"
     LINE "}"
     LINE "City c(block: MyBlock(x: 10, y: 20, color: {1, 2, 3}))";
@@ -4890,7 +4910,7 @@ void TemplateProp_template_ref_call_tag_form(void) {
     LINE "  prop color: Rgb = {0, 0, 0}"
     LINE "}"
     LINE "template City {"
-    LINE "  prop block: template Block"
+    LINE "  prop block: value(Block)"
     LINE "  b { block }"
     LINE "}"
     LINE "City c(block: MyBlock(color: {1, 2, 3}))";
@@ -4912,7 +4932,7 @@ void TemplateProp_template_ref_call_in_with(void) {
     LINE "  prop color: Rgb = {0, 0, 0}"
     LINE "}"
     LINE "template City {"
-    LINE "  prop block: template Block"
+    LINE "  prop block: value(Block)"
     LINE "  with block(x: 5) {"
     LINE "    b {}"
     LINE "  }"
@@ -4936,7 +4956,7 @@ void TemplateProp_template_ref_call_default(void) {
     LINE "  prop color: Rgb = {0, 0, 0}"
     LINE "}"
     LINE "template City {"
-    LINE "  prop block: template Block = MyBlock(color: {1, 2, 3})"
+    LINE "  prop block: value(Block) = MyBlock(color: {1, 2, 3})"
     LINE "  b { block: {x: 1, y: 2} }"
     LINE "}"
     LINE "City c()"
@@ -5028,18 +5048,18 @@ void TemplateProp_template_ref_call_from_c_w_value(void) {
     test_assert(value != NULL);
     value->color = (RgbValue){10, 20, 30};
 
-    ecs_script_template_ref_t ref = { .type = my_block, .value = value };
+    ecs_value_t ref = { .type = my_block, .ptr = value };
     ecs_entity_t c = ecs_entity(world, { .name = "c" });
-    ecs_set_id(world, c, city, sizeof(ecs_script_template_ref_t), &ref);
+    ecs_set_id(world, c, city, sizeof(ecs_value_t), &ref);
     ecs_ptr_free(world, my_block, value);
 
     test_my_block(world, "c.b", 1, 2, 10, 20, 30);
 
-    const ecs_script_template_ref_t *stored = ecs_get_id(world, c, city);
+    const ecs_value_t *stored = ecs_get_id(world, c, city);
     test_assert(stored != NULL);
     test_assert(stored->type == my_block);
-    test_assert(stored->value != NULL);
-    test_assert(stored->value != value);
+    test_assert(stored->ptr != NULL);
+    test_assert(stored->ptr != value);
 
     ecs_fini(world);
 }
@@ -5137,7 +5157,7 @@ void TemplateProp_template_ref_call_to_json(void) {
         .serialize_values = true
     });
     test_assert(json != NULL);
-    test_assert(strstr(json, "\"City\":{\"block\":\"MyBlock\"}") != NULL);
+    test_assert(strstr(json, "\"City\":{\"block\":{\"MyBlock\":{\"x\":0, \"y\":0, \"color\":{\"r\":1, \"g\":2, \"b\":3}}}}") != NULL);
     ecs_os_free(json);
 
     ecs_fini(world);
@@ -5147,15 +5167,15 @@ void TemplateProp_template_ref_call_to_json(void) {
     HEAD "struct Road(size: i32)" \
     LINE "struct Rgb(r: u8, g: u8, b: u8)" \
     LINE "template RoadNetwork {" \
-    LINE "  prop road : template Road" \
-    LINE "  prop corner : template Road" \
-    LINE "  prop intersection : template Road" \
+    LINE "  prop road : value(Road)" \
+    LINE "  prop corner : value(Road)" \
+    LINE "  prop intersection : value(Road)" \
     LINE "  r { road: {size: 1} }" \
     LINE "  c { corner: {size: 2} }" \
     LINE "  i { intersection: {size: 3} }" \
     LINE "}" \
     LINE "template City {" \
-    LINE "  prop roads : template RoadNetwork" \
+    LINE "  prop roads : value(RoadNetwork)" \
     LINE "  n { roads }" \
     LINE "}" \
     LINE "template MyRoad : Road {" \
@@ -5304,13 +5324,13 @@ void TemplateProp_template_ref_nested_default(void) {
     LINE "  prop color: Rgb = {}"
     LINE "}"
     LINE "template RoadNetwork {"
-    LINE "  prop road : template Road = MyRoad(color: {1, 2, 3})"
-    LINE "  prop corner : template Road"
+    LINE "  prop road : value(Road) = MyRoad(color: {1, 2, 3})"
+    LINE "  prop corner : value(Road)"
     LINE "  r { road: {size: 1} }"
     LINE "  c { corner: {size: 2} }"
     LINE "}"
     LINE "template City {"
-    LINE "  prop roads : template RoadNetwork = RoadNetwork(corner: MyRoad())"
+    LINE "  prop roads : value(RoadNetwork) = RoadNetwork(corner: MyRoad())"
     LINE "  n { roads }"
     LINE "}"
     LINE "City a()"
@@ -5340,7 +5360,7 @@ void TemplateProp_any_prop_template_value(void) {
     const char *expr =
     ANY_PROP_HEAD
     LINE "template City {"
-    LINE "  prop object: template"
+    LINE "  prop object: value"
     LINE "  b { object }"
     LINE "}"
     LINE "City c(object: MyBlock)";
@@ -5351,10 +5371,10 @@ void TemplateProp_any_prop_template_value(void) {
 
     ecs_entity_t c = ecs_lookup(world, "c");
     ecs_entity_t city = ecs_lookup(world, "City");
-    const ecs_script_template_ref_t *ref = ecs_get_id(world, c, city);
+    const ecs_value_t *ref = ecs_get_id(world, c, city);
     test_assert(ref != NULL);
     test_assert(ref->type == ecs_lookup(world, "MyBlock"));
-    test_assert(ref->value == NULL);
+    test_assert(ref->ptr == NULL);
 
     ecs_fini(world);
 }
@@ -5365,7 +5385,7 @@ void TemplateProp_any_prop_template_call_value(void) {
     const char *expr =
     ANY_PROP_HEAD
     LINE "template City {"
-    LINE "  prop object: template"
+    LINE "  prop object: value"
     LINE "  b { object }"
     LINE "}"
     LINE "City c(object: MyBlock(x: 1, color: {4, 5, 6}))";
@@ -5383,7 +5403,7 @@ void TemplateProp_any_prop_struct_value(void) {
     const char *expr =
     ANY_PROP_HEAD
     LINE "template City {"
-    LINE "  prop object: template"
+    LINE "  prop object: value"
     LINE "  b { object }"
     LINE "}"
     LINE "City c(object: Position)";
@@ -5409,7 +5429,7 @@ void TemplateProp_any_prop_default_template(void) {
     const char *expr =
     ANY_PROP_HEAD
     LINE "template City {"
-    LINE "  prop object: template = MyBlock(color: {7, 8, 9})"
+    LINE "  prop object: value = MyBlock(color: {7, 8, 9})"
     LINE "  b { object }"
     LINE "}"
     LINE "City c()"
@@ -5433,7 +5453,7 @@ void TemplateProp_any_prop_default_struct(void) {
     const char *expr =
     ANY_PROP_HEAD
     LINE "template City {"
-    LINE "  prop object: template = Position"
+    LINE "  prop object: value = Position"
     LINE "  b { object }"
     LINE "}"
     LINE "City c()";
@@ -5453,7 +5473,7 @@ void TemplateProp_any_prop_in_with(void) {
     const char *expr =
     ANY_PROP_HEAD
     LINE "template City {"
-    LINE "  prop object: template"
+    LINE "  prop object: value"
     LINE "  with object {"
     LINE "    b {}"
     LINE "    d {}"
@@ -5475,7 +5495,7 @@ void TemplateProp_any_prop_update(void) {
     const char *expr =
     ANY_PROP_HEAD
     LINE "template City {"
-    LINE "  prop object: template"
+    LINE "  prop object: value"
     LINE "  b { object }"
     LINE "}"
     LINE "City c(object: MyBlock(color: {1, 2, 3}))";
@@ -5498,7 +5518,7 @@ void TemplateProp_any_prop_vector(void) {
     const char *expr =
     ANY_PROP_HEAD
     LINE "template City {"
-    LINE "  prop objects: template[] = [MyBlock(color: {1, 2, 3}), Position]"
+    LINE "  prop objects: value[] = [MyBlock(color: {1, 2, 3}), Position]"
     LINE "  for (i, o) in objects {"
     LINE "    \"b_{i}\" { o }"
     LINE "  }"
@@ -5524,7 +5544,7 @@ void TemplateProp_any_prop_from_c(void) {
     const char *expr =
     ANY_PROP_HEAD
     LINE "template City {"
-    LINE "  prop object: template"
+    LINE "  prop object: value"
     LINE "  b { object }"
     LINE "}";
 
@@ -5535,9 +5555,9 @@ void TemplateProp_any_prop_from_c(void) {
     test_assert(city != 0);
     test_assert(position != 0);
 
-    ecs_script_template_ref_t ref = { .type = position };
+    ecs_value_t ref = { .type = position };
     ecs_entity_t c = ecs_entity(world, { .name = "c" });
-    ecs_set_id(world, c, city, sizeof(ecs_script_template_ref_t), &ref);
+    ecs_set_id(world, c, city, sizeof(ecs_value_t), &ref);
 
     ecs_entity_t b = ecs_lookup(world, "c.b");
     test_assert(b != 0);
@@ -5552,8 +5572,8 @@ void TemplateProp_any_prop_ast_to_str(void) {
     const char *expr =
     ANY_PROP_HEAD
     LINE "template City {"
-    LINE "  prop object: template"
-    LINE "  prop objects: template[]"
+    LINE "  prop object: value"
+    LINE "  prop objects: value[]"
     LINE "  b { object }"
     LINE "}";
 
@@ -5562,8 +5582,8 @@ void TemplateProp_any_prop_ast_to_str(void) {
 
     char *str = ecs_script_ast_to_str(s, false);
     test_assert(str != NULL);
-    test_assert(strstr(str, "object : template") != NULL);
-    test_assert(strstr(str, "objects : template[]") != NULL);
+    test_assert(strstr(str, "object : value =") != NULL);
+    test_assert(strstr(str, "objects : value[] =") != NULL);
     ecs_os_free(str);
 
     ecs_script_free(s);
@@ -5577,7 +5597,7 @@ void TemplateProp_any_prop_missing_value_fails(void) {
     const char *expr =
     ANY_PROP_HEAD
     LINE "template City {"
-    LINE "  prop object: template"
+    LINE "  prop object: value"
     LINE "  b { object }"
     LINE "}"
     LINE "City c()";
@@ -5595,7 +5615,7 @@ void TemplateProp_any_prop_initializer_fails(void) {
     const char *expr =
     ANY_PROP_HEAD
     LINE "template City {"
-    LINE "  prop object: template"
+    LINE "  prop object: value"
     LINE "  b { object: {x: 1} }"
     LINE "}"
     LINE "City c(object: MyBlock)";
@@ -5613,7 +5633,7 @@ void TemplateProp_any_prop_with_initializer_fails(void) {
     const char *expr =
     ANY_PROP_HEAD
     LINE "template City {"
-    LINE "  prop object: template"
+    LINE "  prop object: value"
     LINE "  with object(x: 1) {"
     LINE "    b {}"
     LINE "  }"
@@ -5634,14 +5654,20 @@ void TemplateProp_any_prop_not_struct_fails(void) {
     ANY_PROP_HEAD
     LINE "Foo {}"
     LINE "template City {"
-    LINE "  prop object: template"
+    LINE "  prop object: value"
     LINE "  b { object }"
     LINE "}"
     LINE "City c(object: Foo)";
 
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
-    ecs_log_set_level(-1);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t b = ecs_lookup(world, "c.b");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(b != 0);
+    test_assert(foo != 0);
+    const ecs_entity_t *value = ecs_get_id(world, b, ecs_id(ecs_entity_t));
+    test_assert(value != NULL);
+    test_uint(*value, foo);
 
     ecs_fini(world);
 }
@@ -5652,7 +5678,7 @@ void TemplateProp_any_prop_mut_fails(void) {
     const char *expr =
     ANY_PROP_HEAD
     LINE "template City {"
-    LINE "  mut object: template"
+    LINE "  mut object: value"
     LINE "  b { object }"
     LINE "}";
 
@@ -5673,7 +5699,7 @@ void TemplateProp_template_ref_call_positional_inherited(void) {
     LINE "  prop color: Rgb = {0, 0, 0}"
     LINE "}"
     LINE "template City {"
-    LINE "  prop block: template Block"
+    LINE "  prop block: value(Block)"
     LINE "  a { block }"
     LINE "  b { block: {y: 2} }"
     LINE "}"
@@ -5700,11 +5726,11 @@ void TemplateProp_template_ref_prop_call_as_template_arg(void) {
     LINE "  prop color: Rgb = {}"
     LINE "}"
     LINE "template Layout {"
-    LINE "  prop object: template"
+    LINE "  prop object: value"
     LINE "  n { object }"
     LINE "}"
     LINE "template City {"
-    LINE "  prop road : template Road"
+    LINE "  prop road : value(Road)"
     LINE "  Layout a(road(5))"
     LINE "  Layout b(object: road(size: 6))"
     LINE "}"
@@ -5809,7 +5835,7 @@ void TemplateProp_template_interface_prop_default(void) {
     const char *expr =
     TEMPLATE_INTERFACE_HEAD
     LINE "template City {"
-    LINE "  prop road : template interface.Road"
+    LINE "  prop road : value(interface.Road)"
     LINE "  a { road }"
     LINE "  b { road: {width: 7} }"
     LINE "}"
@@ -5838,11 +5864,11 @@ void TemplateProp_template_interface_prop_call_as_template_arg(void) {
     const char *expr =
     TEMPLATE_INTERFACE_HEAD
     LINE "template Layout {"
-    LINE "  prop object: template"
+    LINE "  prop object: value"
     LINE "  n { object }"
     LINE "}"
     LINE "template City {"
-    LINE "  prop road : template interface.Road"
+    LINE "  prop road : value(interface.Road)"
     LINE "  Layout a(road(5, 2))"
     LINE "  Layout b(object: road(width: 6))"
     LINE "  Layout c(road)"
@@ -5910,7 +5936,7 @@ void TemplateProp_empty_struct_interface_prop(void) {
     const char *expr =
     EMPTY_STRUCT_HEAD
     LINE "template Building {"
-    LINE "  prop facade: template Facade"
+    LINE "  prop facade: value(Facade)"
     LINE "  ground { facade }"
     LINE "}"
     LINE "Building e"
@@ -5951,11 +5977,11 @@ void TemplateProp_empty_struct_interface_prop_as_template_arg(void) {
     const char *expr =
     EMPTY_STRUCT_HEAD
     LINE "template Layout {"
-    LINE "  prop object: template"
+    LINE "  prop object: value"
     LINE "  n { object }"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade"
+    LINE "  prop facade: value(Facade)"
     LINE "  Layout a(facade)"
     LINE "}"
     LINE "Building e"
@@ -5997,7 +6023,7 @@ void TemplateProp_empty_struct_in_interface_scope(void) {
     LINE "  struct Facade()"
     LINE "  template Building {"
     LINE "    prop floors: i32 = 2"
-    LINE "    prop ground_facade: template interface.Facade"
+    LINE "    prop ground_facade: value(interface.Facade)"
     LINE "    ground { ground_facade }"
     LINE "  }"
     LINE "}"
@@ -6083,7 +6109,7 @@ void TemplateProp_empty_template_interface_prop(void) {
     LINE "  prop height: f32 = 1"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop facade: template Facade"
+    LINE "  prop facade: value(Facade)"
     LINE "  ground { facade }"
     LINE "}"
     LINE "Building e"
@@ -6135,7 +6161,7 @@ void TemplateProp_empty_template_in_interface_scope(void) {
     LINE "  }"
     LINE "  template Building {"
     LINE "    prop floors: i32 = 2"
-    LINE "    prop ground_facade: template interface.Facade"
+    LINE "    prop ground_facade: value(interface.Facade)"
     LINE "    ground { ground_facade }"
     LINE "  }"
     LINE "}"
@@ -6293,7 +6319,7 @@ void TemplateProp_interface_prop_deleted_template(void) {
 
     const char *road =
     HEAD "template Road {"
-    LINE "  prop street_light : template StreetLight = MyStreetLight"
+    LINE "  prop street_light : value(StreetLight) = MyStreetLight"
     LINE "  trigger { Trigger }"
     LINE "  lamp { street_light: {on_off: true} }"
     LINE "}"
@@ -6332,7 +6358,7 @@ void TemplateProp_interface_prop_as_tag_deleted_template(void) {
 
     const char *road =
     HEAD "template Road {"
-    LINE "  prop street_light : template StreetLight = MyStreetLight"
+    LINE "  prop street_light : value(StreetLight) = MyStreetLight"
     LINE "  trigger { Trigger }"
     LINE "  lamp { street_light }"
     LINE "}"

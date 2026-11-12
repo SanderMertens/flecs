@@ -41,21 +41,21 @@ interface {
   template Building {
     prop width: f32 = 3
     prop floors: i32 = 3
-    prop ground_facade: template interface.Facade
-    prop floor_facade: template interface.Facade
-    prop roof_facade: template interface.Facade
+    prop ground_facade: value(interface.Facade)
+    prop floor_facade: value(interface.Facade)
+    prop roof_facade: value(interface.Facade)
   }
   
   template Block {
     prop x: i32 = 1
     prop z: i32 = 1
     prop size: i32 = 1
-    prop building: template interface.Building
+    prop building: value(interface.Building)
   }
 }
 
 template SquareLayout {
-  prop object: template
+  prop object: value
   prop size = 1.0
   
   const offset = size / 2
@@ -341,9 +341,9 @@ template RoofFacade : interface.Facade {
 template City {
   prop width = 3
   prop depth = 3
-  prop block : template interface.Block
-  prop road : template interface.Road
-  prop intersection : template interface.Intersection
+  prop block : value(interface.Block)
+  prop road : value(interface.Road)
+  prop intersection : value(interface.Intersection)
   prop cellSize = 7
   prop roadWidth = 2
   

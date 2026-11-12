@@ -4492,6 +4492,67 @@ void SerializeType_primitive(void);
 void SerializeType_not_a_type(void);
 void SerializeType_opaque_dep(void);
 
+// Testsuite 'ValueType'
+void ValueType_setup(void);
+void ValueType_const_primitive(void);
+void ValueType_const_enum(void);
+void ValueType_const_string(void);
+void ValueType_const_struct_derived(void);
+void ValueType_const_struct_type_only(void);
+void ValueType_const_struct_unrelated(void);
+void ValueType_const_unresolved_param(void);
+void ValueType_const_param_on_non_value(void);
+void ValueType_const_param_value(void);
+void ValueType_const_as_component_w_initializer(void);
+void ValueType_const_member_access(void);
+void ValueType_const_vector_index(void);
+void ValueType_const_vector_for(void);
+void ValueType_const_vector_unrelated(void);
+void ValueType_value_type_decl(void);
+void ValueType_value_type_decl_unconstrained(void);
+void ValueType_value_type_decl_self(void);
+void ValueType_struct_member(void);
+void ValueType_struct_member_type_only(void);
+void ValueType_struct_member_unrelated(void);
+void ValueType_template_prop_named_value_type(void);
+void ValueType_template_prop_primitive(void);
+void ValueType_template_prop_primitive_mismatch(void);
+void ValueType_template_prop_enum(void);
+void ValueType_template_prop_unconstrained_struct(void);
+void ValueType_template_prop_unconstrained_primitive(void);
+void ValueType_template_inherit_value_member_from_struct(void);
+void ValueType_interpolate(void);
+void ValueType_ptr_to_expr(void);
+void ValueType_expr_roundtrip(void);
+void ValueType_serialize_type(void);
+void ValueType_ast_to_str(void);
+
+// Testsuite 'AnonymousType'
+void AnonymousType_setup(void);
+void AnonymousType_const_vector(void);
+void AnonymousType_const_array(void);
+void AnonymousType_const_map(void);
+void AnonymousType_const_map_named_args(void);
+void AnonymousType_const_value_empty_args(void);
+void AnonymousType_const_vector_of_value(void);
+void AnonymousType_same_as_shorthand(void);
+void AnonymousType_struct_member_map(void);
+void AnonymousType_struct_member_value(void);
+void AnonymousType_struct_member_value_unrelated(void);
+void AnonymousType_struct_member_nested(void);
+void AnonymousType_struct_member_w_count(void);
+void AnonymousType_template_prop_map(void);
+void AnonymousType_type_as_value(void);
+void AnonymousType_same_args_same_type(void);
+void AnonymousType_invalid_vector_args(void);
+void AnonymousType_invalid_array_count(void);
+void AnonymousType_invalid_map_key(void);
+void AnonymousType_invalid_value_of_value(void);
+void AnonymousType_args_on_non_kind(void);
+void AnonymousType_value_component(void);
+void AnonymousType_serialize_type(void);
+void AnonymousType_serialize_type_roundtrip(void);
+
 bake_test_case Eval_testcases[] = {
     {
         "2_components_same_line_w_semicolon",
@@ -22125,6 +22186,232 @@ bake_test_case SerializeType_testcases[] = {
     }
 };
 
+bake_test_case ValueType_testcases[] = {
+    {
+        "const_primitive",
+        ValueType_const_primitive
+    },
+    {
+        "const_enum",
+        ValueType_const_enum
+    },
+    {
+        "const_string",
+        ValueType_const_string
+    },
+    {
+        "const_struct_derived",
+        ValueType_const_struct_derived
+    },
+    {
+        "const_struct_type_only",
+        ValueType_const_struct_type_only
+    },
+    {
+        "const_struct_unrelated",
+        ValueType_const_struct_unrelated
+    },
+    {
+        "const_unresolved_param",
+        ValueType_const_unresolved_param
+    },
+    {
+        "const_param_on_non_value",
+        ValueType_const_param_on_non_value
+    },
+    {
+        "const_param_value",
+        ValueType_const_param_value
+    },
+    {
+        "const_as_component_w_initializer",
+        ValueType_const_as_component_w_initializer
+    },
+    {
+        "const_member_access",
+        ValueType_const_member_access
+    },
+    {
+        "const_vector_index",
+        ValueType_const_vector_index
+    },
+    {
+        "const_vector_for",
+        ValueType_const_vector_for
+    },
+    {
+        "const_vector_unrelated",
+        ValueType_const_vector_unrelated
+    },
+    {
+        "value_type_decl",
+        ValueType_value_type_decl
+    },
+    {
+        "value_type_decl_unconstrained",
+        ValueType_value_type_decl_unconstrained
+    },
+    {
+        "value_type_decl_self",
+        ValueType_value_type_decl_self
+    },
+    {
+        "struct_member",
+        ValueType_struct_member
+    },
+    {
+        "struct_member_type_only",
+        ValueType_struct_member_type_only
+    },
+    {
+        "struct_member_unrelated",
+        ValueType_struct_member_unrelated
+    },
+    {
+        "template_prop_named_value_type",
+        ValueType_template_prop_named_value_type
+    },
+    {
+        "template_prop_primitive",
+        ValueType_template_prop_primitive
+    },
+    {
+        "template_prop_primitive_mismatch",
+        ValueType_template_prop_primitive_mismatch
+    },
+    {
+        "template_prop_enum",
+        ValueType_template_prop_enum
+    },
+    {
+        "template_prop_unconstrained_struct",
+        ValueType_template_prop_unconstrained_struct
+    },
+    {
+        "template_prop_unconstrained_primitive",
+        ValueType_template_prop_unconstrained_primitive
+    },
+    {
+        "template_inherit_value_member_from_struct",
+        ValueType_template_inherit_value_member_from_struct
+    },
+    {
+        "interpolate",
+        ValueType_interpolate
+    },
+    {
+        "ptr_to_expr",
+        ValueType_ptr_to_expr
+    },
+    {
+        "expr_roundtrip",
+        ValueType_expr_roundtrip
+    },
+    {
+        "serialize_type",
+        ValueType_serialize_type
+    },
+    {
+        "ast_to_str",
+        ValueType_ast_to_str
+    }
+};
+
+bake_test_case AnonymousType_testcases[] = {
+    {
+        "const_vector",
+        AnonymousType_const_vector
+    },
+    {
+        "const_array",
+        AnonymousType_const_array
+    },
+    {
+        "const_map",
+        AnonymousType_const_map
+    },
+    {
+        "const_map_named_args",
+        AnonymousType_const_map_named_args
+    },
+    {
+        "const_value_empty_args",
+        AnonymousType_const_value_empty_args
+    },
+    {
+        "const_vector_of_value",
+        AnonymousType_const_vector_of_value
+    },
+    {
+        "same_as_shorthand",
+        AnonymousType_same_as_shorthand
+    },
+    {
+        "struct_member_map",
+        AnonymousType_struct_member_map
+    },
+    {
+        "struct_member_value",
+        AnonymousType_struct_member_value
+    },
+    {
+        "struct_member_value_unrelated",
+        AnonymousType_struct_member_value_unrelated
+    },
+    {
+        "struct_member_nested",
+        AnonymousType_struct_member_nested
+    },
+    {
+        "struct_member_w_count",
+        AnonymousType_struct_member_w_count
+    },
+    {
+        "template_prop_map",
+        AnonymousType_template_prop_map
+    },
+    {
+        "type_as_value",
+        AnonymousType_type_as_value
+    },
+    {
+        "same_args_same_type",
+        AnonymousType_same_args_same_type
+    },
+    {
+        "invalid_vector_args",
+        AnonymousType_invalid_vector_args
+    },
+    {
+        "invalid_array_count",
+        AnonymousType_invalid_array_count
+    },
+    {
+        "invalid_map_key",
+        AnonymousType_invalid_map_key
+    },
+    {
+        "invalid_value_of_value",
+        AnonymousType_invalid_value_of_value
+    },
+    {
+        "args_on_non_kind",
+        AnonymousType_args_on_non_kind
+    },
+    {
+        "value_component",
+        AnonymousType_value_component
+    },
+    {
+        "serialize_type",
+        AnonymousType_serialize_type
+    },
+    {
+        "serialize_type_roundtrip",
+        AnonymousType_serialize_type_roundtrip
+    }
+};
+
 const char* Eval_ir_param[] = {"disabled", "enabled"};
 bake_test_param Eval_params[] = {
     {"ir", (char**)Eval_ir_param, 2}
@@ -22270,6 +22557,16 @@ bake_test_param Edit_params[] = {
 const char* EditTemplate_ir_param[] = {"disabled", "enabled"};
 bake_test_param EditTemplate_params[] = {
     {"ir", (char**)EditTemplate_ir_param, 2}
+};
+
+const char* ValueType_ir_param[] = {"disabled", "enabled"};
+bake_test_param ValueType_params[] = {
+    {"ir", (char**)ValueType_ir_param, 2}
+};
+
+const char* AnonymousType_ir_param[] = {"disabled", "enabled"};
+bake_test_param AnonymousType_params[] = {
+    {"ir", (char**)AnonymousType_ir_param, 2}
 };
 
 static bake_test_suite suites[] = {
@@ -22575,9 +22872,27 @@ static bake_test_suite suites[] = {
         NULL,
         18,
         SerializeType_testcases
+    },
+    {
+        "ValueType",
+        ValueType_setup,
+        NULL,
+        32,
+        ValueType_testcases,
+        1,
+        ValueType_params
+    },
+    {
+        "AnonymousType",
+        AnonymousType_setup,
+        NULL,
+        23,
+        AnonymousType_testcases,
+        1,
+        AnonymousType_params
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 35);
+    return bake_test_run("script", argc, argv, suites, 37);
 }
