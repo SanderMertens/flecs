@@ -6095,8 +6095,9 @@ void Error_prop_any_template_non_template_value(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "template T {"
-    LINE "  prop x: template = 10"
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "template T {"
+    LINE "  prop x: value(Position) = 10"
     LINE "}"
     LINE "T t()";
 
@@ -6104,9 +6105,8 @@ void Error_prop_any_template_non_template_value(void) {
     ecs_script_eval_result_t result = {0};
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
-    test_assert(strstr(result.error, "template_ref") == NULL);
-    test_assert(strstr(result.error, "expected template") != NULL);
-    test_int(result.line, 2);
+    test_assert(strstr(result.error, "expected value of type 'Position'") != NULL);
+    test_int(result.line, 3);
     ecs_os_free(result.error);
 
     ecs_fini(world);

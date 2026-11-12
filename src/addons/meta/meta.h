@@ -127,6 +127,18 @@ int flecs_value_ensure_type(
 void flecs_meta_value_init(
     ecs_world_t *world);
 
+void flecs_value_hooks(
+    ecs_world_t *world,
+    ecs_type_hooks_t *hooks);
+
+bool flecs_type_is_value(
+    const ecs_world_t *world,
+    ecs_entity_t type);
+
+ecs_entity_t flecs_value_type_constraint(
+    const ecs_world_t *world,
+    ecs_entity_t value_type);
+
 int flecs_meta_value_type_str(
     const ecs_world_t *world,
     ecs_entity_t type,

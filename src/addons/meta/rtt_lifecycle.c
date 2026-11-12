@@ -887,6 +887,8 @@ void flecs_rtt_init_default_hooks(
         } else if (type->kind == EcsMapType) {
             const EcsMap *map = ecs_get(world, component, EcsMap);
             flecs_rtt_collection_hooks(world, component, map->type, true, &hooks);
+        } else if (type->kind == EcsValueType) {
+            flecs_value_hooks(world, &hooks);
         }
 
         /* Make sure there is at least a default constructor. This ensures that

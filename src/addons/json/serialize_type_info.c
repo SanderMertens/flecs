@@ -216,9 +216,15 @@ static int flecs_json_typeinfo_ser_op(
         }
 
         break;
-    case EcsOpPushValue:
+    case EcsOpPushValue: {
         ecs_strbuf_list_appendstr(str, "\"value\"");
+        const EcsValue *vt = ecs_get(world, op->type, EcsValue);
+        if (vt && vt->type) {
+            flecs_json_next(str);
+            flecs_json_path(str, world, vt->type);
+        }
         break;
+    }
     case EcsOpEnum:
     case EcsOpBitmask:
         ecs_strbuf_list_appendstr(str,

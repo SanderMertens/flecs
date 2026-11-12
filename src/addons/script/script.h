@@ -257,6 +257,23 @@ ecs_entity_t flecs_script_vector_type(
     ecs_world_t *world,
     ecs_entity_t elem_type);
 
+ecs_entity_t flecs_script_value_type(
+    ecs_world_t *world,
+    ecs_entity_t type);
+
+ecs_entity_t flecs_script_kind_component(
+    const ecs_world_t *world,
+    ecs_entity_t kind);
+
+ecs_entity_t flecs_script_kind_type(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const void *value);
+
+bool flecs_script_is_anonymous_type(
+    const ecs_world_t *world,
+    ecs_entity_t type);
+
 const char* flecs_script_stmt(
     ecs_parser_t *parser,
     const char *pos);

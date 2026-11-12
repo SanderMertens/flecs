@@ -181,15 +181,33 @@ static int flecs_meta_write_value(
     flecs_meta_format_t format)
 {
     const ecs_value_t *value = base;
+    bool json = format == EcsMetaJson;
 
-    if (!value->type || !value->ptr) {
-        ecs_assert(false, ECS_INVALID_PARAMETER,
-            "cannot serialize value without value");
-        ecs_err("cannot serialize value without value");
-        return -1;
+    if (!value->type) {
+        if (json) {
+            ecs_strbuf_appendlit(str, "null");
+        } else {
+            ecs_strbuf_appendlit(str, "#0");
+        }
+        return 0;
     }
 
-    bool json = format == EcsMetaJson;
+    if (!value->ptr) {
+        if (json) {
+            ecs_strbuf_appendch(str, '"');
+        }
+
+        if (flecs_meta_value_type_str(world, value->type, str)) {
+            return -1;
+        }
+
+        if (json) {
+            ecs_strbuf_appendch(str, '"');
+        }
+
+        return 0;
+    }
+
     ecs_strbuf_t type_buf = ECS_STRBUF_INIT;
     ecs_strbuf_list_push(str, "{", ", ");
     if (!json) {

@@ -175,6 +175,7 @@ const ecs_entity_t ecs_id(EcsUnitPrefix) =          FLECS_HI_COMPONENT_ID + 112;
 const ecs_entity_t EcsQuantity =                    FLECS_HI_COMPONENT_ID + 113;
 const ecs_entity_t ecs_id(EcsMap) =                 FLECS_HI_COMPONENT_ID + 122;
 const ecs_entity_t ecs_id(ecs_value_t) =          FLECS_HI_COMPONENT_ID + 123;
+const ecs_entity_t ecs_id(EcsValue) =               FLECS_HI_COMPONENT_ID + 124;
 #endif
 
 const ecs_entity_t EcsConstant =                    FLECS_HI_COMPONENT_ID + 114;

@@ -1520,6 +1520,53 @@ my_entity {
 }
 ```
 
+### Value variables
+A variable with a value type holds a value together with its type. A value type is written as `value`, which accepts values of any type, or as `value(T)` (see [Anonymous types](#anonymous-types)), which only accepts values of type `T`. If `T` is a struct, the variable also accepts values of structs that inherit from `T`:
+
+```cpp
+struct Facade(height: f32)
+struct Position(x: f32, y: f32)
+
+template Brick : Facade {
+  Position: {height, 1}
+}
+
+template Glass : Facade {
+  Position: {height, 2}
+}
+
+const a: value(Facade) = Brick(height: 3) // template with arguments
+const b: value(Facade) = Glass            // template without arguments
+const c: value(i32) = 10                  // i32
+```
+
+A value variable can be used as a component. This adds the type of the value to the entity, and assigns the stored value if it has one. If the type is a template, the template is instantiated:
+
+```cpp
+e { a }               // instantiates Brick with height 3
+f { b: {height: 5} }  // instantiates Glass with height 5
+```
+
+Members of a `value(T)` variable can be accessed if `T` is a struct:
+
+```cpp
+g { Position: {a.height, 0} }
+```
+
+Value types can be combined with collection types. Elements of a vector of values can be selected with `[]` and iterated with `for`:
+
+```cpp
+const facades: value(Facade)[] = [Brick, Glass(height: 4)]
+
+h { facades[1] }
+
+for facade in facades {
+  "floor_{facade}" { facade: {height: 9} }
+}
+```
+
+When a value variable is interpolated into a string, the result is the name of the value type if the value holds a struct or has no value, as in the `"floor_{facade}"` example above.
+
 ### Exported variables
 Variables can be exported by prefixing a variable declaration with the `export` keyword. Exported variables can be accessed by the application and from other scripts. The following example shows an exported variable:
 
@@ -2489,19 +2536,29 @@ template VictorianFacade : Facade {
 }
 ```
 
-We can then use the `Facade` type in the prop definition, and instantiate the template-specific facade:
+We can then use a `value(Facade)` prop (see [Value variables](#value-variables)) that accepts any template that inherits from `Facade`, and instantiate the template-specific facade:
 
 ```cpp
 template Building {
-  prop facade: template Facade
+  prop facade: value(Facade)
   prop floors: i32
   prop floorHeight: f32
 
   for i in 0..floors {
-    facade: {floorHeight} // provide value of type FAcade
+    facade: {floorHeight} // provide value of type Facade
   }
 }
+
+Building house(facade: VictorianFacade, floors: 3, floorHeight: 2)
 ```
+
+A template can also be passed with arguments, which are used as the default prop values when the template is instantiated:
+
+```cpp
+Building house(facade: VictorianFacade(height: 3), floors: 3)
+```
+
+If no value is provided for a `value(Facade)` prop, it defaults to `Facade` itself. A prop of type `value` accepts a value of any type. When such a prop is used as a component, the type of the value is added to the entity. If that type is a template, the template is instantiated.
 
 This makes it possible to use templates as primitive for procedural generation templates, where a generic template specifies the "grammar" of an object (for example a building), with a set of derived templates that implement the style and/or content.
 
@@ -2556,11 +2613,11 @@ template Button : HeadlessButton {
 A derived template cannot redeclare a `mut` variable of its base template.
 
 ##### Vectors of templates
-A prop can also accept a *list* of templates by adding `[]` to the type. The prop value is a vector of entities, where each element must be a template that derives from the interface type:
+A prop can also accept a *list* of templates by adding `[]` to the type. The prop value is a vector of values, where each element must be accepted by the value type:
 
 ```cpp
 template Building {
-  prop facade: template Facade[] = [VictorianFacade, ModernFacade]
+  prop facade: value(Facade)[] = [VictorianFacade, ModernFacade]
   prop floors: i32 = 3
 
   for i in 0..floors {
@@ -2571,11 +2628,11 @@ template Building {
 }
 ```
 
-An element is selected with `[]`, and the result can be used anywhere a single `template Facade` prop can be used, both as a component with an initializer and as a tag:
+An element is selected with `[]`, and the result can be used anywhere a single `value(Facade)` prop can be used, both as a component with an initializer and as a tag:
 
 ```cpp
 template Building {
-  prop facade: template Facade[] = [VictorianFacade]
+  prop facade: value(Facade)[] = [VictorianFacade]
 
   front { facade[0]: {height: 3} } // instantiate with initializer
   back  { facade[0] }              // instantiate with default props
@@ -2586,7 +2643,7 @@ The vector can also be used in expressions. It supports `count()`, iteration wit
 
 ```cpp
 template Building {
-  prop facade: template Facade[] = [VictorianFacade, ModernFacade]
+  prop facade: value(Facade)[] = [VictorianFacade, ModernFacade]
 
   for f in facade {
     side { f: {height: 3} }
@@ -2604,8 +2661,6 @@ Instances override the vector like any other prop, both from script and from C:
 Building tower(facade: [ModernFacade])
 e { Building: {facade: [VictorianFacade, ModernFacade]} }
 ```
-
-Vector props require an *interface struct* type (like `Facade` above). `prop x: template SomeTemplate[]`, where `SomeTemplate` is itself a template, is not supported.
 
 #### Parent constraints
 A template can require its immediate parent to be an instance of another template:
@@ -3028,7 +3083,7 @@ with Color(38, 25, 13) {
 ```
 
 ## Type definitions
-Scripts can define component types by using the type entities from the `flecs.meta` module (`struct`, `enum`, `bitmask`) as entity kind, followed by an initializer list that describes the type.
+Scripts can define component types by using the type entities from the `flecs.meta` module (`struct`, `enum`, `bitmask`, `vector`, `array`, `map`, `value`) as entity kind, followed by an initializer list that describes the type.
 
 ### Structs
 A struct is defined by specifying the struct members in the initializer list, where each member is specified as `name: type`:
@@ -3116,6 +3171,75 @@ bitmask Flags(A: 1, B: 2, Both: 3)
 ```
 
 Bitmask constants are stored as `u32`, which cannot be overridden.
+
+### Collection types
+Vector, array and map types are declared with the `vector`, `array` and `map` kinds:
+
+```cpp
+vector Points(type: f32)
+array Vec3(type: f32, count: 3)
+map Lookup(key_type: i32, type: string)
+```
+
+The key type of a map must be a primitive (other than `string`, `f32` or `f64`), an enum or a bitmask.
+
+### Value types
+A value type stores a value together with its type. Value types are declared with the `value` kind and an optional type constraint:
+
+```cpp
+struct Facade(height: f32)
+
+// Accepts Facade and structs that inherit from Facade
+value FacadeRef(type: Facade)
+
+// Accepts values of any type
+value Any()
+```
+
+A value type with a struct constraint accepts values of the struct and of structs that inherit from it. For all other type kinds, the type of the value must match the constraint exactly.
+
+Value types can be used as member types, which makes it possible to store templates (with or without arguments) in a regular component:
+
+```cpp
+struct Building(facade: FacadeRef, floors: i32)
+
+my_building {
+  Building: {facade: Glass(height: 3), floors: 2}
+}
+```
+
+A value can hold a type without a value, as is the case for `Glass` in `const b: value(Facade) = Glass`. In the script text format such a value is written as the name of its type, while a value that holds a value is written as `{Type: value}`:
+
+```cpp
+{facade: Glass, floors: 2}
+{facade: {Glass: {height: 3}}, floors: 2}
+```
+
+In JSON, a value without a value is written as a string with the name of its type, and an empty value is written as `null`.
+
+### Anonymous types
+Vector, array, map and value types can also be used without declaring them first, by writing the kind followed by the arguments of its declaration:
+
+| **Anonymous type**   | **Same as**                               |
+|----------------------|-------------------------------------------|
+| `vector(f32)`        | `vector V(type: f32)`                     |
+| `array(f32, 3)`      | `array V(type: f32, count: 3)`            |
+| `map(i32, string)`   | `map V(key_type: i32, type: string)`      |
+| `value(Facade)`      | `value V(type: Facade)`                   |
+| `value`              | `value V()`                               |
+
+Arguments can be passed by position or by name, as in `map(key_type: i32, type: string)`. Anonymous types can be used anywhere a type is expected, including struct members and the types of variables and props, and can be nested:
+
+```cpp
+struct Theme(
+  facades: map(i32, vector(value(Facade))),
+  colors: array(f32, 3))
+
+const lookup: map(i32, string) = [1: "foo", 2: "bar"]
+prop facade: value(Facade) = Glass
+```
+
+Using the same kind and arguments twice results in the same type. In variable and prop declarations, `T[]` and `T[N]` are shorthand for `vector(T)` and `array(T, N)`.
 
 ## API
 This section goes over how to run scripts in an application.

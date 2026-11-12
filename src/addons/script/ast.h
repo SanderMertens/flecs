@@ -87,8 +87,8 @@ typedef struct ecs_script_id_t {
     int32_t first_symbol;
     int32_t second_symbol;
 
-    /* If first is a template prop typed by an interface struct, this is the
-     * struct the resolved template must derive from. */
+    /* If first is a template prop with a value type, this is the value type
+     * that the resolved type must be accepted by. */
     ecs_entity_t interface;
 
     /* In case first/second are specified as interpolated strings. */
@@ -194,12 +194,10 @@ typedef struct ecs_script_var_node_t {
     ecs_script_node_t node;
     const char *name;
     const char *type;
-    bool type_is_template;
-    bool type_is_vector;
+    ecs_expr_node_t *type_args;
     int32_t type_count;     /* -1 for vector, >0 for array, 0 for neither */
     ecs_expr_node_t *expr;
     ecs_entity_t eval_type;
-    ecs_entity_t eval_interface;
     int32_t sp;
     int32_t symbol;
     /* 0 if not cached, otherwise computed slot index + 1 */

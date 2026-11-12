@@ -195,7 +195,7 @@ bool flecs_expr_has_eval(
 void* flecs_expr_template_ref_value(
     const ecs_script_t *script,
     const ecs_expr_function_t *node,
-    const ecs_script_template_ref_t *ref);
+    const ecs_value_t *ref);
 
 int flecs_expr_range_eval(
     ecs_world_t *world,
@@ -236,6 +236,7 @@ ecs_expr_swizzle_t* flecs_expr_expand_swizzle_get(
     ecs_expr_node_t *node);
 
 const ecs_expr_variable_t* flecs_expr_template_ref_var(
+    const ecs_world_t *world,
     const ecs_expr_node_t *left);
 
 #endif

@@ -110,8 +110,8 @@ template RoofFacade : Facade {
 // The building template.
 template Building {
   // Accepts a list of types that inherit from Facade
-  prop facade: template Facade
-  prop roof: template Facade = RoofFacade
+  prop facade: value(Facade)
+  prop roof: value(Facade) = RoofFacade
   prop floors: i32 = 3
   prop floorHeight: f32 = 3
 

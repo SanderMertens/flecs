@@ -4650,6 +4650,77 @@
                 "not_a_type",
                 "opaque_dep"
             ]
+        }, {
+            "id": "ValueType",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
+            "testcases": [
+                "const_primitive",
+                "const_enum",
+                "const_string",
+                "const_struct_derived",
+                "const_struct_type_only",
+                "const_struct_unrelated",
+                "const_unresolved_param",
+                "const_param_on_non_value",
+                "const_param_value",
+                "const_as_component_w_initializer",
+                "const_member_access",
+                "const_vector_index",
+                "const_vector_for",
+                "const_vector_unrelated",
+                "value_type_decl",
+                "value_type_decl_unconstrained",
+                "value_type_decl_self",
+                "struct_member",
+                "struct_member_type_only",
+                "struct_member_unrelated",
+                "template_prop_named_value_type",
+                "template_prop_primitive",
+                "template_prop_primitive_mismatch",
+                "template_prop_enum",
+                "template_prop_unconstrained_struct",
+                "template_prop_unconstrained_primitive",
+                "template_inherit_value_member_from_struct",
+                "interpolate",
+                "ptr_to_expr",
+                "expr_roundtrip",
+                "serialize_type",
+                "ast_to_str"
+            ]
+        }, {
+            "id": "AnonymousType",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
+            "testcases": [
+                "const_vector",
+                "const_array",
+                "const_map",
+                "const_map_named_args",
+                "const_value_empty_args",
+                "const_vector_of_value",
+                "same_as_shorthand",
+                "struct_member_map",
+                "struct_member_value",
+                "struct_member_value_unrelated",
+                "struct_member_nested",
+                "struct_member_w_count",
+                "template_prop_map",
+                "type_as_value",
+                "same_args_same_type",
+                "invalid_vector_args",
+                "invalid_array_count",
+                "invalid_map_key",
+                "invalid_value_of_value",
+                "args_on_non_kind",
+                "value_component",
+                "serialize_type",
+                "serialize_type_roundtrip"
+            ]
         }]
     }
 }

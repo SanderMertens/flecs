@@ -680,17 +680,99 @@ static int flecs_meta_map_member(
 }
 
 static bool flecs_meta_op_is_value(
+    const ecs_world_t *world,
     const ecs_meta_op_t *op)
 {
     if (op->kind == EcsOpPushValue) {
         return true;
     }
 
-    if (op->kind == EcsOpForward && op->type == ecs_id(ecs_value_t)) {
+    if (op->kind == EcsOpForward && flecs_type_is_value(world, op->type)) {
         return true;
     }
 
     return false;
+}
+
+static int flecs_meta_value_type_error(
+    const ecs_world_t *world,
+    ecs_entity_t value_type,
+    ecs_entity_t type)
+{
+    ecs_entity_t constraint = flecs_value_type_constraint(world, value_type);
+    if (!constraint) {
+        ecs_err("'%s' is not a valid type for value",
+            flecs_errstr(ecs_get_path(world, type)));
+    } else if (ecs_has(world, constraint, EcsStruct)) {
+        ecs_err("type '%s' is not '%s' or derived from '%s'",
+            flecs_errstr(ecs_get_path(world, type)),
+            flecs_errstr_1(ecs_get_path(world, constraint)),
+            flecs_errstr_2(ecs_get_path(world, constraint)));
+    } else {
+        ecs_err("type '%s' does not match '%s'",
+            flecs_errstr(ecs_get_path(world, type)),
+            flecs_errstr_1(ecs_get_path(world, constraint)));
+    }
+
+    return -1;
+}
+
+static int flecs_meta_value_set_type(
+    const ecs_world_t *world,
+    ecs_entity_t value_type,
+    ecs_value_t *v,
+    ecs_entity_t type)
+{
+    if (!v) {
+        ecs_err("no object to assign");
+        return -1;
+    }
+
+    if (type && !ecs_value_type_accepts(world, value_type, type)) {
+        return flecs_meta_value_type_error(world, value_type, type);
+    }
+
+    ecs_value_set_type(world, v, type);
+    return 0;
+}
+
+static ecs_entity_t flecs_meta_value_lookup_type(
+    const ecs_meta_cursor_t *cursor,
+    const char *name)
+{
+    if (!ecs_os_strcmp(name, "#0")) {
+        return 0;
+    }
+
+    ecs_entity_t e = ecs_lookup_symbol(cursor->world, name, true, true);
+    if (!e && cursor->lookup_action) {
+        e = cursor->lookup_action(
+            ECS_CONST_CAST(ecs_world_t*, cursor->world), name,
+            cursor->lookup_ctx);
+    }
+
+    return e;
+}
+
+static ecs_meta_cursor_t flecs_meta_value_constraint_cursor(
+    const ecs_meta_cursor_t *cursor,
+    ecs_value_t *v,
+    ecs_entity_t constraint)
+{
+    ecs_meta_cursor_t result = {0};
+    if (!v) {
+        ecs_err("no object to assign");
+        return result;
+    }
+
+    if (flecs_value_ensure_type(cursor->world, v, constraint)) {
+        return result;
+    }
+
+    result = ecs_meta_cursor(cursor->world, constraint, v->ptr);
+    result.lookup_action = cursor->lookup_action;
+    result.lookup_ctx = cursor->lookup_ctx;
+    return result;
 }
 
 static void* flecs_meta_cursor_value_ensure(
@@ -725,8 +807,13 @@ static int flecs_meta_value_member(
         return -1;
     }
 
-    if (type == ecs_id(ecs_value_t)) {
+    if (flecs_type_is_value(world, type)) {
         if (!try) ecs_err("value cannot be assigned a value");
+        return -1;
+    }
+
+    if (!ecs_value_type_accepts(world, scope->type, type)) {
+        if (!try) flecs_meta_value_type_error(world, scope->type, type);
         return -1;
     }
 
@@ -1611,7 +1698,38 @@ static FLECS_ALWAYS_INLINE int flecs_meta_set_number(
         ecs_assert(ptr != NULL, ECS_INVALID_OPERATION, "no object to assign");
     }
 
-    if (flecs_meta_op_is_value(op)) {
+    if (flecs_meta_op_is_value(cursor->world, op)) {
+        const ecs_world_t *world = cursor->world;
+        ecs_entity_t constraint = flecs_value_type_constraint(world, op->type);
+        bool is_entity_constraint = constraint == ecs_id(ecs_entity_t) ||
+            constraint == ecs_id(ecs_id_t);
+        if (from == EcsEntity && !is_entity_constraint) {
+            ecs_entity_t e = number.u;
+            if (!e) {
+                return flecs_meta_value_set_type(world, op->type, ptr, 0);
+            }
+
+            if (constraint ? ecs_has(world, constraint, EcsStruct)
+                : ecs_has(world, e, EcsType))
+            {
+                return flecs_meta_value_set_type(world, op->type, ptr, e);
+            }
+        }
+
+        if (constraint) {
+            if (ecs_has(world, constraint, EcsStruct)) {
+                goto error;
+            }
+
+            ecs_meta_cursor_t c = flecs_meta_value_constraint_cursor(
+                cursor, ptr, constraint);
+            if (!c.valid) {
+                return -1;
+            }
+
+            return flecs_meta_set_number(&c, from, number);
+        }
+
         kind = (ecs_meta_op_kind_t)(EcsOpPrimitive + (int)from);
         ptr = flecs_meta_cursor_value_ensure(cursor, ptr,
             *types[from]);
@@ -1784,17 +1902,60 @@ int ecs_meta_set_value(
 
     ecs_meta_scope_t *scope = flecs_cursor_get_scope(cursor);
     ecs_meta_op_t *op = flecs_cursor_get_op(scope);
-    if (flecs_meta_op_is_value(op)) {
-        void *ptr = flecs_meta_cursor_get_ptr(cursor->world, cursor, scope);
+    if (flecs_meta_op_is_value(cursor->world, op)) {
+        const ecs_world_t *world = cursor->world;
+        void *ptr = flecs_meta_cursor_get_ptr(world, cursor, scope);
         if (!ptr) {
             ecs_err("no object to assign");
             return -1;
         }
 
-        if (type == ecs_id(ecs_value_t)) {
-            ecs_value_copy(cursor->world, ptr, value->ptr);
+        const ecs_value_t *src = value;
+        if (flecs_type_is_value(world, type)) {
+            src = value->ptr;
+        } else if (type == ecs_id(ecs_entity_t)) {
+            return ecs_meta_set_entity(cursor, *(ecs_entity_t*)value->ptr);
+        } else if (type == ecs_id(ecs_string_t)) {
+            ecs_entity_t constraint = flecs_value_type_constraint(
+                world, op->type);
+            if (constraint && ecs_has(world, constraint, EcsStruct)) {
+                const char *str = *(char**)value->ptr;
+                if (!str) {
+                    ecs_value_fini(world, ptr);
+                    return 0;
+                }
+
+                return ecs_meta_set_string(cursor, str);
+            }
+        }
+
+        if (!src->type) {
+            ecs_value_fini(world, ptr);
+            return 0;
+        }
+
+        if (!ecs_value_type_accepts(world, op->type, src->type)) {
+            ecs_entity_t constraint = flecs_value_type_constraint(
+                world, op->type);
+            if (constraint && src->ptr &&
+                !ecs_has(world, constraint, EcsStruct))
+            {
+                ecs_meta_cursor_t c = flecs_meta_value_constraint_cursor(
+                    cursor, ptr, constraint);
+                if (!c.valid) {
+                    return -1;
+                }
+
+                return ecs_meta_set_value(&c, src);
+            }
+
+            return flecs_meta_value_type_error(world, op->type, src->type);
+        }
+
+        if (src == value && src->ptr) {
+            ecs_value_set(world, ptr, src->type, src->ptr);
         } else {
-            ecs_value_set(cursor->world, ptr, type, value->ptr);
+            ecs_value_copy(world, ptr, src);
         }
 
         return 0;
@@ -1807,7 +1968,17 @@ int ecs_meta_set_value(
     }
 
     if (mt->kind == EcsValueType) {
-        return ecs_meta_set_value(cursor, value->ptr);
+        const ecs_value_t *inner = value->ptr;
+        if (!inner->ptr) {
+            if (!inner->type) {
+                ecs_err("cannot assign empty value");
+                return -1;
+            }
+
+            return ecs_meta_set_entity(cursor, inner->type);
+        }
+
+        return ecs_meta_set_value(cursor, inner);
     }
 
     if (mt->kind == EcsPrimitiveType) {
@@ -1921,7 +2092,34 @@ int ecs_meta_set_string(
         goto error;
     }
 
-    if (flecs_meta_op_is_value(op)) {
+    if (flecs_meta_op_is_value(cursor->world, op)) {
+        const ecs_world_t *world = cursor->world;
+        ecs_entity_t constraint = flecs_value_type_constraint(world, op->type);
+        if (constraint) {
+            if (ecs_has(world, constraint, EcsStruct)) {
+                ecs_entity_t e = flecs_meta_value_lookup_type(cursor, value);
+                if (!e && ecs_os_strcmp(value, "#0")) {
+                    ecs_err("unresolved type identifier '%s' for value", value);
+                    goto error;
+                }
+
+                return flecs_meta_value_set_type(world, op->type, ptr, e);
+            }
+
+            ecs_meta_cursor_t c = flecs_meta_value_constraint_cursor(
+                cursor, ptr, constraint);
+            if (!c.valid) {
+                goto error;
+            }
+
+            return ecs_meta_set_string(&c, value);
+        }
+
+        ecs_entity_t e = flecs_meta_value_lookup_type(cursor, value);
+        if (e && ecs_has(world, e, EcsType) && !flecs_type_is_value(world, e)) {
+            return flecs_meta_value_set_type(world, op->type, ptr, e);
+        }
+
         ptr = flecs_meta_cursor_value_ensure(
             cursor, ptr, ecs_id(ecs_string_t));
         if (!ptr) {
@@ -1992,6 +2190,11 @@ int ecs_meta_set_null(
     if (!ptr) {
         ecs_err("no object to assign");
         goto error;
+    }
+
+    if (!scope->is_value && flecs_meta_op_is_value(cursor->world, op)) {
+        ecs_value_fini(cursor->world, ptr);
+        return 0;
     }
 
     switch (op->kind) {

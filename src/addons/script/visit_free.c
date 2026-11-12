@@ -81,6 +81,8 @@ int flecs_script_visit_free_node(
     case EcsAstExportConst:
     case EcsAstExportMut:
         flecs_expr_visit_free(script, ((ecs_script_var_node_t*)node)->expr);
+        flecs_expr_visit_free(
+            script, ((ecs_script_var_node_t*)node)->type_args);
         break;
     case EcsAstAwait:
         flecs_expr_visit_free(script, ((ecs_script_await_t*)node)->expr);

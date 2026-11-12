@@ -2,7 +2,8 @@
  * @file addons/script/eval/visit_collection.c
  * @brief Visitor that implements the vector Points(type: f32),
  *        array Points(type: f32, count: 3), map Lookup(key_type: i32,
- *        type: f32) and primitive Float(kind: F32) syntax.
+ *        type: f32), value Ref(type: Position) and primitive
+ *        Float(kind: F32) syntax.
  */
 
 #include "flecs.h"
@@ -210,6 +211,29 @@ int flecs_script_map_visit(
     ecs_set_ptr(ctx->world, ctx->entity, EcsMap, &map);
 
     return flecs_script_meta_type_layout_check(ctx, "map");
+}
+
+int flecs_script_value_type_visit(
+    const ecs_script_visitor_ctx_t *ctx)
+{
+    ecs_script_visitor_ctx_t value_ctx = *ctx;
+    value_ctx.kind = ecs_id(EcsValue);
+
+    EcsValue value = {0};
+    if (flecs_script_meta_type_visit(&value_ctx, &value, "value")) {
+        return -1;
+    }
+
+    if (value.type == ctx->entity) {
+        flecs_script_eval_error(ctx->eval, NULL,
+            "value '%s' cannot have itself as type",
+                ecs_get_name(ctx->world, ctx->entity));
+        return -1;
+    }
+
+    ecs_set_ptr(ctx->world, ctx->entity, EcsValue, &value);
+
+    return flecs_script_meta_type_layout_check(ctx, "value");
 }
 
 int flecs_script_primitive_visit(

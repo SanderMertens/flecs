@@ -134,11 +134,6 @@ ecs_entity_t flecs_script_template_member_interface(
     const ecs_script_template_t *template,
     int32_t sp);
 
-ecs_entity_t flecs_script_template_prop_interface(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    const char *member);
-
 bool flecs_script_template_member_is_vector(
     const ecs_script_template_t *template,
     int32_t sp);
@@ -161,15 +156,20 @@ const char* flecs_script_template_interface_error(
     ecs_entity_t value,
     ecs_entity_t interface);
 
+ecs_entity_t flecs_script_template_type_interface(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    bool *is_vector);
+
 void flecs_script_template_ref_set(
     ecs_world_t *world,
-    ecs_script_template_ref_t *ref,
+    ecs_value_t *ref,
     ecs_entity_t type,
     void *value);
 
 int flecs_script_template_ref_apply(
     ecs_world_t *world,
-    const ecs_script_template_ref_t *ref,
+    const ecs_value_t *ref,
     const ecs_type_info_t *ti,
     void *dst);
 

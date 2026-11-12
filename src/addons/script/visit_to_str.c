@@ -106,6 +106,30 @@ static void flecs_expr_to_str(
     }
 }
 
+static void flecs_type_args_to_str(
+    ecs_script_str_visitor_t *v,
+    const ecs_expr_node_t *expr)
+{
+    if (expr->kind == EcsExprEmptyInitializer) {
+        flecs_scriptbuf_appendstr(v, "()");
+        return;
+    }
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    flecs_expr_to_str_buf(&v->script->pub, expr, &buf, false);
+    char *str = ecs_strbuf_get(&buf);
+    ecs_size_t len = str ? ecs_os_strlen(str) : 0;
+    if (len >= 2 && str[0] == '{' && str[len - 1] == '}') {
+        str[0] = '(';
+        str[len - 1] = ')';
+        flecs_scriptbuf_appendstr(v, str);
+    } else {
+        flecs_scriptbuf_append(v, "(%s)", str ? str : "");
+    }
+
+    ecs_os_free(str);
+}
+
 const char* flecs_script_node_kind_str(
     const ecs_script_node_t *node)
 {
@@ -267,16 +291,17 @@ static void flecs_script_stmt_to_str(
     case EcsAstProp:
     case EcsAstMut: {
         ecs_script_var_node_t *stmt = (ecs_script_var_node_t*)node;
-        if (stmt->type_is_template && !stmt->type) {
-            flecs_scriptbuf_append(v, "%s : template%s = ",
-                stmt->name,
-                stmt->type_is_vector ? "[]" : "");
-        } else if (stmt->type) {
-            flecs_scriptbuf_append(v, "%s : %s%s%s = ",
-                stmt->name,
-                stmt->type_is_template ? "template " : "",
-                stmt->type,
-                stmt->type_is_vector ? "[]" : "");
+        if (stmt->type) {
+            flecs_scriptbuf_append(v, "%s : %s", stmt->name, stmt->type);
+            if (stmt->type_args) {
+                flecs_type_args_to_str(v, stmt->type_args);
+            }
+            if (stmt->type_count == -1) {
+                flecs_scriptbuf_appendstr(v, "[]");
+            } else if (stmt->type_count) {
+                flecs_scriptbuf_append(v, "[%d]", stmt->type_count);
+            }
+            flecs_scriptbuf_appendstr(v, " = ");
         } else {
             flecs_scriptbuf_append(v, "%s = ",
                 stmt->name);
