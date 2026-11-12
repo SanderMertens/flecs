@@ -21912,6 +21912,310 @@ void Eval_string_interpolation_of_const_parts_w_leading_literal(void) {
     ecs_fini(world);
 }
 
+void Eval_string_interpolation_of_vector(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Label(text: string)"
+    LINE "const v = [1, 2, 3]"
+    LINE "e { Label: {\"{v} $v\"} }";
+
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t label = ecs_lookup(world, "Label");
+    test_assert(label != 0);
+    const char **text = ecs_get_id(world, e, label);
+    test_assert(text != NULL);
+    test_str(text[0], "[1, 2, 3] [1, 2, 3]");
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_string_interpolation_of_vector_of_strings(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Label(text: string)"
+    LINE "const v = [\"a\", \"b\"]"
+    LINE "e { Label: {\"{v}\"} }";
+
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t label = ecs_lookup(world, "Label");
+    test_assert(label != 0);
+    const char **text = ecs_get_id(world, e, label);
+    test_assert(text != NULL);
+    test_str(text[0], "[\"a\", \"b\"]");
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_string_interpolation_of_vector_of_vectors(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Label(text: string)"
+    LINE "const v = [[1, 2], [3]]"
+    LINE "e { Label: {\"{v}\"} }";
+
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t label = ecs_lookup(world, "Label");
+    test_assert(label != 0);
+    const char **text = ecs_get_id(world, e, label);
+    test_assert(text != NULL);
+    test_str(text[0], "[[1, 2], [3]]");
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_string_interpolation_of_array(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Label(text: string)"
+    LINE "const v: f32[3] = [1, 2.5, 3]"
+    LINE "e { Label: {\"{v}\"} }";
+
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t label = ecs_lookup(world, "Label");
+    test_assert(label != 0);
+    const char **text = ecs_get_id(world, e, label);
+    test_assert(text != NULL);
+    test_str(text[0], "[1, 2.5, 3]");
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_string_interpolation_of_map(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Label(text: string)"
+    LINE "const v: map(i32, string) = [1: \"a\"]"
+    LINE "e { Label: {\"{v}\"} }";
+
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t label = ecs_lookup(world, "Label");
+    test_assert(label != 0);
+    const char **text = ecs_get_id(world, e, label);
+    test_assert(text != NULL);
+    test_str(text[0], "[1: \"a\"]");
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_string_interpolation_of_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Label(text: string)"
+    LINE "struct Position(x: f32, y: f32)"
+    LINE "const v: Position = {1, 2}"
+    LINE "e { Label: {\"{v} $v\"} }";
+
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t label = ecs_lookup(world, "Label");
+    test_assert(label != 0);
+    const char **text = ecs_get_id(world, e, label);
+    test_assert(text != NULL);
+    test_str(text[0], "{x: 1, y: 2} {x: 1, y: 2}");
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_string_interpolation_of_nested_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Label(text: string)"
+    LINE "struct Position(x: f32, y: f32)"
+    LINE "struct Line(start: Position, stop: Position)"
+    LINE "const v: Line = {{1, 2}, {3, 4}}"
+    LINE "e { Label: {\"{v}\"} }";
+
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t label = ecs_lookup(world, "Label");
+    test_assert(label != 0);
+    const char **text = ecs_get_id(world, e, label);
+    test_assert(text != NULL);
+    test_str(text[0], "{start: {x: 1, y: 2}, stop: {x: 3, y: 4}}");
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_string_interpolation_of_enum(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Label(text: string)"
+    LINE "enum Color(Red, Green, Blue)"
+    LINE "const v: Color = Green"
+    LINE "e { Label: {\"<{v}>\"} }";
+
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t label = ecs_lookup(world, "Label");
+    test_assert(label != 0);
+    const char **text = ecs_get_id(world, e, label);
+    test_assert(text != NULL);
+    test_str(text[0], "<Green>");
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_string_interpolation_of_bitmask(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Label(text: string)"
+    LINE "bitmask Toppings(Bacon, Lettuce, Tomato)"
+    LINE "const v: Toppings = Bacon|Tomato"
+    LINE "e { Label: {\"{v}\"} }";
+
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t label = ecs_lookup(world, "Label");
+    test_assert(label != 0);
+    const char **text = ecs_get_id(world, e, label);
+    test_assert(text != NULL);
+    test_str(text[0], "Tomato|Bacon");
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_string_interpolation_of_collection_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Label(text: string)"
+    LINE "e { Label: {\"{[0..3].map((i) -> { i * i })}\"} }";
+
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t label = ecs_lookup(world, "Label");
+    test_assert(label != 0);
+    const char **text = ecs_get_id(world, e, label);
+    test_assert(text != NULL);
+    test_str(text[0], "[0, 1, 4]");
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_string_interpolation_of_collection_in_function(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Label(text: string)"
+    LINE "fn f(n: i32) -> string { \"{[0..n].map((i) -> { i * 2 })}\" }"
+    LINE "e { Label: {f(3)} }";
+
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t label = ecs_lookup(world, "Label");
+    test_assert(label != 0);
+    const char **text = ecs_get_id(world, e, label);
+    test_assert(text != NULL);
+    test_str(text[0], "[0, 2, 4]");
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_interpolated_name_w_collection_literal(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "\"e_{[1, 2]}\" {}";
+
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "e_[1, 2]") != 0);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_interpolated_name_w_vector_in_for(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "for i in [0..2] {"
+    LINE "  const v = [i, i]"
+    LINE "  \"e_{v}\" {}"
+    LINE "}";
+
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "e_[0, 0]") != 0);
+    test_assert(ecs_lookup(world, "e_[1, 1]") != 0);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
 void Eval_semicolon_after_scope_close(void) {
     ecs_world_t *world = ecs_init();
 

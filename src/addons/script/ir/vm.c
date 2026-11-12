@@ -2494,12 +2494,16 @@ static flecs_script_run_status_t flecs_ir_exec(
             break;
         case EcsIrStrValue: {
             ecs_script_ir_reg_t *reg = flecs_ir_reg(vm, op->a);
-            ecs_assert(reg->value.type == ecs_id(ecs_string_t),
-                ECS_INTERNAL_ERROR, NULL);
+            ecs_strbuf_t *buf = ecs_vec_last_t(&vm->strbufs, ecs_strbuf_t);
+            if (reg->value.type != ecs_id(ecs_string_t)) {
+                res = ecs_ptr_to_expr_buf(
+                    v->world, reg->value.type, reg->value.ptr, buf);
+                break;
+            }
+
             const char *str = *(char**)reg->value.ptr;
             if (str) {
-                ecs_strbuf_appendstr(
-                    ecs_vec_last_t(&vm->strbufs, ecs_strbuf_t), str);
+                ecs_strbuf_appendstr(buf, str);
             }
 
             break;

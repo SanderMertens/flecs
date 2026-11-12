@@ -75,6 +75,19 @@ static int flecs_expr_cast_to(
     return 0;
 }
 
+static bool flecs_expr_is_serialized_fragment(
+    ecs_world_t *world,
+    ecs_entity_t type)
+{
+    if (!type || flecs_expr_explicit_cast_allowed(
+        world, type, ecs_id(ecs_string_t)))
+    {
+        return false;
+    }
+
+    return ecs_has(world, type, EcsTypeSerializer);
+}
+
 static bool flecs_expr_unresolved_ref(
     ecs_script_t *script,
     const ecs_expr_eval_desc_t *desc,
@@ -795,9 +808,8 @@ static int flecs_expr_interpolated_string_visit_type(
             priv_desc.allow_unresolved_identifiers = true;
 
             ecs_meta_cursor_t value_cur = {0};
-            ecs_meta_cursor_t *result_cur = format->is_present ? &value_cur : cur;
             if (flecs_expr_visit_type_priv(
-                script, result, result_cur, &priv_desc))
+                script, result, &value_cur, &priv_desc))
             {
                 goto error;
             }
@@ -862,8 +874,9 @@ static int flecs_expr_interpolated_string_visit_type(
                         goto error;
                     }
                 }
-            } else if (flecs_expr_cast_to(
-                script, result, ecs_id(ecs_string_t)))
+            } else if (!flecs_expr_is_serialized_fragment(
+                script->world, (*result)->type) &&
+                flecs_expr_cast_to(script, result, ecs_id(ecs_string_t)))
             {
                 goto error;
             }

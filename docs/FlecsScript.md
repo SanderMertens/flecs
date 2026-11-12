@@ -687,6 +687,16 @@ To prevent evaluating expressions in an interpolated string, the `$` and `{` cha
 const x = "The value of variable \$x is $x"
 ```
 
+Values of enum, bitmask, struct, array, vector and map types are inserted as an expression of the value. Strings nested inside of these values are quoted:
+
+```cpp
+const p: Position = {10, 20}
+const names = ["a", "b"]
+const a = "{p}"                            // {x: 10, y: 20}
+const b = "{[0..3].map((i) -> { i * i })}" // [0, 1, 4]
+const c = "$names"                         // ["a", "b"]
+```
+
 #### Formatting interpolated numbers
 Interpolated `f32` and `f64` values can include a format specifier after the expression, separated by a colon:
 
