@@ -286,6 +286,10 @@ static void flecs_script_ref_dispatch(
     ecs_entity_t instance,
     uint64_t input)
 {
+    if (ecs_get_world(world)->flags & EcsWorldQuit) {
+        return;
+    }
+
     if (!ecs_is_alive(world, script)) {
         return;
     }

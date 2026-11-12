@@ -104,6 +104,16 @@ void flecs_emit(
     ecs_world_t *stage,
     ecs_event_desc_t *desc);
 
+bool flecs_lifecycle_observers_exist(
+    const ecs_world_t *world,
+    ecs_entity_t event);
+
+void flecs_emit_lifecycle(
+    ecs_world_t *world,
+    ecs_entity_t event,
+    ecs_table_t *table,
+    int32_t row);
+
 /* Default function to set in iter::next */
 bool flecs_default_next_callback(
     ecs_iter_t *it);

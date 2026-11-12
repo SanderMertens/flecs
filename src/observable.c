@@ -1001,6 +1001,37 @@ static void flecs_emit_on_set_for_override_on_remove(
     }
 }
 
+bool flecs_lifecycle_observers_exist(
+    const ecs_world_t *world,
+    ecs_entity_t event)
+{
+    const ecs_event_record_t *er = flecs_event_record_get(
+        &world->observable, event);
+    return er && er->any;
+}
+
+void flecs_emit_lifecycle(
+    ecs_world_t *world,
+    ecs_entity_t event,
+    ecs_table_t *table,
+    int32_t row)
+{
+    if (!flecs_lifecycle_observers_exist(world, event)) {
+        return;
+    }
+
+    ecs_id_t any = EcsAny;
+    flecs_emit(world, world, &(ecs_event_desc_t){
+        .event = event,
+        .ids = &(ecs_type_t){ .count = 1, .array = &any },
+        .table = table,
+        .offset = row,
+        .count = 1,
+        .observable = world,
+        .flags = EcsEventLifecycle
+    });
+}
+
 /* The emit function is responsible for finding and invoking the observers 
  * matching the emitted event. The function is also capable of forwarding events
  * for newly reachable ids (after adding a relationship) and propagating events

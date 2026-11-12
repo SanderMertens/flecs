@@ -3738,7 +3738,8 @@
                 "query_bind_prop_changed",
                 "query_bind_if",
                 "query_bind_optional_prefab",
-                "query_bind_recursive_template"
+                "query_bind_recursive_template",
+                "query_no_update_at_fini"
             ]
         }, {
             "id": "ConstVar",

@@ -375,6 +375,22 @@ static void flecs_observer_invoke(
     }
 }
 
+static void flecs_multi_observer_builtin_run(ecs_iter_t *it);
+static void flecs_multi_observer_any_run(ecs_iter_t *it);
+
+static bool flecs_observer_is_monitor_child(
+    const ecs_observer_t *o)
+{
+    if (o->callback != flecs_multi_observer_builtin_run &&
+        o->callback != flecs_multi_observer_any_run)
+    {
+        return false;
+    }
+
+    const ecs_observer_t *parent = o->ctx;
+    return (flecs_observer_impl(parent)->flags & EcsObserverIsMonitor) != 0;
+}
+
 static void flecs_uni_observer_invoke(
     ecs_world_t *world,
     ecs_observer_t *o,
@@ -383,6 +399,12 @@ static void flecs_uni_observer_invoke(
     ecs_entity_t trav)
 {
     if (flecs_ignore_observer(o, table)) {
+        return;
+    }
+
+    if ((it->flags & EcsEventLifecycle) && !table->type.count &&
+        !flecs_observer_is_monitor_child(o))
+    {
         return;
     }
 
@@ -665,8 +687,9 @@ static void flecs_multi_observer_invoke_fixed_src(
     }
 }
 
-static void flecs_multi_observer_invoke(
-    ecs_iter_t *it) 
+static void flecs_multi_observer_invoke_intern(
+    ecs_iter_t *it,
+    bool any) 
 {
     ecs_observer_t *o = it->ctx;
     flecs_poly_assert(o, ecs_observer_t);
@@ -686,8 +709,8 @@ static void flecs_multi_observer_invoke(
         return;
     }
 
-    bool is_not = flecs_observer_term_is_not(term);
-    if (!is_not && !ecs_term_match_this(term) &&
+    bool is_not = !any && flecs_observer_term_is_not(term);
+    if (!any && !is_not && !ecs_term_match_this(term) &&
         (o->query->flags & EcsQueryMatchThis))
     {
         flecs_multi_observer_invoke_fixed_src(o, it);
@@ -696,8 +719,15 @@ static void flecs_multi_observer_invoke(
 
     ecs_table_t *table = it->table;
     ecs_table_t *prev_table = it->other_table;
+    bool is_monitor = (impl->flags & EcsObserverIsMonitor) != 0;
+    bool no_other = !it->other_table || (it->flags & EcsEventLifecycle);
 
     if (is_not) {
+        if (is_monitor && no_other) {
+            o->query->eval_count --;
+            return;
+        }
+
         table = it->other_table;
         prev_table = it->table;
     }
@@ -754,7 +784,7 @@ static void flecs_multi_observer_invoke(
     if (match) {
         /* Monitor observers only invoke when the query matches for the first
          * time with an entity */
-        if (impl->flags & EcsObserverIsMonitor) {
+        if (is_monitor && !no_other) {
             ecs_iter_t table_it;
             ecs_table_range_t prev_range = { .table = prev_table };
             if (flecs_observer_query_has_range(
@@ -784,6 +814,18 @@ static void flecs_multi_observer_invoke(
 
 done:
     return;
+}
+
+static void flecs_multi_observer_invoke(
+    ecs_iter_t *it)
+{
+    flecs_multi_observer_invoke_intern(it, false);
+}
+
+static void flecs_multi_observer_invoke_any(
+    ecs_iter_t *it)
+{
+    flecs_multi_observer_invoke_intern(it, true);
 }
 
 static void flecs_multi_observer_invoke_no_query(
@@ -850,6 +892,24 @@ static void flecs_multi_observer_builtin_run(ecs_iter_t *it) {
     }
 
     flecs_multi_observer_invoke(it);
+}
+
+static void flecs_multi_observer_any_run(ecs_iter_t *it) {
+    ecs_observer_t *o = it->ctx;
+    ecs_run_action_t run = o->run;
+
+    if (run) {
+        if (flecs_observer_impl(o)->flags & EcsObserverBypassQuery) {
+            it->next = flecs_default_next_callback;
+            it->callback = flecs_multi_observer_invoke_any;
+            it->interrupted_by = 0;
+            it->run_ctx = o->run_ctx;
+            run(it);
+            return;
+        }
+    }
+
+    flecs_multi_observer_invoke_any(it);
 }
 
 static void flecs_observer_yield_existing(
@@ -1013,11 +1073,15 @@ static int flecs_multi_observer_init(
 
     int i, term_count = query->term_count;
     bool optional_only = query->flags & EcsQueryMatchThis;
+    bool not_only = optional_only && desc->events[0] == EcsMonitor;
     bool has_not = false;
     for (i = 0; i < term_count; i ++) {
         if (query->terms[i].oper != EcsOptional) {
             if (ecs_term_match_this(&query->terms[i])) {
                 optional_only = false;
+                if (!flecs_observer_term_is_not(&query->terms[i])) {
+                    not_only = false;
+                }
             }
         }
 
@@ -1148,6 +1212,29 @@ static int flecs_multi_observer_init(
 
         if (optional_only) {
             break;
+        }
+    }
+
+    if (not_only && !optional_only) {
+        int32_t pivot = 0;
+        for (i = 0; i < term_count; i ++) {
+            if (ecs_term_match_this(&query->terms[i])) {
+                pivot = i;
+                break;
+            }
+        }
+
+        ecs_term_t *term = &child_desc.query.terms[0];
+        child_desc.term_index_ = query->terms[pivot].field_index;
+        child_desc.callback = flecs_multi_observer_any_run;
+        ecs_os_zeromem(term);
+        term->id = EcsAny;
+        term->first.id = EcsAny;
+        term->src.id = EcsThis | EcsIsVariable | EcsSelf;
+        term->inout = EcsInOutNone;
+
+        if (flecs_observer_add_child(world, o, &child_desc)) {
+            goto error;
         }
     }
 

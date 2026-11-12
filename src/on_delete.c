@@ -542,7 +542,7 @@ static void flecs_remove_from_table(
                 .removed_flags = removed_flags
             };
 
-            flecs_actions_move_remove(world, table, dst_table, 0, table_count, &diff);
+            flecs_actions_move_remove(world, table, dst_table, 0, table_count, &diff, 0);
             ecs_log_pop_3();
         }
 

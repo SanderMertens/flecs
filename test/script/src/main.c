@@ -3637,6 +3637,7 @@ void Reactivity_query_bind_prop_changed(void);
 void Reactivity_query_bind_if(void);
 void Reactivity_query_bind_optional_prefab(void);
 void Reactivity_query_bind_recursive_template(void);
+void Reactivity_query_no_update_at_fini(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_setup(void);
@@ -19113,6 +19114,10 @@ bake_test_case Reactivity_testcases[] = {
     {
         "query_bind_recursive_template",
         Reactivity_query_bind_recursive_template
+    },
+    {
+        "query_no_update_at_fini",
+        Reactivity_query_no_update_at_fini
     }
 };
 
@@ -23862,7 +23867,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         Reactivity_setup,
         NULL,
-        215,
+        216,
         Reactivity_testcases,
         1,
         Reactivity_params

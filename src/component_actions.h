@@ -89,7 +89,8 @@ void flecs_actions_move_remove(
     ecs_table_t *other_table,
     int32_t row,
     int32_t count,
-    const ecs_table_diff_t *diff);
+    const ecs_table_diff_t *diff,
+    ecs_flags32_t evt_flags);
 
 /* Run on_set actions. */
 void flecs_notify_on_set(
