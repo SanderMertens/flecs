@@ -111,6 +111,7 @@ static const struct {
     [EcsIrToBool] = {"ToBool", {"value"}},
     [EcsIrReturn] = {"Return", {"value"}},
     [EcsIrIterate] = {"Iterate", {"dst"}},
+    [EcsIrEval] = {"Eval", {"dst"}},
 };
 
 const char* flecs_script_ir_op_name(

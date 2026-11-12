@@ -302,6 +302,38 @@ ecs_expr_range_t* flecs_expr_range(
     return result;
 }
 
+ecs_expr_mutate_t* flecs_expr_mutate_from(
+    ecs_script_t *script,
+    ecs_expr_node_t *node,
+    ecs_expr_mutate_kind_t kind)
+{
+    ecs_allocator_t *a = &flecs_script_impl(script)->allocator;
+    ecs_expr_mutate_t *result = flecs_calloc_t(a, ecs_expr_mutate_t);
+    result->node.kind = EcsExprMutate;
+    result->node.alloc_size = ECS_SIZEOF(ecs_expr_mutate_t);
+    result->node.pos = node->pos;
+    result->node.end = node->end;
+    result->kind = kind;
+
+    ecs_script_assign_t *assign = flecs_calloc_t(a, ecs_script_assign_t);
+    assign->node.kind = EcsAstAssign;
+    assign->node.alloc_size = ECS_SIZEOF(ecs_script_assign_t);
+    assign->node.pos = node->pos;
+    assign->node.end = node->end;
+    assign->sp = -1;
+    ecs_vec_init_t(a, &assign->steps, ecs_script_assign_step_t, 0);
+    result->assign = assign;
+    return result;
+}
+
+ecs_expr_slice_t* flecs_expr_slice(
+    ecs_parser_t *parser)
+{
+    ecs_expr_slice_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_slice_t, EcsExprSlice);
+    return result;
+}
+
 ecs_expr_new_t* flecs_expr_new(
     ecs_parser_t *parser)
 {
@@ -756,6 +788,45 @@ int flecs_expr_visit_children(
         }
 
         n->lambda = (ecs_expr_lambda_t*)lambda;
+        break;
+    }
+    case EcsExprSlice: {
+        ecs_expr_slice_t *n = (ecs_expr_slice_t*)node;
+        if (action(&n->left, ctx) ||
+            action(&n->from, ctx) ||
+            action(&n->to, ctx))
+        {
+            return -1;
+        }
+
+        break;
+    }
+    case EcsExprMutate: {
+        ecs_expr_mutate_t *n = (ecs_expr_mutate_t*)node;
+        ecs_expr_node_t *args = (ecs_expr_node_t*)n->args;
+        if (action(&args, ctx)) {
+            return -1;
+        }
+
+        n->args = (ecs_expr_initializer_t*)args;
+
+        ecs_script_assign_t *assign = n->assign;
+        if (assign) {
+            if (action(&assign->entity, ctx)) {
+                return -1;
+            }
+
+            ecs_script_assign_step_t *steps = ecs_vec_first(&assign->steps);
+            int32_t i, count = ecs_vec_count(&assign->steps);
+            for (i = 0; i < count; i ++) {
+                if (action(&steps[i].index, ctx) ||
+                    action(&steps[i].index_to, ctx))
+                {
+                    return -1;
+                }
+            }
+        }
+
         break;
     }
     case EcsExprNew:

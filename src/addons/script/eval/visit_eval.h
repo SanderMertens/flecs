@@ -305,6 +305,20 @@ int flecs_script_assign_value(
     const int64_t *indices,
     const void *src);
 
+typedef int (*flecs_script_assign_action_t)(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_assign_t *node,
+    void *dst,
+    void *ctx);
+
+int flecs_script_assign_apply(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_assign_t *node,
+    ecs_entity_t entity,
+    const int64_t *indices,
+    flecs_script_assign_action_t action,
+    void *ctx);
+
 ecs_entity_t flecs_script_lookup_name(
     ecs_script_eval_visitor_t *v,
     const char *name);

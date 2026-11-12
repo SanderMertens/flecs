@@ -435,12 +435,20 @@ static void flecs_script_stmt_to_str(
                 flecs_scriptbuf_append(v, ".%s", steps[i].member);
             } else {
                 flecs_scriptbuf_appendstr(v, "[");
-                flecs_expr_to_str(v, steps[i].index);
+                if (steps[i].index) {
+                    flecs_expr_to_str(v, steps[i].index);
+                }
+                if (steps[i].is_slice) {
+                    flecs_scriptbuf_appendstr(v, "..");
+                    if (steps[i].index_to) {
+                        flecs_expr_to_str(v, steps[i].index_to);
+                    }
+                }
                 flecs_scriptbuf_appendstr(v, "]");
             }
         }
 
-        flecs_scriptbuf_appendstr(v, " = ");
+        flecs_scriptbuf_appendstr(v, stmt->append ? " += " : " = ");
         flecs_expr_to_str(v, stmt->expr);
         break;
     }

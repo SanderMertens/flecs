@@ -314,6 +314,44 @@ static void flecs_expr_iterate_to_str(
     ecs_strbuf_appendlit(v->buf, ")");
 }
 
+static void flecs_expr_mutate_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_mutate_t *node)
+{
+    const ecs_script_assign_t *assign = node->assign;
+    if (assign->entity) {
+        flecs_expr_node_to_str(v, assign->entity);
+    } else {
+        ecs_strbuf_appendstr(v->buf, assign->name);
+    }
+
+    ecs_script_assign_step_t *steps = ecs_vec_first(&assign->steps);
+    int32_t i, count = ecs_vec_count(&assign->steps);
+    for (i = 0; i < count; i ++) {
+        if (steps[i].member) {
+            ecs_strbuf_appendlit(v->buf, ".");
+            ecs_strbuf_appendstr(v->buf, steps[i].member);
+        } else {
+            ecs_strbuf_appendlit(v->buf, "[");
+            flecs_expr_node_to_str(v, steps[i].index);
+            ecs_strbuf_appendlit(v->buf, "]");
+        }
+    }
+
+    ecs_strbuf_append(v->buf, ".%s(", node->function_name);
+    ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->args->elements);
+    count = ecs_vec_count(&node->args->elements);
+    for (i = 0; i < count; i ++) {
+        if (i) {
+            ecs_strbuf_appendlit(v->buf, ", ");
+        }
+
+        flecs_expr_node_to_str(v, elems[i].value);
+    }
+
+    ecs_strbuf_appendlit(v->buf, ")");
+}
+
 static void flecs_expr_node_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_node_t *node)
@@ -421,6 +459,24 @@ static void flecs_expr_node_to_str(
     case EcsExprIterate:
         flecs_expr_iterate_to_str(v,
             (const ecs_expr_iterate_t*)node);
+        break;
+    case EcsExprSlice: {
+        const ecs_expr_slice_t *slice = (const ecs_expr_slice_t*)node;
+        flecs_expr_node_to_str(v, slice->left);
+        ecs_strbuf_appendlit(v->buf, "[");
+        if (slice->from) {
+            flecs_expr_node_to_str(v, slice->from);
+        }
+        ecs_strbuf_appendlit(v->buf, "..");
+        if (slice->to) {
+            flecs_expr_node_to_str(v, slice->to);
+        }
+        suffix = "]";
+        break;
+    }
+    case EcsExprMutate:
+        flecs_expr_mutate_to_str(v,
+            (const ecs_expr_mutate_t*)node);
         break;
     case EcsExprCast:
     case EcsExprCastNumber:

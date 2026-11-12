@@ -1469,7 +1469,9 @@ static int flecs_script_dep_node_impl(
         ecs_script_assign_step_t *steps = ecs_vec_first(&n->steps);
         int32_t i, count = ecs_vec_count(&n->steps);
         for (i = n->entity != NULL; i < count; i ++) {
-            if (flecs_script_dep_expr(ctx, steps[i].index, node)) {
+            if (flecs_script_dep_expr(ctx, steps[i].index, node) ||
+                flecs_script_dep_expr(ctx, steps[i].index_to, node))
+            {
                 return -1;
             }
         }

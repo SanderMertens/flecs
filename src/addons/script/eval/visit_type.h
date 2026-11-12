@@ -75,4 +75,10 @@ bool flecs_script_type_is_skipped_var(
     ecs_script_type_visitor_t *t,
     const char *name);
 
+int flecs_script_type_assign_target(
+    ecs_script_type_visitor_t *t,
+    ecs_script_assign_t *node,
+    ecs_entity_t *var_type_out,
+    ecs_entity_t *target_type_out);
+
 #endif

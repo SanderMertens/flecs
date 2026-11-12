@@ -1520,12 +1520,159 @@ error:
     return -1;
 }
 
+static ecs_entity_t flecs_expr_collection_elem_type(
+    const ecs_world_t *world,
+    ecs_entity_t type)
+{
+    const EcsArray *array = ecs_get(world, type, EcsArray);
+    if (array) {
+        return array->type;
+    }
+
+    const EcsVector *vector = ecs_get(world, type, EcsVector);
+    if (vector) {
+        return vector->type;
+    }
+
+    return 0;
+}
+
+static bool flecs_expr_is_concat_type(
+    const ecs_world_t *world,
+    ecs_entity_t type)
+{
+    return type == ecs_id(ecs_string_t) ||
+        flecs_expr_is_type_collection(world, type);
+}
+
+static ecs_entity_t flecs_expr_unify_elem_type(
+    ecs_entity_t a,
+    ecs_entity_t b)
+{
+    if (a == b) {
+        return a;
+    }
+
+    if (!flecs_expr_is_type_number(a) || !flecs_expr_is_type_number(b)) {
+        return 0;
+    }
+
+    if (flecs_expr_implicit_cast_allowed(b, a)) {
+        return a;
+    }
+
+    if (flecs_expr_implicit_cast_allowed(a, b)) {
+        return b;
+    }
+
+    if (flecs_expr_is_type_float(a) || flecs_expr_is_type_float(b)) {
+        return ecs_id(ecs_f64_t);
+    }
+
+    return ecs_id(ecs_i64_t);
+}
+
+static int flecs_expr_concat_visit_type(
+    ecs_script_t *script,
+    ecs_expr_binary_t *node,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_world_t *world = script->world;
+    ecs_entity_t ltype = node->left->type;
+    bool is_string = ltype == ecs_id(ecs_string_t);
+    bool is_map = !is_string && ecs_has(world, ltype, EcsMap);
+    ecs_entity_t lelem = flecs_expr_collection_elem_type(world, ltype);
+
+    ecs_meta_cursor_t cur;
+    ecs_os_zeromem(&cur);
+    bool left_literal = node->left->kind == EcsExprInitializer ||
+        node->left->kind == EcsExprEmptyInitializer;
+    bool right_literal = node->right->kind == EcsExprInitializer ||
+        node->right->kind == EcsExprEmptyInitializer;
+    if (!is_string && right_literal && (!left_literal || is_map ||
+        node->right->kind == EcsExprEmptyInitializer))
+    {
+        flecs_expr_visit_type_cursor(world, &cur, is_map
+            ? ltype : flecs_script_vector_type(world, lelem));
+    }
+
+    if (flecs_expr_visit_type_priv(script, &node->right, &cur, desc)) {
+        return -1;
+    }
+
+    ecs_entity_t rtype = node->right->type;
+    ecs_entity_t result_type = ltype;
+
+    if (is_string) {
+        if (rtype != ecs_id(ecs_string_t)) {
+            goto incompatible;
+        }
+    } else if (is_map) {
+        if (rtype != ltype) {
+            if (!ecs_has(world, rtype, EcsMap) ||
+                !flecs_expr_explicit_cast_allowed(world, rtype, ltype))
+            {
+                goto incompatible;
+            }
+
+            if (flecs_expr_cast_to(script, &node->right, ltype)) {
+                return -1;
+            }
+        }
+    } else {
+        ecs_entity_t relem = flecs_expr_collection_elem_type(world, rtype);
+        if (!relem) {
+            goto incompatible;
+        }
+
+        ecs_entity_t elem = flecs_expr_unify_elem_type(lelem, relem);
+        if (!elem) {
+            flecs_expr_visit_error(script, node,
+                "cannot concatenate collections with element types %s and %s",
+                flecs_errstr(ecs_get_path(world, lelem)),
+                flecs_errstr_1(ecs_get_path(world, relem)));
+            return -1;
+        }
+
+        result_type = flecs_script_vector_type(world, elem);
+        if (!result_type) {
+            flecs_expr_visit_error(script, node,
+                "failed to create vector type for concatenation");
+            return -1;
+        }
+
+        if (lelem != elem &&
+            flecs_expr_cast_to(script, &node->left, result_type))
+        {
+            return -1;
+        }
+
+        if (relem != elem &&
+            flecs_expr_cast_to(script, &node->right, result_type))
+        {
+            return -1;
+        }
+    }
+
+    node->concat = true;
+    node->vector_type = 0;
+    node->vector_count = 0;
+    node->node.type = result_type;
+    return 0;
+incompatible:
+    flecs_expr_visit_error(script, node,
+        "cannot concatenate %s with %s",
+        flecs_errstr(ecs_get_path(world, ltype)),
+        flecs_errstr_1(ecs_get_path(world, rtype)));
+    return -1;
+}
+
 static int flecs_expr_binary_visit_type(
     ecs_script_t *script,
     ecs_expr_binary_t *node,
     ecs_meta_cursor_t *cur,
     const ecs_expr_eval_desc_t *desc)
-{    
+{
     /* Operands must be of this type or cast to it */
     ecs_entity_t operand_type = 0;
 
@@ -1534,6 +1681,8 @@ static int flecs_expr_binary_visit_type(
 
     /* Number of elements in vector, if vector operation */
     int32_t vector_elem_count = 0;
+
+    node->concat = false;
 
     /* Operands are visited with a copy of the cursor. Visiting an operand can
      * move the cursor to the type of the operand, which must not be visible to
@@ -1564,6 +1713,13 @@ static int flecs_expr_binary_visit_type(
     if (!node->right) {
         flecs_expr_visit_error(script, node, "invalid binary expression");
         goto error;
+    }
+
+    if (node->operator == EcsTokAdd &&
+        flecs_expr_is_concat_type(script->world, node->left->type))
+    {
+        flecs_free_n(a, ecs_meta_cursor_t, 2, operand_cur);
+        return flecs_expr_concat_visit_type(script, node, desc);
     }
 
     if (node->right->kind == EcsExprIdentifier &&
@@ -2439,7 +2595,13 @@ static bool flecs_expr_iterate_kind_from_name(
         { "min", EcsExprIterateMin, true },
         { "max", EcsExprIterateMax, true },
         { "any", EcsExprIterateAny, true },
-        { "all", EcsExprIterateAll, true }
+        { "all", EcsExprIterateAll, true },
+        { "sort", EcsExprIterateSort, true },
+        { "contains", EcsExprIterateContains, true },
+        { "index_of", EcsExprIterateIndexOf, true },
+        { "first", EcsExprIterateFirst, true },
+        { "last", EcsExprIterateLast, true },
+        { "reverse", EcsExprIterateReverse, true }
     };
 
     if (!name) {
@@ -2468,10 +2630,13 @@ static int flecs_expr_iterate_kind(
     ecs_expr_iterate_kind_t *kind)
 {
     const char *name = node->function_name;
-    if (!is_method || !flecs_expr_iterate_kind_from_name(name, true, kind)) {
+    if (!is_method || !flecs_expr_iterate_kind_from_name(name, true, kind) ||
+        (*kind >= EcsExprIterateContains && *kind != EcsExprIterateSort))
+    {
         flecs_expr_visit_error(script, node,
             "lambda can only be passed to collection methods map, "
-            "map_values, filter, reduce, count, sum, min, max, any or all");
+            "map_values, filter, reduce, count, sum, min, max, any, all "
+            "or sort");
         return -1;
     }
 
@@ -2627,6 +2792,45 @@ static int flecs_expr_iterate_visit_type(
         goto error;
     }
 
+    if (kind >= EcsExprIterateIndexOf &&
+        node->collection_kind == EcsMapType)
+    {
+        flecs_expr_visit_error(script, node,
+            "'%s' can only be called on an array or vector, got '%s'",
+            name, flecs_errstr(ecs_get_path(world, type)));
+        goto error;
+    }
+
+    if (kind == EcsExprIterateContains || kind == EcsExprIterateIndexOf) {
+        bool is_key = node->collection_kind == EcsMapType;
+        ecs_entity_t value_type = is_key ? node->key_type : node->elem_type;
+        if (!node->init) {
+            flecs_expr_visit_error(script, node,
+                "missing argument for '%s'", name);
+            goto error;
+        }
+
+        const ecs_type_info_t *ti = ecs_get_type_info(world, value_type);
+        if (!is_key && (!ti ||
+            (ti->hooks.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL)))
+        {
+            flecs_expr_visit_error(script, node,
+                "cannot call '%s' on collection of type '%s': elements "
+                "cannot be compared", name,
+                flecs_errstr(ecs_get_path(world, type)));
+            goto error;
+        }
+
+        flecs_expr_visit_type_cursor(world, &cur, value_type);
+        if (flecs_expr_visit_type_priv(script, &node->init, &cur, desc)) {
+            goto error;
+        }
+
+        if (flecs_expr_cast_to(script, &node->init, value_type)) {
+            goto error;
+        }
+    }
+
     if (kind == EcsExprIterateReduce) {
         node->acc_type = node->elem_type;
         if (node->init) {
@@ -2662,6 +2866,16 @@ static int flecs_expr_iterate_visit_type(
             "'%s' without lambda requires a collection of bool, got '%s'",
             name, flecs_errstr(ecs_get_path(world, type)));
         goto error;
+    }
+
+    if (kind == EcsExprIterateSort) {
+        const ecs_type_info_t *ti = ecs_get_type_info(world, value_type);
+        if (!ti || (ti->hooks.flags & ECS_TYPE_HOOK_CMP_ILLEGAL)) {
+            flecs_expr_visit_error(script, node,
+                "cannot sort by values of type '%s': values cannot be "
+                "compared", flecs_errstr(ecs_get_path(world, value_type)));
+            goto error;
+        }
     }
 
     if ((kind == EcsExprIterateSum || kind == EcsExprIterateMin ||
@@ -2700,7 +2914,19 @@ static int flecs_expr_iterate_visit_type(
         result_type = ecs_id(ecs_bool_t);
         break;
     case EcsExprIterateCount:
+    case EcsExprIterateIndexOf:
         result_type = ecs_id(ecs_i32_t);
+        break;
+    case EcsExprIterateContains:
+        result_type = ecs_id(ecs_bool_t);
+        break;
+    case EcsExprIterateFirst:
+    case EcsExprIterateLast:
+        result_type = node->elem_type;
+        break;
+    case EcsExprIterateReverse:
+    case EcsExprIterateSort:
+        result_type = flecs_script_vector_type(world, node->elem_type);
         break;
     }
 
@@ -2732,8 +2958,13 @@ static int flecs_expr_iterate_from_function(
         script, (ecs_expr_node_t*)fn, kind);
     result->function_name = fn->function_name;
     result->left = fn->left;
-    result->lambda = count ? (ecs_expr_lambda_t*)elems[0].value : NULL;
-    result->init = count == 2 ? elems[1].value : NULL;
+
+    int32_t next = 0;
+    if (count && elems[0].value->kind == EcsExprLambda) {
+        result->lambda = (ecs_expr_lambda_t*)elems[next ++].value;
+    }
+
+    result->init = count > next ? elems[next].value : NULL;
 
     fn->left = NULL;
     for (i = 0; i < count; i ++) {
@@ -2749,6 +2980,296 @@ static int flecs_expr_iterate_from_function(
 
     *node_ptr = (ecs_expr_node_t*)result;
     return flecs_expr_iterate_visit_type(script, result, desc);
+}
+
+static bool flecs_expr_mutate_kind_from_name(
+    const char *name,
+    ecs_expr_mutate_kind_t *kind)
+{
+    static const struct {
+        const char *name;
+        ecs_expr_mutate_kind_t kind;
+    } methods[] = {
+        { "push", EcsExprMutatePush },
+        { "pop", EcsExprMutatePop },
+        { "insert", EcsExprMutateInsert },
+        { "remove", EcsExprMutateRemove },
+        { "clear", EcsExprMutateClear }
+    };
+
+    if (!name) {
+        return false;
+    }
+
+    int32_t i, count = ECS_SIZEOF(methods) / ECS_SIZEOF(methods[0]);
+    for (i = 0; i < count; i ++) {
+        if (!ecs_os_strcmp(name, methods[i].name)) {
+            *kind = methods[i].kind;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static void flecs_expr_mutate_set_name(
+    ecs_script_t *script,
+    ecs_expr_mutate_t *node,
+    const char *name)
+{
+    ecs_allocator_t *a = &flecs_script_impl(script)->allocator;
+    node->name = flecs_strdup(a, name ? name : "");
+    node->assign->name = node->name;
+}
+
+static ecs_script_assign_step_t* flecs_expr_mutate_step(
+    ecs_script_t *script,
+    ecs_expr_mutate_t *node)
+{
+    ecs_allocator_t *a = &flecs_script_impl(script)->allocator;
+    ecs_script_assign_step_t *step = ecs_vec_append_t(
+        a, &node->assign->steps, ecs_script_assign_step_t);
+    ecs_os_zeromem(step);
+    return step;
+}
+
+static int flecs_expr_mutate_target(
+    ecs_script_t *script,
+    ecs_expr_mutate_t *node,
+    ecs_expr_node_t *expr)
+{
+    switch(expr->kind) {
+    case EcsExprIdentifier:
+        flecs_expr_mutate_set_name(script, node,
+            ((ecs_expr_identifier_t*)expr)->value);
+        return 0;
+    case EcsExprVariable:
+    case EcsExprGlobalVariable:
+        flecs_expr_mutate_set_name(script, node,
+            ((ecs_expr_variable_t*)expr)->name);
+        return 0;
+    case EcsExprMember: {
+        ecs_expr_member_t *member = (ecs_expr_member_t*)expr;
+        if (flecs_expr_mutate_target(script, node, member->left)) {
+            return -1;
+        }
+
+        flecs_expr_mutate_step(script, node)->member = member->member_name;
+        return 0;
+    }
+    case EcsExprElement: {
+        ecs_expr_element_t *elem = (ecs_expr_element_t*)expr;
+        if (flecs_expr_mutate_target(script, node, elem->left)) {
+            return -1;
+        }
+
+        flecs_expr_mutate_step(script, node)->index = elem->index;
+        elem->index = NULL;
+        return 0;
+    }
+    case EcsExprComponent: {
+        ecs_expr_element_t *elem = (ecs_expr_element_t*)expr;
+        const char *name = NULL;
+        if (elem->left->kind == EcsExprIdentifier) {
+            name = ((ecs_expr_identifier_t*)elem->left)->value;
+        } else if (elem->left->kind == EcsExprVariable) {
+            name = ((ecs_expr_variable_t*)elem->left)->name;
+        }
+
+        flecs_expr_mutate_set_name(script, node, name);
+        node->assign->entity = elem->left;
+        elem->left = NULL;
+        flecs_expr_mutate_step(script, node)->index = elem->index;
+        elem->index = NULL;
+        return 0;
+    }
+    default:
+        break;
+    }
+
+    flecs_expr_visit_error(script, node,
+        "cannot call '%s' on a value that is not a variable, member, "
+        "element or component", node->function_name);
+    return -1;
+}
+
+static int flecs_expr_mutate_visit_type(
+    ecs_script_t *script,
+    ecs_expr_mutate_t *node,
+    bool is_stmt,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_world_t *world = script->world;
+    const char *name = node->function_name;
+    ecs_script_eval_visitor_t *v = desc ? desc->script_visitor : NULL;
+    ecs_script_type_visitor_t *t = v ? v->type_visitor : NULL;
+    if (!t || !t->async_scope) {
+        flecs_expr_visit_error(script, node,
+            "'%s' modifies a collection and can only be called from an "
+            "async block or a function", name);
+        return -1;
+    }
+
+    ecs_entity_t var_type = 0, target_type = 0;
+    if (flecs_script_type_assign_target(
+        t, node->assign, &var_type, &target_type))
+    {
+        return -1;
+    }
+
+    node->assign->root_type = var_type;
+    node->assign->eval_type = target_type;
+
+    const EcsType *type = ecs_get(world, target_type, EcsType);
+    ecs_type_kind_t kind = type ? type->kind : EcsPrimitiveType;
+    if (kind == EcsVectorType) {
+        node->elem_type = ecs_get(world, target_type, EcsVector)->type;
+    } else if (kind == EcsMapType) {
+        const EcsMap *map = ecs_get(world, target_type, EcsMap);
+        node->elem_type = map->type;
+        node->key_type = map->key_type;
+        node->is_map = true;
+        if (node->kind != EcsExprMutateRemove &&
+            node->kind != EcsExprMutateClear)
+        {
+            flecs_expr_visit_error(script, node,
+                "cannot call '%s' on map '%s'", name, node->name);
+            return -1;
+        }
+    } else if (kind == EcsArrayType) {
+        flecs_expr_visit_error(script, node,
+            "cannot call '%s' on array '%s': arrays have a fixed size",
+            name, node->name);
+        return -1;
+    } else {
+        flecs_expr_visit_error(script, node,
+            "cannot call '%s' on '%s' of type '%s': not a vector or map",
+            name, node->name, flecs_errstr(ecs_get_path(world, target_type)));
+        return -1;
+    }
+
+    ecs_expr_initializer_element_t *elems = ecs_vec_first(
+        &node->args->elements);
+    int32_t i, count = ecs_vec_count(&node->args->elements);
+    int32_t min_args = 0, max_args = 0;
+    switch(node->kind) {
+    case EcsExprMutatePush: min_args = 1; max_args = INT32_MAX; break;
+    case EcsExprMutateInsert: min_args = 2; max_args = INT32_MAX; break;
+    case EcsExprMutateRemove: min_args = 1; max_args = 1; break;
+    case EcsExprMutatePop:
+    case EcsExprMutateClear: break;
+    }
+
+    if (count < min_args || count > max_args) {
+        if (min_args == max_args) {
+            flecs_expr_visit_error(script, node,
+                "expected %d arguments for '%s', got %d",
+                min_args, name, count);
+        } else {
+            flecs_expr_visit_error(script, node,
+                "expected at least %d arguments for '%s', got %d",
+                min_args, name, count);
+        }
+        return -1;
+    }
+
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t arg_type = node->elem_type;
+        bool is_index = false;
+        if (node->kind == EcsExprMutateRemove) {
+            if (node->is_map) {
+                arg_type = node->key_type;
+            } else {
+                arg_type = ecs_id(ecs_i64_t);
+                is_index = true;
+            }
+        } else if (node->kind == EcsExprMutateInsert && !i) {
+            arg_type = ecs_id(ecs_i64_t);
+            is_index = true;
+        }
+
+        ecs_meta_cursor_t cur;
+        ecs_os_zeromem(&cur);
+        if (!is_index) {
+            flecs_expr_visit_type_cursor(world, &cur, arg_type);
+        }
+
+        if (flecs_expr_visit_type_priv(script, &elems[i].value, &cur, desc)) {
+            return -1;
+        }
+
+        ecs_entity_t value_type = elems[i].value->type;
+        if (is_index && !flecs_expr_is_type_number(value_type)) {
+            flecs_expr_visit_error(script, node,
+                "index of type '%s' is not a number", flecs_errstr(
+                    ecs_get_path(world, value_type)));
+            return -1;
+        }
+
+        if (value_type != arg_type &&
+            !(flecs_expr_is_type_number(value_type) &&
+                flecs_expr_is_type_number(arg_type)) &&
+            !(flecs_expr_is_type_collection(world, value_type) &&
+                flecs_expr_is_type_collection(world, arg_type)) &&
+            !flecs_type_is_value(world, arg_type))
+        {
+            flecs_expr_visit_error(script, node,
+                "argument of type '%s' is incompatible with type '%s' for "
+                "'%s'", flecs_errstr(ecs_get_path(world, value_type)),
+                flecs_errstr_1(ecs_get_path(world, arg_type)), name);
+            return -1;
+        }
+
+        if (flecs_expr_cast_to(script, &elems[i].value, arg_type)) {
+            return -1;
+        }
+    }
+
+    if (node->kind == EcsExprMutatePop) {
+        node->node.type = node->elem_type;
+    } else {
+        if (!is_stmt) {
+            flecs_expr_visit_error(script, node,
+                "'%s' does not return a value", name);
+            return -1;
+        }
+
+        node->node.type = ecs_id(ecs_bool_t);
+    }
+
+    return 0;
+}
+
+static int flecs_expr_mutate_from_function(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr,
+    ecs_expr_member_t *replaced_member,
+    ecs_expr_mutate_kind_t kind,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_expr_function_t *fn = (ecs_expr_function_t*)*node_ptr;
+    ecs_expr_mutate_t *result = flecs_expr_mutate_from(
+        script, (ecs_expr_node_t*)fn, kind);
+    result->function_name = fn->function_name;
+    result->args = fn->args;
+    fn->args = NULL;
+    bool is_stmt = fn->is_stmt;
+
+    int ret = flecs_expr_mutate_target(script, result, fn->left);
+
+    if (replaced_member) {
+        replaced_member->left = NULL;
+        flecs_expr_visit_free(script, (ecs_expr_node_t*)replaced_member);
+    }
+
+    flecs_expr_visit_free(script, (ecs_expr_node_t*)fn);
+    *node_ptr = (ecs_expr_node_t*)result;
+
+    if (ret) {
+        return -1;
+    }
+
+    return flecs_expr_mutate_visit_type(script, result, is_stmt, desc);
 }
 
 static int flecs_expr_function_visit_type(
@@ -2846,12 +3367,29 @@ static int flecs_expr_function_visit_type(
                 func = ecs_lookup_child(world, collection, node->function_name);
 
                 ecs_expr_iterate_kind_t kind;
-                if (!func && !ecs_vec_count(&node->args->elements) &&
-                    flecs_expr_iterate_kind_from_name(
-                        node->function_name, false, &kind))
+                if (!func && flecs_expr_iterate_kind_from_name(
+                    node->function_name, false, &kind))
                 {
+                    int32_t expect = (kind == EcsExprIterateContains ||
+                        kind == EcsExprIterateIndexOf) ? 1 : 0;
+                    int32_t arg_count = ecs_vec_count(&node->args->elements);
+                    if (arg_count != expect) {
+                        flecs_expr_visit_error(script, node,
+                            "expected %d arguments for '%s', got %d",
+                            expect, node->function_name, arg_count);
+                        goto error;
+                    }
+
                     return flecs_expr_iterate_from_function(
                         script, node_ptr, replaced_member, kind, desc);
+                }
+
+                ecs_expr_mutate_kind_t mutate_kind;
+                if (!func && flecs_expr_mutate_kind_from_name(
+                    node->function_name, &mutate_kind))
+                {
+                    return flecs_expr_mutate_from_function(
+                        script, node_ptr, replaced_member, mutate_kind, desc);
                 }
             }
         }
@@ -3352,6 +3890,69 @@ error:
     return -1;
 }
 
+static int flecs_expr_slice_bound_visit_type(
+    ecs_script_t *script,
+    ecs_expr_slice_t *node,
+    ecs_expr_node_t **bound,
+    const ecs_expr_eval_desc_t *desc)
+{
+    if (!*bound) {
+        return 0;
+    }
+
+    ecs_meta_cursor_t cur;
+    ecs_os_zeromem(&cur);
+    if (flecs_expr_visit_type_priv(script, bound, &cur, desc)) {
+        return -1;
+    }
+
+    if (!flecs_expr_is_type_number((*bound)->type)) {
+        flecs_expr_visit_error(script, node,
+            "slice bound of type '%s' is not a number",
+            flecs_errstr(ecs_get_path(script->world, (*bound)->type)));
+        return -1;
+    }
+
+    return flecs_expr_cast_to(script, bound, ecs_id(ecs_i64_t));
+}
+
+static int flecs_expr_slice_visit_type(
+    ecs_script_t *script,
+    ecs_expr_slice_t *node,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_world_t *world = script->world;
+    ecs_meta_cursor_t cur;
+    ecs_os_zeromem(&cur);
+    if (flecs_expr_visit_type_priv(script, &node->left, &cur, desc)) {
+        return -1;
+    }
+
+    ecs_entity_t elem = flecs_expr_collection_elem_type(
+        world, node->left->type);
+    if (!elem) {
+        flecs_expr_visit_error(script, node,
+            "cannot slice value of type '%s': not an array or vector",
+            flecs_errstr(ecs_get_path(world, node->left->type)));
+        return -1;
+    }
+
+    if (flecs_expr_slice_bound_visit_type(script, node, &node->from, desc) ||
+        flecs_expr_slice_bound_visit_type(script, node, &node->to, desc))
+    {
+        return -1;
+    }
+
+    node->node.type = flecs_script_vector_type(world, elem);
+    if (!node->node.type) {
+        flecs_expr_visit_error(script, node,
+            "failed to create vector type for slice");
+        return -1;
+    }
+
+    return 0;
+}
+
 static int flecs_expr_has_id_elem_name(
     ecs_script_t *script,
     ecs_expr_has_t *node,
@@ -3724,12 +4325,19 @@ static int flecs_expr_visit_type_ex(
     case EcsExprLambda:
         flecs_expr_visit_error(script, node,
             "lambda can only be passed to collection methods map, "
-            "map_values, filter, reduce, count, sum, min, max, any or all");
+            "map_values, filter, reduce, count, sum, min, max, any, all "
+            "or sort");
         r = -1;
         break;
     case EcsExprIterate:
         r = flecs_expr_iterate_visit_type(
             script, (ecs_expr_iterate_t*)node, desc);
+        break;
+    case EcsExprSlice:
+        r = flecs_expr_slice_visit_type(
+            script, (ecs_expr_slice_t*)node, desc);
+        break;
+    case EcsExprMutate:
         break;
     case EcsExprCast:
     case EcsExprCastNumber:

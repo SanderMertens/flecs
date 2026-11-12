@@ -271,11 +271,16 @@ typedef struct ecs_script_while_t {
 typedef struct ecs_script_assign_step_t {
     const char *member;    /* Member path, NULL if step is an index */
     ecs_expr_node_t *index;
+    ecs_expr_node_t *index_to;
     int32_t offset;        /* Offset of member(s) in value */
     int32_t elem_size;
     int32_t count;         /* Array size, 0 for vectors */
     int32_t reg;           /* Register with index value, used by IR */
+    int32_t reg_to;
+    bool is_slice;
 } ecs_script_assign_step_t;
+
+#define FLECS_SCRIPT_SLICE_OPEN INT64_MIN
 
 typedef struct ecs_script_assign_t {
     ecs_script_node_t node;
@@ -292,6 +297,9 @@ typedef struct ecs_script_assign_t {
     int32_t sp;
     bool parent;
     bool local;
+    bool compound;
+    bool append;
+    bool slice;
 } ecs_script_assign_t;
 
 typedef struct ecs_script_if_t {

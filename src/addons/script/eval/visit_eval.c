@@ -2191,7 +2191,10 @@ static int flecs_script_function_node_refs(
         ecs_script_assign_step_t *steps = ecs_vec_first(&n->steps);
         int32_t i, count = ecs_vec_count(&n->steps);
         for (i = 0; i < count; i ++) {
-            if (flecs_script_function_expr_refs(script, steps[i].index, refs)) {
+            if (flecs_script_function_expr_refs(script, steps[i].index, refs) ||
+                flecs_script_function_expr_refs(
+                    script, steps[i].index_to, refs))
+            {
                 return -1;
             }
         }
@@ -2305,6 +2308,10 @@ static void* flecs_script_assign_target(
             continue;
         }
 
+        if (step->is_slice) {
+            break;
+        }
+
         void *array = ptr;
         int32_t elem_count = step->count;
         if (!elem_count) {
@@ -2327,16 +2334,15 @@ static void* flecs_script_assign_target(
     return ptr;
 }
 
-int flecs_script_assign_value(
+int flecs_script_assign_apply(
     ecs_script_eval_visitor_t *v,
     ecs_script_assign_t *node,
     ecs_entity_t entity,
     const int64_t *indices,
-    const void *src)
+    flecs_script_assign_action_t action,
+    void *ctx)
 {
     ecs_world_t *world = v->world;
-    const ecs_type_info_t *ti = ecs_get_type_info(world, node->eval_type);
-    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (node->local) {
         ecs_script_var_t *var = ecs_script_vars_from_sp(v->vars, node->sp);
@@ -2347,11 +2353,7 @@ int flecs_script_assign_value(
             return -1;
         }
 
-        if (dst != src) {
-            ecs_ptr_copy_w_type_info(world, ti, dst, src);
-        }
-
-        return 0;
+        return action(v, node, dst, ctx);
     }
 
     if (node->global) {
@@ -2373,8 +2375,8 @@ int flecs_script_assign_value(
             return -1;
         }
 
-        if (dst != src) {
-            ecs_ptr_copy_w_type_info(world, ti, dst, src);
+        if (action(v, node, dst, ctx)) {
+            return -1;
         }
 
         ecs_modified(world, node->global, EcsScriptMutVar);
@@ -2426,8 +2428,7 @@ int flecs_script_assign_value(
 
     int result = -1;
     void *dst = flecs_script_assign_target(v, node, copy, indices);
-    if (dst) {
-        ecs_ptr_copy_w_type_info(world, ti, dst, src);
+    if (dst && !action(v, node, dst, ctx)) {
         ecs_set_id(world, instance, component,
             flecs_ito(size_t, comp_ti->size), copy);
         result = 0;
@@ -2435,6 +2436,114 @@ int flecs_script_assign_value(
 
     ecs_ptr_free_w_type_info(world, comp_ti, copy);
     return result;
+}
+
+typedef struct flecs_script_assign_ctx_t {
+    const int64_t *slice;
+    const void *src;
+} flecs_script_assign_ctx_t;
+
+static int flecs_script_assign_copy_action(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_assign_t *node,
+    void *dst,
+    void *ctx)
+{
+    const flecs_script_assign_ctx_t *c = ctx;
+    if (dst != c->src) {
+        const ecs_type_info_t *ti = ecs_get_type_info(
+            v->world, node->eval_type);
+        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_ptr_copy_w_type_info(v->world, ti, dst, c->src);
+    }
+
+    return 0;
+}
+
+static int flecs_script_assign_splice_action(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_assign_t *node,
+    void *dst,
+    void *ctx)
+{
+    const flecs_script_assign_ctx_t *c = ctx;
+    ecs_world_t *world = v->world;
+    const EcsVector *vector_type = ecs_get(world, node->eval_type, EcsVector);
+    ecs_assert(vector_type != NULL, ECS_INTERNAL_ERROR, NULL);
+    const ecs_type_info_t *elem_ti = ecs_get_type_info(
+        world, vector_type->type);
+    ecs_assert(elem_ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    const ecs_vec_t *src = c->src;
+    int32_t src_count = ecs_vec_count(src);
+    const void *src_elems = ecs_vec_first(src);
+
+    int32_t array_count = 0;
+    if (node->slice) {
+        array_count = ecs_vec_last_t(
+            &node->steps, ecs_script_assign_step_t)->count;
+    }
+
+    int32_t count = array_count ? array_count : ecs_vec_count(dst);
+    int64_t from = count, to = count;
+    if (node->slice) {
+        from = c->slice[0] == FLECS_SCRIPT_SLICE_OPEN ? 0 : c->slice[0];
+        to = c->slice[1] == FLECS_SCRIPT_SLICE_OPEN ? count : c->slice[1];
+        if (from < 0 || to < from || to > count) {
+            flecs_script_eval_error(v, node,
+                "cannot assign to '%s': slice [%d..%d] is out of range for "
+                "collection with %d elements",
+                node->name, (int)from, (int)to, count);
+            return -1;
+        }
+    }
+
+    if (array_count) {
+        if ((to - from) != src_count) {
+            flecs_script_eval_error(v, node,
+                "cannot assign %d elements to slice of %d elements of "
+                "array '%s'", src_count, (int)(to - from), node->name);
+            return -1;
+        }
+
+        if (src_count) {
+            flecs_type_info_copy(ECS_ELEM(dst, elem_ti->size, (int32_t)from),
+                src_elems, src_count, elem_ti);
+        }
+
+        return 0;
+    }
+
+    flecs_value_vec_splice(elem_ti, dst, (int32_t)from, (int32_t)to,
+        src_elems, src_count);
+    return 0;
+}
+
+int flecs_script_assign_value(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_assign_t *node,
+    ecs_entity_t entity,
+    const int64_t *indices,
+    const void *src)
+{
+    flecs_script_assign_ctx_t ctx = { .src = src };
+    if (node->slice) {
+        ecs_script_assign_step_t *steps = ecs_vec_first(&node->steps);
+        int32_t i, count = ecs_vec_count(&node->steps), index_count = 0;
+        for (i = node->entity != NULL; i < count; i ++) {
+            if (!steps[i].member && !steps[i].is_slice) {
+                index_count ++;
+            }
+        }
+
+        ctx.slice = &indices[index_count];
+    }
+
+    return flecs_script_assign_apply(v, node, entity, indices,
+        node->slice || node->append
+            ? flecs_script_assign_splice_action
+            : flecs_script_assign_copy_action,
+        &ctx);
 }
 
 static FLECS_SCRIPT_NOINLINE int flecs_script_eval_assign(
@@ -2458,7 +2567,7 @@ static FLECS_SCRIPT_NOINLINE int flecs_script_eval_assign(
         }
     }
 
-    int64_t indices[FLECS_SCRIPT_ASSIGN_INDEX_MAX];
+    int64_t indices[FLECS_SCRIPT_ASSIGN_INDEX_MAX + 2];
     ecs_script_assign_step_t *steps = ecs_vec_first(&node->steps);
     int32_t i, count = ecs_vec_count(&node->steps), index_count = 0;
     for (i = node->entity != NULL; i < count; i ++) {
@@ -2466,13 +2575,22 @@ static FLECS_SCRIPT_NOINLINE int flecs_script_eval_assign(
             continue;
         }
 
-        ecs_value_t index = {
-            .type = ecs_id(ecs_i64_t), .ptr = &indices[index_count ++] };
-        if (flecs_script_eval_expr(v, &steps[i].index, &index)) {
-            flecs_script_eval_error(v, node,
-                "failed to evaluate index for assignment to '%s'",
-                node->name);
-            return -1;
+        ecs_expr_node_t **bounds[2] = { &steps[i].index, &steps[i].index_to };
+        int32_t b, bound_count = steps[i].is_slice ? 2 : 1;
+        for (b = 0; b < bound_count; b ++) {
+            if (!bounds[b][0]) {
+                indices[index_count ++] = FLECS_SCRIPT_SLICE_OPEN;
+                continue;
+            }
+
+            ecs_value_t index = {
+                .type = ecs_id(ecs_i64_t), .ptr = &indices[index_count ++] };
+            if (flecs_script_eval_expr(v, bounds[b], &index)) {
+                flecs_script_eval_error(v, node,
+                    "failed to evaluate index for assignment to '%s'",
+                    node->name);
+                return -1;
+            }
         }
     }
 

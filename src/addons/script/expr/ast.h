@@ -33,7 +33,9 @@ typedef enum ecs_expr_node_kind_t {
     EcsExprNew,
     EcsExprScript,
     EcsExprLambda,
-    EcsExprIterate
+    EcsExprIterate,
+    EcsExprSlice,
+    EcsExprMutate
 } ecs_expr_node_kind_t;
 
 struct ecs_expr_node_t {
@@ -125,6 +127,8 @@ typedef struct ecs_expr_binary_t {
     /* For vector operations */
     ecs_entity_t vector_type;
     int32_t vector_count;
+
+    bool concat;
 } ecs_expr_binary_t;
 
 typedef struct ecs_expr_member_t {
@@ -199,6 +203,33 @@ typedef struct ecs_expr_range_t {
     ecs_expr_node_t *to;
 } ecs_expr_range_t;
 
+typedef struct ecs_expr_slice_t {
+    ecs_expr_node_t node;
+    ecs_expr_node_t *left;
+    ecs_expr_node_t *from;
+    ecs_expr_node_t *to;
+} ecs_expr_slice_t;
+
+typedef enum ecs_expr_mutate_kind_t {
+    EcsExprMutatePush,
+    EcsExprMutatePop,
+    EcsExprMutateInsert,
+    EcsExprMutateRemove,
+    EcsExprMutateClear
+} ecs_expr_mutate_kind_t;
+
+typedef struct ecs_expr_mutate_t {
+    ecs_expr_node_t node;
+    ecs_expr_initializer_t *args;
+    struct ecs_script_assign_t *assign;
+    char *name;
+    const char *function_name;
+    ecs_expr_mutate_kind_t kind;
+    ecs_entity_t elem_type;
+    ecs_entity_t key_type;
+    bool is_map;
+} ecs_expr_mutate_t;
+
 typedef struct ecs_expr_new_t {
     ecs_expr_node_t node;
     ecs_script_entity_t *entity;
@@ -228,7 +259,13 @@ typedef enum ecs_expr_iterate_kind_t {
     EcsExprIterateMax,
     EcsExprIterateAny,
     EcsExprIterateAll,
-    EcsExprIterateCount
+    EcsExprIterateCount,
+    EcsExprIterateContains,
+    EcsExprIterateIndexOf,
+    EcsExprIterateFirst,
+    EcsExprIterateLast,
+    EcsExprIterateReverse,
+    EcsExprIterateSort
 } ecs_expr_iterate_kind_t;
 
 typedef struct ecs_expr_iterate_t {
@@ -338,6 +375,9 @@ ecs_expr_match_t* flecs_expr_match(
 ecs_expr_range_t* flecs_expr_range(
     ecs_parser_t *parser);
 
+ecs_expr_slice_t* flecs_expr_slice(
+    ecs_parser_t *parser);
+
 ecs_expr_new_t* flecs_expr_new(
     ecs_parser_t *parser);
 
@@ -351,6 +391,11 @@ ecs_expr_iterate_t* flecs_expr_iterate_from(
     ecs_script_t *script,
     ecs_expr_node_t *node,
     ecs_expr_iterate_kind_t kind);
+
+ecs_expr_mutate_t* flecs_expr_mutate_from(
+    ecs_script_t *script,
+    ecs_expr_node_t *node,
+    ecs_expr_mutate_kind_t kind);
 
 ecs_script_vars_t* flecs_expr_iterate_vars_push(
     ecs_world_t *world,

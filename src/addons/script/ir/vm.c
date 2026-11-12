@@ -1145,19 +1145,31 @@ static int flecs_ir_assign(
         return -1;
     }
 
-    int64_t indices[FLECS_SCRIPT_ASSIGN_INDEX_MAX];
+    int64_t indices[FLECS_SCRIPT_ASSIGN_INDEX_MAX + 2];
     ecs_script_assign_step_t *steps = ecs_vec_first(&node->steps);
     int32_t i, count = ecs_vec_count(&node->steps), index_count = 0;
     for (i = node->entity != NULL; i < count; i ++) {
-        if (!steps[i].member && flecs_ir_value_to(vm,
-            flecs_ir_reg(vm, steps[i].reg), ecs_id(ecs_i64_t),
-            &indices[index_count ++], ecs_get_type_info(
-                v->world, ecs_id(ecs_i64_t))))
-        {
-            flecs_ir_expr_error(vm, steps[i].index,
-                "failed to evaluate index for assignment to '%s'",
-                node->name);
-            return -1;
+        if (steps[i].member) {
+            continue;
+        }
+
+        int32_t regs[2] = { steps[i].reg, steps[i].reg_to };
+        int32_t b, bound_count = steps[i].is_slice ? 2 : 1;
+        for (b = 0; b < bound_count; b ++) {
+            if (regs[b] == -1) {
+                indices[index_count ++] = FLECS_SCRIPT_SLICE_OPEN;
+                continue;
+            }
+
+            if (flecs_ir_value_to(vm, flecs_ir_reg(vm, regs[b]),
+                ecs_id(ecs_i64_t), &indices[index_count ++],
+                ecs_get_type_info(v->world, ecs_id(ecs_i64_t))))
+            {
+                flecs_ir_expr_error(vm, steps[i].index,
+                    "failed to evaluate index for assignment to '%s'",
+                    node->name);
+                return -1;
+            }
         }
     }
 
@@ -1338,6 +1350,8 @@ static int flecs_ir_binary(
         out = dst->value.ptr;
         dst->value.type = node->node.type;
         dst->ti = node->node.type_info;
+    } else if (node->concat) {
+        out = flecs_ir_reg_alloc(vm, dst, node->node.type_info);
     } else {
         out = flecs_ir_reg_alloc_raw(vm, dst, node->node.type_info);
     }
@@ -2578,6 +2592,7 @@ static flecs_script_run_status_t flecs_ir_exec(
         case EcsIrScript:
             res = flecs_ir_script(vm, op);
             break;
+        case EcsIrEval:
         case EcsIrIterate:
             res = flecs_ir_iterate(vm, op);
             break;

@@ -40,6 +40,39 @@ int flecs_value_unary(
     ecs_value_t *out,
     ecs_token_kind_t operator);
 
+int flecs_value_concat(
+    const ecs_script_t *script,
+    const ecs_value_t *left,
+    const ecs_value_t *right,
+    ecs_value_t *out);
+
+bool flecs_value_collection_get(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *ptr,
+    ecs_entity_t *elem_type,
+    const void **elems,
+    int32_t *count);
+
+void flecs_value_vec_splice(
+    const ecs_type_info_t *elem_ti,
+    ecs_vec_t *vec,
+    int32_t from,
+    int32_t to,
+    const void *src,
+    int32_t src_count);
+
+void flecs_value_map_insert(
+    const ecs_type_info_t *elem_ti,
+    ecs_map_t *map,
+    ecs_map_key_t key,
+    const void *value);
+
+bool flecs_value_map_remove(
+    const ecs_type_info_t *elem_ti,
+    ecs_map_t *map,
+    ecs_map_key_t key);
+
 const char* flecs_script_parse_expr(
     ecs_parser_t *parser,
     const char *pos,
@@ -128,6 +161,11 @@ int flecs_expr_binary_eval(
     void *out,
     ecs_token_kind_t operator)
 {
+    if (node->concat) {
+        ecs_value_t out_value = { .type = node->node.type, .ptr = out };
+        return flecs_value_concat(script, left, right, &out_value);
+    }
+
     if (!node->vector_count) {
         ecs_value_t out_value = { .type = node->node.type, .ptr = out };
         return flecs_value_binary(script, &node->node, left, right,
