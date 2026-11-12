@@ -36,6 +36,7 @@ typedef struct ecs_script_eval_visitor_t {
     int32_t visit;
     int32_t scope_slot;
     int32_t for_slot;
+    uint64_t for_key;
     bool force;
     const ecs_value_t *id_ref;
     ecs_value_t *fn_result;
@@ -161,6 +162,8 @@ typedef struct flecs_script_for_state_t {
     ecs_value_t collection;
     ecs_map_iter_t map_it;
     int32_t for_slot;
+    uint64_t outer_key;
+    uint64_t key;
     bool force;
 } flecs_script_for_state_t;
 

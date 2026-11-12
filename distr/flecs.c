@@ -48769,12 +48769,13 @@ typedef struct ecs_script_for_component_t {
 
 typedef struct ecs_script_for_entry_t {
     int32_t visit;
+    uint64_t key;
     ecs_vec_t components; /* vec<ecs_script_for_component_t> */
 } ecs_script_for_entry_t;
 
 typedef struct ecs_script_for_slot_t {
-    ecs_vec_t entities; /* vec<ecs_entity_t>, anonymous entities */
-    ecs_map_t named;
+    ecs_map_t entries;
+    ecs_map_t keys;
     ecs_entity_t cache_entity;
     ecs_script_for_entry_t *cache_entry;
     int32_t scope_slot;
@@ -48866,20 +48867,35 @@ void flecs_script_state_mark(
 
 void flecs_script_for_slot_clear(
     ecs_world_t *world,
+    ecs_script_for_slot_t *slot);
+
+void flecs_script_for_slot_remove_key(
     ecs_script_for_slot_t *slot,
-    bool delete_named);
+    ecs_entity_t entity,
+    uint64_t key);
 
 void flecs_script_for_slot_purge(
     ecs_world_t *world,
     ecs_script_for_slot_t *slot,
     int32_t visit);
 
-void flecs_script_for_slot_track(
+uint64_t flecs_script_for_key(
+    uint64_t outer,
+    uint64_t value);
+
+ecs_entity_t flecs_script_for_slot_find(
+    ecs_world_t *world,
+    ecs_script_for_slot_t *slot,
+    uint64_t *key,
+    ecs_entity_t parent,
+    int32_t visit);
+
+bool flecs_script_for_slot_track(
     ecs_world_t *world,
     ecs_script_for_slot_t *slot,
     ecs_entity_t entity,
-    int32_t visit,
-    bool *named);
+    uint64_t key,
+    int32_t visit);
 
 void flecs_script_for_slot_track_component(
     ecs_script_for_slot_t *slot,
@@ -50452,6 +50468,7 @@ typedef struct ecs_script_eval_visitor_t {
     int32_t visit;
     int32_t scope_slot;
     int32_t for_slot;
+    uint64_t for_key;
     bool force;
     const ecs_value_t *id_ref;
     ecs_value_t *fn_result;
@@ -50577,6 +50594,8 @@ typedef struct flecs_script_for_state_t {
     ecs_value_t collection;
     ecs_map_iter_t map_it;
     int32_t for_slot;
+    uint64_t outer_key;
+    uint64_t key;
     bool force;
 } flecs_script_for_state_t;
 
@@ -98996,6 +99015,7 @@ int flecs_script_eval_entity_enter_w_name(
     }
 
     bool apply_with = state->eval != 0;
+    uint64_t for_key = 0;
     if (node->name_expr) {
         bool is_ref = name && name->type == ecs_id(ecs_entity_t);
         if (!name || (!is_ref && !*(char**)name->ptr)) {
@@ -99021,8 +99041,22 @@ int flecs_script_eval_entity_enter_w_name(
         state->eval = eval;
         state->created = true;
     } else if (!state->eval) {
-        state->eval = flecs_script_create_entity(v, node->name);
-        state->created = true;
+        ecs_script_for_slot_t *for_slot = NULL;
+        if (!node->name && v->for_slot >= 0 &&
+            v->for_slot < ecs_vec_count(&v->state->for_slots))
+        {
+            for_slot = ecs_vec_get_t(
+                &v->state->for_slots, ecs_script_for_slot_t, v->for_slot);
+            for_key = flecs_script_for_key(v->for_key, (uintptr_t)node);
+            state->eval = flecs_script_for_slot_find(
+                v->world, for_slot, &for_key, v->parent, v->visit);
+            apply_with = state->eval != 0;
+        }
+
+        if (!state->eval) {
+            state->eval = flecs_script_create_entity(v, node->name);
+            state->created = true;
+        }
     }
 
     if (apply_with && !node->name_expr && v->force) {
@@ -99037,11 +99071,10 @@ int flecs_script_eval_entity_enter_w_name(
         v->for_slot < ecs_vec_count(&v->state->for_slots) &&
         !flecs_script_is_builtin(v->world, state->eval))
     {
-        bool named = false;
-        flecs_script_for_slot_track(v->world, ecs_vec_get_t(
+        if (flecs_script_for_slot_track(v->world, ecs_vec_get_t(
             &v->state->for_slots, ecs_script_for_slot_t, v->for_slot),
-            state->eval, v->visit, &named);
-        if (named) {
+            state->eval, for_key, v->visit))
+        {
             state->for_slot = v->for_slot;
         }
     }
@@ -101647,7 +101680,7 @@ void flecs_script_eval_cleanup(
         for (i = 0; i < count; i ++) {
             ecs_script_for_slot_t *slot = &slots[i];
             if (!flecs_script_scope_visited(v, slot->scope_slot)) {
-                flecs_script_for_slot_clear(v->world, slot, true);
+                flecs_script_for_slot_clear(v->world, slot);
             } else {
                 flecs_script_for_slot_purge(v->world, slot, v->visit);
             }
@@ -101806,21 +101839,15 @@ void flecs_script_for_prepare(
 {
     ecs_os_zeromem(state);
     state->for_slot = v->for_slot;
+    state->outer_key = v->for_key;
     state->force = v->force;
 
-    bool visited = node->scope->scope_slot >= 0 &&
-        node->scope->scope_slot < ecs_vec_count(&v->state->scope_slots) &&
-        ecs_vec_get_t(&v->state->scope_slots,
-            int32_t, node->scope->scope_slot)[0] == v->visit;
     if (node->for_slot >= 0 &&
         node->for_slot < ecs_vec_count(&v->state->for_slots))
     {
         ecs_script_for_slot_t *slot = ecs_vec_get_t(
             &v->state->for_slots, ecs_script_for_slot_t, node->for_slot);
         slot->scope_slot = node->scope->scope_slot;
-        if (!visited) {
-            flecs_script_for_slot_clear(v->world, slot, false);
-        }
     }
 }
 
@@ -102214,6 +102241,9 @@ static bool flecs_script_for_query_next(
         vars[var ++].value.ptr = flecs_script_for_query_field(qs, f);
     }
 
+    state->key = flecs_script_for_key(state->outer_key,
+        qs->entity ? qs->entity : (uint64_t)state->index);
+    state->index ++;
     return true;
 }
 
@@ -102228,6 +102258,7 @@ bool flecs_script_for_next(
         state->vars->vars.array)[state->var_base];
     ecs_script_var_t *elem = &vars[state->elem_var];
     int32_t i = state->index;
+    uint64_t key = (uint64_t)i;
 
     switch(state->kind) {
     case FlecsScriptForRange: {
@@ -102237,6 +102268,7 @@ bool flecs_script_for_next(
         }
 
         *(int32_t*)elem->value.ptr = value;
+        key = (uint64_t)(int64_t)value;
         break;
     }
     case FlecsScriptForArray:
@@ -102253,8 +102285,8 @@ bool flecs_script_for_next(
         if (!ecs_map_next(&state->map_it)) {
             return false;
         }
+        key = ecs_map_key(&state->map_it);
         if (state->key_var != -1) {
-            ecs_map_key_t key = ecs_map_key(&state->map_it);
             ecs_os_memcpy(vars[state->key_var].value.ptr, &key,
                 state->key_size);
         }
@@ -102274,6 +102306,7 @@ bool flecs_script_for_next(
     }
 
     state->index = i + 1;
+    state->key = flecs_script_for_key(state->outer_key, key);
     return true;
 }
 
@@ -102283,6 +102316,7 @@ void flecs_script_eval_for_leave(
 {
     v->vars = ecs_script_vars_pop(v->vars);
     v->for_slot = state->for_slot;
+    v->for_key = state->outer_key;
     v->force = state->force;
     flecs_script_for_fini(v, state);
 }
@@ -102304,6 +102338,7 @@ int flecs_script_step_for(
     }
 
     if (flecs_script_for_next(state)) {
+        v->for_key = state->key;
         flecs_script_scope_push(r, node->scope);
         return 0;
     }
@@ -119645,6 +119680,7 @@ static void flecs_ir_for_leave(
     flecs_ir_vars_truncate(vm, state->var_base,
         frame->u.for_.vscratch_top, frame->u.for_.vheap_count);
     vm->v.for_slot = state->for_slot;
+    vm->v.for_key = state->outer_key;
     vm->v.force = state->force;
     flecs_script_for_fini(&vm->v, state);
 }
@@ -121438,9 +121474,13 @@ static flecs_script_run_status_t flecs_ir_exec(
                     *(int32_t*)((ecs_script_var_t*)fs->vars->vars.array)
                         [fs->var_base + fs->elem_var].value.ptr = value;
                     fs->index ++;
+                    vm->v.for_key = flecs_script_for_key(
+                        fs->outer_key, (uint64_t)(int64_t)value);
                 }
             } else if (!flecs_script_for_next(fs)) {
                 vm->pc = op->a;
+            } else {
+                vm->v.for_key = fs->key;
             }
 
             break;
@@ -131626,21 +131666,21 @@ static void flecs_script_for_slot_init(
     ecs_script_for_slot_t *slot)
 {
     slot->scope_slot = -1;
-    ecs_vec_init_t(NULL, &slot->entities, ecs_entity_t, 0);
-    ecs_map_init(&slot->named, NULL);
+    ecs_map_init(&slot->entries, NULL);
+    ecs_map_init(&slot->keys, NULL);
 }
 
 static void flecs_script_for_slot_fini(
     ecs_script_for_slot_t *slot)
 {
-    ecs_vec_fini_t(NULL, &slot->entities, ecs_entity_t);
-    ecs_map_iter_t it = ecs_map_iter(&slot->named);
+    ecs_map_iter_t it = ecs_map_iter(&slot->entries);
     while (ecs_map_next(&it)) {
         ecs_script_for_entry_t *entry = ecs_map_ptr(&it);
         ecs_vec_fini_t(NULL, &entry->components, ecs_script_for_component_t);
         ecs_os_free(entry);
     }
-    ecs_map_fini(&slot->named);
+    ecs_map_fini(&slot->entries);
+    ecs_map_fini(&slot->keys);
 }
 
 static void flecs_script_for_slots_fini(
@@ -131702,7 +131742,7 @@ static void flecs_script_for_slot_mark(
     ecs_script_for_slot_t *slot,
     int32_t visit)
 {
-    ecs_map_iter_t it = ecs_map_iter(&slot->named);
+    ecs_map_iter_t it = ecs_map_iter(&slot->entries);
     while (ecs_map_next(&it)) {
         ecs_script_for_entry_t *entry = ecs_map_ptr(&it);
         entry->visit = visit;
@@ -131841,12 +131881,27 @@ void flecs_script_state_mark(
     }
 }
 
+void flecs_script_for_slot_remove_key(
+    ecs_script_for_slot_t *slot,
+    ecs_entity_t entity,
+    uint64_t key)
+{
+    if (!key) {
+        return;
+    }
+
+    ecs_map_val_t *cur = ecs_map_get(&slot->keys, key);
+    if (cur && (ecs_entity_t)cur[0] == entity) {
+        ecs_map_remove(&slot->keys, key);
+    }
+}
+
 void flecs_script_for_slot_purge(
     ecs_world_t *world,
     ecs_script_for_slot_t *slot,
     int32_t visit)
 {
-    ecs_map_iter_t it = ecs_map_iter(&slot->named);
+    ecs_map_iter_t it = ecs_map_iter(&slot->entries);
     while (ecs_map_next(&it)) {
         ecs_entity_t entity = ecs_map_key(&it);
         ecs_script_for_entry_t *entry = ecs_map_ptr(&it);
@@ -131870,8 +131925,9 @@ void flecs_script_for_slot_purge(
             ecs_delete(world, entity);
         }
 
+        flecs_script_for_slot_remove_key(slot, entity, entry->key);
         ecs_vec_fini_t(NULL, &entry->components, ecs_script_for_component_t);
-        ecs_map_remove_free(&slot->named, entity);
+        ecs_map_remove_free(&slot->entries, entity);
         slot->cache_entity = 0;
         slot->cache_entry = NULL;
     }
@@ -131879,52 +131935,73 @@ void flecs_script_for_slot_purge(
 
 void flecs_script_for_slot_clear(
     ecs_world_t *world,
-    ecs_script_for_slot_t *slot,
-    bool delete_named)
+    ecs_script_for_slot_t *slot)
 {
-    ecs_entity_t *array = ecs_vec_first(&slot->entities);
-    int32_t i, count = ecs_vec_count(&slot->entities);
-    for (i = 0; i < count; i ++) {
-        if (ecs_is_alive(world, array[i])) {
-            ecs_delete(world, array[i]);
-        }
-    }
-
-    ecs_vec_clear(&slot->entities);
-
-    if (delete_named) {
-        flecs_script_for_slot_purge(world, slot, -1);
-    }
+    flecs_script_for_slot_purge(world, slot, -1);
 }
 
-void flecs_script_for_slot_track(
+uint64_t flecs_script_for_key(
+    uint64_t outer,
+    uint64_t value)
+{
+    uint64_t data[2] = { outer, value };
+    uint64_t result = flecs_hash(data, ECS_SIZEOF(data));
+    return result ? result : 1;
+}
+
+ecs_entity_t flecs_script_for_slot_find(
+    ecs_world_t *world,
+    ecs_script_for_slot_t *slot,
+    uint64_t *key,
+    ecs_entity_t parent,
+    int32_t visit)
+{
+    ecs_map_val_t *cur;
+    while ((cur = ecs_map_get(&slot->keys, *key))) {
+        ecs_entity_t entity = (ecs_entity_t)cur[0];
+        ecs_script_for_entry_t *entry = ecs_map_get_deref(
+            &slot->entries, ecs_script_for_entry_t, entity);
+        if (entry && entry->visit == visit) {
+            *key = flecs_script_for_key(*key, 0);
+            continue;
+        }
+
+        if (ecs_is_alive(world, entity) &&
+            ecs_get_target(world, entity, EcsChildOf, 0) == parent)
+        {
+            return entity;
+        }
+
+        return 0;
+    }
+
+    return 0;
+}
+
+bool flecs_script_for_slot_track(
     ecs_world_t *world,
     ecs_script_for_slot_t *slot,
     ecs_entity_t entity,
-    int32_t visit,
-    bool *named)
+    uint64_t key,
+    int32_t visit)
 {
-    if (ecs_get_name(world, entity)) {
-        ecs_script_for_entry_t *entry = ecs_map_ensure_alloc_t(
-            &slot->named, ecs_script_for_entry_t, entity);
-        ecs_vec_init_if_t(&entry->components, ecs_script_for_component_t);
-        entry->visit = visit;
-        slot->cache_entity = entity;
-        slot->cache_entry = entry;
-        *named = true;
-        return;
+    if (!key && !ecs_get_name(world, entity)) {
+        return false;
     }
 
-    *named = false;
-    ecs_entity_t *array = ecs_vec_first(&slot->entities);
-    int32_t i, count = ecs_vec_count(&slot->entities);
-    for (i = 0; i < count; i ++) {
-        if (array[i] == entity) {
-            return;
-        }
+    ecs_script_for_entry_t *entry = ecs_map_ensure_alloc_t(
+        &slot->entries, ecs_script_for_entry_t, entity);
+    ecs_vec_init_if_t(&entry->components, ecs_script_for_component_t);
+    entry->visit = visit;
+    if (key && entry->key != key) {
+        flecs_script_for_slot_remove_key(slot, entity, entry->key);
+        entry->key = key;
+        ecs_map_ensure(&slot->keys, key)[0] = (ecs_map_val_t)entity;
     }
 
-    ecs_vec_append_t(NULL, &slot->entities, ecs_entity_t)[0] = entity;
+    slot->cache_entity = entity;
+    slot->cache_entry = entry;
+    return true;
 }
 
 void flecs_script_for_slot_track_component(
@@ -131937,7 +132014,7 @@ void flecs_script_for_slot_track_component(
     if (slot->cache_entity == entity) {
         entry = slot->cache_entry;
     } else {
-        entry = ecs_map_get_deref(&slot->named, ecs_script_for_entry_t, entity);
+        entry = ecs_map_get_deref(&slot->entries, ecs_script_for_entry_t, entity);
         if (!entry) {
             return;
         }
@@ -132289,7 +132366,7 @@ static bool flecs_script_template_claims_for(
         int32_t f, for_count = ecs_vec_count(&states[s]->for_slots);
         for (f = 0; f < for_count; f ++) {
             ecs_script_for_entry_t *entry = ecs_map_get_deref(
-                &slots[f].named, ecs_script_for_entry_t, entity);
+                &slots[f].entries, ecs_script_for_entry_t, entity);
             if (!entry) {
                 continue;
             }
@@ -132348,7 +132425,7 @@ static void flecs_script_template_for_slot_release(
     ecs_script_for_slot_t *slot,
     const ecs_script_template_claims_t *claims)
 {
-    ecs_map_iter_t it = ecs_map_iter(&slot->named);
+    ecs_map_iter_t it = ecs_map_iter(&slot->entries);
     while (ecs_map_next(&it)) {
         ecs_entity_t entity = ecs_map_key(&it);
         if (!flecs_script_template_claims_entity(claims, entity)) {
@@ -132367,8 +132444,9 @@ static void flecs_script_template_for_slot_release(
             }
         }
 
+        flecs_script_for_slot_remove_key(slot, entity, entry->key);
         ecs_vec_fini_t(NULL, &entry->components, ecs_script_for_component_t);
-        ecs_map_remove_free(&slot->named, entity);
+        ecs_map_remove_free(&slot->entries, entity);
         slot->cache_entity = 0;
         slot->cache_entry = NULL;
     }
@@ -132475,7 +132553,7 @@ static void flecs_script_template_root_clear(
     ecs_script_for_slot_t *for_slot_array = ecs_vec_first(&state.for_slots);
     int32_t i, count = ecs_vec_count(&state.for_slots);
     for (i = 0; i < count; i ++) {
-        flecs_script_for_slot_clear(world, &for_slot_array[i], true);
+        flecs_script_for_slot_clear(world, &for_slot_array[i]);
     }
 
     int32_t root_symbol = template->root_symbol - template->symbol_offset;

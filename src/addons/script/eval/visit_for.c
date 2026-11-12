@@ -15,21 +15,15 @@ void flecs_script_for_prepare(
 {
     ecs_os_zeromem(state);
     state->for_slot = v->for_slot;
+    state->outer_key = v->for_key;
     state->force = v->force;
 
-    bool visited = node->scope->scope_slot >= 0 &&
-        node->scope->scope_slot < ecs_vec_count(&v->state->scope_slots) &&
-        ecs_vec_get_t(&v->state->scope_slots,
-            int32_t, node->scope->scope_slot)[0] == v->visit;
     if (node->for_slot >= 0 &&
         node->for_slot < ecs_vec_count(&v->state->for_slots))
     {
         ecs_script_for_slot_t *slot = ecs_vec_get_t(
             &v->state->for_slots, ecs_script_for_slot_t, node->for_slot);
         slot->scope_slot = node->scope->scope_slot;
-        if (!visited) {
-            flecs_script_for_slot_clear(v->world, slot, false);
-        }
     }
 }
 
@@ -423,6 +417,9 @@ static bool flecs_script_for_query_next(
         vars[var ++].value.ptr = flecs_script_for_query_field(qs, f);
     }
 
+    state->key = flecs_script_for_key(state->outer_key,
+        qs->entity ? qs->entity : (uint64_t)state->index);
+    state->index ++;
     return true;
 }
 
@@ -437,6 +434,7 @@ bool flecs_script_for_next(
         state->vars->vars.array)[state->var_base];
     ecs_script_var_t *elem = &vars[state->elem_var];
     int32_t i = state->index;
+    uint64_t key = (uint64_t)i;
 
     switch(state->kind) {
     case FlecsScriptForRange: {
@@ -446,6 +444,7 @@ bool flecs_script_for_next(
         }
 
         *(int32_t*)elem->value.ptr = value;
+        key = (uint64_t)(int64_t)value;
         break;
     }
     case FlecsScriptForArray:
@@ -462,8 +461,8 @@ bool flecs_script_for_next(
         if (!ecs_map_next(&state->map_it)) {
             return false;
         }
+        key = ecs_map_key(&state->map_it);
         if (state->key_var != -1) {
-            ecs_map_key_t key = ecs_map_key(&state->map_it);
             ecs_os_memcpy(vars[state->key_var].value.ptr, &key,
                 state->key_size);
         }
@@ -483,6 +482,7 @@ bool flecs_script_for_next(
     }
 
     state->index = i + 1;
+    state->key = flecs_script_for_key(state->outer_key, key);
     return true;
 }
 
@@ -492,6 +492,7 @@ void flecs_script_eval_for_leave(
 {
     v->vars = ecs_script_vars_pop(v->vars);
     v->for_slot = state->for_slot;
+    v->for_key = state->outer_key;
     v->force = state->force;
     flecs_script_for_fini(v, state);
 }
@@ -513,6 +514,7 @@ int flecs_script_step_for(
     }
 
     if (flecs_script_for_next(state)) {
+        v->for_key = state->key;
         flecs_script_scope_push(r, node->scope);
         return 0;
     }

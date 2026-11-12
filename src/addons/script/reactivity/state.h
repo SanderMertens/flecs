@@ -14,12 +14,13 @@ typedef struct ecs_script_for_component_t {
 
 typedef struct ecs_script_for_entry_t {
     int32_t visit;
+    uint64_t key;
     ecs_vec_t components; /* vec<ecs_script_for_component_t> */
 } ecs_script_for_entry_t;
 
 typedef struct ecs_script_for_slot_t {
-    ecs_vec_t entities; /* vec<ecs_entity_t>, anonymous entities */
-    ecs_map_t named;
+    ecs_map_t entries;
+    ecs_map_t keys;
     ecs_entity_t cache_entity;
     ecs_script_for_entry_t *cache_entry;
     int32_t scope_slot;
@@ -111,20 +112,35 @@ void flecs_script_state_mark(
 
 void flecs_script_for_slot_clear(
     ecs_world_t *world,
+    ecs_script_for_slot_t *slot);
+
+void flecs_script_for_slot_remove_key(
     ecs_script_for_slot_t *slot,
-    bool delete_named);
+    ecs_entity_t entity,
+    uint64_t key);
 
 void flecs_script_for_slot_purge(
     ecs_world_t *world,
     ecs_script_for_slot_t *slot,
     int32_t visit);
 
-void flecs_script_for_slot_track(
+uint64_t flecs_script_for_key(
+    uint64_t outer,
+    uint64_t value);
+
+ecs_entity_t flecs_script_for_slot_find(
+    ecs_world_t *world,
+    ecs_script_for_slot_t *slot,
+    uint64_t *key,
+    ecs_entity_t parent,
+    int32_t visit);
+
+bool flecs_script_for_slot_track(
     ecs_world_t *world,
     ecs_script_for_slot_t *slot,
     ecs_entity_t entity,
-    int32_t visit,
-    bool *named);
+    uint64_t key,
+    int32_t visit);
 
 void flecs_script_for_slot_track_component(
     ecs_script_for_slot_t *slot,

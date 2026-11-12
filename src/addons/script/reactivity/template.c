@@ -333,7 +333,7 @@ static bool flecs_script_template_claims_for(
         int32_t f, for_count = ecs_vec_count(&states[s]->for_slots);
         for (f = 0; f < for_count; f ++) {
             ecs_script_for_entry_t *entry = ecs_map_get_deref(
-                &slots[f].named, ecs_script_for_entry_t, entity);
+                &slots[f].entries, ecs_script_for_entry_t, entity);
             if (!entry) {
                 continue;
             }
@@ -392,7 +392,7 @@ static void flecs_script_template_for_slot_release(
     ecs_script_for_slot_t *slot,
     const ecs_script_template_claims_t *claims)
 {
-    ecs_map_iter_t it = ecs_map_iter(&slot->named);
+    ecs_map_iter_t it = ecs_map_iter(&slot->entries);
     while (ecs_map_next(&it)) {
         ecs_entity_t entity = ecs_map_key(&it);
         if (!flecs_script_template_claims_entity(claims, entity)) {
@@ -411,8 +411,9 @@ static void flecs_script_template_for_slot_release(
             }
         }
 
+        flecs_script_for_slot_remove_key(slot, entity, entry->key);
         ecs_vec_fini_t(NULL, &entry->components, ecs_script_for_component_t);
-        ecs_map_remove_free(&slot->named, entity);
+        ecs_map_remove_free(&slot->entries, entity);
         slot->cache_entity = 0;
         slot->cache_entry = NULL;
     }
@@ -519,7 +520,7 @@ static void flecs_script_template_root_clear(
     ecs_script_for_slot_t *for_slot_array = ecs_vec_first(&state.for_slots);
     int32_t i, count = ecs_vec_count(&state.for_slots);
     for (i = 0; i < count; i ++) {
-        flecs_script_for_slot_clear(world, &for_slot_array[i], true);
+        flecs_script_for_slot_clear(world, &for_slot_array[i]);
     }
 
     int32_t root_symbol = template->root_symbol - template->symbol_offset;

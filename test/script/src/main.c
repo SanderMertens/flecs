@@ -3509,11 +3509,11 @@ void Reactivity_for_keyed_external_component_survives(void);
 void Reactivity_for_keyed_removed_key_is_deleted(void);
 void Reactivity_for_keyed_new_key_is_added(void);
 void Reactivity_for_keyed_reorder_preserves_identity(void);
-void Reactivity_for_keyed_unkeyed_entity_is_recreated(void);
+void Reactivity_for_keyed_unkeyed_entity_is_kept(void);
 void Reactivity_for_keyed_mixed_external_components(void);
 void Reactivity_for_keyed_multiple_keys_per_iteration(void);
 void Reactivity_for_keyed_multiple_keys_removed_together(void);
-void Reactivity_for_unkeyed_only_entities_are_recreated(void);
+void Reactivity_for_unkeyed_only_entities_are_kept(void);
 void Reactivity_for_keyed_outer_condition_toggles_rows(void);
 void Reactivity_for_keyed_per_item_condition_toggles_row(void);
 void Reactivity_conditional_component_on_named_entity(void);
@@ -3528,11 +3528,11 @@ void Reactivity_template_for_keyed_external_component_survives(void);
 void Reactivity_template_for_keyed_removed_key_is_deleted(void);
 void Reactivity_template_for_keyed_new_key_is_added(void);
 void Reactivity_template_for_keyed_reorder_preserves_identity(void);
-void Reactivity_template_for_keyed_unkeyed_entity_is_recreated(void);
+void Reactivity_template_for_keyed_unkeyed_entity_is_kept(void);
 void Reactivity_template_for_keyed_mixed_external_components(void);
 void Reactivity_template_for_keyed_multiple_keys_per_iteration(void);
 void Reactivity_template_for_keyed_multiple_keys_removed_together(void);
-void Reactivity_template_for_unkeyed_only_entities_are_recreated(void);
+void Reactivity_template_for_unkeyed_only_entities_are_kept(void);
 void Reactivity_template_for_keyed_outer_condition_toggles_rows(void);
 void Reactivity_template_for_keyed_per_item_condition_toggles_row(void);
 void Reactivity_template_conditional_component_on_keyed_for_entity(void);
@@ -3558,7 +3558,7 @@ void Reactivity_dyn_ref_recovers_after_invalid_entity(void);
 void Reactivity_template_prop_change_keeps_for_entities(void);
 void Reactivity_template_i32_prop_change_keeps_for_entities(void);
 void Reactivity_template_prop_change_keeps_for_entities_in_child_scope(void);
-void Reactivity_template_for_range_change_keeps_named_recreates_anonymous(void);
+void Reactivity_template_for_range_change_keeps_named_and_anonymous(void);
 void Reactivity_for_keyed_template_instance_survives_collection_change(void);
 void Reactivity_component_ref_set_from_system_reevaluates(void);
 void Reactivity_template_prop_ensure_modified_from_system_reevaluates(void);
@@ -3638,6 +3638,16 @@ void Reactivity_query_bind_if(void);
 void Reactivity_query_bind_optional_prefab(void);
 void Reactivity_query_bind_recursive_template(void);
 void Reactivity_query_no_update_at_fini(void);
+void Reactivity_for_range_anonymous_kept(void);
+void Reactivity_for_range_anonymous_shrink(void);
+void Reactivity_for_array_anonymous_kept(void);
+void Reactivity_for_map_anonymous_kept(void);
+void Reactivity_for_query_anonymous_kept(void);
+void Reactivity_for_nested_anonymous_kept(void);
+void Reactivity_for_anonymous_child_kept(void);
+void Reactivity_for_query_duplicate_anonymous_kept(void);
+void Reactivity_for_new_expr_kept(void);
+void Reactivity_template_for_query_anonymous_kept(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_setup(void);
@@ -18604,8 +18614,8 @@ bake_test_case Reactivity_testcases[] = {
         Reactivity_for_keyed_reorder_preserves_identity
     },
     {
-        "for_keyed_unkeyed_entity_is_recreated",
-        Reactivity_for_keyed_unkeyed_entity_is_recreated
+        "for_keyed_unkeyed_entity_is_kept",
+        Reactivity_for_keyed_unkeyed_entity_is_kept
     },
     {
         "for_keyed_mixed_external_components",
@@ -18620,8 +18630,8 @@ bake_test_case Reactivity_testcases[] = {
         Reactivity_for_keyed_multiple_keys_removed_together
     },
     {
-        "for_unkeyed_only_entities_are_recreated",
-        Reactivity_for_unkeyed_only_entities_are_recreated
+        "for_unkeyed_only_entities_are_kept",
+        Reactivity_for_unkeyed_only_entities_are_kept
     },
     {
         "for_keyed_outer_condition_toggles_rows",
@@ -18680,8 +18690,8 @@ bake_test_case Reactivity_testcases[] = {
         Reactivity_template_for_keyed_reorder_preserves_identity
     },
     {
-        "template_for_keyed_unkeyed_entity_is_recreated",
-        Reactivity_template_for_keyed_unkeyed_entity_is_recreated
+        "template_for_keyed_unkeyed_entity_is_kept",
+        Reactivity_template_for_keyed_unkeyed_entity_is_kept
     },
     {
         "template_for_keyed_mixed_external_components",
@@ -18696,8 +18706,8 @@ bake_test_case Reactivity_testcases[] = {
         Reactivity_template_for_keyed_multiple_keys_removed_together
     },
     {
-        "template_for_unkeyed_only_entities_are_recreated",
-        Reactivity_template_for_unkeyed_only_entities_are_recreated
+        "template_for_unkeyed_only_entities_are_kept",
+        Reactivity_template_for_unkeyed_only_entities_are_kept
     },
     {
         "template_for_keyed_outer_condition_toggles_rows",
@@ -18800,8 +18810,8 @@ bake_test_case Reactivity_testcases[] = {
         Reactivity_template_prop_change_keeps_for_entities_in_child_scope
     },
     {
-        "template_for_range_change_keeps_named_recreates_anonymous",
-        Reactivity_template_for_range_change_keeps_named_recreates_anonymous
+        "template_for_range_change_keeps_named_and_anonymous",
+        Reactivity_template_for_range_change_keeps_named_and_anonymous
     },
     {
         "for_keyed_template_instance_survives_collection_change",
@@ -19118,6 +19128,46 @@ bake_test_case Reactivity_testcases[] = {
     {
         "query_no_update_at_fini",
         Reactivity_query_no_update_at_fini
+    },
+    {
+        "for_range_anonymous_kept",
+        Reactivity_for_range_anonymous_kept
+    },
+    {
+        "for_range_anonymous_shrink",
+        Reactivity_for_range_anonymous_shrink
+    },
+    {
+        "for_array_anonymous_kept",
+        Reactivity_for_array_anonymous_kept
+    },
+    {
+        "for_map_anonymous_kept",
+        Reactivity_for_map_anonymous_kept
+    },
+    {
+        "for_query_anonymous_kept",
+        Reactivity_for_query_anonymous_kept
+    },
+    {
+        "for_nested_anonymous_kept",
+        Reactivity_for_nested_anonymous_kept
+    },
+    {
+        "for_anonymous_child_kept",
+        Reactivity_for_anonymous_child_kept
+    },
+    {
+        "for_query_duplicate_anonymous_kept",
+        Reactivity_for_query_duplicate_anonymous_kept
+    },
+    {
+        "for_new_expr_kept",
+        Reactivity_for_new_expr_kept
+    },
+    {
+        "template_for_query_anonymous_kept",
+        Reactivity_template_for_query_anonymous_kept
     }
 };
 
@@ -23867,7 +23917,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         Reactivity_setup,
         NULL,
-        216,
+        226,
         Reactivity_testcases,
         1,
         Reactivity_params

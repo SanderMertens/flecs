@@ -996,6 +996,7 @@ int flecs_script_eval_entity_enter_w_name(
     }
 
     bool apply_with = state->eval != 0;
+    uint64_t for_key = 0;
     if (node->name_expr) {
         bool is_ref = name && name->type == ecs_id(ecs_entity_t);
         if (!name || (!is_ref && !*(char**)name->ptr)) {
@@ -1021,8 +1022,22 @@ int flecs_script_eval_entity_enter_w_name(
         state->eval = eval;
         state->created = true;
     } else if (!state->eval) {
-        state->eval = flecs_script_create_entity(v, node->name);
-        state->created = true;
+        ecs_script_for_slot_t *for_slot = NULL;
+        if (!node->name && v->for_slot >= 0 &&
+            v->for_slot < ecs_vec_count(&v->state->for_slots))
+        {
+            for_slot = ecs_vec_get_t(
+                &v->state->for_slots, ecs_script_for_slot_t, v->for_slot);
+            for_key = flecs_script_for_key(v->for_key, (uintptr_t)node);
+            state->eval = flecs_script_for_slot_find(
+                v->world, for_slot, &for_key, v->parent, v->visit);
+            apply_with = state->eval != 0;
+        }
+
+        if (!state->eval) {
+            state->eval = flecs_script_create_entity(v, node->name);
+            state->created = true;
+        }
     }
 
     if (apply_with && !node->name_expr && v->force) {
@@ -1037,11 +1052,10 @@ int flecs_script_eval_entity_enter_w_name(
         v->for_slot < ecs_vec_count(&v->state->for_slots) &&
         !flecs_script_is_builtin(v->world, state->eval))
     {
-        bool named = false;
-        flecs_script_for_slot_track(v->world, ecs_vec_get_t(
+        if (flecs_script_for_slot_track(v->world, ecs_vec_get_t(
             &v->state->for_slots, ecs_script_for_slot_t, v->for_slot),
-            state->eval, v->visit, &named);
-        if (named) {
+            state->eval, for_key, v->visit))
+        {
             state->for_slot = v->for_slot;
         }
     }
@@ -3647,7 +3661,7 @@ void flecs_script_eval_cleanup(
         for (i = 0; i < count; i ++) {
             ecs_script_for_slot_t *slot = &slots[i];
             if (!flecs_script_scope_visited(v, slot->scope_slot)) {
-                flecs_script_for_slot_clear(v->world, slot, true);
+                flecs_script_for_slot_clear(v->world, slot);
             } else {
                 flecs_script_for_slot_purge(v->world, slot, v->visit);
             }
