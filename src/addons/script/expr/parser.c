@@ -418,6 +418,98 @@ static bool flecs_script_is_conditional(
     return pos[0] == ':';
 }
 
+static bool flecs_script_is_lambda(
+    const char *pos)
+{
+    do {
+        while (isspace((unsigned char)pos[0])) {
+            pos ++;
+        }
+
+        if (!isalpha((unsigned char)pos[0]) && pos[0] != '_') {
+            return false;
+        }
+
+        while (isalnum((unsigned char)pos[0]) || pos[0] == '_') {
+            pos ++;
+        }
+
+        while (isspace((unsigned char)pos[0])) {
+            pos ++;
+        }
+
+        if (pos[0] != ',') {
+            break;
+        }
+
+        pos ++;
+    } while (true);
+
+    if (pos[0] != ')') {
+        return false;
+    }
+
+    pos ++;
+
+    while (isspace((unsigned char)pos[0])) {
+        pos ++;
+    }
+
+    return pos[0] == '-' && pos[1] == '>';
+}
+
+static const char* flecs_script_parse_lambda(
+    ecs_parser_t *parser,
+    const char *pos,
+    ecs_expr_node_t **out)
+{
+    ParserBegin;
+
+    ecs_expr_lambda_t *node = flecs_expr_lambda(parser);
+    *out = (ecs_expr_node_t*)node;
+
+    bool old_significant_newline = parser->significant_newline;
+    parser->significant_newline = false;
+
+    do {
+        Parse_1(EcsTokIdentifier, {
+            if (node->param_count == FLECS_EXPR_LAMBDA_PARAM_MAX) {
+                Error("too many lambda parameters (max %d)",
+                    FLECS_EXPR_LAMBDA_PARAM_MAX);
+            }
+
+            node->params[node->param_count ++] = t->value;
+        })
+
+        bool more = false;
+        LookAhead_1(',', {
+            Consume();
+            more = true;
+        })
+
+        if (!more) {
+            break;
+        }
+    } while (true);
+
+    Parse_1(')', {})
+    Parse_1(EcsTokArrow, {})
+    Parse_1('{', {})
+
+    pos = flecs_script_parse_expr(parser, pos, 0, &node->body);
+    if (!pos) {
+        goto error;
+    }
+
+    Parse_1('}', {})
+
+    parser->significant_newline = old_significant_newline;
+    return pos;
+error:
+    parser->significant_newline = old_significant_newline;
+    return NULL;
+}
+
 static const char* flecs_script_parse_rhs(
     ecs_parser_t *parser,
     const char *pos,
@@ -774,6 +866,16 @@ static const char* flecs_script_parse_lhs(
         }
 
         case '(': {
+            if (flecs_script_is_lambda(pos)) {
+                pos = flecs_script_parse_lambda(parser, pos, out);
+                if (!pos) {
+                    goto error;
+                }
+
+                can_have_rhs = false;
+                break;
+            }
+
             pos = flecs_script_parse_expr(parser, pos, 0, out);
             if (!pos) {
                 goto error;

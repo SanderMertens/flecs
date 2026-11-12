@@ -1706,6 +1706,20 @@ static int flecs_ir_script(
     return 0;
 }
 
+static int flecs_ir_iterate(
+    ecs_script_ir_vm_t *vm,
+    const ecs_script_ir_op_t *op)
+{
+    ecs_expr_node_t *node = ECS_CONST_CAST(ecs_expr_node_t*, op->node);
+    ecs_script_ir_reg_t *dst = flecs_ir_reg(vm, op->a);
+    ecs_value_t value = {
+        .type = node->type,
+        .ptr = flecs_ir_reg_out(vm, op, dst)
+    };
+
+    return flecs_script_eval_expr(&vm->v, &node, &value);
+}
+
 #ifdef FLECS_SCRIPT_ASYNC
 static int flecs_ir_await_launch(
     ecs_script_ir_vm_t *vm,
@@ -2559,6 +2573,9 @@ static flecs_script_run_status_t flecs_ir_exec(
         }
         case EcsIrScript:
             res = flecs_ir_script(vm, op);
+            break;
+        case EcsIrIterate:
+            res = flecs_ir_iterate(vm, op);
             break;
         case EcsIrTemplateRef:
             res = flecs_ir_template_ref(vm, op);

@@ -278,6 +278,42 @@ static void flecs_expr_script_to_str(
     ecs_strbuf_appendlit(v->buf, "}");
 }
 
+static void flecs_expr_lambda_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_lambda_t *node)
+{
+    ecs_strbuf_appendlit(v->buf, "(");
+    int32_t i;
+    for (i = 0; i < node->param_count; i ++) {
+        if (i) {
+            ecs_strbuf_appendlit(v->buf, ", ");
+        }
+
+        ecs_strbuf_appendstr(v->buf, node->params[i]);
+    }
+
+    ecs_strbuf_appendlit(v->buf, ") -> { ");
+    flecs_expr_node_to_str(v, node->body);
+    ecs_strbuf_appendlit(v->buf, " }");
+}
+
+static void flecs_expr_iterate_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_iterate_t *node)
+{
+    flecs_expr_node_to_str(v, node->left);
+    ecs_strbuf_append(v->buf, ".%s(", node->function_name);
+    if (node->lambda) {
+        flecs_expr_lambda_to_str(v, node->lambda);
+    }
+    if (node->init) {
+        ecs_strbuf_appendlit(v->buf, ", ");
+        flecs_expr_node_to_str(v, node->init);
+    }
+
+    ecs_strbuf_appendlit(v->buf, ")");
+}
+
 static void flecs_expr_node_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_node_t *node)
@@ -377,6 +413,14 @@ static void flecs_expr_node_to_str(
     case EcsExprScript:
         flecs_expr_script_to_str(v,
             (const ecs_expr_script_t*)node);
+        break;
+    case EcsExprLambda:
+        flecs_expr_lambda_to_str(v,
+            (const ecs_expr_lambda_t*)node);
+        break;
+    case EcsExprIterate:
+        flecs_expr_iterate_to_str(v,
+            (const ecs_expr_iterate_t*)node);
         break;
     case EcsExprCast:
     case EcsExprCastNumber:

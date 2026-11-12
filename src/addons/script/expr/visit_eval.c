@@ -936,6 +936,281 @@ static int flecs_expr_script_visit_eval(
     return 0;
 }
 
+static void flecs_expr_iterate_assign(
+    void *dst,
+    ecs_expr_value_t *src,
+    const ecs_type_info_t *ti)
+{
+    if (src->owned) {
+        flecs_expr_value_move(dst, src->value.ptr, ti);
+    } else {
+        flecs_type_info_copy(dst, src->value.ptr, 1, ti);
+    }
+}
+
+static void* flecs_expr_iterate_append(
+    bool is_map,
+    void *result,
+    ecs_map_key_t key,
+    const ecs_type_info_t *ti)
+{
+    if (!is_map) {
+        ecs_vec_t *vec = result;
+        ecs_vec_init_if(vec, ti->size);
+        int32_t count = ecs_vec_count(vec);
+        ecs_vec_set_count_w_type_info(NULL, vec, ti->size, count + 1, ti);
+        return ecs_vec_get(vec, ti->size, count);
+    }
+
+    ecs_map_t *map = result;
+    ecs_map_init_if(map, NULL);
+    int32_t count = ecs_map_count(map);
+    ecs_map_val_t *val = ecs_map_ensure(map, key);
+    void *ptr;
+    if (ti->size <= ECS_SIZEOF(ecs_map_val_t)) {
+        ptr = val;
+    } else {
+        if (!*val) {
+            *val = (ecs_map_val_t)(uintptr_t)ecs_os_calloc(ti->size);
+        }
+
+        ptr = (void*)(uintptr_t)*val;
+    }
+
+    if (count != ecs_map_count(map) && ti->hooks.ctor) {
+        ti->hooks.ctor(ptr, 1, ti);
+    }
+
+    return ptr;
+}
+
+static int flecs_expr_iterate_step(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_iterate_t *node,
+    ecs_expr_value_t *val,
+    void *elem,
+    const ecs_type_info_t *elem_ti,
+    ecs_map_key_t key,
+    void *result,
+    bool to_map,
+    bool *has_value)
+{
+    const ecs_type_info_t *result_ti = node->node.type_info;
+    ecs_value_t acc = { .type = node->node.type, .ptr = result };
+
+    switch(node->kind) {
+    case EcsExprIterateMap:
+    case EcsExprIterateMapValues:
+        flecs_expr_iterate_assign(flecs_expr_iterate_append(
+            to_map, result, key, val->type_info), val, val->type_info);
+        return 0;
+    case EcsExprIterateFilter:
+        if (*(bool*)val->value.ptr) {
+            flecs_type_info_copy(flecs_expr_iterate_append(
+                to_map, result, key, elem_ti), elem, 1, elem_ti);
+        }
+        return 0;
+    case EcsExprIterateReduce:
+        if (val->value.ptr != result) {
+            flecs_expr_iterate_assign(result, val, result_ti);
+        }
+        return 0;
+    case EcsExprIterateSum:
+        return flecs_value_binary(ctx->script, &node->node, &acc,
+            &val->value, &acc, EcsTokAdd);
+    case EcsExprIterateMin:
+    case EcsExprIterateMax: {
+        bool replace = !*has_value;
+        if (!replace) {
+            ecs_value_t cmp = { .type = ecs_id(ecs_bool_t), .ptr = &replace };
+            if (flecs_value_binary(ctx->script, &node->node, &val->value,
+                &acc, &cmp, node->kind == EcsExprIterateMin
+                    ? EcsTokLt : EcsTokGt))
+            {
+                return -1;
+            }
+        }
+
+        if (replace) {
+            flecs_type_info_copy(result, val->value.ptr, 1, result_ti);
+            *has_value = true;
+        }
+
+        return 0;
+    }
+    case EcsExprIterateAny:
+        if (*(bool*)val->value.ptr) {
+            *(bool*)result = true;
+            return 1;
+        }
+        return 0;
+    case EcsExprIterateAll:
+        if (!*(bool*)val->value.ptr) {
+            *(bool*)result = false;
+            return 1;
+        }
+        return 0;
+    case EcsExprIterateCount:
+        if (*(bool*)val->value.ptr) {
+            (*(int32_t*)result) ++;
+        }
+        return 0;
+    }
+
+    return 0;
+}
+
+static FLECS_SCRIPT_NOINLINE int flecs_expr_iterate_visit_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_iterate_t *node,
+    ecs_expr_value_t *out)
+{
+    ecs_world_t *world = ctx->world;
+    ecs_expr_value_t *left = flecs_expr_eval_result(
+        ctx, node->left, &(ecs_expr_value_t){0});
+    if (!left) {
+        return -1;
+    }
+
+    void *result = out->value.ptr;
+    ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    const ecs_type_info_t *elem_ti = ecs_get_type_info(world, node->elem_type);
+    ecs_assert(elem_ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    bool is_map = node->collection_kind == EcsMapType;
+    bool to_map = node->kind == EcsExprIterateMapValues ||
+        (node->kind == EcsExprIterateFilter && is_map);
+
+    if (node->init) {
+        ecs_expr_value_t *init = flecs_expr_eval_result(
+            ctx, node->init, &(ecs_expr_value_t){0});
+        if (!init) {
+            return -1;
+        }
+
+        flecs_expr_iterate_assign(result, init, node->node.type_info);
+    }
+
+    if (node->kind == EcsExprIterateAll) {
+        *(bool*)result = true;
+    }
+
+    int32_t index = 0, count = 0;
+    ecs_map_key_t key = 0;
+
+    const ecs_expr_eval_desc_t *desc = ctx->desc;
+    ecs_expr_eval_desc_t lambda_desc = {0};
+    ecs_script_vars_t *vars = NULL;
+    ecs_script_var_t *params = NULL;
+
+    if (node->lambda) {
+        vars = flecs_expr_iterate_vars_push(
+            world, node, desc ? desc->vars : NULL);
+        ecs_assert(vars != NULL, ECS_INTERNAL_ERROR, NULL);
+        params = ecs_vec_first(&vars->vars);
+
+        if (desc) {
+            lambda_desc = *desc;
+        }
+
+        lambda_desc.vars = vars;
+        ctx->desc = &lambda_desc;
+
+        if (node->acc_var != -1) {
+            params[node->acc_var].value.ptr = result;
+        }
+
+        if (node->key_var != -1) {
+            params[node->key_var].value.ptr = is_map
+                ? (void*)&key : (void*)&index;
+        }
+    }
+
+    ecs_map_iter_t it = {0};
+    void *elems = NULL;
+
+    if (node->collection_kind == EcsArrayType) {
+        const EcsArray *array = ecs_get(world, left->value.type, EcsArray);
+        ecs_assert(array != NULL, ECS_INTERNAL_ERROR, NULL);
+        elems = left->value.ptr;
+        count = array->count;
+    } else if (node->collection_kind == EcsVectorType) {
+        ecs_vec_t *vec = left->value.ptr;
+        if (vec) {
+            elems = ecs_vec_first(vec);
+            count = ecs_vec_count(vec);
+        }
+    } else if (left->value.ptr) {
+        it = ecs_map_iter(left->value.ptr);
+    }
+
+    bool has_value = false;
+    int r = 0;
+    for (index = 0; ; index ++) {
+        void *elem;
+        if (is_map) {
+            if (!left->value.ptr || !ecs_map_next(&it)) {
+                break;
+            }
+
+            key = ecs_map_key(&it);
+            elem = elem_ti->size > ECS_SIZEOF(ecs_map_val_t)
+                ? ecs_map_ptr(&it)
+                : (void*)&it.res[1];
+        } else {
+            if (index >= count) {
+                break;
+            }
+
+            elem = ECS_ELEM(elems, elem_ti->size, index);
+        }
+
+        flecs_expr_stack_push(ctx->stack);
+
+        ecs_expr_value_t elem_val = {
+            .value = { .type = node->elem_type, .ptr = elem },
+            .type_info = elem_ti,
+            .owned = false
+        };
+
+        ecs_expr_value_t *val = &elem_val;
+        if (node->lambda) {
+            params[node->elem_var].value.ptr = elem;
+            val = flecs_expr_eval_result(
+                ctx, node->lambda->body, &(ecs_expr_value_t){0});
+        }
+
+        r = val ? flecs_expr_iterate_step(ctx, node, val, elem, elem_ti,
+            key, result, to_map, &has_value) : -1;
+
+        flecs_expr_stack_pop(ctx->stack);
+
+        if (r) {
+            break;
+        }
+    }
+
+    if (vars) {
+        ctx->desc = desc;
+        ecs_script_vars_pop(vars);
+    }
+
+    if (r == 1) {
+        r = 0;
+    }
+
+    if (!r && !has_value && (node->kind == EcsExprIterateMin ||
+        node->kind == EcsExprIterateMax))
+    {
+        flecs_expr_visit_error(ctx->script, node,
+            "cannot compute '%s' of empty collection", node->function_name);
+        r = -1;
+    }
+
+    out->owned = true;
+    return r;
+}
+
 static int flecs_expr_component_visit_eval(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_element_t *node,
@@ -1024,7 +1299,9 @@ static const bool flecs_expr_eval_has_frame[] = {
     [EcsExprRange] = true,
     [EcsExprCast] = true,
     [EcsExprCastNumber] = true,
-    [EcsExprScript] = false
+    [EcsExprScript] = false,
+    [EcsExprLambda] = false,
+    [EcsExprIterate] = true
 };
 
 static int flecs_expr_visit_eval_priv(
@@ -1113,6 +1390,13 @@ static int flecs_expr_visit_eval_priv(
     case EcsExprScript:
         result = flecs_expr_script_visit_eval(
             ctx, (ecs_expr_script_t*)node, out);
+        break;
+    case EcsExprIterate:
+        result = flecs_expr_iterate_visit_eval(
+            ctx, (ecs_expr_iterate_t*)node, out);
+        break;
+    case EcsExprLambda:
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected lambda expression");
         break;
     case EcsExprComponent:
         result = flecs_expr_component_visit_eval(

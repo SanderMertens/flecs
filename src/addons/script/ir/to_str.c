@@ -110,6 +110,7 @@ static const struct {
     [EcsIrTemplateRefValue] = {"TemplateRefValue", {"dst", "ref"}},
     [EcsIrToBool] = {"ToBool", {"value"}},
     [EcsIrReturn] = {"Return", {"value"}},
+    [EcsIrIterate] = {"Iterate", {"dst"}},
 };
 
 const char* flecs_script_ir_op_name(

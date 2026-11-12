@@ -1522,6 +1522,8 @@ static bool flecs_script_edit_expr_is_const(
     case EcsExprRange:
     case EcsExprNew:
     case EcsExprScript:
+    case EcsExprLambda:
+    case EcsExprIterate:
     default:
         return false;
     }

@@ -31,7 +31,9 @@ typedef enum ecs_expr_node_kind_t {
     EcsExprMatch,
     EcsExprRange,
     EcsExprNew,
-    EcsExprScript
+    EcsExprScript,
+    EcsExprLambda,
+    EcsExprIterate
 } ecs_expr_node_kind_t;
 
 struct ecs_expr_node_t {
@@ -207,6 +209,45 @@ typedef struct ecs_expr_script_t {
     ecs_script_t *script;
 } ecs_expr_script_t;
 
+#define FLECS_EXPR_LAMBDA_PARAM_MAX (3)
+
+typedef struct ecs_expr_lambda_t {
+    ecs_expr_node_t node;
+    const char *params[FLECS_EXPR_LAMBDA_PARAM_MAX];
+    int32_t param_count;
+    ecs_expr_node_t *body;
+} ecs_expr_lambda_t;
+
+typedef enum ecs_expr_iterate_kind_t {
+    EcsExprIterateMap,
+    EcsExprIterateMapValues,
+    EcsExprIterateFilter,
+    EcsExprIterateReduce,
+    EcsExprIterateSum,
+    EcsExprIterateMin,
+    EcsExprIterateMax,
+    EcsExprIterateAny,
+    EcsExprIterateAll,
+    EcsExprIterateCount
+} ecs_expr_iterate_kind_t;
+
+typedef struct ecs_expr_iterate_t {
+    ecs_expr_node_t node;
+    ecs_expr_node_t *left;
+    ecs_expr_node_t *init;
+    ecs_expr_lambda_t *lambda;
+    const char *function_name;
+    ecs_expr_iterate_kind_t kind;
+    ecs_type_kind_t collection_kind;
+    ecs_entity_t acc_type;
+    ecs_entity_t key_type;
+    ecs_entity_t elem_type;
+    int32_t sp;
+    int8_t acc_var;
+    int8_t key_var;
+    int8_t elem_var;
+} ecs_expr_iterate_t;
+
 ecs_expr_cast_t* flecs_expr_cast_fn(
     ecs_script_t *script,
     ecs_expr_node_t *expr,
@@ -302,6 +343,19 @@ ecs_expr_new_t* flecs_expr_new(
 
 ecs_expr_script_t* flecs_expr_script(
     ecs_parser_t *parser);
+
+ecs_expr_lambda_t* flecs_expr_lambda(
+    ecs_parser_t *parser);
+
+ecs_expr_iterate_t* flecs_expr_iterate_from(
+    ecs_script_t *script,
+    ecs_expr_node_t *node,
+    ecs_expr_iterate_kind_t kind);
+
+ecs_script_vars_t* flecs_expr_iterate_vars_push(
+    ecs_world_t *world,
+    ecs_expr_iterate_t *node,
+    const ecs_script_vars_t *parent);
 
 bool flecs_expr_explicit_cast_allowed(
     ecs_world_t *world,

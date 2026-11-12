@@ -1226,6 +1226,46 @@ const items = [10, 20, 30]
 const n = items.count() // 3
 ```
 
+Arrays, vectors and maps also have methods that take a lambda. A lambda is a list of parameters followed by `->` and a body in braces. The value of the body is the result of the lambda. Lambdas can only be passed to these methods, and can use variables from the scope they are defined in:
+
+```cpp
+const items = [1, 2, 3]
+const scale = 10
+
+const a = items.map((el) -> { el * scale })     // [10, 20, 30]
+const b = items.filter((el) -> { el != 2 })     // [1, 3]
+const c = items.reduce((r, el) -> { r + el })   // 6
+const d = items.reduce((r, el) -> { r + el }, 100) // 106
+const e = items.sum((el) -> { el * scale })     // 60
+const f = items.any((el) -> { el > 2 })         // true
+```
+
+The lambda can take an additional parameter before the element, which is the element index for arrays and vectors, and the key for maps:
+
+```cpp
+const m: map(i32, i32) = [1: 10, 2: 20]
+const g = m.map((key, el) -> { key + el })        // [11, 22]
+const h = m.map_values((key, el) -> { key + el }) // [1: 11, 2: 22]
+const i = m.reduce((r, key, el) -> { r + key * el }) // 50
+```
+
+| **Method**   | **Lambda**                              | **Result** |
+|--------------|-----------------------------------------|------------|
+| `map`        | `(el)` or `(index/key, el)`             | Vector with the lambda result for each element. |
+| `map_values` | `(el)` or `(key, el)`                   | Map with the same keys and the lambda result as value. Only available on maps. |
+| `filter`     | `(el)` or `(index/key, el)`             | Collection with the elements for which the lambda returns `true`. Filtering an array returns a vector. |
+| `reduce`     | `(acc, el)` or `(acc, index/key, el)`   | The accumulated value. The accumulator starts at the optional second argument, or at zero if none is provided. |
+| `count`      | `(el)` or `(index/key, el)`             | Number of elements for which the lambda returns `true`. Without a lambda, `count()` returns the number of elements. |
+| `sum`        | optional, `(el)` or `(index/key, el)`   | Sum of the elements, or of the lambda results. Returns zero for an empty collection. |
+| `min`        | optional, `(el)` or `(index/key, el)`   | Smallest element, or smallest lambda result. An empty collection is an error. |
+| `max`        | optional, `(el)` or `(index/key, el)`   | Largest element, or largest lambda result. An empty collection is an error. |
+| `any`        | optional, `(el)` or `(index/key, el)`   | Whether the lambda returns `true` for any element. Without a lambda, the collection must contain `bool` values. Returns `false` for an empty collection. |
+| `all`        | optional, `(el)` or `(index/key, el)`   | Whether the lambda returns `true` for all elements. Without a lambda, the collection must contain `bool` values. Returns `true` for an empty collection. |
+
+`sum`, `min` and `max` require numeric values. When `map` is called on a map, the order of the resulting vector follows the iteration order of the map, which is not defined.
+
+The accumulator of `reduce` has the type of the element, unless an initial value of a different type is provided. A number literal as initial value keeps the type of the element.
+
 ### Doc
 The doc module is available when Flecs is built with the `FLECS_DOC` addon (enabled by default). The following table lists the doc methods on the `flecs.meta.entity` type:
 

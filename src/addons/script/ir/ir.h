@@ -105,6 +105,7 @@ typedef enum ecs_script_ir_op_kind_t {
     EcsIrTemplateRefValue,
     EcsIrToBool,
     EcsIrReturn,
+    EcsIrIterate,
     EcsIrOpKindLast
 } ecs_script_ir_op_kind_t;
 
