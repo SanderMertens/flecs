@@ -681,6 +681,12 @@ static void flecs_irc_compile_expr(
         flecs_irc_op(c, op)->imm.ptr = ((ecs_expr_script_t*)node)->script;
         flecs_irc_op(c, op)->flags = place;
         return;
+    case EcsExprIterate:
+        op = flecs_irc_emit(c, EcsIrIterate, dst, 0, 0, node);
+        flecs_irc_op(c, op)->flags = place;
+        return;
+    case EcsExprLambda:
+        break;
     }
 
     ecs_abort(ECS_INTERNAL_ERROR, "corrupt expression node kind");

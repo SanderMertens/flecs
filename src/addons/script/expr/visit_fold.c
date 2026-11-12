@@ -404,6 +404,38 @@ error:
     return -1;
 }
 
+static int flecs_expr_iterate_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_expr_iterate_t *node = (ecs_expr_iterate_t*)*node_ptr;
+    if (flecs_expr_visit_fold(script, &node->left, desc)) {
+        return -1;
+    }
+
+    if (node->init && flecs_expr_visit_fold(script, &node->init, desc)) {
+        return -1;
+    }
+
+    if (!node->lambda) {
+        return 0;
+    }
+
+    ecs_script_vars_t *vars = flecs_expr_iterate_vars_push(
+        script->world, node, desc->vars);
+    if (!vars) {
+        return -1;
+    }
+
+    ecs_expr_eval_desc_t lambda_desc = *desc;
+    lambda_desc.vars = vars;
+    int result = flecs_expr_visit_fold(
+        script, &node->lambda->body, &lambda_desc);
+    ecs_script_vars_pop(vars);
+    return result;
+}
+
 int flecs_expr_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -416,7 +448,10 @@ int flecs_expr_visit_fold(
     case EcsExprValue:
     case EcsExprNew:
     case EcsExprScript:
+    case EcsExprLambda:
         return 0;
+    case EcsExprIterate:
+        return flecs_expr_iterate_visit_fold(script, node_ptr, desc);
     case EcsExprInterpolatedString:
     case EcsExprUnary:
     case EcsExprCast:

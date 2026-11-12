@@ -318,6 +318,72 @@ ecs_expr_script_t* flecs_expr_script(
     return result;
 }
 
+ecs_expr_lambda_t* flecs_expr_lambda(
+    ecs_parser_t *parser)
+{
+    ecs_expr_lambda_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_lambda_t, EcsExprLambda);
+    return result;
+}
+
+ecs_expr_iterate_t* flecs_expr_iterate_from(
+    ecs_script_t *script,
+    ecs_expr_node_t *node,
+    ecs_expr_iterate_kind_t kind)
+{
+    ecs_expr_iterate_t *result = flecs_calloc_t(
+        &flecs_script_impl(script)->allocator, ecs_expr_iterate_t);
+    result->node.kind = EcsExprIterate;
+    result->node.alloc_size = ECS_SIZEOF(ecs_expr_iterate_t);
+    result->node.pos = node->pos;
+    result->node.end = node->end;
+    result->kind = kind;
+    result->sp = -1;
+    result->acc_var = -1;
+    result->key_var = -1;
+    result->elem_var = -1;
+    return result;
+}
+
+ecs_script_vars_t* flecs_expr_iterate_vars_push(
+    ecs_world_t *world,
+    ecs_expr_iterate_t *node,
+    const ecs_script_vars_t *parent)
+{
+    ecs_script_vars_t *vars = parent
+        ? ecs_script_vars_push(ECS_CONST_CAST(ecs_script_vars_t*, parent))
+        : ecs_script_vars_init(world);
+
+    if (node->sp == -1) {
+        node->sp = vars->sp;
+    } else {
+        vars->sp = node->sp;
+    }
+
+    ecs_expr_lambda_t *lambda = node->lambda;
+    int32_t i;
+    for (i = 0; i < lambda->param_count; i ++) {
+        ecs_entity_t type = node->elem_type;
+        if (i == node->acc_var) {
+            type = node->acc_type;
+        } else if (i == node->key_var) {
+            type = node->key_type;
+        }
+
+        ecs_script_var_t *var = ecs_script_vars_declare(
+            vars, lambda->params[i]);
+        if (!var) {
+            ecs_script_vars_pop(vars);
+            return NULL;
+        }
+
+        var->value.type = type;
+        var->type_info = ecs_get_type_info(world, type);
+    }
+
+    return vars;
+}
+
 static bool flecs_expr_collection_elem_type(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -675,6 +741,21 @@ int flecs_expr_visit_children(
             return -1;
         }
 
+        break;
+    }
+    case EcsExprLambda:
+        return action(&((ecs_expr_lambda_t*)node)->body, ctx);
+    case EcsExprIterate: {
+        ecs_expr_iterate_t *n = (ecs_expr_iterate_t*)node;
+        ecs_expr_node_t *lambda = (ecs_expr_node_t*)n->lambda;
+        if (action(&n->left, ctx) ||
+            action(&n->init, ctx) ||
+            action(&lambda, ctx))
+        {
+            return -1;
+        }
+
+        n->lambda = (ecs_expr_lambda_t*)lambda;
         break;
     }
     case EcsExprNew:
