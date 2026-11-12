@@ -2998,6 +2998,16 @@ void Prefab_add_inherit_w_override_with_to_prefab_after_instantiate(void);
 void Prefab_add_component_to_prefab_during_instantiate(void);
 void Prefab_add_component_to_prefab_during_instantiate_w_parent(void);
 void Prefab_dont_inherit_dont_fragment_component(void);
+void Prefab_override_after_base_remove_from_intermediate(void);
+void Prefab_override_after_base_add_to_intermediate(void);
+void Prefab_override_after_base_remove_from_intermediate_3_lvl(void);
+void Prefab_override_after_base_add_to_intermediate_w_stage(void);
+void Prefab_override_after_base_add_to_intermediate_override_policy(void);
+void Prefab_override_in_observer_after_base_change(void);
+void Prefab_override_after_base_add_to_intermediate_w_readonly(void);
+void Prefab_on_set_after_remove_override_after_base_add_to_intermediate(void);
+void Prefab_override_after_base_remove(void);
+void Prefab_override_after_base_add(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -15506,6 +15516,46 @@ bake_test_case Prefab_testcases[] = {
     {
         "dont_inherit_dont_fragment_component",
         Prefab_dont_inherit_dont_fragment_component
+    },
+    {
+        "override_after_base_remove_from_intermediate",
+        Prefab_override_after_base_remove_from_intermediate
+    },
+    {
+        "override_after_base_add_to_intermediate",
+        Prefab_override_after_base_add_to_intermediate
+    },
+    {
+        "override_after_base_remove_from_intermediate_3_lvl",
+        Prefab_override_after_base_remove_from_intermediate_3_lvl
+    },
+    {
+        "override_after_base_add_to_intermediate_w_stage",
+        Prefab_override_after_base_add_to_intermediate_w_stage
+    },
+    {
+        "override_after_base_add_to_intermediate_override_policy",
+        Prefab_override_after_base_add_to_intermediate_override_policy
+    },
+    {
+        "override_in_observer_after_base_change",
+        Prefab_override_in_observer_after_base_change
+    },
+    {
+        "override_after_base_add_to_intermediate_w_readonly",
+        Prefab_override_after_base_add_to_intermediate_w_readonly
+    },
+    {
+        "on_set_after_remove_override_after_base_add_to_intermediate",
+        Prefab_on_set_after_remove_override_after_base_add_to_intermediate
+    },
+    {
+        "override_after_base_remove",
+        Prefab_override_after_base_remove
+    },
+    {
+        "override_after_base_add",
+        Prefab_override_after_base_add
     }
 };
 
@@ -18746,7 +18796,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        217,
+        227,
         Prefab_testcases
     },
     {

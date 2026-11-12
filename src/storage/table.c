@@ -451,7 +451,9 @@ static void flecs_table_init_overrides(
     o->refs = ECS_OFFSET(o, bases_size);
     ecs_os_memset_n(o->refs, 0, ecs_ref_t, table->column_count);
     for (int32_t i = 0; i < o->count; i ++) {
-        o->bases[i].pair = table->_->records[tr->index + i].hdr.cr->pair;
+        ecs_component_record_t *cr = table->_->records[tr->index + i].hdr.cr;
+        o->bases[i].pair = cr->pair;
+        o->bases[i].cr = cr;
         o->bases[i].generation = -1;
     }
 
@@ -468,6 +470,23 @@ static void flecs_table_fini_overrides(
     }
 }
 
+/* Get a ref to the component of the base that an override copies from */
+static const ecs_ref_t* flecs_table_find_override(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    ecs_ref_t *storage)
+{
+    ecs_entity_t base = 0;
+    if (ecs_search_relation(world, table, 0, id, EcsIsA, EcsUp,
+        &base, NULL, NULL) != -1)
+    {
+        *storage = ecs_ref_init_id(world, base, id);
+        return storage;
+    }
+    return NULL;
+}
+
 static void flecs_table_update_overrides(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -477,34 +496,36 @@ static void flecs_table_update_overrides(
         return;
     }
 
-    int32_t base_index = 0;
-    for (; base_index < o->count; base_index ++) {
+    ecs_assert(!(world->flags & EcsWorldMultiThreaded),
+        ECS_INTERNAL_ERROR, NULL);
+
+    /* Revalidate the reachable cache of each base before comparing its
+     * generation. The generation of a cache that is already invalid is not
+     * incremented again, so it would miss changes made while it is invalid. */
+    bool changed = false;
+    int32_t base_index;
+    for (base_index = 0; base_index < o->count; base_index ++) {
         ecs_table_override_base_t *base = &o->bases[base_index];
-        if (base->generation != base->pair->reachable.generation) {
-            break;
+        const ecs_reachable_cache_t *rc = &base->pair->reachable;
+        if (rc->current != rc->generation) {
+            flecs_reachable_cache_get(world, base->cr);
+        }
+
+        if (base->generation != rc->generation) {
+            base->generation = rc->generation;
+            changed = true;
         }
     }
 
-    if (base_index == o->count) {
+    if (!changed) {
         return;
-    }
-
-    for (; base_index < o->count; base_index ++) {
-        ecs_table_override_base_t *base = &o->bases[base_index];
-        base->generation = base->pair->reachable.generation;
     }
 
     int16_t *map = &table->column_map[table->type.count];
     int32_t i, count = table->column_count;
     for (i = 0; i < count; i ++) {
         ecs_id_t id = table->type.array[map[i]];
-        ecs_entity_t base = 0;
-
-        if (ecs_search_relation(
-            world, table, 0, id, EcsIsA, EcsUp, &base, NULL, NULL) != -1) 
-        {
-            o->refs[i] = ecs_ref_init_id(world, base, id);
-        } else {
+        if (!flecs_table_find_override(world, table, id, &o->refs[i])) {
             ecs_os_zeromem(&o->refs[i]);
         }
     }
@@ -2313,12 +2334,10 @@ const ecs_ref_t* flecs_table_get_override(
     }
 
     if (cr->flags & EcsIdSparse) {
-        ecs_entity_t base = 0;
-        if (ecs_search_relation(world, table, 0, id, EcsIsA, EcsUp, 
-            &base, NULL, NULL) != -1) 
-        {
-            *storage = ecs_ref_init_id(world, base, id);
-            return storage;
+        const ecs_ref_t *r = flecs_table_find_override(
+            world, table, id, storage);
+        if (r) {
+            return r;
         }
     }
     
@@ -2330,6 +2349,12 @@ const ecs_ref_t* flecs_table_get_override(
     int32_t column_index = ecs_table_get_column_index(world, table, id);
     if (column_index == -1) {
         return NULL;
+    }
+
+    /* In multithreaded mode the reachable cache can't be revalidated, so look
+     * up the base without updating the override cache. */
+    if (world->flags & EcsWorldMultiThreaded) {
+        return flecs_table_find_override(world, table, id, storage);
     }
 
     flecs_table_update_overrides(world, table);

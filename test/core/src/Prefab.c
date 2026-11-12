@@ -7070,3 +7070,338 @@ void Prefab_dont_inherit_dont_fragment_component(void) {
 
     ecs_fini(world);
 }
+
+void Prefab_override_after_base_remove_from_intermediate(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Position, {10, 20});
+    ecs_entity_t mid = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, mid);
+
+    ecs_set(world, mid, Position, {30, 40});
+    ecs_add(world, inst, Position);
+    ecs_remove(world, inst, Position);
+    ecs_remove(world, mid, Position);
+
+    ecs_add(world, inst, Position);
+    test_assert(ecs_owns(world, inst, Position));
+    const Position *p = ecs_get(world, inst, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Prefab_override_after_base_add_to_intermediate(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Position, {10, 20});
+    ecs_entity_t mid = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, mid);
+
+    ecs_add(world, mid, Tag);
+    ecs_add(world, inst, Position);
+    ecs_remove(world, inst, Position);
+    ecs_set(world, mid, Position, {30, 40});
+
+    ecs_add(world, inst, Position);
+    test_assert(ecs_owns(world, inst, Position));
+    const Position *p = ecs_get(world, inst, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}
+
+void Prefab_override_after_base_remove_from_intermediate_3_lvl(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Position, {10, 20});
+    ecs_entity_t mid_1 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t mid_2 = ecs_new_w_pair(world, EcsIsA, mid_1);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, mid_2);
+
+    ecs_set(world, mid_1, Position, {30, 40});
+    ecs_add(world, inst, Position);
+    ecs_remove(world, inst, Position);
+    ecs_remove(world, mid_1, Position);
+
+    ecs_add(world, inst, Position);
+    test_assert(ecs_owns(world, inst, Position));
+    const Position *p = ecs_get(world, inst, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Prefab_override_after_base_add_to_intermediate_w_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Position, {10, 20});
+    ecs_entity_t mid = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, mid);
+
+    ecs_add(world, mid, Tag);
+    ecs_add(world, inst, Position);
+    ecs_remove(world, inst, Position);
+    ecs_set(world, mid, Position, {30, 40});
+    ecs_set(world, inst, Position, {50, 60});
+
+    ecs_set_stage_count(world, 2);
+    ecs_readonly_begin(world, true);
+    ecs_world_t *stage = ecs_get_stage(world, 1);
+
+    ecs_remove(stage, inst, Position);
+    Position *p = ecs_ensure(stage, inst, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    ecs_readonly_end(world);
+
+    test_assert(ecs_owns(world, inst, Position));
+    const Position *ptr = ecs_get(world, inst, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 30);
+    test_int(ptr->y, 40);
+
+    ecs_fini(world);
+}
+
+void Prefab_override_after_base_add_to_intermediate_override_policy(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Position, {10, 20});
+    ecs_entity_t mid = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_remove(world, mid, Position);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, mid);
+    ecs_remove(world, inst, Position);
+
+    ecs_add(world, mid, Tag);
+    ecs_add(world, inst, Position);
+    ecs_remove(world, inst, Position);
+    ecs_set(world, mid, Position, {30, 40});
+
+    ecs_add(world, inst, Position);
+    test_assert(ecs_owns(world, inst, Position));
+    const Position *p = ecs_get(world, inst, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}
+
+static ecs_entity_t override_observer_top;
+static ecs_entity_t override_observer_other;
+static ecs_entity_t override_observer_velocity;
+static ecs_entity_t override_observer_tags[16];
+static int override_observer_invoked;
+
+static void OverrideInObserver(ecs_iter_t *it) {
+    if (override_observer_invoked ++) {
+        return;
+    }
+
+    for (int i = 0; i < 16; i ++) {
+        ecs_add_id(it->world, override_observer_top, override_observer_tags[i]);
+    }
+
+    ecs_add_id(it->world, override_observer_other,
+        override_observer_velocity);
+}
+
+void Prefab_override_in_observer_after_base_change(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+    override_observer_velocity = ecs_id(Velocity);
+
+    for (int i = 0; i < 16; i ++) {
+        override_observer_tags[i] = ecs_new(world);
+        ecs_add_pair(world, override_observer_tags[i],
+            EcsOnInstantiate, EcsInherit);
+    }
+
+    override_observer_top = ecs_new(world);
+    ecs_entity_t base = ecs_new_w_pair(world, EcsIsA, override_observer_top);
+    ecs_set(world, base, Position, {10, 20});
+    ecs_set(world, base, Velocity, {1, 2});
+    override_observer_other = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_add_id(world, override_observer_other, ecs_new(world));
+    override_observer_invoked = 0;
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position), .src.id = EcsUp, .trav = EcsIsA }},
+        .events = { EcsOnAdd },
+        .callback = OverrideInObserver
+    });
+
+    ecs_entity_t inst = ecs_new(world);
+    ecs_add_pair(world, inst, EcsIsA, base);
+    test_assert(override_observer_invoked > 0);
+
+    test_assert(ecs_owns(world, override_observer_other, Velocity));
+    const Velocity *v = ecs_get(world, override_observer_other, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+    test_assert(ecs_has_id(world, inst, override_observer_tags[15]));
+
+    ecs_fini(world);
+}
+
+void Prefab_override_after_base_add_to_intermediate_w_readonly(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Position, {10, 20});
+    ecs_entity_t mid = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, mid);
+
+    ecs_add(world, mid, Tag);
+    ecs_add(world, inst, Position);
+    ecs_remove(world, inst, Position);
+    ecs_set(world, mid, Position, {30, 40});
+    ecs_set(world, inst, Position, {50, 60});
+
+    ecs_readonly_begin(world, false);
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
+    ecs_remove(stage, inst, Position);
+    Position *p = ecs_ensure(stage, inst, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    ecs_readonly_end(world);
+
+    test_assert(ecs_owns(world, inst, Position));
+    const Position *ptr = ecs_get(world, inst, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 30);
+    test_int(ptr->y, 40);
+
+    ecs_fini(world);
+}
+
+static ecs_entity_t on_set_override_src;
+static Position on_set_override_value;
+
+static void OnSetOverride(ecs_iter_t *it) {
+    on_set_override_src = it->sources[0];
+    on_set_override_value = *ecs_field(it, Position, 0);
+}
+
+void Prefab_on_set_after_remove_override_after_base_add_to_intermediate(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Position, {10, 20});
+    ecs_entity_t mid = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, mid);
+
+    ecs_add(world, mid, Tag);
+    ecs_add(world, inst, Position);
+    ecs_remove(world, inst, Position);
+    ecs_set(world, mid, Position, {30, 40});
+    ecs_set(world, inst, Position, {50, 60});
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = OnSetOverride
+    });
+
+    ecs_remove(world, inst, Position);
+    test_uint(on_set_override_src, mid);
+    test_int(on_set_override_value.x, 30);
+    test_int(on_set_override_value.y, 40);
+
+    ecs_fini(world);
+}
+
+void Prefab_override_after_base_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Position, {10, 20});
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_add(world, base, Tag);
+    ecs_add(world, inst, Position);
+    ecs_remove(world, inst, Position);
+    ecs_remove(world, base, Position);
+
+    ecs_add(world, inst, Position);
+    test_assert(ecs_owns(world, inst, Position));
+    test_assert(ecs_get(world, inst, Position) != NULL);
+
+    ecs_fini(world);
+}
+
+void Prefab_override_after_base_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_add(world, base, Tag);
+    ecs_add(world, inst, Position);
+    ecs_remove(world, inst, Position);
+    ecs_set(world, base, Position, {30, 40});
+
+    ecs_add(world, inst, Position);
+    test_assert(ecs_owns(world, inst, Position));
+    const Position *p = ecs_get(world, inst, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}

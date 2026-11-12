@@ -137,7 +137,8 @@ void flecs_observers_invoke_skip_up_notify(
     ecs_table_t *table,
     ecs_entity_t trav);
 
-/* Invalidate reachable cache. */
+/* Get the reachable cache, rebuilding it if it is invalid. Returns NULL if
+ * the cache is invalid in multithreaded mode. */
 const ecs_vec_t* flecs_reachable_cache_get(
     ecs_world_t *world,
     ecs_component_record_t *cr);
