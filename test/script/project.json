@@ -3749,7 +3749,8 @@
                 "for_anonymous_child_kept",
                 "for_query_duplicate_anonymous_kept",
                 "for_new_expr_kept",
-                "template_for_query_anonymous_kept"
+                "template_for_query_anonymous_kept",
+                "template_query_batch_single_update"
             ]
         }, {
             "id": "ConstVar",

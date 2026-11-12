@@ -71,6 +71,11 @@ struct ecs_stage_t {
 #endif
 };
 
+#ifdef FLECS_SCRIPT
+void flecs_script_flush_pending(
+    ecs_world_t *world);
+#endif
+
 static inline
 bool flecs_commands_begin(
     ecs_world_t *world,

@@ -2653,6 +2653,8 @@ struct ecs_world_t {
     /* Unique id per generated event used to prevent duplicate notifications */
     int32_t event_id;
 
+    int32_t flush_depth;
+
     /* Array of table versions used with component refs to determine if the 
      * cached pointer is still valid. */
     uint32_t table_version[ECS_TABLE_VERSION_ARRAY_SIZE];
@@ -5367,6 +5369,7 @@ bool flecs_commands_flush(
         return false;
     }
     flecs_check_exclusive_world_access_write(world);
+    world->flush_depth ++;
     ecs_stage_t *dst_stage = world->stages[0];
     ecs_commands_t *root = commands;
     ecs_vec_t *queue;
@@ -5628,6 +5631,8 @@ next:
         flecs_table_diff_builder_fini(world, &diff);
         ecs_vec_fini_t(&world->allocator, &set_ids, ecs_id_t);
     }
+
+    world->flush_depth --;
 
     return true;
 }
