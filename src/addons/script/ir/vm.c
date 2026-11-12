@@ -395,6 +395,7 @@ static void flecs_ir_for_leave(
     flecs_ir_vars_truncate(vm, state->var_base,
         frame->u.for_.vscratch_top, frame->u.for_.vheap_count);
     vm->v.for_slot = state->for_slot;
+    vm->v.for_key = state->outer_key;
     vm->v.force = state->force;
     flecs_script_for_fini(&vm->v, state);
 }
@@ -2188,9 +2189,13 @@ static flecs_script_run_status_t flecs_ir_exec(
                     *(int32_t*)((ecs_script_var_t*)fs->vars->vars.array)
                         [fs->var_base + fs->elem_var].value.ptr = value;
                     fs->index ++;
+                    vm->v.for_key = flecs_script_for_key(
+                        fs->outer_key, (uint64_t)(int64_t)value);
                 }
             } else if (!flecs_script_for_next(fs)) {
                 vm->pc = op->a;
+            } else {
+                vm->v.for_key = fs->key;
             }
 
             break;

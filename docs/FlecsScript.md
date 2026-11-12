@@ -2458,7 +2458,7 @@ light {
 ```
 
 ### Loops
-Entities created in a loop do not survive a reactive update, unless they are named. For example, here is an example of a loop that creates `count` anonymous entities:
+Entities created in a loop survive reactive updates, whether they are named or anonymous. For example, here is a loop that creates `count` anonymous entities:
 
 ```cpp
 const count = game[Count].value
@@ -2468,15 +2468,24 @@ for i in 0..count {
 }
 ```
 
-When `count` changes, all previous anonymous entities will be deleted before the for loop is reevaluated. To prevent this from happening, entities in a loop must be named:
+When `count` changes from 2 to 3, the entities created for `i = 0` and `i = 1` are kept and only one new entity is created. When `count` goes down, the entities of the iterations that no longer run are deleted.
+
+An anonymous entity is identified by the statement that creates it and by the iteration it was created in. The iteration is identified by a key that depends on the kind of loop:
+
+| **Loop**                 | **Iteration key**             |
+|--------------------------|-------------------------------|
+| `for i in from..to`      | The value of `i`              |
+| Array or vector          | The element index             |
+| Map                      | The map key                   |
+| Query                    | The matched entity            |
+
+In nested loops the key of an iteration includes the keys of the enclosing loops. If a query returns the same entity more than once, each result gets its own entity. A named entity is identified by its name instead:
 
 ```cpp
 for i in 0..count {
   "e_{i}" { Position: {i, i * 2} }
 }
 ```
-
-This will create a named slot for each entity that is tracked across reactive updates, which prevents deleting the entities on each update.
 
 While somewhat wasteful, this following example also work as expected:
 
