@@ -809,13 +809,6 @@ ecs_query_cache_t* flecs_query_cache_init(
         }
     }
 
-    /* The uncached query used to populate the cache always matches empty 
-     * tables. This flag determines whether the empty tables are stored 
-     * separately in the cache or are treated as regular tables. This is only
-     * enabled if the user requested that the query matches empty tables. */
-    ECS_BIT_COND(q->flags, EcsQueryCacheYieldEmptyTables, 
-        !!(query_flags & EcsQueryMatchEmptyTables));
-
     flecs_query_cache_allocators_init(result);
 
     /* Zeroed-out sources array that's used for results that only match $this. 

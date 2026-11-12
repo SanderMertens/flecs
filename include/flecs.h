@@ -1308,6 +1308,8 @@ struct ecs_iter_t {
  */
 #define EcsQueryGroupByDesc           (1u << 10u)
 
+#define EcsQueryDontKeepAlive         (1u << 21u)
+
 
 /** Used with ecs_query_init().
  * 

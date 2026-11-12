@@ -2780,6 +2780,9 @@ void Monitor_optional_only_new_empty(void);
 void Monitor_optional_only_delete_w_component(void);
 void Monitor_on_add_any_not_invoked_for_new_empty(void);
 void Monitor_on_remove_any_not_invoked_for_delete_empty(void);
+void Monitor_delete_pair_target_in_use(void);
+void Monitor_dont_keep_alive_delete_pair_target(void);
+void Monitor_dont_keep_alive_single_term_delete_target(void);
 
 // Testsuite 'Prefab'
 void Prefab_setup(void);
@@ -14649,6 +14652,18 @@ bake_test_case Monitor_testcases[] = {
     {
         "on_remove_any_not_invoked_for_delete_empty",
         Monitor_on_remove_any_not_invoked_for_delete_empty
+    },
+    {
+        "delete_pair_target_in_use",
+        Monitor_delete_pair_target_in_use
+    },
+    {
+        "dont_keep_alive_delete_pair_target",
+        Monitor_dont_keep_alive_delete_pair_target
+    },
+    {
+        "dont_keep_alive_single_term_delete_target",
+        Monitor_dont_keep_alive_single_term_delete_target
     }
 };
 
@@ -18769,7 +18784,7 @@ static bake_test_suite suites[] = {
         "Monitor",
         NULL,
         NULL,
-        31,
+        34,
         Monitor_testcases
     },
     {

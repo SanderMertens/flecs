@@ -306,7 +306,9 @@ static void flecs_query_fini(
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &q->terms[i];
 
-            if (!(ecs_world_get_flags(q->stage) & EcsWorldQuit)) {
+            if (!(ecs_world_get_flags(q->stage) & EcsWorldQuit) &&
+                !(q->flags & EcsQueryDontKeepAlive))
+            {
                 if (!ecs_term_match_0(term)) {
                     flecs_component_unlock(q->world, term->id);
                 }

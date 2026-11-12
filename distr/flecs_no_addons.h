@@ -624,13 +624,11 @@ extern "C" {
 #define EcsQueryHasScopes             (1u << 18u) /* Query has query scopes. */
 #define EcsQueryHasRefs               (1u << 19u) /* Query has terms with static source. */
 #define EcsQueryHasOutTerms           (1u << 20u) /* Query has [out] terms. */
-#define EcsQueryHasNonThisOutTerms    (1u << 21u) /* Query has [out] terms with no $this source. */
 #define EcsQueryHasChangeDetection    (1u << 22u) /* Query has a monitor for change detection. */
 #define EcsQueryIsTrivial             (1u << 23u) /* Query can use trivial evaluation function. */
 #define EcsQueryHasCacheable          (1u << 24u) /* Query has cacheable terms. */
 #define EcsQueryIsCacheable           (1u << 25u) /* All terms of the query are cacheable. */
 #define EcsQueryHasTableThisVar       (1u << 26u) /* Does the query have $this table var. */
-#define EcsQueryCacheYieldEmptyTables (1u << 27u) /* Does the query cache empty tables. */
 #define EcsQueryTrivialCache          (1u << 28u) /* Trivial cache (no wildcards, traversal, order_by, group_by, change detection). */
 #define EcsQueryNested                (1u << 29u) /* Query created by a query (for observer, cache). */
 #define EcsQueryCacheWithFilter       (1u << 30u)
@@ -5814,6 +5812,8 @@ struct ecs_iter_t {
  * \ingroup queries
  */
 #define EcsQueryGroupByDesc           (1u << 10u)
+
+#define EcsQueryDontKeepAlive         (1u << 21u)
 
 /** Used with ecs_query_init().
  * 

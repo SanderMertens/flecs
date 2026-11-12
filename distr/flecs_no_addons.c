@@ -14906,6 +14906,10 @@ static int flecs_multi_observer_init(
         child_desc.query.flags |= EcsQueryTableOnly;
     }
 
+    if (query->flags & EcsQueryDontKeepAlive) {
+        child_desc.query.flags |= EcsQueryDontKeepAlive;
+    }
+
     bool self_term_handled = false;
     for (i = 0; i < term_count; i ++) {
         if (query->terms[i].inout == EcsInOutFilter && !only_table_events) {
@@ -15075,6 +15079,7 @@ static bool flecs_observer_init_trivial(
     ecs_flags32_t *flags)
 {
     if (desc->expr || desc->order_by_callback || desc->group_by_callback ||
+        (desc->flags & EcsQueryDontKeepAlive) ||
         !ecs_term_is_initialized(&desc->terms[0]) ||
         ecs_term_is_initialized(&desc->terms[1]))
     {
@@ -24333,7 +24338,9 @@ static void flecs_query_fini(
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &q->terms[i];
 
-            if (!(ecs_world_get_flags(q->stage) & EcsWorldQuit)) {
+            if (!(ecs_world_get_flags(q->stage) & EcsWorldQuit) &&
+                !(q->flags & EcsQueryDontKeepAlive))
+            {
                 if (!ecs_term_match_0(term)) {
                     flecs_component_unlock(q->world, term->id);
                 }
@@ -25904,12 +25911,6 @@ static int flecs_query_finalize_terms(
             if (ecs_term_match_this(term) || term->inout != EcsInOutDefault) {
                 q->flags |= EcsQueryHasOutTerms;
             }
-
-            bool match_non_this = !ecs_term_match_this(term) || 
-                (term->src.id & EcsUp);
-            if (match_non_this && term->inout != EcsInOutDefault) {
-                q->flags |= EcsQueryHasNonThisOutTerms;
-            }
         }
 
         if (!nodata_term && (term->flags_ & EcsTermIsOr)) {
@@ -26095,7 +26096,9 @@ static int flecs_query_finalize_terms(
                     q->bloom_filter, term->id);
             }
 
-            if (!ecs_term_match_0(term)) {
+            if (!ecs_term_match_0(term) &&
+                !(q->flags & EcsQueryDontKeepAlive))
+            {
                 flecs_component_lock(world, term->id);
             }
         }
@@ -26379,7 +26382,9 @@ bool flecs_query_finalize_simple(
             }
         }
 
-        flecs_component_lock(world, id);
+        if (!(q->flags & EcsQueryDontKeepAlive)) {
+            flecs_component_lock(world, id);
+        }
     }
 
     /* Initialize static data */

@@ -43,9 +43,6 @@ static void query_flags_to_str(uint64_t value) {
     if (value & EcsQueryHasOutTerms) {
         printf("EcsQueryHasOutTerms|");
     }
-    if (value & EcsQueryHasNonThisOutTerms) {
-        printf("EcsQueryHasNonThisOutTerms|");
-    }
     if (value & EcsQueryHasChangeDetection) {
         printf("EcsQueryHasChangeDetection|");
     }
@@ -60,9 +57,6 @@ static void query_flags_to_str(uint64_t value) {
     }
     if (value & EcsQueryHasTableThisVar) {
         printf("EcsQueryHasTableThisVar|");
-    }
-    if (value & EcsQueryCacheYieldEmptyTables) {
-        printf("EcsQueryCacheYieldEmptyTables|");
     }
     if (value & EcsQueryCacheWithFilter) {
         printf("EcsQueryCacheWithFilter|");

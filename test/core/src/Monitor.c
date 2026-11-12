@@ -1197,3 +1197,87 @@ void Monitor_on_remove_any_not_invoked_for_delete_empty(void) {
 
     ecs_fini(world);
 }
+
+void Monitor_dont_keep_alive_delete_pair_target(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t parent = ecs_new(world);
+
+    MonitorEvents ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_pair(EcsChildOf, parent) },
+            { .id = Tag, .oper = EcsOptional }
+        },
+        .query.flags = EcsQueryDontKeepAlive,
+        .events = { EcsMonitor },
+        .callback = Monitor_record_events,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    test_int(ctx.count, 1);
+    test_uint(ctx.events[0], EcsOnAdd);
+    test_uint(ctx.entities[0], child);
+
+    ecs_delete(world, parent);
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, child));
+    test_int(ctx.count, 2);
+    test_uint(ctx.events[1], EcsOnRemove);
+    test_uint(ctx.entities[1], child);
+
+    ecs_delete(world, o);
+
+    ecs_fini(world);
+}
+
+void Monitor_dont_keep_alive_single_term_delete_target(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+
+    MonitorEvents ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ .id = ecs_pair(EcsChildOf, parent) }},
+        .query.flags = EcsQueryDontKeepAlive,
+        .events = { EcsOnAdd },
+        .callback = Monitor_record_events,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    test_int(ctx.count, 1);
+    test_uint(ctx.entities[0], child);
+
+    ecs_delete(world, parent);
+    test_assert(!ecs_is_alive(world, parent));
+
+    ecs_delete(world, o);
+
+    ecs_fini(world);
+}
+
+void Monitor_delete_pair_target_in_use(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+
+    MonitorEvents ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ .id = ecs_pair(EcsChildOf, parent) }},
+        .events = { EcsMonitor },
+        .callback = Monitor_record_events,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    test_expect_abort();
+    ecs_delete(world, parent);
+}

@@ -2856,7 +2856,10 @@
                 "optional_only_new_empty",
                 "optional_only_delete_w_component",
                 "on_add_any_not_invoked_for_new_empty",
-                "on_remove_any_not_invoked_for_delete_empty"
+                "on_remove_any_not_invoked_for_delete_empty",
+                "delete_pair_target_in_use",
+                "dont_keep_alive_delete_pair_target",
+                "dont_keep_alive_single_term_delete_target"
             ]
         }, {
             "id": "Prefab",
