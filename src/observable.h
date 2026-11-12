@@ -108,6 +108,13 @@ void flecs_emit(
 bool flecs_default_next_callback(
     ecs_iter_t *it);
 
+/* Called before an observer is invoked when the source of a forwarded event
+ * may have changed. Updates the table record of the source, and returns false
+ * if the source is no longer alive or no longer has the id. */
+bool flecs_reachable_iter_validate(
+    ecs_world_t *world,
+    ecs_iter_t *it);
+
 /* Invoke observers. */
 void flecs_observers_invoke(
     ecs_world_t *world,

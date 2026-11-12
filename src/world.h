@@ -109,6 +109,9 @@ struct ecs_world_t {
     /* Unique id per generated event used to prevent duplicate notifications */
     int32_t event_id;
 
+    /* Reachable cache arrays that are iterated while emitting events */
+    ecs_reachable_iter_t *reachable_iter;
+
     /* Array of table versions used with component refs to determine if the 
      * cached pointer is still valid. */
     uint32_t table_version[ECS_TABLE_VERSION_ARRAY_SIZE];

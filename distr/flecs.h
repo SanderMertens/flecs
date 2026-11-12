@@ -810,6 +810,7 @@ extern "C" {
 #define EcsIterCppEach                 (1u << 19u) /* Uses C++ 'each' iterator. */
 #define EcsIterImmutableCacheData      (1u << 21u) /* Internally used by the engine to indicate immutable arrays from the cache. */
 #define EcsIterOpCtxSplit              (1u << 22u) /* Query op contexts were allocated separately from other iterator data. */
+#define EcsIterSourceChanged           (1u << 23u) /* Internally used by the engine to indicate that the source of a forwarded event may have changed. */
 
 /* Same as event flags. */
 #define EcsIterTableOnly               (1u << 20u)  /* Result only populates the table. */
