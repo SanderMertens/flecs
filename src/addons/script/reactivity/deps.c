@@ -1495,6 +1495,12 @@ static int flecs_script_dep_node_impl(
             node->direct_input |= n->input;
         }
 
+        int32_t b;
+        for (b = 0; b < n->bind_count; b ++) {
+            flecs_script_dep_var_get(ctx, n->binds[b].sp,
+                &node->direct_input, &node->direct_internal);
+        }
+
         if (ctx->reactive && !ctx->conditional && ctx->computed_count < 64) {
             int32_t slot = ctx->computed_count;
             ctx->computed_input[slot] = node->direct_input |

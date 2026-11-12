@@ -25,8 +25,13 @@ typedef struct ecs_script_for_slot_t {
     int32_t scope_slot;
 } ecs_script_for_slot_t;
 
+#ifndef FLECS_SCRIPT_QUERY_BIND_MAX
+#define FLECS_SCRIPT_QUERY_BIND_MAX (8)
+#endif
+
 typedef struct EcsScriptQuery {
     const struct ecs_script_query_node_t *node;
+    ecs_entity_t binds[FLECS_SCRIPT_QUERY_BIND_MAX];
 } EcsScriptQuery;
 
 typedef struct ecs_script_query_slot_t {

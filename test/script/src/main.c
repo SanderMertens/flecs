@@ -3413,6 +3413,12 @@ void Query_redeclare(void);
 void Query_identifier_name(void);
 void Query_using(void);
 void Query_ast_to_str(void);
+void Query_bind_const(void);
+void Query_bind_prop(void);
+void Query_bind_loop_var(void);
+void Query_bind_src(void);
+void Query_bind_unset(void);
+void Query_bind_not_entity(void);
 
 // Testsuite 'Reactivity'
 void Reactivity_setup(void);
@@ -3625,6 +3631,12 @@ void Reactivity_query_loop_named_instance_kept(void);
 void Reactivity_query_loop_rename(void);
 void Reactivity_query_loop_root_entities(void);
 void Reactivity_query_loop_exclude_name(void);
+void Reactivity_query_bind_child_added(void);
+void Reactivity_query_bind_child_deleted(void);
+void Reactivity_query_bind_prop_changed(void);
+void Reactivity_query_bind_if(void);
+void Reactivity_query_bind_optional_prefab(void);
+void Reactivity_query_bind_recursive_template(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_setup(void);
@@ -18214,6 +18226,30 @@ bake_test_case Query_testcases[] = {
     {
         "ast_to_str",
         Query_ast_to_str
+    },
+    {
+        "bind_const",
+        Query_bind_const
+    },
+    {
+        "bind_prop",
+        Query_bind_prop
+    },
+    {
+        "bind_loop_var",
+        Query_bind_loop_var
+    },
+    {
+        "bind_src",
+        Query_bind_src
+    },
+    {
+        "bind_unset",
+        Query_bind_unset
+    },
+    {
+        "bind_not_entity",
+        Query_bind_not_entity
     }
 };
 
@@ -19053,6 +19089,30 @@ bake_test_case Reactivity_testcases[] = {
     {
         "query_loop_exclude_name",
         Reactivity_query_loop_exclude_name
+    },
+    {
+        "query_bind_child_added",
+        Reactivity_query_bind_child_added
+    },
+    {
+        "query_bind_child_deleted",
+        Reactivity_query_bind_child_deleted
+    },
+    {
+        "query_bind_prop_changed",
+        Reactivity_query_bind_prop_changed
+    },
+    {
+        "query_bind_if",
+        Reactivity_query_bind_if
+    },
+    {
+        "query_bind_optional_prefab",
+        Reactivity_query_bind_optional_prefab
+    },
+    {
+        "query_bind_recursive_template",
+        Reactivity_query_bind_recursive_template
     }
 };
 
@@ -23793,7 +23853,7 @@ static bake_test_suite suites[] = {
         "Query",
         Query_setup,
         NULL,
-        40,
+        46,
         Query_testcases,
         1,
         Query_params
@@ -23802,7 +23862,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         Reactivity_setup,
         NULL,
-        209,
+        215,
         Reactivity_testcases,
         1,
         Reactivity_params

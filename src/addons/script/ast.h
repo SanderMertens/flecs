@@ -313,6 +313,11 @@ typedef struct ecs_script_if_t {
 #define FLECS_SCRIPT_FOR_VAR_MAX (16)
 #endif
 
+typedef struct ecs_script_query_bind_t {
+    int32_t var;
+    int32_t sp;
+} ecs_script_query_bind_t;
+
 typedef struct ecs_script_query_node_t {
     ecs_script_node_t node;
     const char *name;
@@ -320,6 +325,8 @@ typedef struct ecs_script_query_node_t {
     const char *expr_pos;
     char *unresolved;
     ecs_query_t *query;
+    ecs_script_query_bind_t binds[FLECS_SCRIPT_QUERY_BIND_MAX];
+    int32_t bind_count;
     uint64_t input;
     int32_t sp;
     int32_t query_slot;

@@ -89,6 +89,84 @@ static void flecs_script_query_unresolved(
     ecs_os_free(terms);
 }
 
+static const char* flecs_script_query_ref_var(
+    const ecs_term_ref_t *ref)
+{
+    if (!(ref->id & EcsIsVariable) || !ref->name || !ref->name[0] ||
+        ref->name[0] == '_')
+    {
+        return NULL;
+    }
+
+    return ref->name;
+}
+
+static int flecs_script_query_bind(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_query_node_t *node)
+{
+#ifdef FLECS_QUERY_PLANS
+    const ecs_query_t *q = node->query;
+    int32_t t;
+    for (t = 0; t < q->term_count; t ++) {
+        const ecs_term_t *term = &q->terms[t];
+        const ecs_term_ref_t *refs[] = { &term->src, &term->first, &term->second };
+        for (int32_t r = 0; r < 3; r ++) {
+            const char *name = flecs_script_query_ref_var(refs[r]);
+            if (!name) {
+                continue;
+            }
+
+            int32_t var = ecs_query_find_var(q, name);
+            if (var < 0) {
+                continue;
+            }
+
+            int32_t b;
+            for (b = 0; b < node->bind_count; b ++) {
+                if (node->binds[b].var == var) {
+                    break;
+                }
+            }
+
+            if (b < node->bind_count) {
+                continue;
+            }
+
+            ecs_script_var_t *script_var = ecs_script_vars_lookup(
+                v->vars, name);
+            if (!script_var) {
+                continue;
+            }
+
+            if (script_var->value.type != ecs_id(ecs_entity_t)) {
+                flecs_script_eval_error(v, node,
+                    "variable '%s' in query '%s' must be an entity",
+                    name, node->name);
+                return -1;
+            }
+
+            if (node->bind_count == FLECS_SCRIPT_QUERY_BIND_MAX) {
+                flecs_script_eval_error(v, node,
+                    "query '%s' uses more than %d script variables",
+                    node->name, FLECS_SCRIPT_QUERY_BIND_MAX);
+                return -1;
+            }
+
+            node->binds[node->bind_count ++] = (ecs_script_query_bind_t){
+                .var = var,
+                .sp = script_var->sp
+            };
+        }
+    }
+#else
+    (void)v;
+    (void)node;
+#endif
+
+    return 0;
+}
+
 int flecs_script_query_init(
     ecs_script_eval_visitor_t *v,
     ecs_script_query_node_t *node)
@@ -98,6 +176,8 @@ int flecs_script_query_init(
         ecs_query_fini(node->query);
         node->query = NULL;
     }
+
+    node->bind_count = 0;
 
     ecs_entity_t *prev_lookup, prev_scope;
     ecs_entity_t *lookup = flecs_script_query_lookup_push(
@@ -118,7 +198,7 @@ int flecs_script_query_init(
         return -1;
     }
 
-    return 0;
+    return flecs_script_query_bind(v, node);
 }
 
 int32_t flecs_script_query_data_fields(
@@ -138,6 +218,21 @@ int32_t flecs_script_query_data_fields(
     return count;
 }
 
+static bool flecs_script_query_bound(
+    const ecs_world_t *world,
+    const EcsScriptQuery *value)
+{
+    int32_t b;
+    for (b = 0; b < value->node->bind_count; b ++) {
+        ecs_entity_t e = value->binds[b];
+        if (!e || !ecs_is_alive(world, e)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool flecs_script_query_iter(
     const EcsScriptQuery *value,
     ecs_iter_t *it)
@@ -146,9 +241,60 @@ bool flecs_script_query_iter(
         return false;
     }
 
-    const ecs_query_t *q = value->node->query;
+    const ecs_script_query_node_t *node = value->node;
+    const ecs_query_t *q = node->query;
+    if (!flecs_script_query_bound(q->world, value)) {
+        return false;
+    }
+
+    int32_t b;
     *it = ecs_query_iter(q->world, q);
+    for (b = 0; b < node->bind_count; b ++) {
+        ecs_iter_set_var(it, node->binds[b].var, value->binds[b]);
+    }
+
     return true;
+}
+
+static ecs_entity_t flecs_script_query_ref_bound(
+    const ecs_script_query_node_t *node,
+    const EcsScriptQuery *value,
+    const ecs_term_ref_t *ref)
+{
+    const char *name = flecs_script_query_ref_var(ref);
+    if (!name) {
+        return 0;
+    }
+
+#ifdef FLECS_QUERY_PLANS
+    int32_t var = ecs_query_find_var(node->query, name);
+    int32_t b;
+    for (b = 0; b < node->bind_count; b ++) {
+        if (node->binds[b].var == var) {
+            return value->binds[b];
+        }
+    }
+#else
+    (void)node;
+    (void)value;
+#endif
+
+    return 0;
+}
+
+static void flecs_script_query_ref_set(
+    ecs_term_ref_t *ref,
+    ecs_entity_t value)
+{
+    ecs_flags64_t flags = ECS_TERM_REF_FLAGS(ref) &
+        ~(EcsIsVariable | EcsIsEntity | EcsIsName);
+    if (value == EcsWildcard) {
+        ref->id = EcsWildcard | EcsIsVariable | flags;
+    } else {
+        ref->id = value | EcsIsEntity | flags;
+    }
+
+    ref->name = NULL;
 }
 
 void flecs_script_query_to_bool(
@@ -169,16 +315,67 @@ static void flecs_script_query_observe(
     const ecs_query_t *q = node->query;
     ecs_query_desc_t desc = {0};
     int32_t i;
+    if (!flecs_script_query_bound(world, &slot->value)) {
+        return;
+    }
+
+    ecs_script_query_filter_t filters[FLECS_TERM_COUNT_MAX];
+    int32_t filter_count = 0;
+
     for (i = 0; i < q->term_count; i ++) {
-        desc.terms[i] = q->terms[i];
+        ecs_term_t *term = &desc.terms[i];
+        *term = q->terms[i];
+
+        ecs_entity_t src = flecs_script_query_ref_bound(
+            node, &slot->value, &term->src);
+        if (src) {
+            flecs_script_query_ref_set(&term->src, src);
+        }
+
+        ecs_entity_t first = flecs_script_query_ref_bound(
+            node, &slot->value, &term->first);
+        ecs_entity_t second = flecs_script_query_ref_bound(
+            node, &slot->value, &term->second);
+        if (!first && !second) {
+            continue;
+        }
+
+        term->id = 0;
+
+        if (term->oper == EcsNot) {
+            if (first) {
+                flecs_script_query_ref_set(&term->first, first);
+            }
+            if (second) {
+                flecs_script_query_ref_set(&term->second, second);
+            }
+            continue;
+        }
+
+        if (first) {
+            flecs_script_query_ref_set(&term->first, EcsWildcard);
+        }
+        if (second) {
+            flecs_script_query_ref_set(&term->second, EcsWildcard);
+        }
+
+        if (term->oper == EcsAnd) {
+            filters[filter_count ++] = (ecs_script_query_filter_t){
+                .field = term->field_index,
+                .first = first,
+                .second = second
+            };
+        }
     }
 
     slot->observers[0] = flecs_script_query_observer_init(
-        world, script, instance, &desc, EcsMonitor, node->input);
+        world, script, instance, &desc, EcsMonitor, node->input,
+        filters, filter_count);
 
     if (q->data_fields) {
         slot->observers[1] = flecs_script_query_observer_init(
-            world, script, instance, &desc, EcsOnSet, node->input);
+            world, script, instance, &desc, EcsOnSet, node->input,
+            filters, filter_count);
     }
 }
 
@@ -204,6 +401,29 @@ int flecs_script_eval_query(
         slots, ecs_script_query_slot_t, node->query_slot);
     slot->world = world;
     slot->value.node = node;
+
+    bool rebind = false;
+    int32_t b;
+    for (b = 0; b < node->bind_count; b ++) {
+        ecs_script_var_t *bvar = ecs_script_vars_from_sp(
+            v->vars, node->binds[b].sp);
+        ecs_entity_t value = (bvar && bvar->value.ptr)
+            ? *(ecs_entity_t*)bvar->value.ptr : 0;
+        if (slot->value.binds[b] != value) {
+            slot->value.binds[b] = value;
+            rebind = true;
+        }
+    }
+
+    if (rebind) {
+        for (b = 0; b < 2; b ++) {
+            if (slot->observers[b] && ecs_is_alive(world, slot->observers[b])) {
+                ecs_delete(world, slot->observers[b]);
+            }
+
+            slot->observers[b] = 0;
+        }
+    }
 
     if (!slot->observers[0] && node->input) {
         ecs_entity_t script = 0, instance = 0;

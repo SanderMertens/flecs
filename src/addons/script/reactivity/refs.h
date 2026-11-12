@@ -16,11 +16,19 @@ typedef struct ecs_script_ref_t {
     bool is_resolve;
 } ecs_script_ref_t;
 
+typedef struct ecs_script_query_filter_t {
+    int8_t field;
+    ecs_entity_t first;
+    ecs_entity_t second;
+} ecs_script_query_filter_t;
+
 typedef struct ecs_script_ref_ctx_t {
     ecs_entity_t script;
     ecs_entity_t instance;
     char *name;
     uint64_t input;
+    ecs_script_query_filter_t *filters;
+    int32_t filter_count;
 } ecs_script_ref_ctx_t;
 
 typedef struct ecs_script_pending_t {
@@ -49,7 +57,9 @@ ecs_entity_t flecs_script_query_observer_init(
     ecs_entity_t instance,
     const ecs_query_desc_t *query,
     ecs_entity_t event,
-    uint64_t input);
+    uint64_t input,
+    const ecs_script_query_filter_t *filters,
+    int32_t filter_count);
 
 void flecs_script_record_dyn_ref(
     ecs_vec_t *run_refs,
