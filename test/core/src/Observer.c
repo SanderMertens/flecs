@@ -16676,3 +16676,538 @@ void Observer_on_set_multi_observer_add_w_world(void) {
     test_expect_abort_code(ECS_LOCKED_STORAGE);
     ecs_set(world, e, Position, {1, 2});
 }
+
+static ecs_entity_t up_observer_base;
+static ecs_entity_t up_observer_top;
+static ecs_entity_t up_observer_tags[16];
+static int up_observer_invoked;
+
+static void InstantiateAfterBaseAdd(ecs_iter_t *it) {
+    if (up_observer_invoked ++) {
+        return;
+    }
+
+    /* Enough ids for the reachable cache of the base to reallocate */
+    for (int i = 0; i < 16; i ++) {
+        ecs_add_id(it->world, up_observer_top, up_observer_tags[i]);
+    }
+
+    ecs_entity_t e = ecs_new_w_id(it->world, up_observer_tags[0]);
+    ecs_add_pair(it->world, e, EcsIsA, up_observer_base);
+}
+
+void Observer_on_add_up_observer_instantiate_after_base_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
+    for (int i = 0; i < 16; i ++) {
+        up_observer_tags[i] = ecs_new(world);
+        ecs_add_pair(world, up_observer_tags[i], EcsOnInstantiate, EcsInherit);
+    }
+
+    up_observer_top = ecs_new(world);
+    up_observer_base = ecs_new_w_pair(world, EcsIsA, up_observer_top);
+    ecs_set(world, up_observer_base, Position, {10, 20});
+    ecs_set(world, up_observer_base, Velocity, {1, 2});
+    up_observer_invoked = 0;
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position), .src.id = EcsUp, .trav = EcsIsA }},
+        .events = { EcsOnAdd },
+        .callback = InstantiateAfterBaseAdd
+    });
+
+    ecs_entity_t inst = ecs_new(world);
+    ecs_add_pair(world, inst, EcsIsA, up_observer_base);
+    test_int(up_observer_invoked, 2);
+
+    test_assert(ecs_has_id(world, inst, up_observer_tags[15]));
+    const Velocity *v = ecs_get(world, inst, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    ecs_fini(world);
+}
+
+static void AddToBase(ecs_iter_t *it) {
+    if (!up_observer_invoked ++) {
+        ecs_add_id(it->world, up_observer_base, up_observer_tags[0]);
+    }
+}
+
+static void RemoveFromBase(ecs_iter_t *it) {
+    if (!up_observer_invoked ++) {
+        ecs_remove(it->world, up_observer_base, Velocity);
+    }
+}
+
+static void CheckVelocityUp(ecs_iter_t *it) {
+    Probe *ctx = it->ctx;
+    test_int(it->count, 1);
+    test_uint(it->sources[0], up_observer_base);
+    const Velocity *v = ecs_field(it, Velocity, 0);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+    ctx->invoked ++;
+}
+
+void Observer_on_add_up_observer_add_to_base(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
+    up_observer_tags[0] = ecs_new(world);
+    up_observer_base = ecs_new(world);
+    ecs_set(world, up_observer_base, Position, {10, 20});
+    ecs_set(world, up_observer_base, Velocity, {1, 2});
+    up_observer_invoked = 0;
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position), .src.id = EcsUp, .trav = EcsIsA }},
+        .events = { EcsOnAdd },
+        .callback = AddToBase
+    });
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Velocity), .src.id = EcsUp, .trav = EcsIsA }},
+        .events = { EcsOnAdd },
+        .callback = CheckVelocityUp,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t inst = ecs_new(world);
+    ecs_add_pair(world, inst, EcsIsA, up_observer_base);
+    test_int(up_observer_invoked, 1);
+    test_int(ctx.invoked, 1);
+    test_assert(ecs_has_id(world, up_observer_base, up_observer_tags[0]));
+    test_assert(ecs_has(world, inst, Velocity));
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_up_observer_remove_from_base(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
+    up_observer_base = ecs_new(world);
+    ecs_set(world, up_observer_base, Position, {10, 20});
+    ecs_set(world, up_observer_base, Velocity, {1, 2});
+    up_observer_invoked = 0;
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position), .src.id = EcsUp, .trav = EcsIsA }},
+        .events = { EcsOnAdd },
+        .callback = RemoveFromBase
+    });
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Velocity), .src.id = EcsUp, .trav = EcsIsA }},
+        .events = { EcsOnAdd },
+        .callback = CheckVelocityUp,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t inst = ecs_new(world);
+    ecs_add_pair(world, inst, EcsIsA, up_observer_base);
+    test_int(up_observer_invoked, 1);
+    test_int(ctx.invoked, 0);
+    test_assert(!ecs_has(world, inst, Velocity));
+
+    ecs_fini(world);
+}
+
+static int up_observer_tag_invoked;
+
+static void DeleteTagOfBase(ecs_iter_t *it) {
+    if (!up_observer_invoked ++) {
+        ecs_delete(it->world, up_observer_tags[1]);
+    }
+}
+
+static void CountTagUp(ecs_iter_t *it) {
+    test_int(it->count, 1);
+    test_uint(it->sources[0], up_observer_base);
+    up_observer_tag_invoked ++;
+}
+
+void Observer_on_add_up_observer_delete_tag_of_base(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
+    for (int i = 0; i < 2; i ++) {
+        up_observer_tags[i] = ecs_new(world);
+        ecs_add_pair(world, up_observer_tags[i], EcsOnInstantiate, EcsInherit);
+    }
+
+    up_observer_base = ecs_new(world);
+    ecs_set(world, up_observer_base, Position, {10, 20});
+    ecs_set(world, up_observer_base, Velocity, {1, 2});
+    ecs_add_id(world, up_observer_base, up_observer_tags[0]);
+    ecs_add_id(world, up_observer_base, up_observer_tags[1]);
+    up_observer_invoked = 0;
+    up_observer_tag_invoked = 0;
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position), .src.id = EcsUp, .trav = EcsIsA }},
+        .events = { EcsOnAdd },
+        .callback = DeleteTagOfBase
+    });
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Velocity), .src.id = EcsUp, .trav = EcsIsA }},
+        .events = { EcsOnAdd },
+        .callback = CheckVelocityUp,
+        .ctx = &ctx
+    });
+    ecs_observer(world, {
+        .query.terms = {{ up_observer_tags[0], .src.id = EcsUp, .trav = EcsIsA }},
+        .events = { EcsOnAdd },
+        .callback = CountTagUp
+    });
+
+    ecs_entity_t inst = ecs_new(world);
+    ecs_add_pair(world, inst, EcsIsA, up_observer_base);
+    test_int(up_observer_invoked, 1);
+    test_int(ctx.invoked, 1);
+    test_int(up_observer_tag_invoked, 1);
+    test_assert(!ecs_is_alive(world, up_observer_tags[1]));
+    test_assert(ecs_has(world, inst, Velocity));
+    test_assert(ecs_has_id(world, inst, up_observer_tags[0]));
+
+    ecs_fini(world);
+}
+
+static ecs_entity_t up_observer_recycled;
+
+static void DeleteBaseOfBase(ecs_iter_t *it) {
+    if (up_observer_invoked ++) {
+        return;
+    }
+
+    ecs_delete(it->world, up_observer_top);
+}
+
+static void DeleteBaseOfBaseRecycle(ecs_iter_t *it) {
+    if (up_observer_invoked ++) {
+        return;
+    }
+
+    ecs_delete(it->world, up_observer_top);
+
+    /* Recycle the id of the deleted base into the same table */
+    up_observer_recycled = ecs_new(it->world);
+    ecs_set(it->world, up_observer_recycled, Velocity, {1, 2});
+    ecs_add_id(it->world, up_observer_recycled, up_observer_tags[0]);
+}
+
+static void CountUp(ecs_iter_t *it) {
+    Probe *ctx = it->ctx;
+    ctx->invoked ++;
+}
+
+static void up_observer_delete_base_of_base(ecs_iter_action_t callback) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
+    up_observer_tags[0] = ecs_new(world);
+    ecs_add_pair(world, up_observer_tags[0], EcsOnInstantiate, EcsInherit);
+
+    up_observer_top = ecs_new(world);
+    ecs_set(world, up_observer_top, Velocity, {1, 2});
+    ecs_add_id(world, up_observer_top, up_observer_tags[0]);
+    up_observer_base = ecs_new_w_pair(world, EcsIsA, up_observer_top);
+    ecs_set(world, up_observer_base, Position, {10, 20});
+    up_observer_invoked = 0;
+    up_observer_recycled = 0;
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position), .src.id = EcsUp, .trav = EcsIsA }},
+        .events = { EcsOnAdd },
+        .callback = callback
+    });
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Velocity), .src.id = EcsUp, .trav = EcsIsA }},
+        .events = { EcsOnAdd },
+        .callback = CountUp,
+        .ctx = &ctx
+    });
+    ecs_observer(world, {
+        .query.terms = {{ up_observer_tags[0], .src.id = EcsUp, .trav = EcsIsA }},
+        .events = { EcsOnAdd },
+        .callback = CountUp,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t inst = ecs_new(world);
+    ecs_add_pair(world, inst, EcsIsA, up_observer_base);
+    test_int(up_observer_invoked, 1);
+    test_int(ctx.invoked, 0);
+    test_assert(!ecs_is_alive(world, up_observer_top));
+    test_assert(!ecs_has_pair(world, up_observer_base, EcsIsA, up_observer_top));
+    test_assert(!ecs_has(world, inst, Velocity));
+    test_assert(!ecs_has_id(world, inst, up_observer_tags[0]));
+
+    if (up_observer_recycled) {
+        test_assert((uint32_t)up_observer_recycled == (uint32_t)up_observer_top);
+    }
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_up_observer_delete_base_of_base(void) {
+    up_observer_delete_base_of_base(DeleteBaseOfBase);
+}
+
+void Observer_on_add_up_observer_delete_base_of_base_recycle(void) {
+    up_observer_delete_base_of_base(DeleteBaseOfBaseRecycle);
+}
+
+static void ModifyBaseThenCheck(ecs_iter_t *it) {
+    Probe *ctx = it->ctx;
+    if (!up_observer_invoked ++) {
+        if (ctx->param) {
+            ecs_remove(it->world, up_observer_base, Velocity);
+        } else {
+            ecs_delete(it->world, up_observer_tags[0]);
+        }
+        return;
+    }
+
+    CheckVelocityUp(it);
+}
+
+static void up_observer_modify_base_same_id(bool remove) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
+    up_observer_tags[0] = ecs_new(world);
+    ecs_add_pair(world, up_observer_tags[0], EcsOnInstantiate, EcsDontInherit);
+
+    up_observer_base = ecs_new(world);
+    ecs_set(world, up_observer_base, Velocity, {1, 2});
+    ecs_add_id(world, up_observer_base, up_observer_tags[0]);
+    up_observer_invoked = 0;
+
+    Probe ctx = { .param = remove ? &ctx : NULL };
+    Probe ctx_set = {0};
+    for (int i = 0; i < 2; i ++) {
+        ecs_observer(world, {
+            .query.terms = {{ ecs_id(Velocity), .src.id = EcsUp, .trav = EcsIsA }},
+            .events = { EcsOnAdd },
+            .callback = ModifyBaseThenCheck,
+            .ctx = &ctx
+        });
+    }
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Velocity), .src.id = EcsUp, .trav = EcsIsA }},
+        .events = { EcsOnSet },
+        .callback = CheckVelocityUp,
+        .ctx = &ctx_set
+    });
+
+    ecs_entity_t inst = ecs_new(world);
+    ecs_add_pair(world, inst, EcsIsA, up_observer_base);
+
+    if (remove) {
+        test_int(up_observer_invoked, 1);
+        test_int(ctx.invoked, 0);
+        test_int(ctx_set.invoked, 0);
+        test_assert(!ecs_has(world, inst, Velocity));
+    } else {
+        test_int(up_observer_invoked, 2);
+        test_int(ctx.invoked, 1);
+        test_int(ctx_set.invoked, 1);
+        test_assert(!ecs_is_alive(world, up_observer_tags[0]));
+        test_assert(ecs_has(world, inst, Velocity));
+    }
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_up_observer_delete_tag_of_base_same_id(void) {
+    up_observer_modify_base_same_id(false);
+}
+
+void Observer_on_add_up_observer_remove_from_base_same_id(void) {
+    up_observer_modify_base_same_id(true);
+}
+
+static void DeleteTagOfBaseOnce(ecs_iter_t *it) {
+    if (!up_observer_invoked ++) {
+        ecs_delete(it->world, up_observer_tags[0]);
+    }
+}
+
+void Observer_on_add_up_observer_delete_tag_of_base_propagate(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
+    up_observer_tags[0] = ecs_new(world);
+    ecs_add_pair(world, up_observer_tags[0], EcsOnInstantiate, EcsDontInherit);
+
+    up_observer_base = ecs_new(world);
+    ecs_set(world, up_observer_base, Position, {10, 20});
+    ecs_set(world, up_observer_base, Velocity, {1, 2});
+    ecs_add_id(world, up_observer_base, up_observer_tags[0]);
+    up_observer_invoked = 0;
+
+    ecs_entity_t inst = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsIsA, inst);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position), .src.id = EcsUp, .trav = EcsIsA }},
+        .events = { EcsOnAdd },
+        .callback = DeleteTagOfBaseOnce
+    });
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Velocity), .src.id = EcsUp, .trav = EcsIsA }},
+        .events = { EcsOnAdd },
+        .callback = CheckVelocityUp,
+        .ctx = &ctx
+    });
+
+    ecs_add_pair(world, inst, EcsIsA, up_observer_base);
+    test_int(up_observer_invoked, 2);
+    test_int(ctx.invoked, 2);
+    test_assert(!ecs_is_alive(world, up_observer_tags[0]));
+    test_assert(ecs_has(world, child, Velocity));
+
+    ecs_fini(world);
+}
+
+static void DeleteTagOfBaseMulti(ecs_iter_t *it) {
+    const Velocity *v = ecs_field(it, Velocity, 1);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    if (!up_observer_invoked ++) {
+        ecs_delete(it->world, up_observer_tags[0]);
+    }
+}
+
+void Observer_on_add_up_observer_delete_tag_of_base_fixed_src_multi(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+    ECS_TAG(world, Tag);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
+    up_observer_tags[0] = ecs_new(world);
+    ecs_add_pair(world, up_observer_tags[0], EcsOnInstantiate, EcsDontInherit);
+
+    up_observer_base = ecs_new(world);
+    ecs_set(world, up_observer_base, Velocity, {1, 2});
+    ecs_add_id(world, up_observer_base, up_observer_tags[0]);
+    up_observer_invoked = 0;
+
+    /* Three tables that match the observer query */
+    ecs_new_w(world, Tag);
+    ecs_add(world, ecs_new_w(world, Tag), Position);
+    ecs_add(world, ecs_new_w(world, Tag), Velocity);
+
+    ecs_entity_t inst = ecs_new(world);
+    ecs_observer(world, {
+        .query.terms = {
+            { Tag },
+            { ecs_id(Velocity), .src.id = inst|EcsUp, .trav = EcsIsA }
+        },
+        .events = { EcsOnAdd },
+        .callback = DeleteTagOfBaseMulti
+    });
+
+    ecs_add_pair(world, inst, EcsIsA, up_observer_base);
+    test_int(up_observer_invoked, 3);
+    test_assert(!ecs_is_alive(world, up_observer_tags[0]));
+    test_assert(ecs_has(world, inst, Velocity));
+
+    ecs_fini(world);
+}
+
+static void RemoveFromBaseMulti(ecs_iter_t *it) {
+    if (!up_observer_invoked ++) {
+        ecs_remove(it->world, up_observer_base, Velocity);
+    }
+}
+
+void Observer_on_add_up_observer_remove_from_base_fixed_src_multi(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_TAG(world, Tag);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
+    up_observer_base = ecs_new(world);
+    ecs_set(world, up_observer_base, Velocity, {1, 2});
+    up_observer_invoked = 0;
+
+    /* Two tables that match the observer query */
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_set(world, e2, Position, {10, 20});
+    ecs_set(world, e2, Mass, {1});
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .inout = EcsIn }},
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
+    });
+    test_bool(ecs_query_changed(q), true);
+    ecs_iter_t qit = ecs_query_iter(world, q);
+    while (ecs_query_next(&qit)) { }
+    test_bool(ecs_query_changed(q), false);
+
+    ecs_entity_t inst = ecs_new(world);
+    ecs_observer(world, {
+        .query.terms = {
+            { Tag },
+            { ecs_id(Position) },
+            { ecs_id(Velocity), .src.id = inst|EcsUp, .trav = EcsIsA }
+        },
+        .events = { EcsOnAdd },
+        .callback = RemoveFromBaseMulti
+    });
+
+    ecs_add_pair(world, inst, EcsIsA, up_observer_base);
+    test_int(up_observer_invoked, 1);
+    test_assert(!ecs_has(world, inst, Velocity));
+
+    /* The table the observer wasn't invoked for isn't marked as changed */
+    test_bool(ecs_query_changed(q), false);
+
+    ecs_query_fini(q);
+    ecs_fini(world);
+}

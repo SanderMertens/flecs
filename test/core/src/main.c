@@ -2654,6 +2654,17 @@ void Observer_not_term_on_remove_batched_w_remove(void);
 void Observer_not_term_on_add_batched_w_add(void);
 void Observer_not_term_on_remove_other_entity_matches_up_parent(void);
 void Observer_not_term_on_remove_other_entity_matches_dont_fragment(void);
+void Observer_on_add_up_observer_instantiate_after_base_add(void);
+void Observer_on_add_up_observer_add_to_base(void);
+void Observer_on_add_up_observer_remove_from_base(void);
+void Observer_on_add_up_observer_delete_tag_of_base(void);
+void Observer_on_add_up_observer_delete_base_of_base(void);
+void Observer_on_add_up_observer_delete_base_of_base_recycle(void);
+void Observer_on_add_up_observer_delete_tag_of_base_same_id(void);
+void Observer_on_add_up_observer_remove_from_base_same_id(void);
+void Observer_on_add_up_observer_delete_tag_of_base_propagate(void);
+void Observer_on_add_up_observer_delete_tag_of_base_fixed_src_multi(void);
+void Observer_on_add_up_observer_remove_from_base_fixed_src_multi(void);
 
 // Testsuite 'ObserverOnSet'
 void ObserverOnSet_set_1_of_1(void);
@@ -14157,6 +14168,50 @@ bake_test_case Observer_testcases[] = {
     {
         "not_term_on_remove_other_entity_matches_dont_fragment",
         Observer_not_term_on_remove_other_entity_matches_dont_fragment
+    },
+    {
+        "on_add_up_observer_instantiate_after_base_add",
+        Observer_on_add_up_observer_instantiate_after_base_add
+    },
+    {
+        "on_add_up_observer_add_to_base",
+        Observer_on_add_up_observer_add_to_base
+    },
+    {
+        "on_add_up_observer_remove_from_base",
+        Observer_on_add_up_observer_remove_from_base
+    },
+    {
+        "on_add_up_observer_delete_tag_of_base",
+        Observer_on_add_up_observer_delete_tag_of_base
+    },
+    {
+        "on_add_up_observer_delete_base_of_base",
+        Observer_on_add_up_observer_delete_base_of_base
+    },
+    {
+        "on_add_up_observer_delete_base_of_base_recycle",
+        Observer_on_add_up_observer_delete_base_of_base_recycle
+    },
+    {
+        "on_add_up_observer_delete_tag_of_base_same_id",
+        Observer_on_add_up_observer_delete_tag_of_base_same_id
+    },
+    {
+        "on_add_up_observer_remove_from_base_same_id",
+        Observer_on_add_up_observer_remove_from_base_same_id
+    },
+    {
+        "on_add_up_observer_delete_tag_of_base_propagate",
+        Observer_on_add_up_observer_delete_tag_of_base_propagate
+    },
+    {
+        "on_add_up_observer_delete_tag_of_base_fixed_src_multi",
+        Observer_on_add_up_observer_delete_tag_of_base_fixed_src_multi
+    },
+    {
+        "on_add_up_observer_remove_from_base_fixed_src_multi",
+        Observer_on_add_up_observer_remove_from_base_fixed_src_multi
     }
 };
 
@@ -18649,7 +18704,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        435,
+        446,
         Observer_testcases
     },
     {

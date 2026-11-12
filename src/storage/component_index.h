@@ -13,12 +13,8 @@ typedef struct ecs_id_record_elem_t {
 
 typedef struct ecs_reachable_elem_t {
     const ecs_table_record_t *tr;
-    ecs_record_t *record;
     ecs_entity_t src;
     ecs_id_t id;
-#ifndef FLECS_NDEBUG
-    ecs_table_t *table;
-#endif
 } ecs_reachable_elem_t;
 
 typedef struct ecs_reachable_cache_t {
@@ -26,6 +22,16 @@ typedef struct ecs_reachable_cache_t {
     int32_t current;
     ecs_vec_t ids; /* vec<reachable_elem_t> */
 } ecs_reachable_cache_t;
+
+/* An array of a reachable cache that is being iterated. */
+typedef struct ecs_reachable_iter_t {
+    ecs_vec_t ids;
+    const ecs_reachable_cache_t *rc;
+    struct ecs_reachable_iter_t *prev;
+    ecs_iter_t *it;                     /* Iterator passed to observers */
+    const ecs_reachable_elem_t *elem;   /* Element that is being forwarded */
+    bool active;                        /* Iterator is registered with world */
+} ecs_reachable_iter_t;
 
 /* Component index data that just applies to pairs */
 typedef struct ecs_pair_record_t {
