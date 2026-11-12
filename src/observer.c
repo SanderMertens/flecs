@@ -526,6 +526,13 @@ static void flecs_observers_invoke_intern(
                 continue;
             }
 
+            /* Observers can modify the source of a forwarded event */
+            if ((it->flags & EcsIterSourceChanged) &&
+                !flecs_reachable_iter_validate(world, it))
+            {
+                break;
+            }
+
             ecs_assert(it->table == table, ECS_INTERNAL_ERROR, NULL);
             flecs_uni_observer_invoke(world, o, it, table, trav);
 
@@ -638,6 +645,15 @@ static void flecs_multi_observer_invoke_fixed_src(
     bool match = false;
     ecs_iter_t user_it = ecs_query_iter(it->stage, o->query);
     while (ecs_query_next(&user_it)) {
+        /* Observers can modify the source of a forwarded event */
+        if ((it->flags & EcsIterSourceChanged) &&
+            !flecs_reachable_iter_validate(it->world, it))
+        {
+            user_it.flags |= EcsIterSkip; /* Prevent change detection on fini */
+            ecs_iter_fini(&user_it);
+            break;
+        }
+
         match = true;
         impl->last_event_id[0] = it->event_cur;
         impl->last_event_field = pivot_field_bit;

@@ -2720,7 +2720,18 @@
                 "not_term_on_remove_batched_w_remove",
                 "not_term_on_add_batched_w_add",
                 "not_term_on_remove_other_entity_matches_up_parent",
-                "not_term_on_remove_other_entity_matches_dont_fragment"
+                "not_term_on_remove_other_entity_matches_dont_fragment",
+                "on_add_up_observer_instantiate_after_base_add",
+                "on_add_up_observer_add_to_base",
+                "on_add_up_observer_remove_from_base",
+                "on_add_up_observer_delete_tag_of_base",
+                "on_add_up_observer_delete_base_of_base",
+                "on_add_up_observer_delete_base_of_base_recycle",
+                "on_add_up_observer_delete_tag_of_base_same_id",
+                "on_add_up_observer_remove_from_base_same_id",
+                "on_add_up_observer_delete_tag_of_base_propagate",
+                "on_add_up_observer_delete_tag_of_base_fixed_src_multi",
+                "on_add_up_observer_remove_from_base_fixed_src_multi"
             ]
         }, {
             "id": "ObserverOnSet",
@@ -3065,7 +3076,17 @@
                 "add_inherit_w_override_with_to_prefab_after_instantiate",
                 "add_component_to_prefab_during_instantiate",
                 "add_component_to_prefab_during_instantiate_w_parent",
-                "dont_inherit_dont_fragment_component"
+                "dont_inherit_dont_fragment_component",
+                "override_after_base_remove_from_intermediate",
+                "override_after_base_add_to_intermediate",
+                "override_after_base_remove_from_intermediate_3_lvl",
+                "override_after_base_add_to_intermediate_w_stage",
+                "override_after_base_add_to_intermediate_override_policy",
+                "override_in_observer_after_base_change",
+                "override_after_base_add_to_intermediate_w_readonly",
+                "on_set_after_remove_override_after_base_add_to_intermediate",
+                "override_after_base_remove",
+                "override_after_base_add"
             ]
         }, {
             "id": "World",

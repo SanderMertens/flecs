@@ -25,6 +25,7 @@
 
 typedef struct ecs_table_override_base_t {
     const ecs_pair_record_t *pair;
+    ecs_component_record_t *cr;
     int32_t generation;
 } ecs_table_override_base_t;
 

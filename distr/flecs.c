@@ -693,12 +693,8 @@ typedef struct ecs_id_record_elem_t {
 
 typedef struct ecs_reachable_elem_t {
     const ecs_table_record_t *tr;
-    ecs_record_t *record;
     ecs_entity_t src;
     ecs_id_t id;
-#ifndef FLECS_NDEBUG
-    ecs_table_t *table;
-#endif
 } ecs_reachable_elem_t;
 
 typedef struct ecs_reachable_cache_t {
@@ -706,6 +702,16 @@ typedef struct ecs_reachable_cache_t {
     int32_t current;
     ecs_vec_t ids; /* vec<reachable_elem_t> */
 } ecs_reachable_cache_t;
+
+/* An array of a reachable cache that is being iterated. */
+typedef struct ecs_reachable_iter_t {
+    ecs_vec_t ids;
+    const ecs_reachable_cache_t *rc;
+    struct ecs_reachable_iter_t *prev;
+    ecs_iter_t *it;                     /* Iterator passed to observers */
+    const ecs_reachable_elem_t *elem;   /* Element that is being forwarded */
+    bool active;                        /* Iterator is registered with world */
+} ecs_reachable_iter_t;
 
 /* Component index data that just applies to pairs */
 typedef struct ecs_pair_record_t {
@@ -1012,6 +1018,7 @@ void flecs_table_clear_edges_for_base(
 
 typedef struct ecs_table_override_base_t {
     const ecs_pair_record_t *pair;
+    ecs_component_record_t *cr;
     int32_t generation;
 } ecs_table_override_base_t;
 
@@ -3639,6 +3646,13 @@ void flecs_emit(
 bool flecs_default_next_callback(
     ecs_iter_t *it);
 
+/* Called before an observer is invoked when the source of a forwarded event
+ * may have changed. Updates the table record of the source, and returns false
+ * if the source is no longer alive or no longer has the id. */
+bool flecs_reachable_iter_validate(
+    ecs_world_t *world,
+    ecs_iter_t *it);
+
 /* Invoke observers. */
 void flecs_observers_invoke(
     ecs_world_t *world,
@@ -3661,7 +3675,8 @@ void flecs_observers_invoke_skip_up_notify(
     ecs_table_t *table,
     ecs_entity_t trav);
 
-/* Invalidate reachable cache. */
+/* Get the reachable cache, rebuilding it if it is invalid. Returns NULL if
+ * the cache is invalid in multithreaded mode. */
 const ecs_vec_t* flecs_reachable_cache_get(
     ecs_world_t *world,
     ecs_component_record_t *cr);
@@ -4076,6 +4091,9 @@ struct ecs_world_t {
 
     /* Unique id per generated event used to prevent duplicate notifications */
     int32_t event_id;
+
+    /* Reachable cache arrays that are iterated while emitting events */
+    ecs_reachable_iter_t *reachable_iter;
 
     /* Array of table versions used with component refs to determine if the 
      * cached pointer is still valid. */
@@ -14782,6 +14800,119 @@ static ecs_component_record_t* flecs_traversable_target_cr(
     return flecs_components_get(world, ecs_pair(EcsWildcard, entity));
 }
 
+static bool flecs_reachable_array_is_iterated(
+    const ecs_world_t *world,
+    const void *array)
+{
+    if (!array) {
+        return false;
+    }
+
+    const ecs_reachable_iter_t *iter = world->reachable_iter;
+    for (; iter; iter = iter->prev) {
+        if (iter->ids.array == array) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/* Called before observers are invoked while a reachable cache is iterated.
+ * Observers can modify the cache, in which case a rebuild of the cache
+ * allocates a new array instead of modifying the iterated one. In
+ * multithreaded mode observers are deferred, so they can't modify the cache
+ * or its sources. */
+static void flecs_reachable_iter_begin(
+    ecs_world_t *world,
+    ecs_reachable_iter_t *iter)
+{
+    if (world->flags & EcsWorldMultiThreaded) {
+        return;
+    }
+
+    iter->prev = world->reachable_iter;
+    world->reachable_iter = iter;
+    iter->active = true;
+}
+
+static void flecs_reachable_iter_end(
+    ecs_world_t *world,
+    ecs_reachable_iter_t *iter)
+{
+    iter->it->flags &= ~EcsIterSourceChanged;
+    if (!iter->active) {
+        return;
+    }
+
+    world->reachable_iter = iter->prev;
+    if (iter->ids.array != iter->rc->ids.array &&
+        !flecs_reachable_array_is_iterated(world, iter->ids.array))
+    {
+        ecs_vec_fini_t(&world->allocator, &iter->ids, ecs_reachable_elem_t);
+    }
+}
+
+/* Observers can modify or delete sources while events are forwarded, which can
+ * also delete the tables of the cached table records. A change to a source
+ * increments the generation of a valid cache, which marks the iterators of the
+ * cache as changed. */
+static void flecs_reachable_iter_mark_changed(
+    ecs_world_t *world,
+    const ecs_reachable_cache_t *rc)
+{
+    ecs_reachable_iter_t *iter = world->reachable_iter;
+    for (; iter; iter = iter->prev) {
+        if (iter->rc == rc) {
+            iter->it->flags |= EcsIterSourceChanged;
+        }
+    }
+}
+
+/* Get the table record of a reachable element for the current table of its
+ * source, or NULL if the source is no longer alive or no longer has the id. */
+static const ecs_table_record_t* flecs_reachable_elem_get_tr(
+    ecs_world_t *world,
+    const ecs_reachable_elem_t *elem)
+{
+    ecs_record_t *r = flecs_entities_try(world, elem->src);
+    if (!r || !r->table) {
+        return NULL;
+    }
+
+    ecs_component_record_t *cr = flecs_components_get(world, elem->id);
+    if (!cr) {
+        return NULL;
+    }
+
+    /* Only use the record if the source owns the id. The table can also have
+     * a record for a base component of one of its ids. */
+    const ecs_table_record_t *tr = flecs_component_get_table(cr, r->table);
+    if (!tr || r->table->type.array[tr->index] != elem->id) {
+        return NULL;
+    }
+
+    return tr;
+}
+
+bool flecs_reachable_iter_validate(
+    ecs_world_t *world,
+    ecs_iter_t *it)
+{
+    ecs_reachable_iter_t *iter = world->reachable_iter;
+    if (!iter || iter->it != it) {
+        return true;
+    }
+
+    const ecs_table_record_t *tr = flecs_reachable_elem_get_tr(
+        world, iter->elem);
+    if (!tr) {
+        return false;
+    }
+
+    it->trs[0] = tr;
+    return true;
+}
+
 void flecs_emit_propagate_invalidate_tables(
     ecs_world_t *world,
     ecs_component_record_t *tgt_cr)
@@ -14804,6 +14935,7 @@ void flecs_emit_propagate_invalidate_tables(
         }
 
         rc->generation ++;
+        flecs_reachable_iter_mark_changed(world, rc);
 
         if (flecs_component_has_non_fragmenting_childof(cur)) {
             int32_t i, count = ecs_vec_count(&cur->pair->ordered_children);
@@ -14913,13 +15045,11 @@ static void flecs_emit_forward_id(
     const ecs_type_t *emit_ids,
     ecs_iter_t *it,
     ecs_table_t *table,
-    ecs_component_record_t *cr,
-    ecs_entity_t tgt,
-    ecs_table_t *tgt_table,
-    int32_t column,
+    ecs_reachable_iter_t *iter,
+    const ecs_reachable_elem_t *elem,
     ecs_entity_t trav)
 {
-    ecs_id_t id = cr->id;
+    ecs_id_t id = elem->id;
     ecs_entity_t event = er ? er->event : 0;
     bool inherit = trav == EcsIsA;
     bool may_override = inherit && (event == EcsOnAdd) && (emit_ids->count > 1);
@@ -14938,10 +15068,30 @@ static void flecs_emit_forward_id(
         return;
     }
 
+    const ecs_table_record_t *src_tr = elem->tr;
+    if (it->flags & EcsIterSourceChanged) {
+        src_tr = flecs_reachable_elem_get_tr(world, elem);
+        if (!src_tr) {
+            return;
+        }
+    } else {
+        ecs_dbg_assert(flecs_entities_get(world, elem->src)->table ==
+            src_tr->hdr.table, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    iter->elem = elem;
+    if (!iter->active) {
+        flecs_reachable_iter_begin(world, iter);
+    }
+
+    ecs_component_record_t *cr = src_tr->hdr.cr;
+    ecs_assert(cr->id == id, ECS_INTERNAL_ERROR, NULL);
+    ecs_table_t *tgt_table = src_tr->hdr.table;
+    int32_t column = src_tr->index;
     ecs_entity_t old_src = it->sources[0];
 
     it->ids[0] = id;
-    it->sources[0] = tgt;
+    it->sources[0] = elem->src;
     it->event_id = id;
     ECS_CONST_CAST(int32_t*, it->sizes)[0] = 0; /* safe, owned by observer */
     it->up_fields = 1;
@@ -15018,7 +15168,14 @@ static void flecs_reachable_cache_ensure(
     }
 
     ecs_allocator_t *a = &world->allocator;
-    ecs_vec_reset_t(a, &rc->ids, ecs_reachable_elem_t);
+    if (flecs_reachable_array_is_iterated(world, rc->ids.array)) {
+        /* Don't modify the array while it is iterated. The iterator frees it
+         * when it's done. */
+        ecs_vec_init_t(NULL, &rc->ids, ecs_reachable_elem_t, 0);
+    } else {
+        ecs_vec_reset_t(a, &rc->ids, ecs_reachable_elem_t);
+    }
+
     ecs_entity_t tgt = flecs_entities_get_alive(world, ECS_PAIR_SECOND(cr->id));
     ecs_record_t *r = tgt ? flecs_entities_try(world, tgt) : NULL;
     ecs_table_t *table = r ? r->table : NULL;
@@ -15059,13 +15216,9 @@ static void flecs_reachable_cache_ensure(
                     a, &rc->ids, ecs_reachable_elem_t);
                 *elem = (ecs_reachable_elem_t){
                     .tr = tr,
-                    .record = r,
                     .src = tgt,
                     .id = id
                 };
-#ifndef FLECS_NDEBUG
-                elem->table = table;
-#endif
             }
         }
     }
@@ -15107,25 +15260,28 @@ static void flecs_emit_forward(
     flecs_reachable_cache_ensure(world, cr, 0,
         it->event == EcsOnAdd || it->event == EcsOnRemove);
 
-    ecs_entity_t trav = ECS_PAIR_FIRST(cr->id);
-    ecs_reachable_elem_t *elems = ecs_vec_first_t(&rc->ids,
-        ecs_reachable_elem_t);
     int32_t i, count = ecs_vec_count(&rc->ids);
+    if (!count) {
+        return;
+    }
+
+    ecs_reachable_iter_t iter = {
+        .ids = rc->ids,
+        .rc = rc,
+        .it = it
+    };
+
+    /* Changes to sources don't increment the generation of an invalid cache */
+    if (rc->current != rc->generation) {
+        it->flags |= EcsIterSourceChanged;
+    }
+
+    ecs_entity_t trav = ECS_PAIR_FIRST(cr->id);
+    ecs_reachable_elem_t *elems = ecs_vec_first_t(&iter.ids,
+        ecs_reachable_elem_t);
     for (i = 0; i < count; i ++) {
-        ecs_reachable_elem_t *elem = &elems[i];
-        const ecs_table_record_t *tr = elem->tr;
-        ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_component_record_t *rc_cr = tr->hdr.cr;
-        ecs_record_t *r = elem->record;
-
-        ecs_assert(rc_cr->id == elem->id, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(flecs_entities_get(world, elem->src) == r,
-            ECS_INTERNAL_ERROR, NULL);
-        ecs_dbg_assert(r->table == elem->table, ECS_INTERNAL_ERROR, NULL);
-
-        flecs_emit_forward_id(world, er, er_onset, emit_ids, it, table,
-            rc_cr, elem->src, r->table, tr->index, trav);
+        flecs_emit_forward_id(
+            world, er, er_onset, emit_ids, it, table, &iter, &elems[i], trav);
     }
 
     /* Propagate events for new reachable ids downwards */
@@ -15140,22 +15296,22 @@ static void flecs_emit_forward(
         }
 
         if (i != it->count) {
-            elems = ecs_vec_first_t(&rc->ids,
-                ecs_reachable_elem_t);
-            count = ecs_vec_count(&rc->ids);
+            if (!iter.active) {
+                flecs_reachable_iter_begin(world, &iter);
+            }
+
             for (i = 0; i < count; i ++) {
                 ecs_reachable_elem_t *elem = &elems[i];
                 const ecs_table_record_t *tr = elem->tr;
-                ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-                ecs_component_record_t *rc_cr = tr->hdr.cr;
-                ecs_record_t *r = elem->record;
+                if (it->flags & EcsIterSourceChanged) {
+                    tr = flecs_reachable_elem_get_tr(world, elem);
+                    if (!tr) {
+                        continue;
+                    }
+                }
 
-                ecs_assert(rc_cr->id == elem->id, ECS_INTERNAL_ERROR, NULL);
-                ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-                ecs_assert(flecs_entities_get(world, elem->src) == r,
-                    ECS_INTERNAL_ERROR, NULL);
-                ecs_dbg_assert(r->table == elem->table, ECS_INTERNAL_ERROR, NULL);
-                (void)r;
+                iter.elem = elem;
+                ecs_component_record_t *rc_cr = tr->hdr.cr;
 
                 /* If entities already have the component, don't propagate */
                 if (flecs_component_get_table(rc_cr, it->table)) {
@@ -15181,6 +15337,8 @@ static void flecs_emit_forward(
             }
         }
     }
+
+    flecs_reachable_iter_end(world, &iter);
 }
 
 static void flecs_emit_on_set_for_override_on_add(
@@ -16250,6 +16408,13 @@ static void flecs_observers_invoke_intern(
                 continue;
             }
 
+            /* Observers can modify the source of a forwarded event */
+            if ((it->flags & EcsIterSourceChanged) &&
+                !flecs_reachable_iter_validate(world, it))
+            {
+                break;
+            }
+
             ecs_assert(it->table == table, ECS_INTERNAL_ERROR, NULL);
             flecs_uni_observer_invoke(world, o, it, table, trav);
 
@@ -16362,6 +16527,15 @@ static void flecs_multi_observer_invoke_fixed_src(
     bool match = false;
     ecs_iter_t user_it = ecs_query_iter(it->stage, o->query);
     while (ecs_query_next(&user_it)) {
+        /* Observers can modify the source of a forwarded event */
+        if ((it->flags & EcsIterSourceChanged) &&
+            !flecs_reachable_iter_validate(it->world, it))
+        {
+            user_it.flags |= EcsIterSkip; /* Prevent change detection on fini */
+            ecs_iter_fini(&user_it);
+            break;
+        }
+
         match = true;
         impl->last_event_id[0] = it->event_cur;
         impl->last_event_field = pivot_field_bit;
@@ -41715,7 +41889,9 @@ static void flecs_table_init_overrides(
     o->refs = ECS_OFFSET(o, bases_size);
     ecs_os_memset_n(o->refs, 0, ecs_ref_t, table->column_count);
     for (int32_t i = 0; i < o->count; i ++) {
-        o->bases[i].pair = table->_->records[tr->index + i].hdr.cr->pair;
+        ecs_component_record_t *cr = table->_->records[tr->index + i].hdr.cr;
+        o->bases[i].pair = cr->pair;
+        o->bases[i].cr = cr;
         o->bases[i].generation = -1;
     }
 
@@ -41732,6 +41908,23 @@ static void flecs_table_fini_overrides(
     }
 }
 
+/* Get a ref to the component of the base that an override copies from */
+static const ecs_ref_t* flecs_table_find_override(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    ecs_ref_t *storage)
+{
+    ecs_entity_t base = 0;
+    if (ecs_search_relation(world, table, 0, id, EcsIsA, EcsUp,
+        &base, NULL, NULL) != -1)
+    {
+        *storage = ecs_ref_init_id(world, base, id);
+        return storage;
+    }
+    return NULL;
+}
+
 static void flecs_table_update_overrides(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -41741,34 +41934,36 @@ static void flecs_table_update_overrides(
         return;
     }
 
-    int32_t base_index = 0;
-    for (; base_index < o->count; base_index ++) {
+    ecs_assert(!(world->flags & EcsWorldMultiThreaded),
+        ECS_INTERNAL_ERROR, NULL);
+
+    /* Revalidate the reachable cache of each base before comparing its
+     * generation. The generation of a cache that is already invalid is not
+     * incremented again, so it would miss changes made while it is invalid. */
+    bool changed = false;
+    int32_t base_index;
+    for (base_index = 0; base_index < o->count; base_index ++) {
         ecs_table_override_base_t *base = &o->bases[base_index];
-        if (base->generation != base->pair->reachable.generation) {
-            break;
+        const ecs_reachable_cache_t *rc = &base->pair->reachable;
+        if (rc->current != rc->generation) {
+            flecs_reachable_cache_get(world, base->cr);
+        }
+
+        if (base->generation != rc->generation) {
+            base->generation = rc->generation;
+            changed = true;
         }
     }
 
-    if (base_index == o->count) {
+    if (!changed) {
         return;
-    }
-
-    for (; base_index < o->count; base_index ++) {
-        ecs_table_override_base_t *base = &o->bases[base_index];
-        base->generation = base->pair->reachable.generation;
     }
 
     int16_t *map = &table->column_map[table->type.count];
     int32_t i, count = table->column_count;
     for (i = 0; i < count; i ++) {
         ecs_id_t id = table->type.array[map[i]];
-        ecs_entity_t base = 0;
-
-        if (ecs_search_relation(
-            world, table, 0, id, EcsIsA, EcsUp, &base, NULL, NULL) != -1) 
-        {
-            o->refs[i] = ecs_ref_init_id(world, base, id);
-        } else {
+        if (!flecs_table_find_override(world, table, id, &o->refs[i])) {
             ecs_os_zeromem(&o->refs[i]);
         }
     }
@@ -43576,12 +43771,10 @@ const ecs_ref_t* flecs_table_get_override(
     }
 
     if (cr->flags & EcsIdSparse) {
-        ecs_entity_t base = 0;
-        if (ecs_search_relation(world, table, 0, id, EcsIsA, EcsUp, 
-            &base, NULL, NULL) != -1) 
-        {
-            *storage = ecs_ref_init_id(world, base, id);
-            return storage;
+        const ecs_ref_t *r = flecs_table_find_override(
+            world, table, id, storage);
+        if (r) {
+            return r;
         }
     }
     
@@ -43593,6 +43786,12 @@ const ecs_ref_t* flecs_table_get_override(
     int32_t column_index = ecs_table_get_column_index(world, table, id);
     if (column_index == -1) {
         return NULL;
+    }
+
+    /* In multithreaded mode the reachable cache can't be revalidated, so look
+     * up the base without updating the override cache. */
+    if (world->flags & EcsWorldMultiThreaded) {
+        return flecs_table_find_override(world, table, id, storage);
     }
 
     flecs_table_update_overrides(world, table);

@@ -2654,6 +2654,17 @@ void Observer_not_term_on_remove_batched_w_remove(void);
 void Observer_not_term_on_add_batched_w_add(void);
 void Observer_not_term_on_remove_other_entity_matches_up_parent(void);
 void Observer_not_term_on_remove_other_entity_matches_dont_fragment(void);
+void Observer_on_add_up_observer_instantiate_after_base_add(void);
+void Observer_on_add_up_observer_add_to_base(void);
+void Observer_on_add_up_observer_remove_from_base(void);
+void Observer_on_add_up_observer_delete_tag_of_base(void);
+void Observer_on_add_up_observer_delete_base_of_base(void);
+void Observer_on_add_up_observer_delete_base_of_base_recycle(void);
+void Observer_on_add_up_observer_delete_tag_of_base_same_id(void);
+void Observer_on_add_up_observer_remove_from_base_same_id(void);
+void Observer_on_add_up_observer_delete_tag_of_base_propagate(void);
+void Observer_on_add_up_observer_delete_tag_of_base_fixed_src_multi(void);
+void Observer_on_add_up_observer_remove_from_base_fixed_src_multi(void);
 
 // Testsuite 'ObserverOnSet'
 void ObserverOnSet_set_1_of_1(void);
@@ -2987,6 +2998,16 @@ void Prefab_add_inherit_w_override_with_to_prefab_after_instantiate(void);
 void Prefab_add_component_to_prefab_during_instantiate(void);
 void Prefab_add_component_to_prefab_during_instantiate_w_parent(void);
 void Prefab_dont_inherit_dont_fragment_component(void);
+void Prefab_override_after_base_remove_from_intermediate(void);
+void Prefab_override_after_base_add_to_intermediate(void);
+void Prefab_override_after_base_remove_from_intermediate_3_lvl(void);
+void Prefab_override_after_base_add_to_intermediate_w_stage(void);
+void Prefab_override_after_base_add_to_intermediate_override_policy(void);
+void Prefab_override_in_observer_after_base_change(void);
+void Prefab_override_after_base_add_to_intermediate_w_readonly(void);
+void Prefab_on_set_after_remove_override_after_base_add_to_intermediate(void);
+void Prefab_override_after_base_remove(void);
+void Prefab_override_after_base_add(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -14157,6 +14178,50 @@ bake_test_case Observer_testcases[] = {
     {
         "not_term_on_remove_other_entity_matches_dont_fragment",
         Observer_not_term_on_remove_other_entity_matches_dont_fragment
+    },
+    {
+        "on_add_up_observer_instantiate_after_base_add",
+        Observer_on_add_up_observer_instantiate_after_base_add
+    },
+    {
+        "on_add_up_observer_add_to_base",
+        Observer_on_add_up_observer_add_to_base
+    },
+    {
+        "on_add_up_observer_remove_from_base",
+        Observer_on_add_up_observer_remove_from_base
+    },
+    {
+        "on_add_up_observer_delete_tag_of_base",
+        Observer_on_add_up_observer_delete_tag_of_base
+    },
+    {
+        "on_add_up_observer_delete_base_of_base",
+        Observer_on_add_up_observer_delete_base_of_base
+    },
+    {
+        "on_add_up_observer_delete_base_of_base_recycle",
+        Observer_on_add_up_observer_delete_base_of_base_recycle
+    },
+    {
+        "on_add_up_observer_delete_tag_of_base_same_id",
+        Observer_on_add_up_observer_delete_tag_of_base_same_id
+    },
+    {
+        "on_add_up_observer_remove_from_base_same_id",
+        Observer_on_add_up_observer_remove_from_base_same_id
+    },
+    {
+        "on_add_up_observer_delete_tag_of_base_propagate",
+        Observer_on_add_up_observer_delete_tag_of_base_propagate
+    },
+    {
+        "on_add_up_observer_delete_tag_of_base_fixed_src_multi",
+        Observer_on_add_up_observer_delete_tag_of_base_fixed_src_multi
+    },
+    {
+        "on_add_up_observer_remove_from_base_fixed_src_multi",
+        Observer_on_add_up_observer_remove_from_base_fixed_src_multi
     }
 };
 
@@ -15451,6 +15516,46 @@ bake_test_case Prefab_testcases[] = {
     {
         "dont_inherit_dont_fragment_component",
         Prefab_dont_inherit_dont_fragment_component
+    },
+    {
+        "override_after_base_remove_from_intermediate",
+        Prefab_override_after_base_remove_from_intermediate
+    },
+    {
+        "override_after_base_add_to_intermediate",
+        Prefab_override_after_base_add_to_intermediate
+    },
+    {
+        "override_after_base_remove_from_intermediate_3_lvl",
+        Prefab_override_after_base_remove_from_intermediate_3_lvl
+    },
+    {
+        "override_after_base_add_to_intermediate_w_stage",
+        Prefab_override_after_base_add_to_intermediate_w_stage
+    },
+    {
+        "override_after_base_add_to_intermediate_override_policy",
+        Prefab_override_after_base_add_to_intermediate_override_policy
+    },
+    {
+        "override_in_observer_after_base_change",
+        Prefab_override_in_observer_after_base_change
+    },
+    {
+        "override_after_base_add_to_intermediate_w_readonly",
+        Prefab_override_after_base_add_to_intermediate_w_readonly
+    },
+    {
+        "on_set_after_remove_override_after_base_add_to_intermediate",
+        Prefab_on_set_after_remove_override_after_base_add_to_intermediate
+    },
+    {
+        "override_after_base_remove",
+        Prefab_override_after_base_remove
+    },
+    {
+        "override_after_base_add",
+        Prefab_override_after_base_add
     }
 };
 
@@ -18649,7 +18754,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        435,
+        446,
         Observer_testcases
     },
     {
@@ -18691,7 +18796,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        217,
+        227,
         Prefab_testcases
     },
     {
