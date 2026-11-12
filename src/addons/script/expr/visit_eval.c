@@ -8,6 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "../script.h"
 #include "../../meta/meta.h"
+#include <inttypes.h>
 
 typedef struct ecs_script_eval_ctx_t {
     const ecs_script_t *script;
@@ -1058,9 +1059,201 @@ static int flecs_expr_iterate_step(
             (*(int32_t*)result) ++;
         }
         return 0;
+    case EcsExprIterateContains:
+    case EcsExprIterateIndexOf:
+    case EcsExprIterateFirst:
+    case EcsExprIterateLast:
+    case EcsExprIterateReverse:
+    case EcsExprIterateSort:
+        return 0;
     }
 
     return 0;
+}
+
+static void flecs_expr_sort_indices(
+    int32_t *indices,
+    int32_t count,
+    const void *keys,
+    const ecs_type_info_t *key_ti)
+{
+    if (count < 2) {
+        return;
+    }
+
+    ecs_size_t size = key_ti->size;
+    int32_t *tmp = ecs_os_malloc_n(int32_t, count);
+    int32_t width, i;
+    for (width = 1; width < count; width *= 2) {
+        for (i = 0; i < count; i += 2 * width) {
+            int32_t l = i, l_end = i + width, r = i + width;
+            int32_t r_end = i + 2 * width, out = i;
+            if (l_end > count) {
+                l_end = count;
+            }
+            if (r > count) {
+                r = count;
+            }
+            if (r_end > count) {
+                r_end = count;
+            }
+
+            while (l < l_end && r < r_end) {
+                if (flecs_type_info_cmp(ECS_ELEM(keys, size, indices[r]),
+                    ECS_ELEM(keys, size, indices[l]), key_ti) < 0)
+                {
+                    tmp[out ++] = indices[r ++];
+                } else {
+                    tmp[out ++] = indices[l ++];
+                }
+            }
+
+            while (l < l_end) {
+                tmp[out ++] = indices[l ++];
+            }
+
+            while (r < r_end) {
+                tmp[out ++] = indices[r ++];
+            }
+        }
+
+        ecs_os_memcpy_n(indices, tmp, int32_t, count);
+    }
+
+    ecs_os_free(tmp);
+}
+
+static void flecs_expr_sort_collection(
+    ecs_vec_t *result,
+    const void *elems,
+    int32_t count,
+    const ecs_type_info_t *elem_ti,
+    const void *keys,
+    const ecs_type_info_t *key_ti)
+{
+    int32_t *indices = ecs_os_malloc_n(int32_t, count ? count : 1);
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        indices[i] = i;
+    }
+
+    flecs_expr_sort_indices(indices, count, keys, key_ti);
+
+    ecs_vec_init_if(result, elem_ti->size);
+    flecs_value_vec_splice(elem_ti, result, 0, ecs_vec_count(result), NULL, 0);
+    for (i = 0; i < count; i ++) {
+        flecs_value_vec_splice(elem_ti, result, i, i,
+            ECS_ELEM(elems, elem_ti->size, indices[i]), 1);
+    }
+
+    ecs_os_free(indices);
+}
+
+static int flecs_expr_iterate_collection_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_iterate_t *node,
+    ecs_expr_value_t *left,
+    ecs_expr_value_t *out)
+{
+    ecs_world_t *world = ctx->world;
+    void *result = out->value.ptr;
+    out->owned = true;
+
+    ecs_expr_value_t *init = NULL;
+    if (node->init) {
+        init = flecs_expr_eval_result(ctx, node->init, &(ecs_expr_value_t){0});
+        if (!init) {
+            return -1;
+        }
+    }
+
+    if (node->collection_kind == EcsMapType) {
+        ecs_assert(node->kind == EcsExprIterateContains,
+            ECS_INTERNAL_ERROR, NULL);
+        ecs_map_key_t key = 0;
+        if (flecs_value_blit_u64(world, &init->value, &key)) {
+            return -1;
+        }
+
+        const ecs_map_t *map = left->value.ptr;
+        *(bool*)result = ecs_map_is_init(map) && ecs_map_get(map, key) != NULL;
+        return 0;
+    }
+
+    ecs_entity_t elem_type;
+    const void *elems;
+    int32_t i, count;
+    if (!flecs_value_collection_get(world, left->value.type, left->value.ptr,
+        &elem_type, &elems, &count))
+    {
+        return -1;
+    }
+
+    const ecs_type_info_t *elem_ti = ecs_get_type_info(world, elem_type);
+    ecs_assert(elem_ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_size_t size = elem_ti->size;
+
+    switch(node->kind) {
+    case EcsExprIterateContains:
+    case EcsExprIterateIndexOf: {
+        int32_t found = -1;
+        for (i = 0; i < count; i ++) {
+            if (flecs_type_info_equals(
+                ECS_ELEM(elems, size, i), init->value.ptr, elem_ti))
+            {
+                found = i;
+                break;
+            }
+        }
+
+        if (node->kind == EcsExprIterateContains) {
+            *(bool*)result = found != -1;
+        } else {
+            *(int32_t*)result = found;
+        }
+
+        return 0;
+    }
+    case EcsExprIterateFirst:
+    case EcsExprIterateLast:
+        if (!count) {
+            flecs_expr_visit_error(ctx->script, node,
+                "cannot get '%s' of empty collection", node->function_name);
+            return -1;
+        }
+
+        flecs_type_info_copy(result, ECS_ELEM(elems, size,
+            node->kind == EcsExprIterateFirst ? 0 : count - 1), 1, elem_ti);
+        return 0;
+    case EcsExprIterateReverse: {
+        ecs_vec_t *vec = result;
+        ecs_vec_init_if(vec, size);
+        flecs_value_vec_splice(elem_ti, vec, 0, ecs_vec_count(vec), NULL, 0);
+        for (i = 0; i < count; i ++) {
+            flecs_value_vec_splice(elem_ti, vec, i, i,
+                ECS_ELEM(elems, size, count - 1 - i), 1);
+        }
+
+        return 0;
+    }
+    case EcsExprIterateSort:
+        flecs_expr_sort_collection(
+            result, elems, count, elem_ti, elems, elem_ti);
+        return 0;
+    case EcsExprIterateMap:
+    case EcsExprIterateMapValues:
+    case EcsExprIterateFilter:
+    case EcsExprIterateReduce:
+    case EcsExprIterateSum:
+    case EcsExprIterateMin:
+    case EcsExprIterateMax:
+    case EcsExprIterateAny:
+    case EcsExprIterateAll:
+    case EcsExprIterateCount:
+        break;
+    }
+
+    ecs_abort(ECS_INTERNAL_ERROR, NULL);
 }
 
 static FLECS_SCRIPT_NOINLINE int flecs_expr_iterate_visit_eval(
@@ -1077,6 +1270,12 @@ static FLECS_SCRIPT_NOINLINE int flecs_expr_iterate_visit_eval(
 
     void *result = out->value.ptr;
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (node->kind >= EcsExprIterateContains &&
+        (node->kind != EcsExprIterateSort || !node->lambda))
+    {
+        return flecs_expr_iterate_collection_eval(ctx, node, left, out);
+    }
 
     const ecs_type_info_t *elem_ti = ecs_get_type_info(world, node->elem_type);
     ecs_assert(elem_ti != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -1147,6 +1346,13 @@ static FLECS_SCRIPT_NOINLINE int flecs_expr_iterate_visit_eval(
         it = ecs_map_iter(left->value.ptr);
     }
 
+    bool is_sort = node->kind == EcsExprIterateSort;
+    const ecs_type_info_t *key_ti = is_sort ? node->lambda->node.type_info : NULL;
+    ecs_vec_t keys = {0};
+    if (is_sort) {
+        ecs_vec_init(NULL, &keys, key_ti->size, count);
+    }
+
     bool has_value = false;
     int r = 0;
     for (index = 0; ; index ++) {
@@ -1183,6 +1389,11 @@ static FLECS_SCRIPT_NOINLINE int flecs_expr_iterate_visit_eval(
                 ctx, node->lambda->body, &(ecs_expr_value_t){0});
         }
 
+        if (val && is_sort) {
+            flecs_value_vec_splice(key_ti, &keys, index, index,
+                val->value.ptr, 1);
+        }
+
         r = val ? flecs_expr_iterate_step(ctx, node, val, elem, elem_ti,
             key, result, to_map, &has_value) : -1;
 
@@ -1202,6 +1413,16 @@ static FLECS_SCRIPT_NOINLINE int flecs_expr_iterate_visit_eval(
         r = 0;
     }
 
+    if (is_sort) {
+        if (!r) {
+            flecs_expr_sort_collection(result, elems, count, elem_ti,
+                ecs_vec_first(&keys), key_ti);
+        }
+
+        flecs_value_vec_splice(key_ti, &keys, 0, ecs_vec_count(&keys), NULL, 0);
+        ecs_vec_fini(NULL, &keys, key_ti->size);
+    }
+
     if (!r && !has_value && (node->kind == EcsExprIterateMin ||
         node->kind == EcsExprIterateMax))
     {
@@ -1212,6 +1433,239 @@ static FLECS_SCRIPT_NOINLINE int flecs_expr_iterate_visit_eval(
 
     out->owned = true;
     return r;
+}
+
+static FLECS_SCRIPT_NOINLINE int flecs_expr_slice_visit_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_slice_t *node,
+    ecs_expr_value_t *out)
+{
+    ecs_world_t *world = ctx->world;
+    ecs_expr_value_t *left = flecs_expr_eval_result(
+        ctx, node->left, &(ecs_expr_value_t){0});
+    if (!left) {
+        return -1;
+    }
+
+    ecs_entity_t elem_type;
+    const void *elems;
+    int32_t count;
+    if (!flecs_value_collection_get(world, left->value.type, left->value.ptr,
+        &elem_type, &elems, &count))
+    {
+        flecs_expr_visit_error(ctx->script, node, "cannot slice value");
+        return -1;
+    }
+
+    int64_t from = 0, to = count;
+    if (node->from) {
+        ecs_expr_value_t *v = flecs_expr_eval_result(
+            ctx, node->from, &(ecs_expr_value_t){0});
+        if (!v) {
+            return -1;
+        }
+
+        from = *(int64_t*)v->value.ptr;
+    }
+
+    if (node->to) {
+        ecs_expr_value_t *v = flecs_expr_eval_result(
+            ctx, node->to, &(ecs_expr_value_t){0});
+        if (!v) {
+            return -1;
+        }
+
+        to = *(int64_t*)v->value.ptr;
+    }
+
+    if (from < 0 || to < from || to > count) {
+        flecs_expr_visit_error(ctx->script, node,
+            "slice [%" PRId64 "..%" PRId64 "] is out of range for "
+            "collection (count = %d)", from, to, count);
+        return -1;
+    }
+
+    const ecs_type_info_t *elem_ti = ecs_get_type_info(world, elem_type);
+    ecs_assert(elem_ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_vec_t *vec = out->value.ptr;
+    ecs_vec_init_if(vec, elem_ti->size);
+    flecs_value_vec_splice(elem_ti, vec, 0, ecs_vec_count(vec),
+        ECS_ELEM(elems, elem_ti->size, (int32_t)from), (int32_t)(to - from));
+
+    out->owned = true;
+    return 0;
+}
+
+typedef struct flecs_expr_mutate_ctx_t {
+    const ecs_script_t *script;
+    const ecs_expr_mutate_t *node;
+    const ecs_value_t *args;
+    int32_t arg_count;
+    void *out;
+} flecs_expr_mutate_ctx_t;
+
+static int flecs_expr_mutate_action(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_assign_t *assign,
+    void *dst,
+    void *ptr)
+{
+    (void)assign;
+    flecs_expr_mutate_ctx_t *c = ptr;
+    const ecs_expr_mutate_t *node = c->node;
+    ecs_world_t *world = v->world;
+    const ecs_type_info_t *elem_ti = ecs_get_type_info(world, node->elem_type);
+    ecs_assert(elem_ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (node->is_map) {
+        ecs_map_t *map = dst;
+        if (node->kind == EcsExprMutateClear) {
+            flecs_meta_map_clear(map, elem_ti);
+            return 0;
+        }
+
+        ecs_map_key_t key = 0;
+        if (flecs_value_blit_u64(world, &c->args[0], &key)) {
+            return -1;
+        }
+
+        flecs_value_map_remove(elem_ti, map, key);
+        return 0;
+    }
+
+    ecs_size_t size = elem_ti->size;
+    ecs_vec_t *vec = dst;
+    ecs_vec_init_if(vec, size);
+    int32_t i, count = ecs_vec_count(vec);
+
+    switch(node->kind) {
+    case EcsExprMutatePush:
+        for (i = 0; i < c->arg_count; i ++) {
+            flecs_value_vec_splice(elem_ti, vec, count + i, count + i,
+                c->args[i].ptr, 1);
+        }
+        break;
+    case EcsExprMutateInsert: {
+        int64_t index = *(int64_t*)c->args[0].ptr;
+        if (index < 0 || index > count) {
+            flecs_expr_visit_error(c->script, node,
+                "cannot insert at index %" PRId64 " in vector '%s' with "
+                "%d elements", index, node->name, count);
+            return -1;
+        }
+
+        for (i = 1; i < c->arg_count; i ++) {
+            int32_t at = (int32_t)index + i - 1;
+            flecs_value_vec_splice(elem_ti, vec, at, at, c->args[i].ptr, 1);
+        }
+        break;
+    }
+    case EcsExprMutatePop:
+        if (!count) {
+            flecs_expr_visit_error(c->script, node,
+                "cannot pop from empty vector '%s'", node->name);
+            return -1;
+        }
+
+        flecs_type_info_copy(c->out, ecs_vec_get(vec, size, count - 1), 1,
+            elem_ti);
+        flecs_value_vec_splice(elem_ti, vec, count - 1, count, NULL, 0);
+        break;
+    case EcsExprMutateRemove: {
+        int64_t index = *(int64_t*)c->args[0].ptr;
+        if (index < 0 || index >= count) {
+            flecs_expr_visit_error(c->script, node,
+                "cannot remove index %" PRId64 " from vector '%s' with "
+                "%d elements", index, node->name, count);
+            return -1;
+        }
+
+        flecs_value_vec_splice(elem_ti, vec,
+            (int32_t)index, (int32_t)index + 1, NULL, 0);
+        break;
+    }
+    case EcsExprMutateClear:
+        flecs_value_vec_splice(elem_ti, vec, 0, count, NULL, 0);
+        break;
+    }
+
+    return 0;
+}
+
+static FLECS_SCRIPT_NOINLINE int flecs_expr_mutate_visit_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_mutate_t *node,
+    ecs_expr_value_t *out)
+{
+    ecs_script_eval_visitor_t *v = ctx->desc ? ctx->desc->script_visitor : NULL;
+    if (!v) {
+        flecs_expr_visit_error(ctx->script, node,
+            "'%s' can only be called from an async block or a function",
+            node->function_name);
+        return -1;
+    }
+
+    ecs_script_assign_t *assign = node->assign;
+    ecs_entity_t entity = 0;
+    if (assign->entity) {
+        ecs_expr_value_t *e = flecs_expr_eval_result(
+            ctx, assign->entity, &(ecs_expr_value_t){0});
+        if (!e) {
+            return -1;
+        }
+
+        entity = *(ecs_entity_t*)e->value.ptr;
+    }
+
+    int64_t indices[FLECS_SCRIPT_ASSIGN_INDEX_MAX + 2];
+    ecs_script_assign_step_t *steps = ecs_vec_first(&assign->steps);
+    int32_t i, count = ecs_vec_count(&assign->steps), index_count = 0;
+    for (i = assign->entity != NULL; i < count; i ++) {
+        if (steps[i].member) {
+            continue;
+        }
+
+        ecs_expr_value_t *index = flecs_expr_eval_result(
+            ctx, steps[i].index, &(ecs_expr_value_t){0});
+        if (!index) {
+            return -1;
+        }
+
+        indices[index_count ++] = *(int64_t*)index->value.ptr;
+    }
+
+    ecs_expr_initializer_element_t *elems = ecs_vec_first(
+        &node->args->elements);
+    int32_t arg_count = ecs_vec_count(&node->args->elements);
+    ecs_value_t *args = NULL;
+    if (arg_count) {
+        args = ecs_os_alloca_n(ecs_value_t, arg_count);
+        for (i = 0; i < arg_count; i ++) {
+            ecs_expr_value_t *arg = flecs_expr_eval_result(
+                ctx, elems[i].value, &(ecs_expr_value_t){0});
+            if (!arg) {
+                return -1;
+            }
+
+            args[i] = arg->value;
+        }
+    }
+
+    flecs_expr_mutate_ctx_t mutate_ctx = {
+        .script = ctx->script,
+        .node = node,
+        .args = args,
+        .arg_count = arg_count,
+        .out = out->value.ptr
+    };
+
+    if (node->kind != EcsExprMutatePop) {
+        *(bool*)out->value.ptr = false;
+    }
+
+    out->owned = true;
+    return flecs_script_assign_apply(v, assign, entity, indices,
+        flecs_expr_mutate_action, &mutate_ctx);
 }
 
 static int flecs_expr_component_visit_eval(
@@ -1304,7 +1758,9 @@ static const bool flecs_expr_eval_has_frame[] = {
     [EcsExprCastNumber] = true,
     [EcsExprScript] = false,
     [EcsExprLambda] = false,
-    [EcsExprIterate] = true
+    [EcsExprIterate] = true,
+    [EcsExprSlice] = true,
+    [EcsExprMutate] = true
 };
 
 static int flecs_expr_visit_eval_priv(
@@ -1397,6 +1853,14 @@ static int flecs_expr_visit_eval_priv(
     case EcsExprIterate:
         result = flecs_expr_iterate_visit_eval(
             ctx, (ecs_expr_iterate_t*)node, out);
+        break;
+    case EcsExprSlice:
+        result = flecs_expr_slice_visit_eval(
+            ctx, (ecs_expr_slice_t*)node, out);
+        break;
+    case EcsExprMutate:
+        result = flecs_expr_mutate_visit_eval(
+            ctx, (ecs_expr_mutate_t*)node, out);
         break;
     case EcsExprLambda:
         ecs_abort(ECS_INTERNAL_ERROR, "unexpected lambda expression");

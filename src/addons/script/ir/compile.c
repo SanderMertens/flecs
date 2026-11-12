@@ -685,6 +685,11 @@ static void flecs_irc_compile_expr(
         op = flecs_irc_emit(c, EcsIrIterate, dst, 0, 0, node);
         flecs_irc_op(c, op)->flags = place;
         return;
+    case EcsExprSlice:
+    case EcsExprMutate:
+        op = flecs_irc_emit(c, EcsIrEval, dst, 0, 0, node);
+        flecs_irc_op(c, op)->flags = place;
+        return;
     case EcsExprLambda:
         break;
     }
@@ -1101,6 +1106,7 @@ static void flecs_irc_compile_assign(
     for (i = node->entity != NULL; i < count; i ++) {
         if (!steps[i].member) {
             steps[i].reg = flecs_irc_compile_tmp(c, steps[i].index);
+            steps[i].reg_to = flecs_irc_compile_tmp(c, steps[i].index_to);
         }
     }
 

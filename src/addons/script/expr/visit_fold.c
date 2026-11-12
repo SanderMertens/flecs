@@ -452,6 +452,10 @@ int flecs_expr_visit_fold(
         return 0;
     case EcsExprIterate:
         return flecs_expr_iterate_visit_fold(script, node_ptr, desc);
+    case EcsExprSlice:
+        return flecs_expr_fold_children(script, node_ptr, desc, true);
+    case EcsExprMutate:
+        return flecs_expr_fold_children(script, node_ptr, desc, false);
     case EcsExprInterpolatedString:
     case EcsExprUnary:
     case EcsExprCast:

@@ -71,6 +71,19 @@ void flecs_expr_visit_free(
 
         break;
     }
+    case EcsExprMutate: {
+        ecs_expr_mutate_t *n = (ecs_expr_mutate_t*)node;
+        if (n->assign) {
+            ecs_vec_fini_t(a, &n->assign->steps, ecs_script_assign_step_t);
+            flecs_free_t(a, ecs_script_assign_t, n->assign);
+        }
+
+        if (n->name) {
+            flecs_strfree(a, n->name);
+        }
+
+        break;
+    }
     case EcsExprScript: {
         ecs_script_t *nested = ((ecs_expr_script_t*)node)->script;
         if (nested) {

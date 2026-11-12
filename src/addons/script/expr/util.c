@@ -882,4 +882,267 @@ int flecs_expr_swizzle_set(
     return 0;
 }
 
+bool flecs_value_collection_get(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *ptr,
+    ecs_entity_t *elem_type,
+    const void **elems,
+    int32_t *count)
+{
+    return flecs_value_collection_elems(
+        world, type, ptr, elem_type, elems, count);
+}
+
+static void flecs_value_vec_splice_priv(
+    const ecs_type_info_t *ti,
+    ecs_vec_t *vec,
+    int32_t from,
+    int32_t to,
+    const void *src,
+    int32_t src_count)
+{
+    ecs_size_t size = ti->size;
+    int32_t count = ecs_vec_count(vec);
+    int32_t delta = src_count - (to - from);
+    int32_t i;
+
+    if (delta > 0) {
+        ecs_vec_set_count_w_type_info(NULL, vec, size, count + delta, ti);
+        void *array = ecs_vec_first(vec);
+        for (i = count - 1; i >= to; i --) {
+            flecs_type_info_move(ECS_ELEM(array, size, i + delta),
+                ECS_ELEM(array, size, i), 1, ti);
+        }
+    }
+
+    if (src_count) {
+        flecs_type_info_copy(ECS_ELEM(ecs_vec_first(vec), size, from),
+            src, src_count, ti);
+    }
+
+    if (delta < 0) {
+        void *array = ecs_vec_first(vec);
+        for (i = to; i < count; i ++) {
+            flecs_type_info_move(ECS_ELEM(array, size, i + delta),
+                ECS_ELEM(array, size, i), 1, ti);
+        }
+
+        ecs_vec_set_count_w_type_info(NULL, vec, size, count + delta, ti);
+    }
+}
+
+void flecs_value_vec_splice(
+    const ecs_type_info_t *elem_ti,
+    ecs_vec_t *vec,
+    int32_t from,
+    int32_t to,
+    const void *src,
+    int32_t src_count)
+{
+    ecs_size_t size = elem_ti->size;
+    ecs_vec_init_if(vec, size);
+
+    ecs_assert(from >= 0 && from <= to && to <= ecs_vec_count(vec),
+        ECS_INTERNAL_ERROR, NULL);
+
+    const char *array = ecs_vec_first(vec);
+    const char *src_ptr = src;
+    bool overlaps = src_count && array &&
+        src_ptr < (array + size * vec->size) &&
+        (src_ptr + size * src_count) > array;
+
+    if (!overlaps) {
+        flecs_value_vec_splice_priv(elem_ti, vec, from, to, src, src_count);
+        return;
+    }
+
+    ecs_vec_t tmp;
+    ecs_vec_init(NULL, &tmp, size, src_count);
+    ecs_vec_set_count_w_type_info(NULL, &tmp, size, src_count, elem_ti);
+    flecs_type_info_copy(ecs_vec_first(&tmp), src, src_count, elem_ti);
+    flecs_value_vec_splice_priv(elem_ti, vec, from, to,
+        ecs_vec_first(&tmp), src_count);
+    ecs_vec_set_count_w_type_info(NULL, &tmp, size, 0, elem_ti);
+    ecs_vec_fini(NULL, &tmp, size);
+}
+
+static void* flecs_value_map_value_ptr(
+    const ecs_type_info_t *elem_ti,
+    ecs_map_val_t *val)
+{
+    if (elem_ti->size > ECS_SIZEOF(ecs_map_val_t)) {
+        return (void*)(uintptr_t)val[0];
+    }
+
+    return val;
+}
+
+void flecs_value_map_insert(
+    const ecs_type_info_t *elem_ti,
+    ecs_map_t *map,
+    ecs_map_key_t key,
+    const void *value)
+{
+    ecs_map_init_if(map, NULL);
+    int32_t count = ecs_map_count(map);
+    ecs_map_val_t *val = ecs_map_ensure(map, key);
+    if (count != ecs_map_count(map)) {
+        if (elem_ti->size > ECS_SIZEOF(ecs_map_val_t)) {
+            val[0] = (ecs_map_val_t)(uintptr_t)ecs_os_calloc(elem_ti->size);
+        } else {
+            val[0] = 0;
+        }
+
+        flecs_type_info_ctor(flecs_value_map_value_ptr(elem_ti, val), 1, elem_ti);
+    }
+
+    flecs_type_info_copy(flecs_value_map_value_ptr(elem_ti, val), value, 1,
+        elem_ti);
+}
+
+bool flecs_value_map_remove(
+    const ecs_type_info_t *elem_ti,
+    ecs_map_t *map,
+    ecs_map_key_t key)
+{
+    if (!ecs_map_is_init(map)) {
+        return false;
+    }
+
+    ecs_map_val_t *val = ecs_map_get(map, key);
+    if (!val) {
+        return false;
+    }
+
+    void *ptr = flecs_value_map_value_ptr(elem_ti, val);
+    flecs_type_info_dtor(ptr, 1, elem_ti);
+    if (elem_ti->size > ECS_SIZEOF(ecs_map_val_t)) {
+        ecs_os_free(ptr);
+    }
+
+    ecs_map_remove(map, key);
+    return true;
+}
+
+static int flecs_value_concat_string(
+    const ecs_value_t *left,
+    const ecs_value_t *right,
+    ecs_value_t *out)
+{
+    const char *l = *(char**)left->ptr, *r = *(char**)right->ptr;
+    ecs_size_t l_len = l ? ecs_os_strlen(l) : 0;
+    ecs_size_t r_len = r ? ecs_os_strlen(r) : 0;
+    char *result = ecs_os_malloc(l_len + r_len + 1);
+    if (l_len) {
+        ecs_os_memcpy(result, l, l_len);
+    }
+
+    if (r_len) {
+        ecs_os_memcpy(&result[l_len], r, r_len);
+    }
+
+    result[l_len + r_len] = '\0';
+    ecs_os_free(*(char**)out->ptr);
+    *(char**)out->ptr = result;
+    return 0;
+}
+
+static int flecs_value_concat_map(
+    ecs_world_t *world,
+    const ecs_value_t *left,
+    const ecs_value_t *right,
+    ecs_value_t *out)
+{
+    const EcsMap *map_type = ecs_get(world, out->type, EcsMap);
+    ecs_assert(map_type != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(left->type == out->type, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(right->type == out->type, ECS_INTERNAL_ERROR, NULL);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, out->type);
+    const ecs_type_info_t *elem_ti = ecs_get_type_info(world, map_type->type);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(elem_ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    void *result = ecs_ptr_new_w_type_info(world, ti);
+    flecs_type_info_copy(result, left->ptr, 1, ti);
+
+    const ecs_map_t *src = right->ptr;
+    if (ecs_map_is_init(src)) {
+        bool is_alloc = elem_ti->size > ECS_SIZEOF(ecs_map_val_t);
+        ecs_map_iter_t it = ecs_map_iter(src);
+        while (ecs_map_next(&it)) {
+            const void *value = is_alloc ? ecs_map_ptr(&it) : &it.res[1];
+            flecs_value_map_insert(elem_ti, result, ecs_map_key(&it), value);
+        }
+    }
+
+    flecs_type_info_move(out->ptr, result, 1, ti);
+    ecs_ptr_free_w_type_info(world, ti, result);
+    return 0;
+}
+
+static int flecs_value_concat_vector(
+    ecs_world_t *world,
+    const ecs_value_t *left,
+    const ecs_value_t *right,
+    ecs_value_t *out)
+{
+    const EcsVector *vector_type = ecs_get(world, out->type, EcsVector);
+    ecs_assert(vector_type != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, out->type);
+    const ecs_type_info_t *elem_ti = ecs_get_type_info(
+        world, vector_type->type);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(elem_ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t elem_type;
+    const void *l_elems = NULL, *r_elems = NULL;
+    int32_t l_count = 0, r_count = 0;
+    if (!flecs_value_collection_elems(
+        world, left->type, left->ptr, &elem_type, &l_elems, &l_count))
+    {
+        return -1;
+    }
+
+    ecs_assert(elem_type == vector_type->type, ECS_INTERNAL_ERROR, NULL);
+
+    if (!flecs_value_collection_elems(
+        world, right->type, right->ptr, &elem_type, &r_elems, &r_count))
+    {
+        return -1;
+    }
+
+    ecs_assert(elem_type == vector_type->type, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_vec_t result;
+    ecs_vec_init(NULL, &result, elem_ti->size, l_count + r_count);
+    flecs_value_vec_splice(elem_ti, &result, 0, 0, l_elems, l_count);
+    flecs_value_vec_splice(elem_ti, &result, l_count, l_count,
+        r_elems, r_count);
+
+    flecs_type_info_dtor(out->ptr, 1, ti);
+    *(ecs_vec_t*)out->ptr = result;
+    return 0;
+}
+
+int flecs_value_concat(
+    const ecs_script_t *script,
+    const ecs_value_t *left,
+    const ecs_value_t *right,
+    ecs_value_t *out)
+{
+    ecs_world_t *world = script->world;
+    if (out->type == ecs_id(ecs_string_t)) {
+        return flecs_value_concat_string(left, right, out);
+    }
+
+    if (ecs_has(world, out->type, EcsMap)) {
+        return flecs_value_concat_map(world, left, right, out);
+    }
+
+    return flecs_value_concat_vector(world, left, right, out);
+}
+
 #endif

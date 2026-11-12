@@ -2823,24 +2823,37 @@ static int flecs_script_type_assign_steps(
             return -1;
         }
 
-        *type = array ? array->type : vector->type;
+        ecs_entity_t elem_type = array ? array->type : vector->type;
         step->count = array ? array->count : 0;
 
-        const ecs_type_info_t *ti = ecs_get_type_info(world, *type);
+        const ecs_type_info_t *ti = ecs_get_type_info(world, elem_type);
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
         step->elem_size = ti->size;
 
-        ecs_entity_t index_type = ecs_id(ecs_i64_t);
-        int result = flecs_script_type_check_expr(t, &step->index, &index_type);
-        if (result) {
-            return result;
+        if (!step->is_slice) {
+            *type = elem_type;
         }
 
-        if (!flecs_script_type_is_number(world, index_type)) {
-            flecs_script_eval_error(t->v, node,
-                "cannot assign to '%s': index of type %s is not a number",
-                node->name, flecs_errstr(ecs_get_path(world, index_type)));
-            return -1;
+        ecs_expr_node_t **bounds[2] = { &step->index, &step->index_to };
+        int32_t b;
+        for (b = 0; b < 2; b ++) {
+            if (!bounds[b][0]) {
+                continue;
+            }
+
+            ecs_entity_t index_type = ecs_id(ecs_i64_t);
+            int result = flecs_script_type_check_expr(
+                t, bounds[b], &index_type);
+            if (result) {
+                return result;
+            }
+
+            if (!flecs_script_type_is_number(world, index_type)) {
+                flecs_script_eval_error(t->v, node,
+                    "cannot assign to '%s': index of type %s is not a number",
+                    node->name, flecs_errstr(ecs_get_path(world, index_type)));
+                return -1;
+            }
         }
     }
 
@@ -2987,17 +3000,13 @@ done:
     return result;
 }
 
-static int flecs_script_type_assign(
+int flecs_script_type_assign_target(
     ecs_script_type_visitor_t *t,
-    ecs_script_assign_t *node)
+    ecs_script_assign_t *node,
+    ecs_entity_t *var_type_out,
+    ecs_entity_t *target_type_out)
 {
     ecs_script_eval_visitor_t *v = t->v;
-    if (!t->async_scope) {
-        flecs_script_eval_error(v, node,
-            "assignment is only allowed in async blocks");
-        return -1;
-    }
-
     flecs_script_assign_root_t root = {0};
     ecs_entity_t var_type = 0, target_type = 0;
 
@@ -3035,12 +3044,53 @@ static int flecs_script_type_assign(
 
     int steps_result = flecs_script_type_assign_steps(t, node, &target_type);
     if (steps_result) {
-        if (steps_result == 1) {
+        return steps_result;
+    }
+
+    *var_type_out = var_type;
+    *target_type_out = target_type;
+    return 0;
+}
+
+static int flecs_script_type_assign(
+    ecs_script_type_visitor_t *t,
+    ecs_script_assign_t *node)
+{
+    ecs_script_eval_visitor_t *v = t->v;
+    if (!t->async_scope) {
+        flecs_script_eval_error(v, node,
+            "assignment is only allowed in async blocks");
+        return -1;
+    }
+
+    ecs_entity_t var_type = 0, target_type = 0;
+    int target_result = flecs_script_type_assign_target(
+        t, node, &var_type, &target_type);
+    if (target_result) {
+        if (target_result == 1) {
             node->node.skip = true;
             return 0;
         }
 
         return -1;
+    }
+
+    if (node->slice) {
+        const EcsArray *array = ecs_get(v->world, target_type, EcsArray);
+        const EcsVector *vector = ecs_get(v->world, target_type, EcsVector);
+        target_type = flecs_script_vector_type(v->world,
+            array ? array->type : vector->type);
+        ecs_assert(target_type != 0, ECS_INTERNAL_ERROR, NULL);
+    } else if (node->compound && node->expr->kind == EcsExprBinary &&
+        ecs_has(v->world, target_type, EcsVector))
+    {
+        ecs_expr_binary_t *binary = (ecs_expr_binary_t*)node->expr;
+        if (binary->operator == EcsTokAdd) {
+            node->expr = binary->right;
+            binary->right = NULL;
+            flecs_expr_visit_free(&v->base.script->pub, (ecs_expr_node_t*)binary);
+            node->append = true;
+        }
     }
 
     ecs_entity_t type = target_type;

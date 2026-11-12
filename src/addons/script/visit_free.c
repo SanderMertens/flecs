@@ -108,6 +108,7 @@ int flecs_script_visit_free_node(
         int32_t i, count = ecs_vec_count(&assign->steps);
         for (i = 0; i < count; i ++) {
             flecs_expr_visit_free(script, steps[i].index);
+            flecs_expr_visit_free(script, steps[i].index_to);
         }
 
         ecs_vec_fini_t(a, &assign->steps, ecs_script_assign_step_t);

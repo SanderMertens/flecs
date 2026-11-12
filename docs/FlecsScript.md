@@ -366,7 +366,7 @@ The following operators are supported in expressions, in order of precedence:
 | `*`        | Multiplication         | `10 * 20`              |
 | `/`        | Division               | `10 / 20`              |
 | `%`        | Modulus                | `10 % 3`               |
-| `+`        | Addition               | `10 + 20`              |
+| `+`        | Addition/concatenation | `10 + 20`, `"a" + "b"`, `[1] + [2]` |
 | `-`        | Subtraction/negative   | `10 - 20`, `-(10, 20)` |
 | `<<`       | Bitwise left shift     | `10 << 1`              |
 | `>>`       | Bitwise right shift    | `10 >> 1`              |
@@ -441,6 +441,30 @@ Ranges can also be assigned, in which case they materialize into a vector with t
 ```cpp
 const v = [1 .. 5]            // vector<i32> [1, 2, 3, 4]
 ```
+
+### Concatenation
+The `+` operator concatenates strings, arrays, vectors and maps:
+
+```cpp
+const a = "Hello" + ", " + "World"  // "Hello, World"
+const b = [1, 2] + [3, 4]           // [1, 2, 3, 4]
+const c = [1, 2] + [0.5]            // vector<f64> [1, 2, 0.5]
+```
+
+Concatenating arrays and vectors always produces a vector. When the element types of the operands are different numeric types, the most expressive type is used. A collection literal on the right side takes the element type of the left side, so `items + [1]` has the same type as `items`. Concatenating maps produces a map with the elements of both maps, where elements of the right side overwrite elements on the left side with the same key. Both operands must be strings, collections or maps: `"a" + 10` and `[1, 2] + 3` are errors.
+
+### Slicing
+A slice selects a range of elements from an array or vector, and produces a new vector. Slices use the same syntax as ranges, where the end of the range is exclusive. The start and end of the slice can be omitted:
+
+```cpp
+const v = [10, 20, 30, 40]
+const a = v[1..3]  // [20, 30]
+const b = v[..2]   // [10, 20]
+const c = v[2..]   // [30, 40]
+const d = v[..]    // [10, 20, 30, 40]
+```
+
+A slice that is out of range, has a negative start, or has an end that is smaller than its start is an error.
 
 When assigning variables to elements in a composite initializer, applications can use the following shorthand notation if the variable names are the same as the member name of the element:
 
@@ -1272,9 +1296,30 @@ const i = m.reduce((r, key, el) -> { r + key * el }) // 50
 | `any`        | optional, `(el)` or `(index/key, el)`   | Whether the lambda returns `true` for any element. Without a lambda, the collection must contain `bool` values. Returns `false` for an empty collection. |
 | `all`        | optional, `(el)` or `(index/key, el)`   | Whether the lambda returns `true` for all elements. Without a lambda, the collection must contain `bool` values. Returns `true` for an empty collection. |
 
+| `sort`       | optional, `(el)` or `(index, el)`       | Vector with the elements sorted in ascending order of the element, or of the lambda result. The sort is stable. Only available on arrays and vectors. |
+
 `sum`, `min` and `max` require numeric values. When `map` is called on a map, the order of the resulting vector follows the iteration order of the map, which is not defined.
 
 The accumulator of `reduce` has the type of the element, unless an initial value of a different type is provided. A number literal as initial value keeps the type of the element.
+
+The following methods don't take a lambda:
+
+| **Method**     | **Result** |
+|----------------|------------|
+| `contains(v)`  | Whether the collection contains an element equal to `v`. For maps, whether the map contains key `v`. |
+| `index_of(v)`  | Index of the first element equal to `v`, or `-1`. Only available on arrays and vectors. |
+| `first()`      | First element. An empty collection is an error. Only available on arrays and vectors. |
+| `last()`       | Last element. An empty collection is an error. Only available on arrays and vectors. |
+| `reverse()`    | Vector with the elements in reverse order. Only available on arrays and vectors. |
+
+```cpp
+const v = [3, 1, 2]
+const a = v.sort()                          // [1, 2, 3]
+const b = v.contains(2)                     // true
+const c = v.index_of(2)                     // 2
+const d = v.reverse()                       // [2, 1, 3]
+const e = items.sort((el) -> { el.height }) // sort by member
+```
 
 ### Doc
 The doc module is available when Flecs is built with the `FLECS_DOC` addon (enabled by default). The following table lists the doc methods on the `flecs.meta.entity` type:
@@ -1827,7 +1872,52 @@ async {
 }
 ```
 
-Indices are evaluated before the assigned value. Assigning to an index that is out of range is a script error and doesn't change the variable. A write to an exported or template mut variable notifies everything that reads the variable, as if the entire variable was assigned. Compound assignments behave like the long form, so `v[f()] += 1` evaluates `f()` twice, just like `v[f()] = v[f()] + 1`. Elements can't be added to a vector with an index assignment.
+Indices are evaluated before the assigned value. Assigning to an index that is out of range is a script error and doesn't change the variable. A write to an exported or template mut variable notifies everything that reads the variable, as if the entire variable was assigned. Compound assignments behave like the long form, so `v[f()] += 1` evaluates `f()` twice, just like `v[f()] = v[f()] + 1`. Elements can't be added to a vector with an index assignment. The exception is `+=` on a vector, which appends the elements of the right side to the vector in place and evaluates the indices of the target once:
+
+```cpp
+export mut items: i32[] = []
+
+async {
+  items += [1, 2]  // [1, 2]
+  items += items   // [1, 2, 1, 2]
+}
+```
+
+A slice of an array or vector can be assigned, which replaces the elements in the slice. For vectors the assigned value can have any number of elements, which makes it possible to insert and remove elements. For arrays the number of elements must be equal to the size of the slice. The slice must be the last element of the target:
+
+```cpp
+export mut v: i32[] = [1, 2, 3, 4]
+
+async {
+  v[1..3] = [7, 8, 9]  // [1, 7, 8, 9, 4]
+  v[1..1] = [5]        // insert: [1, 5, 7, 8, 9, 4]
+  v[0..2] = []         // remove: [7, 8, 9, 4]
+  v[..] = []           // clear:  []
+}
+```
+
+Vectors and maps also have methods that modify them in place. These methods follow the same rules as assignments: they can only be called on mut variables, from async blocks and functions, and they notify readers of exported and template mut variables. The target can be any combination of members and indices, like `ships[2].cargo.push(item)`:
+
+| **Method**             | **Description** |
+|------------------------|-----------------|
+| `push(v, ...)`         | Appends one or more elements to a vector. |
+| `pop()`                | Removes the last element of a vector and returns it. Popping from an empty vector is an error. |
+| `insert(i, v, ...)`    | Inserts one or more elements at index `i` of a vector. `i` can be equal to the number of elements. |
+| `remove(i)`            | Removes the element at index `i` of a vector, or the element with key `i` from a map. Removing a key that is not in a map does nothing. |
+| `clear()`              | Removes all elements from a vector or map. |
+
+```cpp
+export mut stack: i32[] = []
+
+async {
+  stack.push(1, 2, 3)
+  const top = stack.pop()  // 3
+  stack.insert(0, top)     // [3, 1, 2]
+  stack.remove(1)          // [3, 2]
+}
+```
+
+Only `pop` returns a value. Arrays can't be modified with these methods, since they have a fixed size. An index that is out of range is a script error and doesn't change the variable.
 
 Assignments can also target a component of an entity, using the same syntax as a component value expression (see [Component values](#component-values)). The entity can be an entity name or a variable of type `entity`, and can be followed by any combination of members and indices:
 

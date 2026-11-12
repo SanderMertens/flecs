@@ -560,18 +560,58 @@ static const char* flecs_script_parse_rhs(
 
             switch(oper) {
             case EcsTokBracketOpen: {
-                ecs_expr_element_t *result = flecs_expr_element(parser);
-                result->left = *out;
-                
-                *out = (ecs_expr_node_t*)result;
+                const char *node_pos = parser->pos;
+                ecs_expr_node_t *index = NULL;
+                bool is_slice = false;
 
-                pos = flecs_script_parse_expr(
-                    parser, pos, 0, &result->index);
-                if (!pos) {
-                    goto error;
+                LookAhead_1(EcsTokRange, {
+                    Consume();
+                    is_slice = true;
+                })
+
+                if (!is_slice) {
+                    pos = flecs_script_parse_expr(parser, pos, 0, &index);
+                    if (!pos) {
+                        goto error;
+                    }
+
+                    LookAhead_1(EcsTokRange, {
+                        Consume();
+                        is_slice = true;
+                    })
                 }
 
-                Parse_1(']', {});
+                if (!is_slice) {
+                    ecs_expr_element_t *result = flecs_expr_element(parser);
+                    result->node.pos = node_pos;
+                    result->left = *out;
+                    result->index = index;
+                    *out = (ecs_expr_node_t*)result;
+                    Parse_1(']', {});
+                    break;
+                }
+
+                ecs_expr_slice_t *result = flecs_expr_slice(parser);
+                result->node.pos = node_pos;
+                result->left = *out;
+                result->from = index;
+                *out = (ecs_expr_node_t*)result;
+
+                bool open_end = false;
+                LookAhead_1(']', {
+                    Consume();
+                    open_end = true;
+                })
+
+                if (!open_end) {
+                    pos = flecs_script_parse_expr(
+                        parser, pos, 0, &result->to);
+                    if (!pos) {
+                        goto error;
+                    }
+
+                    Parse_1(']', {});
+                }
 
                 break;
             }

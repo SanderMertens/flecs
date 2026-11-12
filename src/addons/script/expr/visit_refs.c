@@ -112,6 +112,20 @@ static int flecs_expr_ref_visit(
 
         return 0;
     }
+    case EcsExprMutate: {
+        ecs_expr_mutate_t *n = (ecs_expr_mutate_t*)node;
+        if (n->assign && n->assign->global) {
+            ecs_script_ref_t ref = {
+                .entity = n->assign->global,
+                .component = ecs_id(EcsScriptMutVar)
+            };
+            if (ctx->action(&ref, NULL, ctx->ctx)) {
+                return -1;
+            }
+        }
+
+        break;
+    }
     case EcsExprComponent:
     case EcsExprHas: {
         bool is_has = node->kind == EcsExprHas;

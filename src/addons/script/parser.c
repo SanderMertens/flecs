@@ -561,6 +561,7 @@ static const char* flecs_script_parse_compound_assign(
     binary->left = left;
     binary->operator = oper;
     stmt->expr = (ecs_expr_node_t*)binary;
+    stmt->compound = true;
 
     // value += expr\n
     Expr({
@@ -570,6 +571,71 @@ static const char* flecs_script_parse_compound_assign(
     })
 
     ParserEnd;
+}
+
+static bool flecs_script_is_index_call(
+    const char *pos)
+{
+    int32_t depth = 1;
+    char quote = 0;
+
+    do {
+        for (; pos[0] && depth; pos ++) {
+            if (quote) {
+                if (pos[0] == '\\' && pos[1]) {
+                    pos ++;
+                } else if (pos[0] == quote) {
+                    quote = 0;
+                }
+            } else if (pos[0] == '"' || pos[0] == '\'' || pos[0] == '`') {
+                quote = pos[0];
+            } else if (pos[0] == '[' || pos[0] == '(' || pos[0] == '{') {
+                depth ++;
+            } else if (pos[0] == ']' || pos[0] == ')' || pos[0] == '}') {
+                depth --;
+            }
+        }
+
+        if (depth) {
+            return false;
+        }
+
+        while (pos[0] == ' ' || pos[0] == '\t') {
+            pos ++;
+        }
+
+        if (pos[0] == '[') {
+            pos ++;
+            depth = 1;
+            continue;
+        }
+
+        if (pos[0] != '.') {
+            return false;
+        }
+
+        pos ++;
+        while (isalnum((unsigned char)pos[0]) || pos[0] == '_' ||
+            pos[0] == '.')
+        {
+            pos ++;
+        }
+
+        while (pos[0] == ' ' || pos[0] == '\t') {
+            pos ++;
+        }
+
+        if (pos[0] == '(') {
+            return true;
+        }
+
+        if (pos[0] != '[') {
+            return false;
+        }
+
+        pos ++;
+        depth = 1;
+    } while (true);
 }
 
 /* Parse assignment target after the first '[': value[expr].member[expr] */
@@ -592,10 +658,55 @@ static const char* flecs_script_parse_assign_target(
         ecs_os_zeromem(step);
 
         if (is_index) {
-            Expr({
-                step = ecs_vec_last_t(&stmt->steps, ecs_script_assign_step_t);
-                step->index = EXPR;
+            bool is_slice = false;
+            LookAhead_1(EcsTokRange, {
+                Consume();
+                is_slice = true;
             })
+
+            if (!is_slice) {
+                Expr({
+                    step = ecs_vec_last_t(
+                        &stmt->steps, ecs_script_assign_step_t);
+                    step->index = EXPR;
+                })
+
+                LookAhead_1(EcsTokRange, {
+                    Consume();
+                    is_slice = true;
+                })
+            }
+
+            if (is_slice) {
+                step = ecs_vec_last_t(&stmt->steps, ecs_script_assign_step_t);
+                step->is_slice = true;
+                stmt->slice = true;
+
+                bool open_end = false;
+                LookAhead_1(']', {
+                    Consume();
+                    open_end = true;
+                })
+
+                if (!open_end) {
+                    Expr({
+                        step = ecs_vec_last_t(
+                            &stmt->steps, ecs_script_assign_step_t);
+                        step->index_to = EXPR;
+                    })
+
+                    Parse_1(']', {});
+                }
+
+                LookAhead(
+                    case '[':
+                    case '.':
+                        Error("slice must be the last element of an "
+                            "assignment target");
+                )
+
+                EndOfRule;
+            }
 
             Parse_1(']', {});
         } else {
@@ -1651,6 +1762,10 @@ flagged_id: {
 // facade[0]
 identifier_index: {
     if (parser->async_scope) {
+        if (flecs_script_is_index_call(pos)) {
+            goto identifier_call;
+        }
+
         goto identifier_assign_target;
     }
 
