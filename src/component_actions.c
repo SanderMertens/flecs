@@ -336,7 +336,8 @@ static void flecs_actions_on_remove_intern(
     ecs_table_t *other_table,
     int32_t row,
     int32_t count,
-    const ecs_table_diff_t *diff)
+    const ecs_table_diff_t *diff,
+    ecs_flags32_t evt_flags)
 {
     const ecs_type_t *removed = &diff->removed;
     ecs_flags32_t diff_flags = diff->removed_flags;
@@ -357,7 +358,8 @@ static void flecs_actions_on_remove_intern(
             .other_table = other_table,
             .offset = row,
             .count = count,
-            .observable = world
+            .observable = world,
+            .flags = evt_flags
         });
     }
 
@@ -397,7 +399,7 @@ void flecs_actions_delete_tree(
 
     if (diff->removed_flags) {
         flecs_actions_on_remove_intern(
-            world, table, NULL, row, count, diff);
+            world, table, NULL, row, count, diff, EcsEventLifecycle);
     }
 }
 
@@ -438,7 +440,8 @@ void flecs_actions_move_remove(
     ecs_table_t *other_table,
     int32_t row,
     int32_t count,
-    const ecs_table_diff_t *diff)
+    const ecs_table_diff_t *diff,
+    ecs_flags32_t evt_flags)
 {
     ecs_assert(diff != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(other_table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -494,7 +497,7 @@ void flecs_actions_move_remove(
 
     if (diff_flags) {
         flecs_actions_on_remove_intern(
-            world, table, other_table, row, count, diff);
+            world, table, other_table, row, count, diff, evt_flags);
     }
 
 error:

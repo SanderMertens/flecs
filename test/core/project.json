@@ -2846,7 +2846,17 @@
                 "yield_existing",
                 "monitor_w_not_childof_wildcard",
                 "monitor_w_neq_name",
-                "monitor_w_parent_nonfragmenting_reparent"
+                "monitor_w_parent_nonfragmenting_reparent",
+                "not_only_new_empty",
+                "not_only_delete_empty",
+                "not_only_delete_w_component",
+                "not_only_add_component",
+                "not_only_new_child",
+                "not_only_delete_child",
+                "optional_only_new_empty",
+                "optional_only_delete_w_component",
+                "on_add_any_not_invoked_for_new_empty",
+                "on_remove_any_not_invoked_for_delete_empty"
             ]
         }, {
             "id": "Prefab",

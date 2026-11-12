@@ -1609,7 +1609,8 @@ void flecs_actions_move_remove(
     ecs_table_t *other_table,
     int32_t row,
     int32_t count,
-    const ecs_table_diff_t *diff);
+    const ecs_table_diff_t *diff,
+    ecs_flags32_t evt_flags);
 
 /* Run on_set actions. */
 void flecs_notify_on_set(
@@ -2206,6 +2207,16 @@ void flecs_emit(
     ecs_world_t *world,
     ecs_world_t *stage,
     ecs_event_desc_t *desc);
+
+bool flecs_lifecycle_observers_exist(
+    const ecs_world_t *world,
+    ecs_entity_t event);
+
+void flecs_emit_lifecycle(
+    ecs_world_t *world,
+    ecs_entity_t event,
+    ecs_table_t *table,
+    int32_t row);
 
 /* Default function to set in iter::next */
 bool flecs_default_next_callback(
@@ -6033,7 +6044,8 @@ static void flecs_actions_on_remove_intern(
     ecs_table_t *other_table,
     int32_t row,
     int32_t count,
-    const ecs_table_diff_t *diff)
+    const ecs_table_diff_t *diff,
+    ecs_flags32_t evt_flags)
 {
     const ecs_type_t *removed = &diff->removed;
     ecs_flags32_t diff_flags = diff->removed_flags;
@@ -6054,7 +6066,8 @@ static void flecs_actions_on_remove_intern(
             .other_table = other_table,
             .offset = row,
             .count = count,
-            .observable = world
+            .observable = world,
+            .flags = evt_flags
         });
     }
 
@@ -6094,7 +6107,7 @@ void flecs_actions_delete_tree(
 
     if (diff->removed_flags) {
         flecs_actions_on_remove_intern(
-            world, table, NULL, row, count, diff);
+            world, table, NULL, row, count, diff, EcsEventLifecycle);
     }
 }
 
@@ -6135,7 +6148,8 @@ void flecs_actions_move_remove(
     ecs_table_t *other_table,
     int32_t row,
     int32_t count,
-    const ecs_table_diff_t *diff)
+    const ecs_table_diff_t *diff,
+    ecs_flags32_t evt_flags)
 {
     ecs_assert(diff != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(other_table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -6191,7 +6205,7 @@ void flecs_actions_move_remove(
 
     if (diff_flags) {
         flecs_actions_on_remove_intern(
-            world, table, other_table, row, count, diff);
+            world, table, other_table, row, count, diff, evt_flags);
     }
 
 error:
@@ -6882,7 +6896,7 @@ static void flecs_move_entity(
     ecs_assert(record->table == src_table, ECS_INTERNAL_ERROR, NULL);
 
     /* Invoke remove actions for removed components */
-    flecs_actions_move_remove(world, src_table, dst_table, src_row, 1, diff);
+    flecs_actions_move_remove(world, src_table, dst_table, src_row, 1, diff, 0);
 
     /* Remove actions can delete entities from the source table, which can
      * move the entity to a different row. */
@@ -6946,7 +6960,7 @@ void flecs_commit(
 
         if (diff->removed_flags & EcsTableEdgeDontFragment) {
             flecs_actions_move_remove(world, src_table, src_table,
-                ECS_RECORD_TO_ROW(record->row), 1, diff);
+                ECS_RECORD_TO_ROW(record->row), 1, diff, 0);
         }
 
         flecs_journal_end();
@@ -7376,6 +7390,13 @@ void flecs_add_to_root_table(
     flecs_table_append(world, &world->store.root, e, false, false);
     r->table = &world->store.root;
     r->row = ECS_ROW_TO_RECORD(row, r->row & ECS_ROW_FLAGS_MASK);
+
+    if (flecs_lifecycle_observers_exist(world, EcsOnAdd)) {
+        ecs_stage_t *stage = world->stages[0];
+        flecs_commands_begin(world, stage);
+        flecs_emit_lifecycle(world, EcsOnAdd, &world->store.root, row);
+        flecs_commands_end(world, stage);
+    }
 
     flecs_journal(world, EcsJournalNew, e, 0, 0);
 }
@@ -8097,8 +8118,13 @@ void ecs_delete(
                 .removed_flags = table->flags & EcsTableRemoveEdgeFlags
             };
 
+            if (!table->type.count) {
+                flecs_emit_lifecycle(world, EcsOnRemove, table,
+                    ECS_RECORD_TO_ROW(r->row));
+            }
+
             flecs_actions_move_remove(world, table, &world->store.root,
-                ECS_RECORD_TO_ROW(r->row), 1, &diff);
+                ECS_RECORD_TO_ROW(r->row), 1, &diff, EcsEventLifecycle);
             flecs_entity_remove_non_fragmenting(world, entity, r);
             flecs_table_delete(world, table, ECS_RECORD_TO_ROW(r->row), true);
 
@@ -13346,6 +13372,37 @@ static void flecs_emit_on_set_for_override_on_remove(
     }
 }
 
+bool flecs_lifecycle_observers_exist(
+    const ecs_world_t *world,
+    ecs_entity_t event)
+{
+    const ecs_event_record_t *er = flecs_event_record_get(
+        &world->observable, event);
+    return er && er->any;
+}
+
+void flecs_emit_lifecycle(
+    ecs_world_t *world,
+    ecs_entity_t event,
+    ecs_table_t *table,
+    int32_t row)
+{
+    if (!flecs_lifecycle_observers_exist(world, event)) {
+        return;
+    }
+
+    ecs_id_t any = EcsAny;
+    flecs_emit(world, world, &(ecs_event_desc_t){
+        .event = event,
+        .ids = &(ecs_type_t){ .count = 1, .array = &any },
+        .table = table,
+        .offset = row,
+        .count = 1,
+        .observable = world,
+        .flags = EcsEventLifecycle
+    });
+}
+
 /* The emit function is responsible for finding and invoking the observers 
  * matching the emitted event. The function is also capable of forwarding events
  * for newly reachable ids (after adding a relationship) and propagating events
@@ -14107,6 +14164,22 @@ static void flecs_observer_invoke(
     }
 }
 
+static void flecs_multi_observer_builtin_run(ecs_iter_t *it);
+static void flecs_multi_observer_any_run(ecs_iter_t *it);
+
+static bool flecs_observer_is_monitor_child(
+    const ecs_observer_t *o)
+{
+    if (o->callback != flecs_multi_observer_builtin_run &&
+        o->callback != flecs_multi_observer_any_run)
+    {
+        return false;
+    }
+
+    const ecs_observer_t *parent = o->ctx;
+    return (flecs_observer_impl(parent)->flags & EcsObserverIsMonitor) != 0;
+}
+
 static void flecs_uni_observer_invoke(
     ecs_world_t *world,
     ecs_observer_t *o,
@@ -14115,6 +14188,12 @@ static void flecs_uni_observer_invoke(
     ecs_entity_t trav)
 {
     if (flecs_ignore_observer(o, table)) {
+        return;
+    }
+
+    if ((it->flags & EcsEventLifecycle) && !table->type.count &&
+        !flecs_observer_is_monitor_child(o))
+    {
         return;
     }
 
@@ -14397,8 +14476,9 @@ static void flecs_multi_observer_invoke_fixed_src(
     }
 }
 
-static void flecs_multi_observer_invoke(
-    ecs_iter_t *it) 
+static void flecs_multi_observer_invoke_intern(
+    ecs_iter_t *it,
+    bool any) 
 {
     ecs_observer_t *o = it->ctx;
     flecs_poly_assert(o, ecs_observer_t);
@@ -14418,8 +14498,8 @@ static void flecs_multi_observer_invoke(
         return;
     }
 
-    bool is_not = flecs_observer_term_is_not(term);
-    if (!is_not && !ecs_term_match_this(term) &&
+    bool is_not = !any && flecs_observer_term_is_not(term);
+    if (!any && !is_not && !ecs_term_match_this(term) &&
         (o->query->flags & EcsQueryMatchThis))
     {
         flecs_multi_observer_invoke_fixed_src(o, it);
@@ -14428,8 +14508,15 @@ static void flecs_multi_observer_invoke(
 
     ecs_table_t *table = it->table;
     ecs_table_t *prev_table = it->other_table;
+    bool is_monitor = (impl->flags & EcsObserverIsMonitor) != 0;
+    bool no_other = !it->other_table || (it->flags & EcsEventLifecycle);
 
     if (is_not) {
+        if (is_monitor && no_other) {
+            o->query->eval_count --;
+            return;
+        }
+
         table = it->other_table;
         prev_table = it->table;
     }
@@ -14486,7 +14573,7 @@ static void flecs_multi_observer_invoke(
     if (match) {
         /* Monitor observers only invoke when the query matches for the first
          * time with an entity */
-        if (impl->flags & EcsObserverIsMonitor) {
+        if (is_monitor && !no_other) {
             ecs_iter_t table_it;
             ecs_table_range_t prev_range = { .table = prev_table };
             if (flecs_observer_query_has_range(
@@ -14516,6 +14603,18 @@ static void flecs_multi_observer_invoke(
 
 done:
     return;
+}
+
+static void flecs_multi_observer_invoke(
+    ecs_iter_t *it)
+{
+    flecs_multi_observer_invoke_intern(it, false);
+}
+
+static void flecs_multi_observer_invoke_any(
+    ecs_iter_t *it)
+{
+    flecs_multi_observer_invoke_intern(it, true);
 }
 
 static void flecs_multi_observer_invoke_no_query(
@@ -14582,6 +14681,24 @@ static void flecs_multi_observer_builtin_run(ecs_iter_t *it) {
     }
 
     flecs_multi_observer_invoke(it);
+}
+
+static void flecs_multi_observer_any_run(ecs_iter_t *it) {
+    ecs_observer_t *o = it->ctx;
+    ecs_run_action_t run = o->run;
+
+    if (run) {
+        if (flecs_observer_impl(o)->flags & EcsObserverBypassQuery) {
+            it->next = flecs_default_next_callback;
+            it->callback = flecs_multi_observer_invoke_any;
+            it->interrupted_by = 0;
+            it->run_ctx = o->run_ctx;
+            run(it);
+            return;
+        }
+    }
+
+    flecs_multi_observer_invoke_any(it);
 }
 
 static void flecs_observer_yield_existing(
@@ -14745,11 +14862,15 @@ static int flecs_multi_observer_init(
 
     int i, term_count = query->term_count;
     bool optional_only = query->flags & EcsQueryMatchThis;
+    bool not_only = optional_only && desc->events[0] == EcsMonitor;
     bool has_not = false;
     for (i = 0; i < term_count; i ++) {
         if (query->terms[i].oper != EcsOptional) {
             if (ecs_term_match_this(&query->terms[i])) {
                 optional_only = false;
+                if (!flecs_observer_term_is_not(&query->terms[i])) {
+                    not_only = false;
+                }
             }
         }
 
@@ -14880,6 +15001,29 @@ static int flecs_multi_observer_init(
 
         if (optional_only) {
             break;
+        }
+    }
+
+    if (not_only && !optional_only) {
+        int32_t pivot = 0;
+        for (i = 0; i < term_count; i ++) {
+            if (ecs_term_match_this(&query->terms[i])) {
+                pivot = i;
+                break;
+            }
+        }
+
+        ecs_term_t *term = &child_desc.query.terms[0];
+        child_desc.term_index_ = query->terms[pivot].field_index;
+        child_desc.callback = flecs_multi_observer_any_run;
+        ecs_os_zeromem(term);
+        term->id = EcsAny;
+        term->first.id = EcsAny;
+        term->src.id = EcsThis | EcsIsVariable | EcsSelf;
+        term->inout = EcsInOutNone;
+
+        if (flecs_observer_add_child(world, o, &child_desc)) {
+            goto error;
         }
     }
 
@@ -15937,7 +16081,7 @@ static void flecs_remove_from_table(
                 .removed_flags = removed_flags
             };
 
-            flecs_actions_move_remove(world, table, dst_table, 0, table_count, &diff);
+            flecs_actions_move_remove(world, table, dst_table, 0, table_count, &diff, 0);
             ecs_log_pop_3();
         }
 
@@ -29962,7 +30106,8 @@ static void flecs_table_notify_on_remove(
         ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
         diff.removed = table->type;
         diff.removed_flags = table->flags & EcsTableRemoveEdgeFlags;
-        flecs_actions_move_remove(world, table, &world->store.root, 0, count, &diff);
+        flecs_actions_move_remove(world, table, &world->store.root, 0, count, &diff,
+            EcsEventLifecycle);
     }
 }
 

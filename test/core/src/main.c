@@ -2770,6 +2770,16 @@ void Monitor_yield_existing(void);
 void Monitor_monitor_w_not_childof_wildcard(void);
 void Monitor_monitor_w_neq_name(void);
 void Monitor_monitor_w_parent_nonfragmenting_reparent(void);
+void Monitor_not_only_new_empty(void);
+void Monitor_not_only_delete_empty(void);
+void Monitor_not_only_delete_w_component(void);
+void Monitor_not_only_add_component(void);
+void Monitor_not_only_new_child(void);
+void Monitor_not_only_delete_child(void);
+void Monitor_optional_only_new_empty(void);
+void Monitor_optional_only_delete_w_component(void);
+void Monitor_on_add_any_not_invoked_for_new_empty(void);
+void Monitor_on_remove_any_not_invoked_for_delete_empty(void);
 
 // Testsuite 'Prefab'
 void Prefab_setup(void);
@@ -14599,6 +14609,46 @@ bake_test_case Monitor_testcases[] = {
     {
         "monitor_w_parent_nonfragmenting_reparent",
         Monitor_monitor_w_parent_nonfragmenting_reparent
+    },
+    {
+        "not_only_new_empty",
+        Monitor_not_only_new_empty
+    },
+    {
+        "not_only_delete_empty",
+        Monitor_not_only_delete_empty
+    },
+    {
+        "not_only_delete_w_component",
+        Monitor_not_only_delete_w_component
+    },
+    {
+        "not_only_add_component",
+        Monitor_not_only_add_component
+    },
+    {
+        "not_only_new_child",
+        Monitor_not_only_new_child
+    },
+    {
+        "not_only_delete_child",
+        Monitor_not_only_delete_child
+    },
+    {
+        "optional_only_new_empty",
+        Monitor_optional_only_new_empty
+    },
+    {
+        "optional_only_delete_w_component",
+        Monitor_optional_only_delete_w_component
+    },
+    {
+        "on_add_any_not_invoked_for_new_empty",
+        Monitor_on_add_any_not_invoked_for_new_empty
+    },
+    {
+        "on_remove_any_not_invoked_for_delete_empty",
+        Monitor_on_remove_any_not_invoked_for_delete_empty
     }
 };
 
@@ -18719,7 +18769,7 @@ static bake_test_suite suites[] = {
         "Monitor",
         NULL,
         NULL,
-        21,
+        31,
         Monitor_testcases
     },
     {

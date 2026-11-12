@@ -11312,3 +11312,48 @@ void Reactivity_query_bind_recursive_template(void) {
 
     ecs_fini(world);
 }
+
+static int32_t query_fini_tag_added = 0;
+static bool query_fini_started = false;
+
+static void Reactivity_on_add_tag_at_fini(ecs_iter_t *it) {
+    if (query_fini_started) {
+        query_fini_tag_added += it->count;
+    }
+}
+
+void Reactivity_query_no_update_at_fini(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity(world, { .name = "a" });
+    ecs_entity(world, { .name = "b" });
+
+    query_fini_tag_added = 0;
+    query_fini_started = false;
+    ecs_observer(world, {
+        .query.terms = {{ .id = tag }},
+        .events = { EcsOnAdd },
+        .callback = Reactivity_on_add_tag_at_fini
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "flecs.main" }),
+        .code =
+            HEAD "query roots { !(flecs.core.ChildOf, *) }"
+            LINE "out {"
+            LINE "  for e in roots {"
+            LINE "    \"x_{e}\" { Tag }"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "out.x_a") != 0);
+    test_assert(ecs_lookup(world, "out.x_b") != 0);
+
+    query_fini_started = true;
+    ecs_fini(world);
+
+    test_int(query_fini_tag_added, 0);
+}

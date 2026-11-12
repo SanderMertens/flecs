@@ -164,6 +164,7 @@ extern "C" {
 
 #define EcsEventTableOnly              (1u << 20u) /* Table event (no data, same as iter flags). */
 #define EcsEventNoOnSet                (1u << 16u) /* Don't emit OnSet for inherited IDs. */
+#define EcsEventLifecycle              (1u << 23u)
 
 
 ////////////////////////////////////////////////////////////////////////////////

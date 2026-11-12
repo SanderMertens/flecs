@@ -937,3 +937,263 @@ void Monitor_monitor_w_parent_nonfragmenting_reparent(void) {
 
     ecs_fini(world);
 }
+
+void Monitor_not_only_new_empty(void) {
+    ecs_world_t *world = ecs_mini();
+
+    MonitorEvents ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_pair(EcsChildOf, EcsWildcard), .oper = EcsNot }
+        },
+        .events = { EcsMonitor },
+        .callback = Monitor_record_events,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world);
+    test_int(ctx.count, 1);
+    test_uint(ctx.events[0], EcsOnAdd);
+    test_uint(ctx.entities[0], e);
+
+    ecs_delete(world, o);
+
+    ecs_fini(world);
+}
+
+void Monitor_not_only_delete_empty(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new(world);
+
+    MonitorEvents ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_pair(EcsChildOf, EcsWildcard), .oper = EcsNot }
+        },
+        .events = { EcsMonitor },
+        .callback = Monitor_record_events,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_delete(world, e);
+    test_int(ctx.count, 1);
+    test_uint(ctx.events[0], EcsOnRemove);
+    test_uint(ctx.entities[0], e);
+
+    ecs_delete(world, o);
+
+    ecs_fini(world);
+}
+
+void Monitor_not_only_delete_w_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new_w(world, Tag);
+
+    MonitorEvents ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_pair(EcsChildOf, EcsWildcard), .oper = EcsNot }
+        },
+        .events = { EcsMonitor },
+        .callback = Monitor_record_events,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_delete(world, e);
+    test_int(ctx.count, 1);
+    test_uint(ctx.events[0], EcsOnRemove);
+    test_uint(ctx.entities[0], e);
+
+    ecs_delete(world, o);
+
+    ecs_fini(world);
+}
+
+void Monitor_not_only_add_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new(world);
+
+    MonitorEvents ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_pair(EcsChildOf, EcsWildcard), .oper = EcsNot }
+        },
+        .events = { EcsMonitor },
+        .callback = Monitor_record_events,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_add(world, e, Tag);
+    test_int(ctx.count, 0);
+
+    ecs_remove(world, e, Tag);
+    test_int(ctx.count, 0);
+
+    ecs_delete(world, o);
+
+    ecs_fini(world);
+}
+
+void Monitor_not_only_new_child(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+
+    MonitorEvents ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_pair(EcsChildOf, EcsWildcard), .oper = EcsNot }
+        },
+        .events = { EcsMonitor },
+        .callback = Monitor_record_events,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_new_w_pair(world, EcsChildOf, parent);
+    test_int(ctx.count, 0);
+
+    ecs_delete(world, o);
+
+    ecs_fini(world);
+}
+
+void Monitor_not_only_delete_child(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    MonitorEvents ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_pair(EcsChildOf, EcsWildcard), .oper = EcsNot }
+        },
+        .events = { EcsMonitor },
+        .callback = Monitor_record_events,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_delete(world, child);
+    test_int(ctx.count, 0);
+
+    ecs_delete(world, parent);
+    test_int(ctx.count, 1);
+    test_uint(ctx.events[0], EcsOnRemove);
+    test_uint(ctx.entities[0], parent);
+
+    ecs_delete(world, o);
+
+    ecs_fini(world);
+}
+
+void Monitor_optional_only_new_empty(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    MonitorEvents ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = Tag, .oper = EcsOptional }
+        },
+        .events = { EcsMonitor },
+        .callback = Monitor_record_events,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world);
+    test_int(ctx.count, 1);
+    test_uint(ctx.events[0], EcsOnAdd);
+    test_uint(ctx.entities[0], e);
+
+    ecs_add(world, e, Tag);
+    test_int(ctx.count, 1);
+
+    ecs_delete(world, o);
+
+    ecs_fini(world);
+}
+
+void Monitor_optional_only_delete_w_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new_w(world, Tag);
+
+    MonitorEvents ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = Tag, .oper = EcsOptional }
+        },
+        .events = { EcsMonitor },
+        .callback = Monitor_record_events,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_delete(world, e);
+    test_int(ctx.count, 1);
+    test_uint(ctx.events[0], EcsOnRemove);
+    test_uint(ctx.entities[0], e);
+
+    ecs_delete(world, o);
+
+    ecs_fini(world);
+}
+
+void Monitor_on_add_any_not_invoked_for_new_empty(void) {
+    ecs_world_t *world = ecs_mini();
+
+    MonitorEvents ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ .id = EcsAny }},
+        .events = { EcsOnAdd },
+        .callback = Monitor_record_events,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_new(world);
+    test_int(ctx.count, 0);
+
+    ecs_delete(world, o);
+
+    ecs_fini(world);
+}
+
+void Monitor_on_remove_any_not_invoked_for_delete_empty(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new(world);
+
+    MonitorEvents ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ .id = EcsAny }},
+        .events = { EcsOnRemove },
+        .callback = Monitor_record_events,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_delete(world, e);
+    test_int(ctx.count, 0);
+
+    ecs_delete(world, o);
+
+    ecs_fini(world);
+}

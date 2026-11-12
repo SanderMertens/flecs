@@ -170,7 +170,7 @@ static void flecs_move_entity(
     ecs_assert(record->table == src_table, ECS_INTERNAL_ERROR, NULL);
 
     /* Invoke remove actions for removed components */
-    flecs_actions_move_remove(world, src_table, dst_table, src_row, 1, diff);
+    flecs_actions_move_remove(world, src_table, dst_table, src_row, 1, diff, 0);
 
     /* Remove actions can delete entities from the source table, which can
      * move the entity to a different row. */
@@ -234,7 +234,7 @@ void flecs_commit(
 
         if (diff->removed_flags & EcsTableEdgeDontFragment) {
             flecs_actions_move_remove(world, src_table, src_table,
-                ECS_RECORD_TO_ROW(record->row), 1, diff);
+                ECS_RECORD_TO_ROW(record->row), 1, diff, 0);
         }
 
         flecs_journal_end();
@@ -664,6 +664,13 @@ void flecs_add_to_root_table(
     flecs_table_append(world, &world->store.root, e, false, false);
     r->table = &world->store.root;
     r->row = ECS_ROW_TO_RECORD(row, r->row & ECS_ROW_FLAGS_MASK);
+
+    if (flecs_lifecycle_observers_exist(world, EcsOnAdd)) {
+        ecs_stage_t *stage = world->stages[0];
+        flecs_commands_begin(world, stage);
+        flecs_emit_lifecycle(world, EcsOnAdd, &world->store.root, row);
+        flecs_commands_end(world, stage);
+    }
 
     flecs_journal(world, EcsJournalNew, e, 0, 0);
 }
@@ -1385,8 +1392,13 @@ void ecs_delete(
                 .removed_flags = table->flags & EcsTableRemoveEdgeFlags
             };
 
+            if (!table->type.count) {
+                flecs_emit_lifecycle(world, EcsOnRemove, table,
+                    ECS_RECORD_TO_ROW(r->row));
+            }
+
             flecs_actions_move_remove(world, table, &world->store.root,
-                ECS_RECORD_TO_ROW(r->row), 1, &diff);
+                ECS_RECORD_TO_ROW(r->row), 1, &diff, EcsEventLifecycle);
             flecs_entity_remove_non_fragmenting(world, entity, r);
             flecs_table_delete(world, table, ECS_RECORD_TO_ROW(r->row), true);
 
