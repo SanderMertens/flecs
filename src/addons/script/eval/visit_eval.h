@@ -301,6 +301,7 @@ int flecs_script_eval_expr(
 int flecs_script_assign_value(
     ecs_script_eval_visitor_t *v,
     ecs_script_assign_t *node,
+    ecs_entity_t entity,
     const int64_t *indices,
     const void *src);
 

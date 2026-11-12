@@ -1779,6 +1779,24 @@ async {
 
 Indices are evaluated before the assigned value. Assigning to an index that is out of range is a script error and doesn't change the variable. A write to an exported or template mut variable notifies everything that reads the variable, as if the entire variable was assigned. Compound assignments behave like the long form, so `v[f()] += 1` evaluates `f()` twice, just like `v[f()] = v[f()] + 1`. Elements can't be added to a vector with an index assignment.
 
+Assignments can also target a component of an entity, using the same syntax as a component value expression (see [Component values](#component-values)). The entity can be an entity name or a variable of type `entity`, and can be followed by any combination of members and indices:
+
+```cpp
+dozer_0 { Position: {1, 2} }
+
+fn move(e: entity, x: f32) {
+  e[Position].x = x
+}
+
+async {
+  dozer_0[Position].x = 10
+  dozer_0[Position].y += 1
+  move(dozer_0, 20)
+}
+```
+
+A component assignment sets the component with the modified value, which notifies everything that observes the component. If the component is inherited, the entity gets its own copy. Assigning a component that the entity doesn't have is a script error.
+
 Async blocks can declare local mut variables. A local mut variable belongs to a single task and keeps its value across `await`. It follows normal scoping rules, so a variable declared in a loop body is reset on each iteration. Local mut variables are not reactive: writing one doesn't notify anything.
 
 ```cpp
@@ -1813,7 +1831,7 @@ async {
 Delays use scaled world time, so `ecs_set_time_scale` speeds up delays, and a time scale of 0 pauses them. `next_frame()` isn't affected by the time scale. Both functions are resolved by a system in the `EcsPreUpdate` phase of the default pipeline, and are not available in builds without the pipeline addon. Calling `ecs_script_tasks_progress` without `ecs_progress` doesn't advance time.
 
 ### Mutable functions
-A function that changes state is a mutable function. A function is mutable when it assigns an exported `mut` variable, emits an event, or calls another mutable function. Assigning local `mut` variables of the function does not make it mutable. Flecs determines whether a function is mutable from its body:
+A function that changes state is a mutable function. A function is mutable when it assigns an exported `mut` variable, assigns a component, emits an event, or calls another mutable function. Assigning local `mut` variables of the function does not make it mutable. Flecs determines whether a function is mutable from its body:
 
 ```cpp
 export mut alert_text: string = ""
@@ -2929,7 +2947,7 @@ template Button {
 
 Async blocks don't run immediately when the script runs or the template is instantiated. They start and resume during `ecs_progress`. Applications that don't use `ecs_progress` can run them with `ecs_script_tasks_progress`. An async block stops when it reaches the end, when its script is updated or deleted, or when the template instance is deleted. When a prop of the template instance changes, its async blocks restart from the beginning.
 
-Async blocks can't create entities or assign components. Instead they assign `mut` variables, and the rest of the script reacts to those changes (see [Reactivity](#reactivity)). Async blocks can contain `const` variables, `if`, `for`, `while`, `try`/`catch`, `await`, assignments and function calls. They can't be nested, and can't be placed inside an `if` or a regular entity scope.
+Async blocks can't create entities or add components. Instead they assign `mut` variables or components of existing entities, and the rest of the script reacts to those changes (see [Reactivity](#reactivity)). Async blocks can contain `const` variables, `if`, `for`, `while`, `try`/`catch`, `await`, assignments and function calls. They can't be nested, and can't be placed inside an `if` or a regular entity scope.
 
 ### Await
 The `await` keyword calls an async function and pauses the block until the function completes. An await can be used as a statement, or to store the result in a variable:

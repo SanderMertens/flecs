@@ -1450,6 +1450,14 @@ identifier_assign_target: {
         goto error;
     }
 
+    ecs_script_assign_step_t *first = ecs_vec_first(&stmt->steps);
+    if (first->index && first->index->kind == EcsExprIdentifier) {
+        stmt->entity = (ecs_expr_node_t*)flecs_expr_identifier(
+            parser, stmt->name);
+        stmt->entity->pos = target;
+        stmt->entity->end = target + ecs_os_strlen(stmt->name);
+    }
+
     Parse(
         // value[0] = expr\n
         case '=': {

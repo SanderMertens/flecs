@@ -7769,11 +7769,10 @@ void AsyncBlock_error_assign_target(void) {
         HEAD "export const x: i32[2] = {}\nasync { x[0] = 1 }",
         HEAD "async { y[0] = 1 }",
         HEAD "y {}\nasync { y.z = 1 }",
-        HEAD "struct Pos(x: i32)\ny { Pos: {0} }\nasync { y[Pos].x = 2 }",
         HEAD "export mut x: i32[2] = {}\nasync { x[0][0][0][0][0][0][0][0][0] = 1 }",
     };
 
-    for (int32_t i = 0; i < 14; i ++) {
+    for (int32_t i = 0; i < 13; i ++) {
         test_assert(ecs_script_run_w_desc(
             world, NULL, scripts[i], &ir_desc, NULL) != 0);
     }
@@ -9532,6 +9531,392 @@ void AsyncBlock_finished_block_keeps_resolved_block_ready(void) {
     test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "got")).ptr, 7);
     test_int(ecs_script_tasks_progress(world), 0);
     test_int(ab_cancel_count, 0);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_assign_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "e { Position: {1, 2} }"
+            LINE "async {"
+            LINE "  e[Position] = {3, 4}"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ab_Position *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_script_tasks_progress(world);
+
+    p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_assign_component_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "dozer_0 { Position: {1, 2} }"
+            LINE "async {"
+            LINE "  dozer_0[Position].x = 10"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "dozer_0");
+    test_assert(e != 0);
+
+    ecs_script_tasks_progress(world);
+
+    const ab_Position *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_compound_assign_component_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "e { Position: {1, 2} }"
+            LINE "async {"
+            LINE "  e[Position].x += 10"
+            LINE "  e[Position].y *= 3"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_script_tasks_progress(world);
+
+    const ab_Position *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_int(p->x, 11);
+    test_int(p->y, 6);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_assign_component_member_element(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t values = ecs_array(world, {
+        .type = ecs_id(ecs_i32_t), .count = 3 });
+    ecs_entity_t group = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Group" }),
+        .members = {{"values", values}}
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "e { Group: {[1, 2, 3]} }"
+            LINE "export mut idx: i32 = 2"
+            LINE "async {"
+            LINE "  e[Group].values[1] = 20"
+            LINE "  e[Group].values[idx] += 30"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_script_tasks_progress(world);
+
+    const int32_t *g = ecs_get_id(world, e, group);
+    test_assert(g != NULL);
+    test_int(g[0], 1);
+    test_int(g[1], 20);
+    test_int(g[2], 33);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_assign_component_from_entity_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "a { Position: {1, 2} }"
+            LINE "b { Position: {3, 4} }"
+            LINE "export mut target: entity = b"
+            LINE "async {"
+            LINE "  const t: entity = a"
+            LINE "  t[Position].x = 10"
+            LINE "  target[Position].y = 40"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    ecs_entity_t b = ecs_lookup(world, "b");
+    test_assert(a != 0);
+    test_assert(b != 0);
+
+    ecs_script_tasks_progress(world);
+
+    const ab_Position *p = ecs_get_id(world, a, position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 2);
+
+    p = ecs_get_id(world, b, position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_assign_component_this(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "template T {"
+            LINE "  async {"
+            LINE "    this[Position].x = 10"
+            LINE "  }"
+            LINE "}"
+            LINE "T e { Position: {1, 2} }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_script_tasks_progress(world);
+
+    const ab_Position *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_assign_component_inherited(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_add_pair(world, position, EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "prefab Base { Position: {1, 2} }"
+            LINE "e : Base {}"
+            LINE "async {"
+            LINE "  e[Position].x = 10"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t base = ecs_lookup(world, "Base");
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(base != 0);
+    test_assert(e != 0);
+    test_assert(!ecs_owns_id(world, e, position));
+
+    ecs_script_tasks_progress(world);
+
+    test_assert(ecs_owns_id(world, e, position));
+    const ab_Position *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 2);
+
+    p = ecs_get_id(world, base, position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_assign_component_notifies(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_set_id(world, a, position, sizeof(ab_Position), &(ab_Position){1, 2});
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "b { Position: {a[Position].x * 2, 0} }"
+            LINE "async {"
+            LINE "  a[Position].x = 10"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t b = ecs_lookup(world, "b");
+    test_assert(b != 0);
+
+    const ab_Position *p = ecs_get_id(world, b, position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+
+    ecs_script_tasks_progress(world);
+    ecs_progress(world, 0);
+
+    p = ecs_get_id(world, b, position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_assign_component_missing(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "e {}"
+            LINE "export mut after: i32 = 0"
+            LINE "async {"
+            LINE "  e[Position].x = 10"
+            LINE "  after = 1"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_script_tasks_progress(world);
+
+    test_assert(!ecs_has_id(world, e, position));
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "after")).ptr, 0);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_error_assign_component_unresolved(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    const char *scripts[] = {
+        HEAD "e {}\nasync { e[Foo].x = 1 }",
+        HEAD "Tag {}\ne { Tag }\nasync { e[Tag] = 1 }",
+        HEAD "struct Pos(x: i32)\ne { Pos: {0} }\nasync { e[Pos].z = 1 }",
+        HEAD "struct Pos(x: i32)\ne { Pos: {0} }\nasync { e[Pos].x = \"foo\" }",
+        HEAD "struct Pos(x: i32)\nexport mut v: i32 = 0\nasync { v[Pos].x = 1 }",
+    };
+
+    for (int32_t i = 0; i < 5; i ++) {
+        test_assert(ecs_script_run_w_desc(
+            world, NULL, scripts[i], &ir_desc, NULL) != 0);
+    }
 
     ecs_fini(world);
 }

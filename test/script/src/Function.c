@@ -3018,6 +3018,43 @@ void Function_assign_mut_var_is_mut(void) {
     ecs_fini(world);
 }
 
+void Function_assign_component_is_mut(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "e { Position: {1, 2} }"
+            LINE "fn move(t: entity, x: f32) { t[Position].x = x }"
+            LINE "async { move(e, 10) }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    const EcsScriptFunction *f = ecs_get(
+        world, ecs_lookup(world, "move"), EcsScriptFunction);
+    test_assert(f != NULL);
+    test_bool(f->is_mut, true);
+
+    ecs_script_tasks_progress(world);
+
+    const Position *p = ecs_get(world, ecs_lookup(world, "e"), Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
 void Function_call_mut_fn_is_mut(void) {
     ecs_world_t *world = ecs_init();
 

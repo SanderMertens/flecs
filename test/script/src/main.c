@@ -1187,6 +1187,16 @@ void AsyncBlock_declare_array_w_type(void);
 void AsyncBlock_struct_reset_w_empty_initializer(void);
 void AsyncBlock_error_assign_target(void);
 void AsyncBlock_assign_template_and_parent_mut_member(void);
+void AsyncBlock_assign_component(void);
+void AsyncBlock_assign_component_member(void);
+void AsyncBlock_compound_assign_component_member(void);
+void AsyncBlock_assign_component_member_element(void);
+void AsyncBlock_assign_component_from_entity_var(void);
+void AsyncBlock_assign_component_this(void);
+void AsyncBlock_assign_component_inherited(void);
+void AsyncBlock_assign_component_notifies(void);
+void AsyncBlock_assign_component_missing(void);
+void AsyncBlock_error_assign_component_unresolved(void);
 void AsyncBlock_next_frame(void);
 void AsyncBlock_delay(void);
 void AsyncBlock_delay_large_step(void);
@@ -1474,6 +1484,7 @@ void Function_control_flow_w_return(void);
 void Function_return_local_from_if(void);
 void Function_read_mut_var_is_not_mut(void);
 void Function_assign_mut_var_is_mut(void);
+void Function_assign_component_is_mut(void);
 void Function_call_mut_fn_is_mut(void);
 void Function_emit_is_mut(void);
 void Function_no_return_type(void);
@@ -9236,6 +9247,46 @@ bake_test_case AsyncBlock_testcases[] = {
         AsyncBlock_assign_template_and_parent_mut_member
     },
     {
+        "assign_component",
+        AsyncBlock_assign_component
+    },
+    {
+        "assign_component_member",
+        AsyncBlock_assign_component_member
+    },
+    {
+        "compound_assign_component_member",
+        AsyncBlock_compound_assign_component_member
+    },
+    {
+        "assign_component_member_element",
+        AsyncBlock_assign_component_member_element
+    },
+    {
+        "assign_component_from_entity_var",
+        AsyncBlock_assign_component_from_entity_var
+    },
+    {
+        "assign_component_this",
+        AsyncBlock_assign_component_this
+    },
+    {
+        "assign_component_inherited",
+        AsyncBlock_assign_component_inherited
+    },
+    {
+        "assign_component_notifies",
+        AsyncBlock_assign_component_notifies
+    },
+    {
+        "assign_component_missing",
+        AsyncBlock_assign_component_missing
+    },
+    {
+        "error_assign_component_unresolved",
+        AsyncBlock_error_assign_component_unresolved
+    },
+    {
         "next_frame",
         AsyncBlock_next_frame
     },
@@ -10355,6 +10406,10 @@ bake_test_case Function_testcases[] = {
     {
         "assign_mut_var_is_mut",
         Function_assign_mut_var_is_mut
+    },
+    {
+        "assign_component_is_mut",
+        Function_assign_component_is_mut
     },
     {
         "call_mut_fn_is_mut",
@@ -22601,7 +22656,7 @@ static bake_test_suite suites[] = {
         "AsyncBlock",
         AsyncBlock_setup,
         NULL,
-        181,
+        191,
         AsyncBlock_testcases,
         1,
         AsyncBlock_params
@@ -22628,7 +22683,7 @@ static bake_test_suite suites[] = {
         "Function",
         Function_setup,
         NULL,
-        119,
+        120,
         Function_testcases,
         1,
         Function_params

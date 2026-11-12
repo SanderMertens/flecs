@@ -2298,7 +2298,7 @@ static void* flecs_script_assign_target(
     void *ptr = ECS_OFFSET(base, node->offset);
     ecs_script_assign_step_t *steps = ecs_vec_first(&node->steps);
     int32_t i, count = ecs_vec_count(&node->steps), index = 0;
-    for (i = 0; i < count; i ++) {
+    for (i = node->entity != NULL; i < count; i ++) {
         ecs_script_assign_step_t *step = &steps[i];
         if (step->member) {
             ptr = ECS_OFFSET(ptr, step->offset);
@@ -2330,6 +2330,7 @@ static void* flecs_script_assign_target(
 int flecs_script_assign_value(
     ecs_script_eval_visitor_t *v,
     ecs_script_assign_t *node,
+    ecs_entity_t entity,
     const int64_t *indices,
     const void *src)
 {
@@ -2381,7 +2382,25 @@ int flecs_script_assign_value(
     }
 
     ecs_entity_t instance = v->template_instance;
-    if (node->parent && instance && ecs_is_alive(world, instance)) {
+    if (node->entity) {
+        instance = entity;
+        if (!instance || !ecs_is_alive(world, instance)) {
+            flecs_script_eval_error(v, node,
+                "cannot assign to '%s': entity is not alive", node->name);
+            return -1;
+        }
+
+        if (!ecs_has_id(world, instance, node->component)) {
+            char *entity_str = ecs_get_path(world, instance);
+            char *component_str = ecs_get_path(world, node->component);
+            flecs_script_eval_error(v, node,
+                "cannot assign to '%s': entity '%s' does not have "
+                "component '%s'", node->name, entity_str, component_str);
+            ecs_os_free(entity_str);
+            ecs_os_free(component_str);
+            return -1;
+        }
+    } else if (node->parent && instance && ecs_is_alive(world, instance)) {
         instance = ecs_get_parent(world, instance);
     }
 
@@ -2427,10 +2446,22 @@ static FLECS_SCRIPT_NOINLINE int flecs_script_eval_assign(
     const ecs_type_info_t *ti = ecs_get_type_info(v->world, type);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_entity_t entity = 0;
+    if (node->entity) {
+        ecs_value_t entity_value = {
+            .type = ecs_id(ecs_entity_t), .ptr = &entity };
+        if (flecs_script_eval_expr(v, &node->entity, &entity_value)) {
+            flecs_script_eval_error(v, node,
+                "failed to evaluate entity for assignment to '%s'",
+                node->name);
+            return -1;
+        }
+    }
+
     int64_t indices[FLECS_SCRIPT_ASSIGN_INDEX_MAX];
     ecs_script_assign_step_t *steps = ecs_vec_first(&node->steps);
     int32_t i, count = ecs_vec_count(&node->steps), index_count = 0;
-    for (i = 0; i < count; i ++) {
+    for (i = node->entity != NULL; i < count; i ++) {
         if (steps[i].member) {
             continue;
         }
@@ -2456,7 +2487,8 @@ static FLECS_SCRIPT_NOINLINE int flecs_script_eval_assign(
             node->name);
         result = -1;
     } else {
-        result = flecs_script_assign_value(v, node, indices, value.ptr);
+        result = flecs_script_assign_value(
+            v, node, entity, indices, value.ptr);
     }
 
     if (ti->hooks.dtor) {

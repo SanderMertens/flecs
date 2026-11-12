@@ -1135,10 +1135,20 @@ static int flecs_ir_assign(
     const ecs_type_info_t *ti = ecs_get_type_info(v->world, node->eval_type);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_entity_t entity = 0;
+    if (node->entity && flecs_ir_value_to(vm,
+        flecs_ir_reg(vm, node->entity_reg), ecs_id(ecs_entity_t), &entity,
+        ecs_get_type_info(v->world, ecs_id(ecs_entity_t))))
+    {
+        flecs_ir_expr_error(vm, node->entity,
+            "failed to evaluate entity for assignment to '%s'", node->name);
+        return -1;
+    }
+
     int64_t indices[FLECS_SCRIPT_ASSIGN_INDEX_MAX];
     ecs_script_assign_step_t *steps = ecs_vec_first(&node->steps);
     int32_t i, count = ecs_vec_count(&node->steps), index_count = 0;
-    for (i = 0; i < count; i ++) {
+    for (i = node->entity != NULL; i < count; i ++) {
         if (!steps[i].member && flecs_ir_value_to(vm,
             flecs_ir_reg(vm, steps[i].reg), ecs_id(ecs_i64_t),
             &indices[index_count ++], ecs_get_type_info(
@@ -1166,7 +1176,7 @@ static int flecs_ir_assign(
         src = tmp;
     }
 
-    int result = flecs_script_assign_value(v, node, indices, src);
+    int result = flecs_script_assign_value(v, node, entity, indices, src);
     if (tmp) {
         ecs_ptr_free_w_type_info(v->world, ti, tmp);
     }
