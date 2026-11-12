@@ -360,15 +360,36 @@ void flecs_script_ref_enqueue(
     uint64_t input)
 {
     ecs_script_runtime_t *rt = flecs_script_runtime_get(world);
-    ecs_vec_append_t(NULL, &rt->pending, ecs_script_pending_t)[0] =
-        (ecs_script_pending_t){
-            .script = script,
-            .instance = instance,
-            .input = input,
-            .depth = rt->template_depth
-        };
+    ecs_script_pending_t entry = {
+        .script = script,
+        .instance = instance,
+        .input = input,
+        .depth = rt->template_depth
+    };
 
-    if (rt->pending_marker) {
+    uint64_t key_data[3] = {
+        script, instance, ((uint64_t)(uint32_t)entry.depth << 1) | (input != 0)
+    };
+    uint64_t key = flecs_hash(key_data, ECS_SIZEOF(key_data));
+    ecs_map_val_t *index = ecs_map_get(&rt->pending_index, key);
+    if (index) {
+        int32_t i = (int32_t)index[0];
+        ecs_script_pending_t *cur = ecs_vec_get_t(
+            &rt->pending, ecs_script_pending_t, i);
+        if (i >= rt->pending_next && cur->script == script &&
+            cur->instance == instance && cur->depth == entry.depth &&
+            (cur->input != 0) == (input != 0))
+        {
+            cur->input |= input;
+            return;
+        }
+    }
+
+    ecs_map_ensure(&rt->pending_index, key)[0] =
+        (ecs_map_val_t)ecs_vec_count(&rt->pending);
+    ecs_vec_append_t(NULL, &rt->pending, ecs_script_pending_t)[0] = entry;
+
+    if (rt->pending_marker || world->flush_depth) {
         return;
     }
 
@@ -388,7 +409,13 @@ static void flecs_script_on_update_event(
 
     ecs_script_runtime_t *rt = flecs_script_runtime_get(world);
     rt->pending_marker = false;
-    if (rt->pending_active) {
+}
+
+void flecs_script_flush_pending(
+    ecs_world_t *world)
+{
+    ecs_script_runtime_t *rt = world->stages[0]->runtime;
+    if (!rt || rt->pending_active || !ecs_vec_count(&rt->pending)) {
         return;
     }
 
@@ -398,10 +425,13 @@ static void flecs_script_on_update_event(
         ecs_script_pending_t p = ecs_vec_get_t(
             &rt->pending, ecs_script_pending_t, i)[0];
         rt->template_depth = p.depth;
+        rt->pending_next = i + 1;
         flecs_script_ref_dispatch(world, NULL, p.script, p.instance, p.input);
     }
 
     ecs_vec_clear(&rt->pending);
+    ecs_map_clear(&rt->pending_index);
+    rt->pending_next = 0;
     rt->pending_active = false;
     rt->template_depth = prev_depth;
 }

@@ -11803,3 +11803,53 @@ void Reactivity_template_for_query_anonymous_kept(void) {
 
     ecs_fini(world);
 }
+
+static int32_t batch_value_set = 0;
+
+static void Reactivity_on_set_batch_value(ecs_iter_t *it) {
+    batch_value_set += it->count;
+}
+
+void Reactivity_template_query_batch_single_update(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t value = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Value" }),
+        .members = {{"x", ecs_id(ecs_i32_t)}}
+    });
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+
+    batch_value_set = 0;
+    ecs_observer(world, {
+        .query.terms = {{ .id = value }},
+        .events = { EcsOnSet },
+        .callback = Reactivity_on_set_batch_value
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Rows {"
+            LINE "  prop target: entity = 0"
+            LINE "  query kids { (flecs.core.ChildOf, $target) }"
+            LINE "  for e in kids {"
+            LINE "    _ { Value: {1} }"
+            LINE "  }"
+            LINE "}"
+            LINE "inst { Rows: {target: parent} }"
+    });
+    test_assert(script != 0);
+    test_int(batch_value_set, 0);
+
+    ecs_readonly_begin(world, false);
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    for (int32_t i = 0; i < 10; i ++) {
+        ecs_new_w_pair(stage, EcsChildOf, parent);
+    }
+    ecs_readonly_end(world);
+
+    test_int(ecs_count_id(world, value), 10);
+    test_int(batch_value_set, 10);
+
+    ecs_fini(world);
+}

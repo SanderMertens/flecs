@@ -3939,6 +3939,11 @@ struct ecs_stage_t {
 #endif
 };
 
+#ifdef FLECS_SCRIPT
+void flecs_script_flush_pending(
+    ecs_world_t *world);
+#endif
+
 static inline
 bool flecs_commands_begin(
     ecs_world_t *world,
@@ -4087,6 +4092,8 @@ struct ecs_world_t {
 
     /* Unique id per generated event used to prevent duplicate notifications */
     int32_t event_id;
+
+    int32_t flush_depth;
 
     /* Array of table versions used with component refs to determine if the 
      * cached pointer is still valid. */
@@ -6985,6 +6992,7 @@ bool flecs_commands_flush(
         return false;
     }
     flecs_check_exclusive_world_access_write(world);
+    world->flush_depth ++;
     ecs_stage_t *dst_stage = world->stages[0];
     ecs_commands_t *root = commands;
     ecs_vec_t *queue;
@@ -7246,6 +7254,13 @@ next:
         flecs_table_diff_builder_fini(world, &diff);
         ecs_vec_fini_t(&world->allocator, &set_ids, ecs_id_t);
     }
+
+    world->flush_depth --;
+#ifdef FLECS_SCRIPT
+    if (!world->flush_depth) {
+        flecs_script_flush_pending(world);
+    }
+#endif
 
     return true;
 }
@@ -50313,6 +50328,8 @@ struct ecs_script_runtime_t {
      * the command queue is flushed. One marker event is enqueued per flush
      * instead of one event per update. */
     ecs_vec_t pending;
+    ecs_map_t pending_index;
+    int32_t pending_next;
     bool pending_marker;
     bool pending_active;
 
@@ -97445,6 +97462,7 @@ ecs_script_runtime_t* flecs_script_runtime_new_shared(
     ecs_vec_init_t(NULL, &r->ir_vms, ecs_script_ir_vm_t*, 0);
     ecs_vec_init_t(NULL, &r->call_runtimes, ecs_script_runtime_t*, 0);
     ecs_vec_init_t(NULL, &r->pending, ecs_script_pending_t, 0);
+    ecs_map_init(&r->pending_index, NULL);
     ecs_vec_init_t(NULL, &r->async_tasks, void*, 0);
     ecs_vec_init_t(NULL, &r->async_ready, uint64_t, 0);
     return r;
@@ -97487,6 +97505,7 @@ void ecs_script_runtime_free(
 
     flecs_script_ir_vm_pool_fini(r);
     ecs_vec_fini_t(NULL, &r->pending, ecs_script_pending_t);
+    ecs_map_fini(&r->pending_index);
     ecs_vec_fini_t(NULL, &r->async_tasks, void*);
     ecs_vec_fini_t(NULL, &r->async_ready, uint64_t);
     if (r->async_lock) {
@@ -131236,15 +131255,36 @@ void flecs_script_ref_enqueue(
     uint64_t input)
 {
     ecs_script_runtime_t *rt = flecs_script_runtime_get(world);
-    ecs_vec_append_t(NULL, &rt->pending, ecs_script_pending_t)[0] =
-        (ecs_script_pending_t){
-            .script = script,
-            .instance = instance,
-            .input = input,
-            .depth = rt->template_depth
-        };
+    ecs_script_pending_t entry = {
+        .script = script,
+        .instance = instance,
+        .input = input,
+        .depth = rt->template_depth
+    };
 
-    if (rt->pending_marker) {
+    uint64_t key_data[3] = {
+        script, instance, ((uint64_t)(uint32_t)entry.depth << 1) | (input != 0)
+    };
+    uint64_t key = flecs_hash(key_data, ECS_SIZEOF(key_data));
+    ecs_map_val_t *index = ecs_map_get(&rt->pending_index, key);
+    if (index) {
+        int32_t i = (int32_t)index[0];
+        ecs_script_pending_t *cur = ecs_vec_get_t(
+            &rt->pending, ecs_script_pending_t, i);
+        if (i >= rt->pending_next && cur->script == script &&
+            cur->instance == instance && cur->depth == entry.depth &&
+            (cur->input != 0) == (input != 0))
+        {
+            cur->input |= input;
+            return;
+        }
+    }
+
+    ecs_map_ensure(&rt->pending_index, key)[0] =
+        (ecs_map_val_t)ecs_vec_count(&rt->pending);
+    ecs_vec_append_t(NULL, &rt->pending, ecs_script_pending_t)[0] = entry;
+
+    if (rt->pending_marker || world->flush_depth) {
         return;
     }
 
@@ -131264,7 +131304,13 @@ static void flecs_script_on_update_event(
 
     ecs_script_runtime_t *rt = flecs_script_runtime_get(world);
     rt->pending_marker = false;
-    if (rt->pending_active) {
+}
+
+void flecs_script_flush_pending(
+    ecs_world_t *world)
+{
+    ecs_script_runtime_t *rt = world->stages[0]->runtime;
+    if (!rt || rt->pending_active || !ecs_vec_count(&rt->pending)) {
         return;
     }
 
@@ -131274,10 +131320,13 @@ static void flecs_script_on_update_event(
         ecs_script_pending_t p = ecs_vec_get_t(
             &rt->pending, ecs_script_pending_t, i)[0];
         rt->template_depth = p.depth;
+        rt->pending_next = i + 1;
         flecs_script_ref_dispatch(world, NULL, p.script, p.instance, p.input);
     }
 
     ecs_vec_clear(&rt->pending);
+    ecs_map_clear(&rt->pending_index);
+    rt->pending_next = 0;
     rt->pending_active = false;
     rt->template_depth = prev_depth;
 }

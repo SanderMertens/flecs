@@ -109,6 +109,8 @@ struct ecs_world_t {
     /* Unique id per generated event used to prevent duplicate notifications */
     int32_t event_id;
 
+    int32_t flush_depth;
+
     /* Array of table versions used with component refs to determine if the 
      * cached pointer is still valid. */
     uint32_t table_version[ECS_TABLE_VERSION_ARRAY_SIZE];

@@ -3648,6 +3648,7 @@ void Reactivity_for_anonymous_child_kept(void);
 void Reactivity_for_query_duplicate_anonymous_kept(void);
 void Reactivity_for_new_expr_kept(void);
 void Reactivity_template_for_query_anonymous_kept(void);
+void Reactivity_template_query_batch_single_update(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_setup(void);
@@ -19168,6 +19169,10 @@ bake_test_case Reactivity_testcases[] = {
     {
         "template_for_query_anonymous_kept",
         Reactivity_template_for_query_anonymous_kept
+    },
+    {
+        "template_query_batch_single_update",
+        Reactivity_template_query_batch_single_update
     }
 };
 
@@ -23917,7 +23922,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         Reactivity_setup,
         NULL,
-        226,
+        227,
         Reactivity_testcases,
         1,
         Reactivity_params

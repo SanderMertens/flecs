@@ -29,6 +29,8 @@ struct ecs_script_runtime_t {
      * the command queue is flushed. One marker event is enqueued per flush
      * instead of one event per update. */
     ecs_vec_t pending;
+    ecs_map_t pending_index;
+    int32_t pending_next;
     bool pending_marker;
     bool pending_active;
 
