@@ -1149,12 +1149,6 @@ static int flecs_query_finalize_terms(
             if (ecs_term_match_this(term) || term->inout != EcsInOutDefault) {
                 q->flags |= EcsQueryHasOutTerms;
             }
-
-            bool match_non_this = !ecs_term_match_this(term) || 
-                (term->src.id & EcsUp);
-            if (match_non_this && term->inout != EcsInOutDefault) {
-                q->flags |= EcsQueryHasNonThisOutTerms;
-            }
         }
 
         if (!nodata_term && (term->flags_ & EcsTermIsOr)) {
@@ -1355,7 +1349,9 @@ static int flecs_query_finalize_terms(
                     q->bloom_filter, term->id);
             }
 
-            if (!ecs_term_match_0(term)) {
+            if (!ecs_term_match_0(term) &&
+                !(q->flags & EcsQueryDontKeepAlive))
+            {
                 flecs_component_lock(world, term->id);
             }
         }
@@ -1706,7 +1702,9 @@ bool flecs_query_finalize_simple(
             }
         }
 
-        flecs_component_lock(world, id);
+        if (!(q->flags & EcsQueryDontKeepAlive)) {
+            flecs_component_lock(world, id);
+        }
     }
 
     /* Initialize static data */

@@ -1117,6 +1117,10 @@ static int flecs_multi_observer_init(
         child_desc.query.flags |= EcsQueryTableOnly;
     }
 
+    if (query->flags & EcsQueryDontKeepAlive) {
+        child_desc.query.flags |= EcsQueryDontKeepAlive;
+    }
+
     bool self_term_handled = false;
     for (i = 0; i < term_count; i ++) {
         if (query->terms[i].inout == EcsInOutFilter && !only_table_events) {
@@ -1286,6 +1290,7 @@ static bool flecs_observer_init_trivial(
     ecs_flags32_t *flags)
 {
     if (desc->expr || desc->order_by_callback || desc->group_by_callback ||
+        (desc->flags & EcsQueryDontKeepAlive) ||
         !ecs_term_is_initialized(&desc->terms[0]) ||
         ecs_term_is_initialized(&desc->terms[1]))
     {

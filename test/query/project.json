@@ -718,6 +718,8 @@
                 "add_on_self_ref",
                 "add_on_self_ref_by_name",
                 "delete_id_after_delete_query",
+                "dont_keep_alive_delete_id",
+                "dont_keep_alive_delete_pair_target",
                 "pair_sweep_tag",
                 "pair_sweep_wildcard_first",
                 "pair_sweep_wildcard_second",

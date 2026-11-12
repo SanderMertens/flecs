@@ -701,6 +701,8 @@ void Basic_no_results_after_delete_tree_deferred(void);
 void Basic_add_on_self_ref(void);
 void Basic_add_on_self_ref_by_name(void);
 void Basic_delete_id_after_delete_query(void);
+void Basic_dont_keep_alive_delete_id(void);
+void Basic_dont_keep_alive_delete_pair_target(void);
 void Basic_pair_sweep_tag(void);
 void Basic_pair_sweep_wildcard_first(void);
 void Basic_pair_sweep_wildcard_second(void);
@@ -5756,6 +5758,14 @@ bake_test_case Basic_testcases[] = {
     {
         "delete_id_after_delete_query",
         Basic_delete_id_after_delete_query
+    },
+    {
+        "dont_keep_alive_delete_id",
+        Basic_dont_keep_alive_delete_id
+    },
+    {
+        "dont_keep_alive_delete_pair_target",
+        Basic_dont_keep_alive_delete_pair_target
     },
     {
         "pair_sweep_tag",
@@ -14939,7 +14949,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        247,
+        249,
         Basic_testcases,
         1,
         Basic_params

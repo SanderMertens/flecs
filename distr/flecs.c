@@ -16925,6 +16925,10 @@ static int flecs_multi_observer_init(
         child_desc.query.flags |= EcsQueryTableOnly;
     }
 
+    if (query->flags & EcsQueryDontKeepAlive) {
+        child_desc.query.flags |= EcsQueryDontKeepAlive;
+    }
+
     bool self_term_handled = false;
     for (i = 0; i < term_count; i ++) {
         if (query->terms[i].inout == EcsInOutFilter && !only_table_events) {
@@ -17094,6 +17098,7 @@ static bool flecs_observer_init_trivial(
     ecs_flags32_t *flags)
 {
     if (desc->expr || desc->order_by_callback || desc->group_by_callback ||
+        (desc->flags & EcsQueryDontKeepAlive) ||
         !ecs_term_is_initialized(&desc->terms[0]) ||
         ecs_term_is_initialized(&desc->terms[1]))
     {
@@ -35530,7 +35535,9 @@ static void flecs_query_fini(
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &q->terms[i];
 
-            if (!(ecs_world_get_flags(q->stage) & EcsWorldQuit)) {
+            if (!(ecs_world_get_flags(q->stage) & EcsWorldQuit) &&
+                !(q->flags & EcsQueryDontKeepAlive))
+            {
                 if (!ecs_term_match_0(term)) {
                     flecs_component_unlock(q->world, term->id);
                 }
@@ -37987,12 +37994,6 @@ static int flecs_query_finalize_terms(
             if (ecs_term_match_this(term) || term->inout != EcsInOutDefault) {
                 q->flags |= EcsQueryHasOutTerms;
             }
-
-            bool match_non_this = !ecs_term_match_this(term) || 
-                (term->src.id & EcsUp);
-            if (match_non_this && term->inout != EcsInOutDefault) {
-                q->flags |= EcsQueryHasNonThisOutTerms;
-            }
         }
 
         if (!nodata_term && (term->flags_ & EcsTermIsOr)) {
@@ -38193,7 +38194,9 @@ static int flecs_query_finalize_terms(
                     q->bloom_filter, term->id);
             }
 
-            if (!ecs_term_match_0(term)) {
+            if (!ecs_term_match_0(term) &&
+                !(q->flags & EcsQueryDontKeepAlive))
+            {
                 flecs_component_lock(world, term->id);
             }
         }
@@ -38544,7 +38547,9 @@ bool flecs_query_finalize_simple(
             }
         }
 
-        flecs_component_lock(world, id);
+        if (!(q->flags & EcsQueryDontKeepAlive)) {
+            flecs_component_lock(world, id);
+        }
     }
 
     /* Initialize static data */
@@ -51367,19 +51372,11 @@ typedef struct ecs_script_ref_t {
     bool is_resolve;
 } ecs_script_ref_t;
 
-typedef struct ecs_script_query_filter_t {
-    int8_t field;
-    ecs_entity_t first;
-    ecs_entity_t second;
-} ecs_script_query_filter_t;
-
 typedef struct ecs_script_ref_ctx_t {
     ecs_entity_t script;
     ecs_entity_t instance;
     char *name;
     uint64_t input;
-    ecs_script_query_filter_t *filters;
-    int32_t filter_count;
 } ecs_script_ref_ctx_t;
 
 typedef struct ecs_script_pending_t {
@@ -51408,9 +51405,7 @@ ecs_entity_t flecs_script_query_observer_init(
     ecs_entity_t instance,
     const ecs_query_desc_t *query,
     ecs_entity_t event,
-    uint64_t input,
-    const ecs_script_query_filter_t *filters,
-    int32_t filter_count);
+    uint64_t input);
 
 void flecs_script_record_dyn_ref(
     ecs_vec_t *run_refs,
@@ -79820,13 +79815,6 @@ ecs_query_cache_t* flecs_query_cache_init(
             }
         }
     }
-
-    /* The uncached query used to populate the cache always matches empty 
-     * tables. This flag determines whether the empty tables are stored 
-     * separately in the cache or are treated as regular tables. This is only
-     * enabled if the user requested that the query matches empty tables. */
-    ECS_BIT_COND(q->flags, EcsQueryCacheYieldEmptyTables, 
-        !!(query_flags & EcsQueryMatchEmptyTables));
 
     flecs_query_cache_allocators_init(result);
 
@@ -130691,12 +130679,7 @@ static void flecs_script_query_ref_set(
 {
     ecs_flags64_t flags = ECS_TERM_REF_FLAGS(ref) &
         ~(EcsIsVariable | EcsIsEntity | EcsIsName);
-    if (value == EcsWildcard) {
-        ref->id = EcsWildcard | EcsIsVariable | flags;
-    } else {
-        ref->id = value | EcsIsEntity | flags;
-    }
-
+    ref->id = value | EcsIsEntity | flags;
     ref->name = NULL;
 }
 
@@ -130716,14 +130699,11 @@ static void flecs_script_query_observe(
     ecs_entity_t instance)
 {
     const ecs_query_t *q = node->query;
-    ecs_query_desc_t desc = {0};
+    ecs_query_desc_t desc = { .flags = EcsQueryDontKeepAlive };
     int32_t i;
     if (!flecs_script_query_bound(world, &slot->value)) {
         return;
     }
-
-    ecs_script_query_filter_t filters[FLECS_TERM_COUNT_MAX];
-    int32_t filter_count = 0;
 
     for (i = 0; i < q->term_count; i ++) {
         ecs_term_t *term = &desc.terms[i];
@@ -130744,41 +130724,20 @@ static void flecs_script_query_observe(
         }
 
         term->id = 0;
-
-        if (term->oper == EcsNot) {
-            if (first) {
-                flecs_script_query_ref_set(&term->first, first);
-            }
-            if (second) {
-                flecs_script_query_ref_set(&term->second, second);
-            }
-            continue;
-        }
-
         if (first) {
-            flecs_script_query_ref_set(&term->first, EcsWildcard);
+            flecs_script_query_ref_set(&term->first, first);
         }
         if (second) {
-            flecs_script_query_ref_set(&term->second, EcsWildcard);
-        }
-
-        if (term->oper == EcsAnd) {
-            filters[filter_count ++] = (ecs_script_query_filter_t){
-                .field = term->field_index,
-                .first = first,
-                .second = second
-            };
+            flecs_script_query_ref_set(&term->second, second);
         }
     }
 
     slot->observers[0] = flecs_script_query_observer_init(
-        world, script, instance, &desc, EcsMonitor, node->input,
-        filters, filter_count);
+        world, script, instance, &desc, EcsMonitor, node->input);
 
     if (q->data_fields) {
         slot->observers[1] = flecs_script_query_observer_init(
-            world, script, instance, &desc, EcsOnSet, node->input,
-            filters, filter_count);
+            world, script, instance, &desc, EcsOnSet, node->input);
     }
 }
 
@@ -131208,32 +131167,6 @@ static void flecs_script_ref_on_set(
         it->world, it->stage, ctx->script, ctx->instance, ctx->input);
 }
 
-static void flecs_script_query_on_event(
-    ecs_iter_t *it)
-{
-    ecs_script_ref_ctx_t *ctx = it->ctx;
-    int32_t i;
-    for (i = 0; i < ctx->filter_count; i ++) {
-        const ecs_script_query_filter_t *filter = &ctx->filters[i];
-        ecs_id_t id = it->ids[filter->field];
-        bool is_pair = ECS_IS_PAIR(id);
-        uint32_t first = is_pair
-            ? (uint32_t)ECS_PAIR_FIRST(id) : (uint32_t)id;
-        if (filter->first && first != (uint32_t)filter->first) {
-            return;
-        }
-
-        if (filter->second && (!is_pair ||
-            (uint32_t)ECS_PAIR_SECOND(id) != (uint32_t)filter->second))
-        {
-            return;
-        }
-    }
-
-    flecs_script_ref_dispatch(
-        it->world, it->stage, ctx->script, ctx->instance, ctx->input);
-}
-
 static void flecs_script_resolve_on_set(
     ecs_iter_t *it)
 {
@@ -131314,7 +131247,6 @@ static void flecs_script_ref_ctx_free(
 {
     ecs_script_ref_ctx_t *ctx = ptr;
     ecs_os_free(ctx->name);
-    ecs_os_free(ctx->filters);
     ecs_os_free(ctx);
 }
 
@@ -131324,9 +131256,7 @@ static ecs_entity_t flecs_script_ref_observer_init(
     ecs_entity_t instance,
     ecs_observer_desc_t *desc,
     uint64_t input,
-    const char *name,
-    const ecs_script_query_filter_t *filters,
-    int32_t filter_count)
+    const char *name)
 {
     ecs_entity_t prev_scope = ecs_set_scope(world, script);
 
@@ -131335,12 +131265,6 @@ static ecs_entity_t flecs_script_ref_observer_init(
     ctx->instance = instance;
     ctx->name = name ? ecs_os_strdup(name) : NULL;
     ctx->input = input;
-    ctx->filters = NULL;
-    ctx->filter_count = filter_count;
-    if (filter_count) {
-        ctx->filters = ecs_os_memdup_n(
-            filters, ecs_script_query_filter_t, filter_count);
-    }
 
     desc->ctx = ctx;
     desc->ctx_free = flecs_script_ref_ctx_free;
@@ -131390,7 +131314,7 @@ static ecs_entity_t flecs_script_create_ref_observer(
     }
 
     return flecs_script_ref_observer_init(world, script, instance, &desc,
-        ref->is_resolve ? 0 : ref->input, name, NULL, 0);
+        ref->is_resolve ? 0 : ref->input, name);
 }
 
 ecs_entity_t flecs_script_query_observer_init(
@@ -131399,20 +131323,16 @@ ecs_entity_t flecs_script_query_observer_init(
     ecs_entity_t instance,
     const ecs_query_desc_t *query,
     ecs_entity_t event,
-    uint64_t input,
-    const ecs_script_query_filter_t *filters,
-    int32_t filter_count)
+    uint64_t input)
 {
     ecs_observer_desc_t desc = {
         .query = *query,
         .events = { event },
-        .callback = filter_count
-            ? flecs_script_query_on_event
-            : flecs_script_ref_on_set
+        .callback = flecs_script_ref_on_set
     };
 
-    return flecs_script_ref_observer_init(world, script, instance, &desc,
-        input, NULL, filters, filter_count);
+    return flecs_script_ref_observer_init(
+        world, script, instance, &desc, input, NULL);
 }
 
 static void flecs_script_update_ref_observers(

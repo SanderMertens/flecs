@@ -12060,3 +12060,55 @@ void Basic_this_value_pair_w_0_value(void) {
 
     ecs_fini(world);
 }
+
+void Basic_dont_keep_alive_delete_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t i = ecs_new(world);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = i }},
+        .cache_kind = cache_kind,
+        .flags = EcsQueryDontKeepAlive
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t e = ecs_new_w_id(world, i);
+    test_int(ecs_query_count(q).entities, 1);
+
+    ecs_delete(world, i);
+    test_assert(!ecs_is_alive(world, i));
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_dont_keep_alive_delete_pair_target(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = ecs_pair(EcsChildOf, parent) }},
+        .cache_kind = cache_kind,
+        .flags = EcsQueryDontKeepAlive
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_uint(it.entities[0], child);
+    test_bool(ecs_query_next(&it), false);
+
+    ecs_delete(world, parent);
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, child));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

@@ -288,12 +288,7 @@ static void flecs_script_query_ref_set(
 {
     ecs_flags64_t flags = ECS_TERM_REF_FLAGS(ref) &
         ~(EcsIsVariable | EcsIsEntity | EcsIsName);
-    if (value == EcsWildcard) {
-        ref->id = EcsWildcard | EcsIsVariable | flags;
-    } else {
-        ref->id = value | EcsIsEntity | flags;
-    }
-
+    ref->id = value | EcsIsEntity | flags;
     ref->name = NULL;
 }
 
@@ -313,14 +308,11 @@ static void flecs_script_query_observe(
     ecs_entity_t instance)
 {
     const ecs_query_t *q = node->query;
-    ecs_query_desc_t desc = {0};
+    ecs_query_desc_t desc = { .flags = EcsQueryDontKeepAlive };
     int32_t i;
     if (!flecs_script_query_bound(world, &slot->value)) {
         return;
     }
-
-    ecs_script_query_filter_t filters[FLECS_TERM_COUNT_MAX];
-    int32_t filter_count = 0;
 
     for (i = 0; i < q->term_count; i ++) {
         ecs_term_t *term = &desc.terms[i];
@@ -341,41 +333,20 @@ static void flecs_script_query_observe(
         }
 
         term->id = 0;
-
-        if (term->oper == EcsNot) {
-            if (first) {
-                flecs_script_query_ref_set(&term->first, first);
-            }
-            if (second) {
-                flecs_script_query_ref_set(&term->second, second);
-            }
-            continue;
-        }
-
         if (first) {
-            flecs_script_query_ref_set(&term->first, EcsWildcard);
+            flecs_script_query_ref_set(&term->first, first);
         }
         if (second) {
-            flecs_script_query_ref_set(&term->second, EcsWildcard);
-        }
-
-        if (term->oper == EcsAnd) {
-            filters[filter_count ++] = (ecs_script_query_filter_t){
-                .field = term->field_index,
-                .first = first,
-                .second = second
-            };
+            flecs_script_query_ref_set(&term->second, second);
         }
     }
 
     slot->observers[0] = flecs_script_query_observer_init(
-        world, script, instance, &desc, EcsMonitor, node->input,
-        filters, filter_count);
+        world, script, instance, &desc, EcsMonitor, node->input);
 
     if (q->data_fields) {
         slot->observers[1] = flecs_script_query_observer_init(
-            world, script, instance, &desc, EcsOnSet, node->input,
-            filters, filter_count);
+            world, script, instance, &desc, EcsOnSet, node->input);
     }
 }
 
