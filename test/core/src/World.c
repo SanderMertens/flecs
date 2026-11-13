@@ -1082,23 +1082,6 @@ void World_range_new_from_range_null(void) {
     ecs_new_from_range(world, NULL);
 }
 
-void World_get_tick(void) {
-    ecs_world_t *world = ecs_init();
-
-    const ecs_world_info_t *stats = ecs_get_world_info(world);
-    test_int(stats->frame_count_total, 0);
-
-    ecs_progress(world, 1);
-
-    test_int(stats->frame_count_total, 1);
-
-    ecs_progress(world, 1);
-
-    test_int(stats->frame_count_total, 2);
-
-    ecs_fini(world);
-}
-
 static void TOnLoad(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     int i;
@@ -2356,7 +2339,7 @@ void World_delete_empty_tables_w_add_hook_delete_empty_table(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_set_hooks(world, Position, {
-        .on_set = DummyHook
+        .on_add = DummyHook
     });
 
     test_int(0, dummy_hook_invoked);

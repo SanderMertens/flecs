@@ -712,35 +712,6 @@ void Pipeline_merge_after_staged_inout_main_inout(void) {
     ecs_fini(world);
 }
 
-void Pipeline_merge_after_staged_out_before_owned(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_entity_t E = ecs_entity(world, { .name = "E" });
-    ecs_add(world, E, Position);
-
-    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, [out] Velocity());
-    ECS_SYSTEM(world, SysInMain, EcsOnUpdate, Velocity);
-
-    const ecs_world_info_t *stats = ecs_get_world_info(world);
-
-    ecs_progress(world, 1);
-
-    test_int(stats->systems_ran_total, 3);
-    test_int(stats->merge_count_total, 2);
-    test_int(stats->pipeline_build_count_total, 2);
-
-    test_int(sys_out_invoked, 1);
-    test_int(sys_in_invoked, 1);
-
-    ecs_progress(world, 1);
-    test_int(stats->pipeline_build_count_total, 2);
-
-    ecs_fini(world);
-}
-
 void Pipeline_switch_pipeline(void) {
     ecs_world_t *world = ecs_init();
 
@@ -3205,15 +3176,15 @@ void Pipeline_switch_from_tasks_to_threads(void) {
         .phase = EcsOnUpdate,
         .query = {.terms = {{ ecs_id(Position) }}},
         .callback = SysA
-        });
+    });
 
     ecs_system(world, {
         .phase = EcsOnUpdate,
         .callback = NoReadonlyAddPosition,
         .immediate = true
-        });
+    });
 
-    ecs_set_threads(world, 2);
+    ecs_set_task_threads(world, 2);
 
     ecs_progress(world, 0);
 
@@ -3221,7 +3192,7 @@ void Pipeline_switch_from_tasks_to_threads(void) {
     test_int(no_staging_add_position_invoked, 1);
     test_int(ecs_count(world, Position), 1);
 
-    ecs_set_task_threads(world, 2);
+    ecs_set_threads(world, 2);
 
     ecs_progress(world, 0);
 

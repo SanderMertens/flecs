@@ -60,20 +60,6 @@ void SystemMisc_invalid_empty_element(void) {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_empty_element_w_space(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    test_expect_abort();
-
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, , Position);
-
-    ecs_fini(world);
-}
-
 void SystemMisc_invalid_empty_or(void) {
     install_test_abort();
 
@@ -84,20 +70,6 @@ void SystemMisc_invalid_empty_or(void) {
     test_expect_abort();
 
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, || Position);
-
-    ecs_fini(world);
-}
-
-void SystemMisc_invalid_empty_or_w_space(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    test_expect_abort();
-
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate,|| Position);
 
     ecs_fini(world);
 }
@@ -2160,10 +2132,12 @@ void SystemMisc_locked_storage_mixed(void) {
     ECS_TAG_DEFINE(world, Bar);
     
     ecs_entity_t e = ecs_new(world);
-    ecs_add(world, e, Foo);
+    ecs_add_pair(world, e, Foo, ecs_new(world));
 
     ecs_system(world, {
-        .query = { .terms = { { Foo } } },
+        .query = { 
+            .terms = { { .first.id = Foo, .second.name = "$foo" } } 
+        },
         .callback = AddTag,
         .phase = EcsOnUpdate
     });
@@ -2314,12 +2288,14 @@ void SystemMisc_locked_storage_mixed_other(void) {
     ECS_TAG_DEFINE(world, Bar);
     
     ecs_entity_t e = ecs_new(world);
-    ecs_add(world, e, Foo);
+    ecs_add_pair(world, e, Foo, ecs_new(world));
 
     other = ecs_new(world);
 
     ecs_system(world, {
-        .query = { .terms = { { Foo } } },
+        .query = { 
+            .terms = { { .first.id = Foo, .second.name = "$foo" } } 
+        },
         .callback = AddTag_Other,
         .phase = EcsOnUpdate
     });

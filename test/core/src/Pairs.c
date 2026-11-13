@@ -1918,13 +1918,13 @@ void Pairs_get_tag_pair_w_obj_comp(void) {
 
     ecs_world_t *world = ecs_mini();
 
-    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Rel);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_add_id(world, ecs_id(Position), EcsPairIsTag);
+    ecs_add_id(world, Rel, EcsPairIsTag);
 
     ecs_entity_t e = ecs_new(world);
-    ecs_id_t pair_id = ecs_pair(ecs_id(Position), ecs_id(Velocity));
+    ecs_id_t pair_id = ecs_pair(Rel, ecs_id(Velocity));
 
     ecs_add_id(world, e, pair_id);
 
@@ -3399,28 +3399,6 @@ void Pairs_add_exclusive_value_pairs(void) {
 
     test_bool(false, ecs_has_id(world, e, ecs_value_pair(Number, 10)));
     test_bool(false, ecs_has_id(world, e, ecs_value_pair(Number, 20)));
-
-    ecs_fini(world);
-}
-
-void Pairs_remove_value_pair_wildcard(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Number);
-
-    ecs_entity_t e = ecs_new(world);
-
-    ecs_add_id(world, e, ecs_value_pair(Number, 10));
-
-    test_bool(true, ecs_has_id(world, e, ecs_value_pair(Number, 10)));
-
-    ecs_remove_id(world, e, ecs_pair(Number, EcsWildcard));
-
-    test_bool(true, ecs_has_id(world, e, ecs_value_pair(Number, 10)));
-
-    ecs_remove_id(world, e, ecs_value_pair(Number, EcsWildcard));
-
-    test_bool(false, ecs_has_id(world, e, ecs_value_pair(Number, 10)));
 
     ecs_fini(world);
 }

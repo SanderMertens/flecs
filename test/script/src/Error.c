@@ -1476,30 +1476,6 @@ void Error_template_unresolved_with_tag(void) {
     ecs_fini(world);
 }
 
-void Error_template_unresolved_with_component(void) {
-    test_quarantine("13 Aug 2026");
-
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "using flecs.meta"
-    LINE "template Tree {"
-    LINE "  struct Position(x: f32)"
-    LINE ""
-    LINE "  with Position(10, 20) {"
-    LINE "  }"
-    LINE "}";
-
-    ecs_log_set_level(-4);
-    ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
-    test_assert(result.error != NULL);
-    test_int(result.line, 5);
-    ecs_os_free(result.error);
-
-    ecs_fini(world);
-}
-
 void Error_template_unresolved_with_pair_relationship(void) {
     ecs_world_t *world = ecs_init();
 

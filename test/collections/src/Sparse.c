@@ -54,63 +54,7 @@ void Sparse_add_1(void) {
     flecs_sparse_free(sp);
 }
 
-void Sparse_add_1_to_empty(void) {
-    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
-    test_assert(sp != NULL);
-    test_int(flecs_sparse_count(sp), 0);
-
-    int* elem = flecs_sparse_add_t(sp, int);
-    test_assert(elem != NULL);
-    test_int(flecs_sparse_count(sp), 1);
-    
-    int *ptr = flecs_sparse_get_dense_t(sp, int, 0);
-    test_assert(ptr != NULL);
-    test_assert(elem == ptr);
-
-    flecs_sparse_free(sp);
-}
-
-void Sparse_add_1_chunk_size_1(void) {
-    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
-    test_assert(sp != NULL);
-    test_int(flecs_sparse_count(sp), 0);
-
-    int* elem = flecs_sparse_add_t(sp, int);
-    test_assert(elem != NULL);
-    test_int(flecs_sparse_count(sp), 1);
-    
-    int *ptr = flecs_sparse_get_dense_t(sp, int, 0);
-    test_assert(ptr != NULL);
-    test_assert(elem == ptr);
-
-    flecs_sparse_free(sp);
-}
-
 void Sparse_add_n(void) {
-    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
-    test_assert(sp != NULL);
-    test_int(flecs_sparse_count(sp), 0);
-
-    int* elem1 = flecs_sparse_add_t(sp, int);
-    test_assert(elem1 != NULL);
-    test_int(flecs_sparse_count(sp), 1);
-
-    int* elem2 = flecs_sparse_add_t(sp, int);
-    test_assert(elem2 != NULL);
-    test_int(flecs_sparse_count(sp), 2);    
-    
-    int *ptr = flecs_sparse_get_dense_t(sp, int, 0);
-    test_assert(ptr != NULL);
-    test_assert(elem1 == ptr);
-
-    ptr = flecs_sparse_get_dense_t(sp, int, 1);
-    test_assert(ptr != NULL);
-    test_assert(elem2 == ptr);
-
-    flecs_sparse_free(sp);
-}
-
-void Sparse_add_n_chunk_size_1(void) {
     ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
     test_assert(sp != NULL);
     test_int(flecs_sparse_count(sp), 0);

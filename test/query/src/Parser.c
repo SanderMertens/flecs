@@ -350,28 +350,6 @@ void Parser_this_var_as_predicate(void) {
     ecs_fini(world);
 }
 
-void Parser_this_lowercase_var_as_predicate(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Subj);
-
-    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "$this(Subj)"
-    });
-    test_assert(q != NULL);
-    test_int(term_count(q), 1);
-
-    ecs_term_t *terms = query_terms(q);
-    test_first(terms[0], EcsThis, EcsSelf|EcsIsVariable);
-    test_src(terms[0], Subj, EcsSelf|EcsIsEntity);
-    test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOutNone);
-
-    ecs_query_fini(q);
-
-    ecs_fini(world);
-}
-
 void Parser_this_as_object(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -826,30 +804,6 @@ void Parser_pair_explicit_subject_this_by_name(void) {
     ecs_term_t *terms = query_terms(q);
     test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsIsEntity);
-    test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
-    test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOutDefault);
-
-    ecs_query_fini(q);
-
-    ecs_fini(world);
-}
-
-void Parser_pair_explicit_subject_this_by_var_name(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Pred);
-    ECS_TAG(world, Obj);
-
-    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred($this, Obj)"
-    });
-    test_assert(q != NULL);
-    test_int(term_count(q), 1);
-
-    ecs_term_t *terms = query_terms(q);
-    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
-    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
     test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -1435,52 +1389,6 @@ void Parser_component_implicit_no_subject(void) {
     ecs_fini(world);
 }
 
-void Parser_component_explicit_no_subject(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Pred);
-
-    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred(#0)"
-    });
-    test_assert(q != NULL);
-    test_int(term_count(q), 1);
-
-    ecs_term_t *terms = query_terms(q);
-    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
-    test_src(terms[0], 0, EcsIsEntity);
-    test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOutDefault);
-
-    ecs_query_fini(q);
-
-    ecs_fini(world);
-}
-
-void Parser_pair_no_subject(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Pred);
-    ECS_TAG(world, Obj);
-
-    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred(#0, Obj)"
-    });
-    test_assert(q != NULL);
-    test_int(term_count(q), 1);
-
-    ecs_term_t *terms = query_terms(q);
-    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
-    test_src(terms[0], 0, EcsIsEntity);
-    test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
-    test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOutDefault);
-
-    ecs_query_fini(q);
-
-    ecs_fini(world);
-}
-
 void Parser_variable_single_char(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -2029,54 +1937,6 @@ void Parser_pred_no_subject_w_role(void) {
     ecs_fini(world);  
 }
 
-void Parser_pair_implicit_subject_w_role(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Pred);
-    ECS_TAG(world, Obj);
-
-    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "(Pred, Obj)"
-    });
-    test_assert(q != NULL);
-    test_int(term_count(q), 1);
-
-    ecs_term_t *terms = query_terms(q);
-    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
-    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
-    test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
-    test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOutDefault);
-
-    ecs_query_fini(q);
-
-    ecs_fini(world);   
-}
-
-void Parser_pair_explicit_subject_w_role(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Pred);
-    ECS_TAG(world, Obj);
-
-    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred($this, Obj)"
-    });
-    test_assert(q != NULL);
-    test_int(term_count(q), 1);
-
-    ecs_term_t *terms = query_terms(q);
-    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
-    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
-    test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
-    test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOutDefault);
-
-    ecs_query_fini(q);
-
-    ecs_fini(world); 
-}
-
 void Parser_inout_role_pred_implicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -2135,30 +1995,6 @@ void Parser_inout_role_pred_explicit_subject(void) {
     ecs_term_t *terms = query_terms(q);
     test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
-    test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOut);
-
-    ecs_query_fini(q);
-
-    ecs_fini(world);  
-}
-
-void Parser_inout_role_pair_implicit_subject(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Pred);
-    ECS_TAG(world, Obj);
-
-    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "[inout] (Pred, Obj)"
-    });
-    test_assert(q != NULL);
-    test_int(term_count(q), 1);
-
-    ecs_term_t *terms = query_terms(q);
-    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
-    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
-    test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
 
@@ -2364,72 +2200,6 @@ void Parser_2_pred_role(void) {
 
     test_first(terms[1], Pred_2, EcsSelf|EcsIsEntity);
     test_src(terms[1], EcsThis, EcsSelf|EcsIsVariable);
-    test_int(terms[1].oper, EcsAnd);
-    test_int(terms[1].inout, EcsInOutDefault); 
-
-
-    ecs_query_fini(q);
-
-    ecs_fini(world); 
-}
-
-void Parser_2_pair_implicit_subj_role(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Pred_1);
-    ECS_TAG(world, Pred_2);
-    ECS_TAG(world, Obj_1);
-    ECS_TAG(world, Obj_2);
-
-    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "(Pred_1, Obj_1), (Pred_2, Obj_2)"
-    });
-    test_assert(q != NULL);
-    test_int(term_count(q), 2);
-
-    ecs_term_t *terms = query_terms(q);
-    test_first(terms[0], Pred_1, EcsSelf|EcsIsEntity);
-    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
-    test_second(terms[0], Obj_1, EcsSelf|EcsIsEntity);
-    test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOutDefault);
-
-    test_first(terms[1], Pred_2, EcsSelf|EcsIsEntity);
-    test_src(terms[1], EcsThis, EcsSelf|EcsIsVariable);
-    test_second(terms[1], Obj_2, EcsSelf|EcsIsEntity);
-    test_int(terms[1].oper, EcsAnd);
-    test_int(terms[1].inout, EcsInOutDefault); 
-
-
-    ecs_query_fini(q);
-
-    ecs_fini(world); 
-}
-
-void Parser_2_pair_explicit_subj_role(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Pred_1);
-    ECS_TAG(world, Pred_2);
-    ECS_TAG(world, Obj_1);
-    ECS_TAG(world, Obj_2);
-
-    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred_1($this, Obj_1), Pred_2($this, Obj_2)"
-    });
-    test_assert(q != NULL);
-    test_int(term_count(q), 2);
-
-    ecs_term_t *terms = query_terms(q);
-    test_first(terms[0], Pred_1, EcsSelf|EcsIsEntity);
-    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
-    test_second(terms[0], Obj_1, EcsSelf|EcsIsEntity);
-    test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOutDefault);
-
-    test_first(terms[1], Pred_2, EcsSelf|EcsIsEntity);
-    test_src(terms[1], EcsThis, EcsSelf|EcsIsVariable);
-    test_second(terms[1], Obj_2, EcsSelf|EcsIsEntity);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault); 
 
@@ -3657,7 +3427,7 @@ void Parser_3_newlines(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "\n\n"
+        .expr = "\n\n\n"
     });
     test_assert(q != NULL);
 

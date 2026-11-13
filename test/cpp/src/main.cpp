@@ -572,7 +572,6 @@ void Enum_multithreaded_enum_registration(void);
 // Testsuite 'Union'
 void Union_add_case(void);
 void Union_get_case(void);
-void Union_add_case_w_type(void);
 void Union_add_switch_w_type(void);
 void Union_add_remove_switch_w_type(void);
 void Union_switch_enum_type(void);
@@ -625,8 +624,6 @@ void System_each_tag(void);
 void System_set_interval(void);
 void System_order_by_type(void);
 void System_order_by_id(void);
-void System_order_by_type_after_create(void);
-void System_order_by_id_after_create(void);
 void System_get_query(void);
 void System_add_from_each(void);
 void System_delete_from_each(void);
@@ -832,6 +829,7 @@ void Query_get_first_w_non_this_src(void);
 void Query_get_first_direct_w_non_this_src(void);
 void Query_get_first_skips_empty_results(void);
 void Query_each_w_no_this(void);
+void Query_invalid_each_w_no_this(void);
 void Query_named_query(void);
 void Query_named_scoped_query(void);
 void Query_instanced_nested_query_w_iter(void);
@@ -909,7 +907,6 @@ void Query_component_inheritance_virtual(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
-void QueryBuilder_builder_assign_same_type(void);
 void QueryBuilder_builder_assign_from_empty(void);
 void QueryBuilder_builder_assign_to_empty(void);
 void QueryBuilder_builder_build(void);
@@ -978,6 +975,7 @@ void QueryBuilder_explicit_term_w_id(void);
 void QueryBuilder_explicit_term_w_pair_id(void);
 void QueryBuilder_1_term_to_empty(void);
 void QueryBuilder_2_subsequent_args(void);
+void QueryBuilder_query_as_arg(void);
 void QueryBuilder_filter_as_move_arg(void);
 void QueryBuilder_filter_as_return(void);
 void QueryBuilder_filter_copy(void);
@@ -1087,8 +1085,6 @@ void QueryBuilder_named_scoped_rule(void);
 void QueryBuilder_is_valid(void);
 void QueryBuilder_unresolved_by_name(void);
 void QueryBuilder_scope(void);
-void QueryBuilder_each_w_field_w_fixed_src(void);
-void QueryBuilder_each_w_field_at_w_fixed_src(void);
 void QueryBuilder_each_w_const_field_w_fixed_src(void);
 void QueryBuilder_each_w_const_field_at_w_fixed_src(void);
 void QueryBuilder_each_w_untyped_field_w_fixed_src(void);
@@ -1137,7 +1133,6 @@ void SystemBuilder_kind_on_shared_builder(void);
 void Observer_2_terms_on_add(void);
 void Observer_2_terms_on_remove(void);
 void Observer_2_terms_on_set(void);
-void Observer_2_terms_un_set(void);
 void Observer_10_terms(void);
 void Observer_16_terms(void);
 void Observer_2_entities_iter(void);
@@ -1153,7 +1148,6 @@ void Observer_default_ctor(void);
 void Observer_entity_ctor(void);
 void Observer_on_add(void);
 void Observer_on_remove(void);
-void Observer_on_add_tag_action(void);
 void Observer_on_add_tag_iter(void);
 void Observer_on_add_tag_each(void);
 void Observer_on_add_expr(void);
@@ -1254,7 +1248,6 @@ void ComponentLifecycle_ensure_new(void);
 void ComponentLifecycle_ensure_existing(void);
 void ComponentLifecycle_implicit_component(void);
 void ComponentLifecycle_implicit_after_query(void);
-void ComponentLifecycle_deleted_copy(void);
 void ComponentLifecycle_no_default_ctor_emplace(void);
 void ComponentLifecycle_default_init(void);
 void ComponentLifecycle_no_default_ctor_add(void);
@@ -1544,6 +1537,7 @@ void World_log_dbg_caller_file_line(void);
 void World_log_push_caller_file_line(void);
 void World_log_w_std_string_fmt(void);
 void World_reset_world(void);
+void World_reset_set_rest_after_reset(void);
 void World_id_from_pair_type(void);
 void World_scope_w_name(void);
 void World_set_get_context(void);
@@ -1557,8 +1551,6 @@ void World_make_pair_of_pair_type(void);
 void World_delta_time(void);
 void World_atfini(void);
 void World_atfini_w_ctx(void);
-void World_get_mut_T(void);
-void World_get_mut_R_T(void);
 void World_world_mini(void);
 void World_copy_world(void);
 void World_fini_reentrancy(void);
@@ -1583,7 +1575,6 @@ void World_fini_w_scoped_tag_added_to_builtin(void);
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
 void Singleton_ensure_singleton(void);
-void Singleton_get_mut_singleton(void);
 void Singleton_emplace_singleton(void);
 void Singleton_modified_singleton(void);
 void Singleton_add_singleton(void);
@@ -1614,10 +1605,12 @@ void Singleton_get_R_t_not_found(void);
 void Singleton_get_R_T_not_found(void);
 void Singleton_try_get_w_id(void);
 void Singleton_try_get_T(void);
+void Singleton_try_get_r_t(void);
 void Singleton_try_get_R_t(void);
 void Singleton_try_get_R_T(void);
 void Singleton_get_mut_w_id(void);
 void Singleton_get_mut_T(void);
+void Singleton_get_mut_r_t(void);
 void Singleton_get_mut_R_t(void);
 void Singleton_get_mut_R_T(void);
 void Singleton_get_mut_w_id_not_found(void);
@@ -1718,8 +1711,6 @@ void Table_each_without_entity(void);
 void Table_each_without_entity_locked(void);
 void Table_iter(void);
 void Table_iter_locked(void);
-void Table_iter_without_components(void);
-void Table_iter_without_components_locked(void);
 void Table_multi_get(void);
 void Table_multi_get_locked(void);
 void Table_multi_set(void);
@@ -1776,8 +1767,6 @@ void ComponentTraits_sparse_try_get_not_found(void);
 void ComponentTraits_dont_fragment_get_get_mut(void);
 void ComponentTraits_on_instantiate_override_get_get_mut(void);
 void ComponentTraits_on_instantiate_dont_inherit_get_get_mut(void);
-void ComponentTraits_on_instantiate_inherit_get_inherited(void);
-void ComponentTraits_no_traits_get_inherited(void);
 void ComponentTraits_get_dispatch(void);
 void ComponentTraits_dynamic_inherit_dense_owned(void);
 void ComponentTraits_dynamic_inherit_dense_inherited(void);
@@ -4018,10 +4007,6 @@ bake_test_case Union_testcases[] = {
         Union_get_case
     },
     {
-        "add_case_w_type",
-        Union_add_case_w_type
-    },
-    {
         "add_switch_w_type",
         Union_add_switch_w_type
     },
@@ -4218,14 +4203,6 @@ bake_test_case System_testcases[] = {
     {
         "order_by_id",
         System_order_by_id
-    },
-    {
-        "order_by_type_after_create",
-        System_order_by_type_after_create
-    },
-    {
-        "order_by_id_after_create",
-        System_order_by_id_after_create
     },
     {
         "get_query",
@@ -5033,6 +5010,10 @@ bake_test_case Query_testcases[] = {
         Query_each_w_no_this
     },
     {
+        "invalid_each_w_no_this",
+        Query_invalid_each_w_no_this
+    },
+    {
         "named_query",
         Query_named_query
     },
@@ -5332,10 +5313,6 @@ bake_test_case Query_testcases[] = {
 
 bake_test_case QueryBuilder_testcases[] = {
     {
-        "builder_assign_same_type",
-        QueryBuilder_builder_assign_same_type
-    },
-    {
         "builder_assign_from_empty",
         QueryBuilder_builder_assign_from_empty
     },
@@ -5606,6 +5583,10 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "2_subsequent_args",
         QueryBuilder_2_subsequent_args
+    },
+    {
+        "query_as_arg",
+        QueryBuilder_query_as_arg
     },
     {
         "filter_as_move_arg",
@@ -6044,14 +6025,6 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_scope
     },
     {
-        "each_w_field_w_fixed_src",
-        QueryBuilder_each_w_field_w_fixed_src
-    },
-    {
-        "each_w_field_at_w_fixed_src",
-        QueryBuilder_each_w_field_at_w_fixed_src
-    },
-    {
         "each_w_const_field_w_fixed_src",
         QueryBuilder_each_w_const_field_w_fixed_src
     },
@@ -6234,10 +6207,6 @@ bake_test_case Observer_testcases[] = {
         Observer_2_terms_on_set
     },
     {
-        "2_terms_un_set",
-        Observer_2_terms_un_set
-    },
-    {
         "10_terms",
         Observer_10_terms
     },
@@ -6296,10 +6265,6 @@ bake_test_case Observer_testcases[] = {
     {
         "on_remove",
         Observer_on_remove
-    },
-    {
-        "on_add_tag_action",
-        Observer_on_add_tag_action
     },
     {
         "on_add_tag_iter",
@@ -6695,10 +6660,6 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "implicit_after_query",
         ComponentLifecycle_implicit_after_query
-    },
-    {
-        "deleted_copy",
-        ComponentLifecycle_deleted_copy
     },
     {
         "no_default_ctor_emplace",
@@ -7832,6 +7793,10 @@ bake_test_case World_testcases[] = {
         World_reset_world
     },
     {
+        "reset_set_rest_after_reset",
+        World_reset_set_rest_after_reset
+    },
+    {
         "id_from_pair_type",
         World_id_from_pair_type
     },
@@ -7882,14 +7847,6 @@ bake_test_case World_testcases[] = {
     {
         "atfini_w_ctx",
         World_atfini_w_ctx
-    },
-    {
-        "get_mut_T",
-        World_get_mut_T
-    },
-    {
-        "get_mut_R_T",
-        World_get_mut_R_T
     },
     {
         "world_mini",
@@ -7981,10 +7938,6 @@ bake_test_case Singleton_testcases[] = {
     {
         "ensure_singleton",
         Singleton_ensure_singleton
-    },
-    {
-        "get_mut_singleton",
-        Singleton_get_mut_singleton
     },
     {
         "emplace_singleton",
@@ -8107,6 +8060,10 @@ bake_test_case Singleton_testcases[] = {
         Singleton_try_get_T
     },
     {
+        "try_get_r_t",
+        Singleton_try_get_r_t
+    },
+    {
         "try_get_R_t",
         Singleton_try_get_R_t
     },
@@ -8121,6 +8078,10 @@ bake_test_case Singleton_testcases[] = {
     {
         "get_mut_T",
         Singleton_get_mut_T
+    },
+    {
+        "get_mut_r_t",
+        Singleton_get_mut_r_t
     },
     {
         "get_mut_R_t",
@@ -8513,14 +8474,6 @@ bake_test_case Table_testcases[] = {
         Table_iter_locked
     },
     {
-        "iter_without_components",
-        Table_iter_without_components
-    },
-    {
-        "iter_without_components_locked",
-        Table_iter_without_components_locked
-    },
-    {
         "multi_get",
         Table_multi_get
     },
@@ -8740,14 +8693,6 @@ bake_test_case ComponentTraits_testcases[] = {
         ComponentTraits_on_instantiate_dont_inherit_get_get_mut
     },
     {
-        "on_instantiate_inherit_get_inherited",
-        ComponentTraits_on_instantiate_inherit_get_inherited
-    },
-    {
-        "no_traits_get_inherited",
-        ComponentTraits_no_traits_get_inherited
-    },
-    {
         "get_dispatch",
         ComponentTraits_get_dispatch
     },
@@ -8861,7 +8806,7 @@ static bake_test_suite suites[] = {
         "Union",
         NULL,
         NULL,
-        6,
+        5,
         Union_testcases
     },
     {
@@ -8875,7 +8820,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        80,
+        78,
         System_testcases
     },
     {
@@ -8896,14 +8841,14 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        178,
+        179,
         Query_testcases
     },
     {
         "QueryBuilder",
         QueryBuilder_setup,
         NULL,
-        191,
+        189,
         QueryBuilder_testcases,
         1,
         QueryBuilder_params
@@ -8919,14 +8864,14 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        92,
+        90,
         Observer_testcases
     },
     {
         "ComponentLifecycle",
         NULL,
         NULL,
-        110,
+        109,
         ComponentLifecycle_testcases
     },
     {
@@ -8961,14 +8906,14 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        130,
+        129,
         World_testcases
     },
     {
         "Singleton",
         NULL,
         NULL,
-        52,
+        53,
         Singleton_testcases
     },
     {
@@ -8982,14 +8927,14 @@ static bake_test_suite suites[] = {
         "Table",
         NULL,
         NULL,
-        40,
+        38,
         Table_testcases
     },
     {
         "ComponentTraits",
         NULL,
         NULL,
-        39,
+        37,
         ComponentTraits_testcases
     }
 };

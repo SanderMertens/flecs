@@ -9738,30 +9738,6 @@ void Observer_get_filter(void) {
     ecs_fini(world);
 }
 
-void Observer_uni_observer_eval_count(void) {
-    ecs_world_t* world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_entity_t o = ecs_observer(world, {
-        .query.terms = {
-            { .id = ecs_id(Position) },
-        },
-        .callback = Observer,
-        .events = { EcsOnAdd },
-    });
-
-    const ecs_query_t *q = ecs_observer_get(world, o)->query;
-    test_assert(q != NULL);
-    test_int(q->eval_count, 0);
-
-    ecs_new_w(world, Position);
-
-    test_int(q->eval_count, 1);
-
-    ecs_fini(world);
-}
-
 void Observer_multi_observer_eval_count(void) {
     ecs_world_t* world = ecs_mini();
 

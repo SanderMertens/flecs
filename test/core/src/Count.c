@@ -3,7 +3,15 @@
 void Count_count_empty(void) {
     ecs_world_t *world = ecs_mini();
 
-    test_int(ecs_count_id(world, 0), 0);
+    ECS_COMPONENT(world, Position);
+
+    test_int(ecs_count(world, Position), 0);
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    test_int(ecs_count(world, Position), 1);
+
+    ecs_remove(world, e, Position);
+    test_int(ecs_count(world, Position), 0);
 
     ecs_fini(world);
 }

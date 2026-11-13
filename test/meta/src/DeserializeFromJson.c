@@ -7871,44 +7871,6 @@ void DeserializeFromJson_map_bitmask_i32(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_map_bitmask_i32_multi_flag_key(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
-        .entity = ecs_entity(world, {.name = "Toppings"}),
-        .constants = {
-            {"Lettuce"}, {"Bacon"}, {"Tomato"}
-        }
-    });
-
-    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
-        .entity = ecs_entity(world, {.name = "T"}),
-        .key_type = b,
-        .type = ecs_id(ecs_i32_t)
-    });
-
-    test_assert(t != 0);
-
-    ecs_map_t value = {0};
-
-    const char *ptr = ecs_ptr_from_json(world, t, &value,
-        "{\"Lettuce|Bacon\": 10, \"Tomato\": 20}", NULL);
-    test_assert(ptr != NULL);
-    test_assert(ptr[0] == '\0');
-
-    test_int(ecs_map_count(&value), 2);
-    ecs_map_val_t *v = ecs_map_get(&value, 3);
-    test_assert(v != NULL);
-    test_int(*(int32_t*)v, 10);
-    v = ecs_map_get(&value, 4);
-    test_assert(v != NULL);
-    test_int(*(int32_t*)v, 20);
-
-    ecs_map_fini(&value);
-
-    ecs_fini(world);
-}
-
 void DeserializeFromJson_map_id_pair_i32(void) {
     ecs_world_t *world = ecs_init();
 

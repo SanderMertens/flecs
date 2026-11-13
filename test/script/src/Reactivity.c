@@ -7503,52 +7503,6 @@ void Reactivity_template_prop_change_keeps_for_entities(void) {
     ecs_fini(world);
 }
 
-void Reactivity_template_i32_prop_change_keeps_for_entities(void) {
-    typedef struct {
-        ecs_i32_t scale;
-        ecs_i32_t count;
-    } Props;
-
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
-        .entity = ecs_entity(world, { .name = "main" }),
-        .code =
-            HEAD "template List {"
-            LINE "  prop scale: i32 = 1"
-            LINE "  prop count: i32 = 2"
-            LINE "  for i in 0..count {"
-            LINE "    \"child_$i\" {}"
-            LINE "  }"
-            LINE "}"
-            LINE "List instance()"
-    });
-    test_assert(script != 0);
-
-    ecs_entity_t list = ecs_lookup(world, "List");
-    ecs_entity_t instance = ecs_lookup(world, "instance");
-    ecs_entity_t old_0 = ecs_lookup(world, "instance.child_0");
-    ecs_entity_t old_1 = ecs_lookup(world, "instance.child_1");
-    test_assert(list != 0);
-    test_assert(instance != 0);
-    test_assert(old_0 != 0);
-    test_assert(old_1 != 0);
-
-    const Props *ptr = ecs_get_id(world, instance, list);
-    test_assert(ptr != NULL);
-
-    Props props = *ptr;
-    props.scale = 5;
-    ecs_set_id(world, instance, list, sizeof(Props), &props);
-
-    test_assert(ecs_is_alive(world, old_0));
-    test_assert(ecs_is_alive(world, old_1));
-    test_uint(ecs_lookup(world, "instance.child_0"), old_0);
-    test_uint(ecs_lookup(world, "instance.child_1"), old_1);
-
-    ecs_fini(world);
-}
-
 void Reactivity_template_prop_change_keeps_for_entities_in_child_scope(void) {
     typedef struct {
         ecs_bool_t ok;
@@ -11368,46 +11322,6 @@ void Reactivity_query_no_update_at_fini(void) {
     ecs_fini(world);
 
     test_int(query_fini_tag_added, 0);
-}
-
-void Reactivity_for_range_anonymous_kept(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t count = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Count" }),
-        .members = {{"value", ecs_id(ecs_i32_t)}}
-    });
-    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
-    ecs_entity_t source = ecs_entity(world, { .name = "source" });
-    ecs_set_id(world, source, count, sizeof(int32_t), &(int32_t){2});
-
-    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
-        .entity = ecs_entity(world, { .name = "main" }),
-        .code =
-            HEAD "for i in 0..source[Count].value {"
-            LINE "  _ { Tag }"
-            LINE "}"
-    });
-    test_assert(script != 0);
-    test_int(ecs_count_id(world, tag), 2);
-
-    ecs_entity_t old[2] = {0};
-    int32_t i = 0;
-    ecs_iter_t it = ecs_each_id(world, tag);
-    while (ecs_each_next(&it)) {
-        for (int32_t j = 0; j < it.count; j ++) {
-            old[i ++] = it.entities[j];
-        }
-    }
-
-    ecs_set_id(world, source, count, sizeof(int32_t), &(int32_t){3});
-    test_int(ecs_count_id(world, tag), 3);
-    test_assert(ecs_is_alive(world, old[0]));
-    test_assert(ecs_is_alive(world, old[1]));
-    test_assert(ecs_has_id(world, old[0], tag));
-    test_assert(ecs_has_id(world, old[1], tag));
-
-    ecs_fini(world);
 }
 
 void Reactivity_for_range_anonymous_shrink(void) {

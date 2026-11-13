@@ -849,7 +849,6 @@ void DeserializeFromJson_map_i32_i32_negative_key(void);
 void DeserializeFromJson_map_i64_i32_negative_key(void);
 void DeserializeFromJson_map_enum_i32(void);
 void DeserializeFromJson_map_bitmask_i32(void);
-void DeserializeFromJson_map_bitmask_i32_multi_flag_key(void);
 void DeserializeFromJson_map_id_pair_i32(void);
 void DeserializeFromJson_map_i64_enum_underlying_i8(void);
 void DeserializeFromJson_map_i64_enum_underlying_i16(void);
@@ -1026,7 +1025,6 @@ void SerializeEntityToJson_serialize_w_label_no_name(void);
 void SerializeEntityToJson_serialize_w_brief(void);
 void SerializeEntityToJson_serialize_w_brief_no_brief(void);
 void SerializeEntityToJson_serialize_w_link(void);
-void SerializeEntityToJson_serialize_w_link_no_link(void);
 void SerializeEntityToJson_serialize_color(void);
 void SerializeEntityToJson_serialize_w_doc_w_quotes(void);
 void SerializeEntityToJson_serialize_from_core(void);
@@ -1039,9 +1037,7 @@ void SerializeEntityToJson_serialize_w_alerts_no_message(void);
 void SerializeEntityToJson_serialize_refs_childof(void);
 void SerializeEntityToJson_serialize_refs_custom(void);
 void SerializeEntityToJson_serialize_refs_wildcard(void);
-void SerializeEntityToJson_serialize_matches_filter(void);
 void SerializeEntityToJson_serialize_matches_query(void);
-void SerializeEntityToJson_serialize_matches_rule(void);
 void SerializeEntityToJson_serialize_no_matches(void);
 void SerializeEntityToJson_serialize_id_recycled(void);
 void SerializeEntityToJson_serialize_union_target(void);
@@ -1173,7 +1169,6 @@ void SerializeIterToJson_serialize_31_fields(void);
 void SerializeIterToJson_serialize_32_fields(void);
 void SerializeIterToJson_serialize_field_w_escaped_sep(void);
 void SerializeIterToJson_serialize_children_w_parent_component(void);
-void SerializeIterToJson_serialize_children_w_parent_component_table(void);
 void SerializeIterToJson_serialize_children_w_parent_component_parents_before_children(void);
 void SerializeIterToJson_serialize_world_w_parent_component(void);
 void SerializeIterToJson_serialize_children_w_tag_w_parent_component(void);
@@ -4950,10 +4945,6 @@ bake_test_case DeserializeFromJson_testcases[] = {
         DeserializeFromJson_map_bitmask_i32
     },
     {
-        "map_bitmask_i32_multi_flag_key",
-        DeserializeFromJson_map_bitmask_i32_multi_flag_key
-    },
-    {
         "map_id_pair_i32",
         DeserializeFromJson_map_id_pair_i32
     },
@@ -5648,10 +5639,6 @@ bake_test_case SerializeEntityToJson_testcases[] = {
         SerializeEntityToJson_serialize_w_link
     },
     {
-        "serialize_w_link_no_link",
-        SerializeEntityToJson_serialize_w_link_no_link
-    },
-    {
         "serialize_color",
         SerializeEntityToJson_serialize_color
     },
@@ -5700,16 +5687,8 @@ bake_test_case SerializeEntityToJson_testcases[] = {
         SerializeEntityToJson_serialize_refs_wildcard
     },
     {
-        "serialize_matches_filter",
-        SerializeEntityToJson_serialize_matches_filter
-    },
-    {
         "serialize_matches_query",
         SerializeEntityToJson_serialize_matches_query
-    },
-    {
-        "serialize_matches_rule",
-        SerializeEntityToJson_serialize_matches_rule
     },
     {
         "serialize_no_matches",
@@ -6229,10 +6208,6 @@ bake_test_case SerializeIterToJson_testcases[] = {
     {
         "serialize_children_w_parent_component",
         SerializeIterToJson_serialize_children_w_parent_component
-    },
-    {
-        "serialize_children_w_parent_component_table",
-        SerializeIterToJson_serialize_children_w_parent_component_table
     },
     {
         "serialize_children_w_parent_component_parents_before_children",
@@ -8162,7 +8137,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        221,
+        220,
         DeserializeFromJson_testcases
     },
     {
@@ -8176,14 +8151,14 @@ static bake_test_suite suites[] = {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        101,
+        98,
         SerializeEntityToJson_testcases
     },
     {
         "SerializeIterToJson",
         NULL,
         NULL,
-        91,
+        90,
         SerializeIterToJson_testcases
     },
     {

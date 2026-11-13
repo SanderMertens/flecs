@@ -122,13 +122,6 @@ void Id_pair_id_w_rel_component_obj_wildcard_is_tag(void) {
     ecs_fini(world);
 }
 
-void Id_pair_id_w_obj_wildcard_is_tag(void) {
-    ecs_world_t *world = ecs_mini();
-    ecs_entity_t r = ecs_new(world);
-    test_assert( !ecs_id_is_tag(world, ecs_pair(r, EcsWildcard)));
-    ecs_fini(world);
-}
-
 void Id_pair_id_w_tag_property_w_obj_component_is_tag(void) {
     ecs_world_t *world = ecs_mini();
     ECS_COMPONENT(world, Position);

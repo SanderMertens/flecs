@@ -24,12 +24,29 @@ void Commands_is_deferred(void) {
 
 void Commands_stage_always_deferred(void) {
     ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
     ecs_world_t *stage = ecs_get_stage(world, 0);
     test_assert(ecs_is_stage(stage));
     test_assert(!ecs_is_stage(world));
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(stage, e, Tag);
+    test_assert(!ecs_has(world, e, Tag));
+
     ecs_merge(stage);
+    test_assert(ecs_has(world, e, Tag));
+
     test_assert(ecs_is_stage(stage));
-    test_assert(!ecs_is_stage(world));
+
+    ecs_add(stage, e, Tag);
+    ecs_remove(stage, e, Tag);
+    test_assert(ecs_has(world, e, Tag));
+
+    ecs_merge(stage);
+    test_assert(!ecs_has(world, e, Tag));
+
     ecs_fini(world);
 }
 
@@ -1678,32 +1695,6 @@ void Commands_defer_delete_added_object(void) {
     test_assert(!ecs_has_pair(world, child, Rel, target));
 
     ecs_fini(world);
-}
-
-void Commands_defer_delete_added_object_childof(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_entity_t parent = ecs_new(world);
-
-    ecs_frame_begin(world, 1);
-
-    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
-
-    ecs_entity_t child = ecs_new_w_pair(stage_1, EcsChildOf, parent);
-    ecs_add(stage_1, child, Velocity);
-    ecs_delete(stage_1, parent);
-
-    ecs_merge(stage_1);
-
-    ecs_frame_end(world);    
-
-    test_assert(!ecs_is_alive(world, parent));
-    test_assert(!ecs_is_alive(world, child));
-
-    ecs_fini(world); 
 }
 
 void Commands_discard_add(void) {

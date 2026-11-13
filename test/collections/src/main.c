@@ -44,10 +44,7 @@ void Map_hashmap_iter_terminates(void);
 // Testsuite 'Sparse'
 void Sparse_setup(void);
 void Sparse_add_1(void);
-void Sparse_add_1_to_empty(void);
-void Sparse_add_1_chunk_size_1(void);
 void Sparse_add_n(void);
-void Sparse_add_n_chunk_size_1(void);
 void Sparse_remove(void);
 void Sparse_remove_first(void);
 void Sparse_remove_last(void);
@@ -249,20 +246,8 @@ bake_test_case Sparse_testcases[] = {
         Sparse_add_1
     },
     {
-        "add_1_to_empty",
-        Sparse_add_1_to_empty
-    },
-    {
-        "add_1_chunk_size_1",
-        Sparse_add_1_chunk_size_1
-    },
-    {
         "add_n",
         Sparse_add_n
-    },
-    {
-        "add_n_chunk_size_1",
-        Sparse_add_n_chunk_size_1
     },
     {
         "remove",
@@ -523,7 +508,6 @@ bake_test_case Vec_testcases[] = {
     }
 };
 
-
 static bake_test_suite suites[] = {
     {
         "Map",
@@ -536,7 +520,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        24,
+        21,
         Sparse_testcases
     },
     {

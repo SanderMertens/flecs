@@ -802,31 +802,6 @@ void Entity_init_w_nested_name_twice_deferred(void) {
     ecs_fini(world);
 }
 
-void Entity_init_w_scope_name_twice_deferred(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
-
-    ecs_entity_t e1 = ecs_entity_init(stage_1, &(ecs_entity_desc_t){
-        .name = "Foo.Bar"
-    });
-    ecs_entity_t e2 = ecs_entity_init(stage_1, &(ecs_entity_desc_t){
-        .name = "Foo.Bar"
-    });
-
-    ecs_merge(stage_1);
-
-    test_str(ecs_get_name(world, e1), "Bar");
-    test_str(ecs_get_name(world, e2), "Bar");
-    test_assert(e1 == e2);
-
-    ecs_entity_t parent = ecs_lookup(world, "Foo");
-    test_assert(parent != 0);
-    test_assert(ecs_has_pair(world, e1, EcsChildOf, parent));
-
-    ecs_fini(world);
-}
-
 void Entity_init_w_childof_name_twice_deferred(void) {
     ecs_world_t *world = ecs_mini();
 

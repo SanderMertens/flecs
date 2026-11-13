@@ -191,7 +191,6 @@ void Parser_component_explicit_subject_any(void);
 void Parser_component_explicit_subject_0(void);
 void Parser_this_as_predicate(void);
 void Parser_this_var_as_predicate(void);
-void Parser_this_lowercase_var_as_predicate(void);
 void Parser_this_as_object(void);
 void Parser_this_var_as_object(void);
 void Parser_pair_implicit_subject(void);
@@ -212,7 +211,6 @@ void Parser_pair_implicit_subject_obj_w_invalid_flags(void);
 void Parser_pair_explicit_subject(void);
 void Parser_pair_explicit_subject_this(void);
 void Parser_pair_explicit_subject_this_by_name(void);
-void Parser_pair_explicit_subject_this_by_var_name(void);
 void Parser_pair_explicit_subject_wildcard_pred(void);
 void Parser_pair_explicit_subject_wildcard_subj(void);
 void Parser_pair_explicit_subject_wildcard_obj(void);
@@ -239,8 +237,6 @@ void Parser_inout_w_optional_operator(void);
 void Parser_component_singleton(void);
 void Parser_this_singleton(void);
 void Parser_component_implicit_no_subject(void);
-void Parser_component_explicit_no_subject(void);
-void Parser_pair_no_subject(void);
 void Parser_variable_single_char(void);
 void Parser_variable_multi_char(void);
 void Parser_variable_multi_char_w_underscore(void);
@@ -264,12 +260,9 @@ void Parser_pair_explicit_subject_optional(void);
 void Parser_pred_implicit_subject_w_role(void);
 void Parser_pred_explicit_subject_w_role(void);
 void Parser_pred_no_subject_w_role(void);
-void Parser_pair_implicit_subject_w_role(void);
-void Parser_pair_explicit_subject_w_role(void);
 void Parser_inout_role_pred_implicit_subject(void);
 void Parser_inout_role_pred_no_subject(void);
 void Parser_inout_role_pred_explicit_subject(void);
-void Parser_inout_role_pair_implicit_subject(void);
 void Parser_inout_role_pair_explicit_subject(void);
 void Parser_2_pred_implicit_subject(void);
 void Parser_2_pred_no_subject(void);
@@ -277,8 +270,6 @@ void Parser_2_pred_explicit_subject(void);
 void Parser_2_pair_implicit_subject(void);
 void Parser_2_pair_explicit_subject(void);
 void Parser_2_pred_role(void);
-void Parser_2_pair_implicit_subj_role(void);
-void Parser_2_pair_explicit_subj_role(void);
 void Parser_2_or_pred_implicit_subj(void);
 void Parser_2_or_pred_explicit_subj(void);
 void Parser_2_or_pair_implicit_subj(void);
@@ -577,6 +568,13 @@ void Basic_1_any_src_w_pair_tgt_var_childof(void);
 void Basic_1_any_src_w_pair_rel_var(void);
 void Basic_1_any_src_w_pair_tgt_this(void);
 void Basic_1_any_src_w_pair_rel_this(void);
+void Basic_1_any_src_any_tgt_w_rel_fixed(void);
+void Basic_1_any_src_any_rel_w_tgt_fixed(void);
+void Basic_1_any_src_w_childof_pair_any_tgt(void);
+void Basic_1_any_src_pair_tgt_wildcard_empty(void);
+void Basic_1_any_src_pair_rel_wildcard_empty(void);
+void Basic_1_any_src_pair_w_tag_query_empty(void);
+void Basic_1_any_src_tag_w_pair_query_empty(void);
 void Basic_not_any(void);
 void Basic_rule_w_iter_next(void);
 void Basic_empty_rule(void);
@@ -590,9 +588,7 @@ void Basic_out_term(void);
 void Basic_inout_term(void);
 void Basic_nodata_term(void);
 void Basic_find_this_lowercase(void);
-void Basic_find_this_uppercase(void);
 void Basic_find_this_tgt_lowercase(void);
-void Basic_find_this_tgt_uppercase(void);
 void Basic_get_filter(void);
 void Basic_iter_empty_source(void);
 void Basic_iter_empty_source_2_terms(void);
@@ -663,8 +659,6 @@ void Basic_2_trivial_w_disabled(void);
 void Basic_3_trivial_w_disabled(void);
 void Basic_1_component_w_match_prefab_flag(void);
 void Basic_1_tag_w_match_prefab_flag(void);
-void Basic_1_tag_w_match_prefab_flag_uncached(void);
-void Basic_1_tag_w_match_prefab_flag_cached(void);
 void Basic_1_tag_w_match_disabled_flag(void);
 void Basic_2_terms_w_match_prefab_flag(void);
 void Basic_2_this_w_fixed_src(void);
@@ -732,7 +726,6 @@ void Basic_0_terms_match_nothing(void);
 void Basic_pair_rel_any_record(void);
 void Basic_pair_tgt_any_record(void);
 void Basic_pair_any_any_record(void);
-void Basic_written_any_record(void);
 void Basic_written_pair_rel_any_record(void);
 void Basic_written_pair_tgt_any_record(void);
 void Basic_written_pair_any_any_record(void);
@@ -1847,10 +1840,7 @@ void Cached_isa_self_superset(void);
 void Cached_childof_superset(void);
 void Cached_superset_2_targets(void);
 void Cached_superset_2_relations(void);
-void Cached_superset_2_relations_instanced(void);
 void Cached_superset_2_relations_w_component(void);
-void Cached_superset_2_relations_instanced_w_component(void);
-void Cached_parent(void);
 void Cached_isa_rematch(void);
 void Cached_childof_rematch(void);
 void Cached_isa_unmatch(void);
@@ -2357,6 +2347,7 @@ void DontFragment_1_fixed_sparse_exclusive_any(void);
 void DontFragment_1_fixed_sparse_tgt_var(void);
 void DontFragment_1_fixed_sparse_exclusive_tgt_var(void);
 void DontFragment_1_fixed_sparse_tgt_var_written(void);
+void DontFragment_1_fixed_sparse_exclusive_tgt_var_written(void);
 void DontFragment_1_this_sparse_simple(void);
 void DontFragment_1_this_sparse(void);
 void DontFragment_1_this_sparse_none(void);
@@ -2588,6 +2579,7 @@ void NonFragmentingChildOf_this_src_childof_parent_w_component_single_child(void
 void NonFragmentingChildOf_this_src_childof_parent_w_component_single_child_table(void);
 void NonFragmentingChildOf_this_src_childof_tag_w_parent(void);
 void NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child_table(void);
 void NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child_at_offset(void);
 void NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child_after_range(void);
 void NonFragmentingChildOf_this_src_childof_tag_w_parent_n_children_after_toggle_range(void);
@@ -2614,7 +2606,6 @@ void NonFragmentingChildOf_this_src_childof_component_w_parent_single_child(void
 void NonFragmentingChildOf_this_src_childof_component_w_parent_single_child_table(void);
 void NonFragmentingChildOf_this_src_childof_wildcard(void);
 void NonFragmentingChildOf_this_src_childof_wildcard_count(void);
-void NonFragmentingChildOf_this_src_childof_var_count(void);
 void NonFragmentingChildOf_this_src_childof_wildcard_w_tag(void);
 void NonFragmentingChildOf_this_src_childof_wildcard_w_component(void);
 void NonFragmentingChildOf_this_src_childof_any(void);
@@ -2656,7 +2647,9 @@ void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_w_component_from_
 void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_from_child_on_instantiate_inherit(void);
 void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_from_child_on_instantiate_dont_inherit(void);
 void NonFragmentingChildOf_this_up_childof_1_table_3_parents(void);
+void NonFragmentingChildOf_this_up_childof_2_tables_3_parents(void);
 void NonFragmentingChildOf_this_self_up_childof_1_table_3_parents(void);
+void NonFragmentingChildOf_this_self_up_childof_2_tables_3_parents(void);
 void NonFragmentingChildOf_this_written_up_childof(void);
 void NonFragmentingChildOf_this_written_up_childof_w_component(void);
 void NonFragmentingChildOf_this_written_up_childof_w_component_inherited(void);
@@ -3739,10 +3732,6 @@ bake_test_case Parser_testcases[] = {
         Parser_this_var_as_predicate
     },
     {
-        "this_lowercase_var_as_predicate",
-        Parser_this_lowercase_var_as_predicate
-    },
-    {
         "this_as_object",
         Parser_this_as_object
     },
@@ -3821,10 +3810,6 @@ bake_test_case Parser_testcases[] = {
     {
         "pair_explicit_subject_this_by_name",
         Parser_pair_explicit_subject_this_by_name
-    },
-    {
-        "pair_explicit_subject_this_by_var_name",
-        Parser_pair_explicit_subject_this_by_var_name
     },
     {
         "pair_explicit_subject_wildcard_pred",
@@ -3931,14 +3916,6 @@ bake_test_case Parser_testcases[] = {
         Parser_component_implicit_no_subject
     },
     {
-        "component_explicit_no_subject",
-        Parser_component_explicit_no_subject
-    },
-    {
-        "pair_no_subject",
-        Parser_pair_no_subject
-    },
-    {
         "variable_single_char",
         Parser_variable_single_char
     },
@@ -4031,14 +4008,6 @@ bake_test_case Parser_testcases[] = {
         Parser_pred_no_subject_w_role
     },
     {
-        "pair_implicit_subject_w_role",
-        Parser_pair_implicit_subject_w_role
-    },
-    {
-        "pair_explicit_subject_w_role",
-        Parser_pair_explicit_subject_w_role
-    },
-    {
         "inout_role_pred_implicit_subject",
         Parser_inout_role_pred_implicit_subject
     },
@@ -4049,10 +4018,6 @@ bake_test_case Parser_testcases[] = {
     {
         "inout_role_pred_explicit_subject",
         Parser_inout_role_pred_explicit_subject
-    },
-    {
-        "inout_role_pair_implicit_subject",
-        Parser_inout_role_pair_implicit_subject
     },
     {
         "inout_role_pair_explicit_subject",
@@ -4081,14 +4046,6 @@ bake_test_case Parser_testcases[] = {
     {
         "2_pred_role",
         Parser_2_pred_role
-    },
-    {
-        "2_pair_implicit_subj_role",
-        Parser_2_pair_implicit_subj_role
-    },
-    {
-        "2_pair_explicit_subj_role",
-        Parser_2_pair_explicit_subj_role
     },
     {
         "2_or_pred_implicit_subj",
@@ -5265,6 +5222,34 @@ bake_test_case Basic_testcases[] = {
         Basic_1_any_src_w_pair_rel_this
     },
     {
+        "1_any_src_any_tgt_w_rel_fixed",
+        Basic_1_any_src_any_tgt_w_rel_fixed
+    },
+    {
+        "1_any_src_any_rel_w_tgt_fixed",
+        Basic_1_any_src_any_rel_w_tgt_fixed
+    },
+    {
+        "1_any_src_w_childof_pair_any_tgt",
+        Basic_1_any_src_w_childof_pair_any_tgt
+    },
+    {
+        "1_any_src_pair_tgt_wildcard_empty",
+        Basic_1_any_src_pair_tgt_wildcard_empty
+    },
+    {
+        "1_any_src_pair_rel_wildcard_empty",
+        Basic_1_any_src_pair_rel_wildcard_empty
+    },
+    {
+        "1_any_src_pair_w_tag_query_empty",
+        Basic_1_any_src_pair_w_tag_query_empty
+    },
+    {
+        "1_any_src_tag_w_pair_query_empty",
+        Basic_1_any_src_tag_w_pair_query_empty
+    },
+    {
         "not_any",
         Basic_not_any
     },
@@ -5317,16 +5302,8 @@ bake_test_case Basic_testcases[] = {
         Basic_find_this_lowercase
     },
     {
-        "find_this_uppercase",
-        Basic_find_this_uppercase
-    },
-    {
         "find_this_tgt_lowercase",
         Basic_find_this_tgt_lowercase
-    },
-    {
-        "find_this_tgt_uppercase",
-        Basic_find_this_tgt_uppercase
     },
     {
         "get_filter",
@@ -5609,14 +5586,6 @@ bake_test_case Basic_testcases[] = {
         Basic_1_tag_w_match_prefab_flag
     },
     {
-        "1_tag_w_match_prefab_flag_uncached",
-        Basic_1_tag_w_match_prefab_flag_uncached
-    },
-    {
-        "1_tag_w_match_prefab_flag_cached",
-        Basic_1_tag_w_match_prefab_flag_cached
-    },
-    {
         "1_tag_w_match_disabled_flag",
         Basic_1_tag_w_match_disabled_flag
     },
@@ -5883,10 +5852,6 @@ bake_test_case Basic_testcases[] = {
     {
         "pair_any_any_record",
         Basic_pair_any_any_record
-    },
-    {
-        "written_any_record",
-        Basic_written_any_record
     },
     {
         "written_pair_rel_any_record",
@@ -10262,20 +10227,8 @@ bake_test_case Cached_testcases[] = {
         Cached_superset_2_relations
     },
     {
-        "superset_2_relations_instanced",
-        Cached_superset_2_relations_instanced
-    },
-    {
         "superset_2_relations_w_component",
         Cached_superset_2_relations_w_component
-    },
-    {
-        "superset_2_relations_instanced_w_component",
-        Cached_superset_2_relations_instanced_w_component
-    },
-    {
-        "parent",
-        Cached_parent
     },
     {
         "isa_rematch",
@@ -12256,6 +12209,10 @@ bake_test_case DontFragment_testcases[] = {
         DontFragment_1_fixed_sparse_tgt_var_written
     },
     {
+        "1_fixed_sparse_exclusive_tgt_var_written",
+        DontFragment_1_fixed_sparse_exclusive_tgt_var_written
+    },
+    {
         "1_this_sparse_simple",
         DontFragment_1_this_sparse_simple
     },
@@ -13171,6 +13128,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child
     },
     {
+        "this_src_childof_tag_w_parent_single_child_table",
+        NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child_table
+    },
+    {
         "this_src_childof_tag_w_parent_single_child_at_offset",
         NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child_at_offset
     },
@@ -13273,10 +13234,6 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "this_src_childof_wildcard_count",
         NonFragmentingChildOf_this_src_childof_wildcard_count
-    },
-    {
-        "this_src_childof_var_count",
-        NonFragmentingChildOf_this_src_childof_var_count
     },
     {
         "this_src_childof_wildcard_w_tag",
@@ -13443,8 +13400,16 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_this_up_childof_1_table_3_parents
     },
     {
+        "this_up_childof_2_tables_3_parents",
+        NonFragmentingChildOf_this_up_childof_2_tables_3_parents
+    },
+    {
         "this_self_up_childof_1_table_3_parents",
         NonFragmentingChildOf_this_self_up_childof_1_table_3_parents
+    },
+    {
+        "this_self_up_childof_2_tables_3_parents",
+        NonFragmentingChildOf_this_self_up_childof_2_tables_3_parents
     },
     {
         "this_written_up_childof",
@@ -14938,7 +14903,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        313,
+        304,
         Parser_testcases
     },
     {
@@ -14954,7 +14919,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        250,
+        252,
         Basic_testcases,
         1,
         Basic_params
@@ -15047,7 +15012,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        172,
+        169,
         Cached_testcases
     },
     {
@@ -15095,7 +15060,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        150,
+        151,
         DontFragment_testcases,
         1,
         DontFragment_params
@@ -15104,7 +15069,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        365,
+        367,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params

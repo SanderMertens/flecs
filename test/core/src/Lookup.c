@@ -688,9 +688,9 @@ void Lookup_lookup_path_wildcard_from_scope(void) {
 
     ecs_entity_t scope = ecs_new(world);
 
-    ecs_entity_t lookup = ecs_lookup_path_w_sep(world, scope, ".", NULL, NULL, false);
+    ecs_entity_t lookup = ecs_lookup_path_w_sep(world, scope, "*", NULL, NULL, false);
     test_assert(lookup != 0);
-    test_assert(lookup == EcsThis);
+    test_assert(lookup == EcsWildcard);
 
     ecs_fini(world);
 }

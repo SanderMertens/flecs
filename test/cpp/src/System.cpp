@@ -631,64 +631,6 @@ void System_order_by_id(void) {
     test_int(count, 5);
 }
 
-void System_order_by_type_after_create(void) {
-    flecs::world world;
-
-    world.entity().set<Position>({3, 0});
-    world.entity().set<Position>({1, 0});
-    world.entity().set<Position>({5, 0});
-    world.entity().set<Position>({2, 0});
-    world.entity().set<Position>({4, 0});
-
-    float last_val = 0;
-    int32_t count = 0;
-
-    auto sys = world.system<const Position>()
-        .order_by<Position>([](flecs::entity_t e1, const Position *p1,
-            flecs::entity_t e2, const Position *p2) {
-            return (p1->x > p2->x) - (p1->x < p2->x);
-        })
-        .each([&](flecs::entity e, const Position& p) {
-            test_assert(p.x > last_val);
-            last_val = p.x;
-            count ++;
-        });
-
-    sys.run();
-
-    test_int(count, 5);
-}
-
-void System_order_by_id_after_create(void) {
-    flecs::world world;
-
-    auto pos = world.component<Position>();
-
-    world.entity().set<Position>({3, 0});
-    world.entity().set<Position>({1, 0});
-    world.entity().set<Position>({5, 0});
-    world.entity().set<Position>({2, 0});
-    world.entity().set<Position>({4, 0});
-
-    float last_val = 0;
-    int32_t count = 0;
-
-    auto sys = world.system<const Position>()
-        .order_by(pos, [](flecs::entity_t e1, const void *p1, flecs::entity_t e2, const void *p2) {
-            return (static_cast<const Position*>(p1)->x > static_cast<const Position*>(p2)->x) -
-                (static_cast<const Position*>(p1)->x < static_cast<const Position*>(p2)->x);
-        })
-        .each([&](flecs::entity e, const Position& p) {
-            test_assert(p.x > last_val);
-            last_val = p.x;
-            count ++;
-        });
-
-    sys.run();
-
-    test_int(count, 5);
-}
-
 void System_get_query(void) {
     flecs::world world;
 

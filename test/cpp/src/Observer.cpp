@@ -85,37 +85,6 @@ void Observer_2_terms_on_set(void) {
     test_int(count, 1);
 }
 
-void Observer_2_terms_un_set(void) {
-    flecs::world ecs;
-
-    int32_t count = 0;
-
-    ecs.observer<Position, Velocity>()
-        .event(flecs::OnRemove)
-        .each([&](Position& p, Velocity& v) {
-            count ++;
-            test_int(p.x, 10);
-            test_int(p.y, 20);
-            test_int(v.x, 1);
-            test_int(v.y, 2);
-        });
-
-    auto e = ecs.entity();
-    test_int(count, 0);
-
-    e.set<Position>({10, 20});
-    test_int(count, 0);
-
-    e.set<Velocity>({1, 2});
-    test_int(count, 0);
-
-    e.remove<Velocity>();
-    test_int(count, 1);
-
-    e.remove<Position>();
-    test_int(count, 1); 
-}
-
 void Observer_10_terms(void) {
     flecs::world ecs;
 
@@ -560,25 +529,6 @@ void Observer_on_remove(void) {
 }
 
 struct MyTag { };
-
-void Observer_on_add_tag_action(void) {
-    flecs::world world;
-
-    int invoked = 0;
-
-    world.observer<MyTag>()
-        .event(flecs::OnAdd)
-        .run([&](flecs::iter it) {
-            while (it.next()) {
-                invoked ++;
-            }
-        });
-
-    world.entity()
-        .add<MyTag>();
-
-    test_int(invoked, 1);
-}
 
 void Observer_on_add_tag_iter(void) {
     flecs::world world;

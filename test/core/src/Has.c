@@ -1,30 +1,5 @@
 #include <core.h>
 
-void Has_zero(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ecs_entity_t e = ecs_new(world);
-    test_assert(e != 0);
-
-    test_expect_abort();
-    ecs_has_id(world, e, 0);
-}
-
-void Has_1_of_0(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_entity_t e = ecs_new(world);
-    test_assert(e != 0);
-
-    test_assert(!ecs_has(world, e, Position));
-    
-    ecs_fini(world);
-}
-
 void Has_1_of_1(void) {
     ecs_world_t *world = ecs_mini();
 

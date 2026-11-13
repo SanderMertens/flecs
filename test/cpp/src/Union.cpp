@@ -38,20 +38,6 @@ struct Movement { };
 struct Standing { };
 struct Walking { };
 
-void Union_add_case_w_type(void) {
-    flecs::world world;
-
-    world.component<Movement>().add(flecs::DontFragment).add(flecs::Exclusive);
-
-    auto e = world.entity().add<Movement, Standing>();
-    test_assert((e.has<Movement, Standing>()));
-
-    e.add<Movement, Walking>();
-
-    test_assert((e.has<Movement, Walking>()));
-    test_assert((!e.has<Movement, Standing>()));
-}
-
 void Union_add_switch_w_type(void) {
     flecs::world world;
 

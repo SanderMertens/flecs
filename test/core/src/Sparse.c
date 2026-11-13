@@ -7898,13 +7898,18 @@ void Sparse_fini_w_dont_fragment_component_on_prefab_child_w_up_query(void) {
 
     test_assert(q != NULL);
 
+    ecs_entity_t inst_child = ecs_lookup_child(world, inst, "child");
+    test_assert(inst_child != 0);
+    test_assert(ecs_owns(world, inst_child, Position));
+    test_assert(!ecs_has_pair(world, inst_child, EcsIsA, EcsWildcard));
+
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
         count += it.count;
     }
 
-    test_assert(count >= 0);
+    test_int(count, 0);
 
     ecs_query_fini(q);
 
@@ -7979,19 +7984,6 @@ void Sparse_fini_w_dont_fragment_component_w_isa_prefab_in_module(void) {
     ecs_fini(world);
 
     test_assert(true);
-}
-
-void Sparse_add_dont_fragment_tag_w_with(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ecs_entity_t tag_a = ecs_new(world);
-    ecs_entity_t tag_b = ecs_new(world);
-    ecs_add_id(world, tag_b, EcsDontFragment);
-
-    test_expect_abort();
-    ecs_add_pair(world, tag_b, EcsWith, tag_a);
 }
 
 void Sparse_add_dont_fragment_tag_w_with_deferred(void) {

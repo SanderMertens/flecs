@@ -2153,7 +2153,9 @@ void Lambda_lambda_as_function_arg(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const a = [1, 2, 3]"
+    HEAD "fn foo(v: i64) -> i64 {"
+    LINE "  v"
+    LINE "}"
     LINE "const b = foo((el) -> { el })";
 
     ecs_log_set_level(-4);

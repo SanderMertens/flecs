@@ -83,6 +83,17 @@ void Input_import(void) {
     test_assert(ecs_lookup(world, "flecs.script.on.move") != 0);
     test_assert(ecs_lookup(world, "flecs.script.on.key_down") != 0);
     test_assert(ecs_lookup(world, "flecs.script.on.key_up") != 0);
+    test_assert(ecs_lookup(world, "flecs.script.on.enter") != 0);
+    test_assert(ecs_lookup(world, "flecs.script.on.leave") != 0);
+    test_assert(ecs_lookup(world, "flecs.script.input.FocusEvent") ==
+        ecs_id(EcsScriptFocusEvent));
+    test_assert(ecs_lookup(world, "flecs.script.on.focus") != 0);
+    test_assert(ecs_lookup(world, "flecs.script.on.blur") != 0);
+    test_assert(ecs_lookup(world, "flecs.script.focus") != 0);
+    test_uint(ecs_script_get_focus(world), 0);
+    test_assert(ecs_lookup(world, "flecs.script.input.ActivateEvent") ==
+        ecs_id(EcsScriptActivateEvent));
+    test_assert(ecs_lookup(world, "flecs.script.on.activate") != 0);
 
     ecs_fini(world);
 }
@@ -1968,16 +1979,6 @@ void Input_mouse_event_in_progress(void) {
     ecs_fini(world);
 }
 
-void Input_import_enter_leave(void) {
-    ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptInput);
-
-    test_assert(ecs_lookup(world, "flecs.script.on.enter") != 0);
-    test_assert(ecs_lookup(world, "flecs.script.on.leave") != 0);
-
-    ecs_fini(world);
-}
-
 void Input_enter_leave(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptInput);
@@ -3220,20 +3221,6 @@ void Input_stop_propagation_enter_event(void) {
     ecs_fini(world);
 }
 
-void Input_import_focus(void) {
-    ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptInput);
-
-    test_assert(ecs_lookup(world, "flecs.script.input.FocusEvent") ==
-        ecs_id(EcsScriptFocusEvent));
-    test_assert(ecs_lookup(world, "flecs.script.on.focus") != 0);
-    test_assert(ecs_lookup(world, "flecs.script.on.blur") != 0);
-    test_assert(ecs_lookup(world, "flecs.script.focus") != 0);
-    test_uint(ecs_script_get_focus(world), 0);
-
-    ecs_fini(world);
-}
-
 void Input_set_get_focus(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptInput);
@@ -4168,17 +4155,6 @@ void Input_delete_focus(void) {
     });
 
     test_int(*(const int64_t*)ecs_get_id(world, p, mut), 1);
-
-    ecs_fini(world);
-}
-
-void Input_import_activate(void) {
-    ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptInput);
-
-    test_assert(ecs_lookup(world, "flecs.script.input.ActivateEvent") ==
-        ecs_id(EcsScriptActivateEvent));
-    test_assert(ecs_lookup(world, "flecs.script.on.activate") != 0);
 
     ecs_fini(world);
 }

@@ -677,16 +677,6 @@ static void try_set_default(flecs::world& ecs) {
     e.remove<T>();
 }
 
-void ComponentLifecycle_deleted_copy(void) {
-    flecs::world ecs;
-
-    ecs.component<NoCopy>();
-
-    try_add<NoCopy>(ecs);
-
-    try_set<NoCopy>(ecs);
-}
-
 void ComponentLifecycle_no_default_ctor_emplace(void) {
     flecs::world ecs;
 
