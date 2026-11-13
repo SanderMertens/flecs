@@ -766,7 +766,8 @@
                 "recycled_pair",
                 "recycled_component_id",
                 "update_query_replaces_existing",
-                "this_value_pair_w_0_value"
+                "this_value_pair_w_0_value",
+                "dont_keep_alive_eq_deleted_entity"
             ]
         }, {
             "id": "Combinations",

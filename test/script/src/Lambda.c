@@ -2331,3 +2331,112 @@ void Lambda_param_out_of_scope(void) {
 
     ecs_fini(world);
 }
+
+void Lambda_reduce_lambda_init(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const v = [1, 2, 3]"
+        LINE "const x = v.reduce((acc, el) -> { acc + el }, (el) -> { el })",
+        &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+
+void Lambda_reduce_init_eval_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const v = [1, 2, 3]"
+        LINE "const x = v.reduce((acc, el) -> { acc + el }, v[10])",
+        &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Lambda_invalid_collection(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const x = $undefined.map((el) -> { el })",
+        &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Lambda_contains_not_comparable(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t point = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Point" }),
+        .members = {{ .name = "x", .type = ecs_id(ecs_f32_t) }}
+    });
+
+    ecs_type_hooks_t hooks = *ecs_get_hooks_id(world, point);
+    hooks.cmp = NULL;
+    hooks.equals = NULL;
+    hooks.flags |= ECS_TYPE_HOOK_CMP_ILLEGAL|ECS_TYPE_HOOK_EQUALS_ILLEGAL;
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
+    ecs_set_hooks_id(world, point, &hooks);
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const v: Point[] = [{1}, {2}]"
+        LINE "const x = v.contains({1})",
+        &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Lambda_sort_by_not_comparable(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t point = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Point" }),
+        .members = {{ .name = "x", .type = ecs_id(ecs_f32_t) }}
+    });
+
+    ecs_type_hooks_t hooks = *ecs_get_hooks_id(world, point);
+    hooks.cmp = NULL;
+    hooks.equals = NULL;
+    hooks.flags |= ECS_TYPE_HOOK_CMP_ILLEGAL|ECS_TYPE_HOOK_EQUALS_ILLEGAL;
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
+    ecs_set_hooks_id(world, point, &hooks);
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const v: Point[] = [{2}, {1}]"
+        LINE "const x = v.sort((el) -> { el })",
+        &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Lambda_to_str(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        HEAD "const v = [1, 2, 3]"
+        LINE "const a = v.map((el) -> { el * 2 })"
+        LINE "const b = v.reduce((acc, i, el) -> { acc + el }, 10)",
+        &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
+
+    char *str = ecs_script_ast_to_str(script, false);
+    test_str(str,
+    HEAD "{"
+    LINE "  const: v = {1, 2, 3}"
+    LINE "  const: a = $v.map((el) -> { ($el * 2) })"
+    LINE "  const: b = $v.reduce((acc, i, el) -> { ($acc + $el) }, 10)"
+    LINE "}"
+    LINE "");
+    ecs_os_free(str);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}

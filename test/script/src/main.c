@@ -1258,6 +1258,14 @@ void AsyncBlock_progress_resumes_only_resolved(void);
 void AsyncBlock_resolve_after_delete_while_awaiting(void);
 void AsyncBlock_delete_keeps_resolved_block_ready(void);
 void AsyncBlock_finished_block_keeps_resolved_block_ready(void);
+void AsyncBlock_to_str_emit_call_break(void);
+void AsyncBlock_error_assign_index_not_number(void);
+void AsyncBlock_error_assign_tag(void);
+void AsyncBlock_error_assign_dead_entity(void);
+void AsyncBlock_error_assign_index_eval(void);
+void AsyncBlock_slice_assign_after_index(void);
+void AsyncBlock_call_fn_returning_string(void);
+void AsyncBlock_error_emit_value_eval(void);
 
 // Testsuite 'Input'
 void Input_setup(void);
@@ -2700,6 +2708,9 @@ void Expr_match_multiple_patterns_const(void);
 void Expr_match_multiple_patterns_enum(void);
 void Expr_match_multiple_patterns_no_match(void);
 void Expr_error_match_multiple_patterns(void);
+void Expr_match_multiple_patterns_to_str(void);
+void Expr_conditional_vector_w_strings(void);
+void Expr_bitwise_not_uptr(void);
 
 // Testsuite 'ExprAst'
 void ExprAst_setup(void);
@@ -3419,6 +3430,12 @@ void Query_bind_loop_var(void);
 void Query_bind_src(void);
 void Query_bind_unset(void);
 void Query_bind_not_entity(void);
+void Query_bind_var_twice(void);
+void Query_bind_too_many_vars(void);
+void Query_reactive_bind_src(void);
+void Query_reactive_bind_first(void);
+void Query_comments_and_strings(void);
+void Query_nested_braces(void);
 
 // Testsuite 'Reactivity'
 void Reactivity_setup(void);
@@ -3649,6 +3666,8 @@ void Reactivity_for_query_duplicate_anonymous_kept(void);
 void Reactivity_for_new_expr_kept(void);
 void Reactivity_template_for_query_anonymous_kept(void);
 void Reactivity_template_query_batch_single_update(void);
+void Reactivity_remove_sibling_template_w_for(void);
+void Reactivity_for_range_from_var(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_setup(void);
@@ -3753,6 +3772,10 @@ void SkipUnknown_warn_once_for_unknown_using(void);
 void SkipUnknown_unknown_fn_body_const(void);
 void SkipUnknown_unknown_fn_body_const_type(void);
 void SkipUnknown_unknown_fn_return_expr(void);
+void SkipUnknown_unknown_emit_value_in_async(void);
+void SkipUnknown_unknown_assign_expr_in_async(void);
+void SkipUnknown_unknown_assign_entity_in_async(void);
+void SkipUnknown_unknown_assign_index_in_async(void);
 
 // Testsuite 'StructInheritance'
 void StructInheritance_setup(void);
@@ -4101,6 +4124,7 @@ void TemplateProp_prop_default_from_nested_struct_const(void);
 void TemplateProp_prop_default_from_nested_struct_const_member(void);
 void TemplateProp_interface_prop_deleted_template(void);
 void TemplateProp_interface_prop_as_tag_deleted_template(void);
+void TemplateProp_prop_w_own_template_type(void);
 
 // Testsuite 'TemplateVectorProp'
 void TemplateVectorProp_setup(void);
@@ -4538,6 +4562,7 @@ void SerializeType_roundtrip(void);
 void SerializeType_primitive(void);
 void SerializeType_not_a_type(void);
 void SerializeType_opaque_dep(void);
+void SerializeType_typecache_struct_dep(void);
 
 // Testsuite 'ValueType'
 void ValueType_setup(void);
@@ -4573,6 +4598,10 @@ void ValueType_ptr_to_expr(void);
 void ValueType_expr_roundtrip(void);
 void ValueType_serialize_type(void);
 void ValueType_ast_to_str(void);
+void ValueType_const_member_on_primitive_value(void);
+void ValueType_const_from_unconstrained(void);
+void ValueType_template_call_on_primitive_value(void);
+void ValueType_const_primitive_from_template(void);
 
 // Testsuite 'AnonymousType'
 void AnonymousType_setup(void);
@@ -4599,6 +4628,8 @@ void AnonymousType_args_on_non_kind(void);
 void AnonymousType_value_component(void);
 void AnonymousType_serialize_type(void);
 void AnonymousType_serialize_type_roundtrip(void);
+void AnonymousType_to_str_type_args(void);
+void AnonymousType_invalid_type_arg(void);
 
 // Testsuite 'Lambda'
 void Lambda_setup(void);
@@ -4710,6 +4741,12 @@ void Lambda_filter_non_bool(void);
 void Lambda_body_without_braces(void);
 void Lambda_unresolved_in_body(void);
 void Lambda_param_out_of_scope(void);
+void Lambda_reduce_lambda_init(void);
+void Lambda_reduce_init_eval_error(void);
+void Lambda_invalid_collection(void);
+void Lambda_contains_not_comparable(void);
+void Lambda_sort_by_not_comparable(void);
+void Lambda_to_str(void);
 
 // Testsuite 'CollectionOps'
 void CollectionOps_setup(void);
@@ -4788,6 +4825,37 @@ void CollectionOps_sort_empty(void);
 void CollectionOps_contains_w_lambda(void);
 void CollectionOps_index_of_map(void);
 void CollectionOps_methods_in_async(void);
+void CollectionOps_sort_odd_count(void);
+void CollectionOps_concat_implicit_cast_elems(void);
+void CollectionOps_pop_dollar_var(void);
+void CollectionOps_push_component_var(void);
+void CollectionOps_push_non_collection(void);
+void CollectionOps_push_expression(void);
+void CollectionOps_push_expression_element(void);
+void CollectionOps_push_invalid_arg(void);
+void CollectionOps_remove_wrong_arg_count(void);
+void CollectionOps_insert_index_not_number(void);
+void CollectionOps_contains_wrong_arg_count(void);
+void CollectionOps_unknown_method(void);
+void CollectionOps_slice_bound_not_number(void);
+void CollectionOps_slice_invalid_bound(void);
+void CollectionOps_slice_invalid_left(void);
+void CollectionOps_slice_left_eval_error(void);
+void CollectionOps_slice_from_eval_error(void);
+void CollectionOps_slice_to_eval_error(void);
+void CollectionOps_contains_arg_eval_error(void);
+void CollectionOps_method_left_eval_error(void);
+void CollectionOps_struct_value_map(void);
+void CollectionOps_contains_invalid_arg(void);
+void CollectionOps_reduce_invalid_init(void);
+void CollectionOps_concat_invalid_right(void);
+void CollectionOps_concat_map_different_types(void);
+void CollectionOps_concat_map_w_vector(void);
+void CollectionOps_push_arg_eval_error(void);
+void CollectionOps_push_index_eval_error(void);
+void CollectionOps_to_str(void);
+void CollectionOps_single_elem_initializer_invalid(void);
+void CollectionOps_copy_collection_elem_error(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -9754,6 +9822,38 @@ bake_test_case AsyncBlock_testcases[] = {
     {
         "finished_block_keeps_resolved_block_ready",
         AsyncBlock_finished_block_keeps_resolved_block_ready
+    },
+    {
+        "to_str_emit_call_break",
+        AsyncBlock_to_str_emit_call_break
+    },
+    {
+        "error_assign_index_not_number",
+        AsyncBlock_error_assign_index_not_number
+    },
+    {
+        "error_assign_tag",
+        AsyncBlock_error_assign_tag
+    },
+    {
+        "error_assign_dead_entity",
+        AsyncBlock_error_assign_dead_entity
+    },
+    {
+        "error_assign_index_eval",
+        AsyncBlock_error_assign_index_eval
+    },
+    {
+        "slice_assign_after_index",
+        AsyncBlock_slice_assign_after_index
+    },
+    {
+        "call_fn_returning_string",
+        AsyncBlock_call_fn_returning_string
+    },
+    {
+        "error_emit_value_eval",
+        AsyncBlock_error_emit_value_eval
     }
 };
 
@@ -15450,6 +15550,18 @@ bake_test_case Expr_testcases[] = {
     {
         "error_match_multiple_patterns",
         Expr_error_match_multiple_patterns
+    },
+    {
+        "match_multiple_patterns_to_str",
+        Expr_match_multiple_patterns_to_str
+    },
+    {
+        "conditional_vector_w_strings",
+        Expr_conditional_vector_w_strings
+    },
+    {
+        "bitwise_not_uptr",
+        Expr_bitwise_not_uptr
     }
 };
 
@@ -18262,6 +18374,30 @@ bake_test_case Query_testcases[] = {
     {
         "bind_not_entity",
         Query_bind_not_entity
+    },
+    {
+        "bind_var_twice",
+        Query_bind_var_twice
+    },
+    {
+        "bind_too_many_vars",
+        Query_bind_too_many_vars
+    },
+    {
+        "reactive_bind_src",
+        Query_reactive_bind_src
+    },
+    {
+        "reactive_bind_first",
+        Query_reactive_bind_first
+    },
+    {
+        "comments_and_strings",
+        Query_comments_and_strings
+    },
+    {
+        "nested_braces",
+        Query_nested_braces
     }
 };
 
@@ -19173,6 +19309,14 @@ bake_test_case Reactivity_testcases[] = {
     {
         "template_query_batch_single_update",
         Reactivity_template_query_batch_single_update
+    },
+    {
+        "remove_sibling_template_w_for",
+        Reactivity_remove_sibling_template_w_for
+    },
+    {
+        "for_range_from_var",
+        Reactivity_for_range_from_var
     }
 };
 
@@ -19571,6 +19715,22 @@ bake_test_case SkipUnknown_testcases[] = {
     {
         "unknown_fn_return_expr",
         SkipUnknown_unknown_fn_return_expr
+    },
+    {
+        "unknown_emit_value_in_async",
+        SkipUnknown_unknown_emit_value_in_async
+    },
+    {
+        "unknown_assign_expr_in_async",
+        SkipUnknown_unknown_assign_expr_in_async
+    },
+    {
+        "unknown_assign_entity_in_async",
+        SkipUnknown_unknown_assign_entity_in_async
+    },
+    {
+        "unknown_assign_index_in_async",
+        SkipUnknown_unknown_assign_index_in_async
     }
 };
 
@@ -20927,6 +21087,10 @@ bake_test_case TemplateProp_testcases[] = {
     {
         "interface_prop_as_tag_deleted_template",
         TemplateProp_interface_prop_as_tag_deleted_template
+    },
+    {
+        "prop_w_own_template_type",
+        TemplateProp_prop_w_own_template_type
     }
 };
 
@@ -22607,6 +22771,10 @@ bake_test_case SerializeType_testcases[] = {
     {
         "opaque_dep",
         SerializeType_opaque_dep
+    },
+    {
+        "typecache_struct_dep",
+        SerializeType_typecache_struct_dep
     }
 };
 
@@ -22738,6 +22906,22 @@ bake_test_case ValueType_testcases[] = {
     {
         "ast_to_str",
         ValueType_ast_to_str
+    },
+    {
+        "const_member_on_primitive_value",
+        ValueType_const_member_on_primitive_value
+    },
+    {
+        "const_from_unconstrained",
+        ValueType_const_from_unconstrained
+    },
+    {
+        "template_call_on_primitive_value",
+        ValueType_template_call_on_primitive_value
+    },
+    {
+        "const_primitive_from_template",
+        ValueType_const_primitive_from_template
     }
 };
 
@@ -22833,6 +23017,14 @@ bake_test_case AnonymousType_testcases[] = {
     {
         "serialize_type_roundtrip",
         AnonymousType_serialize_type_roundtrip
+    },
+    {
+        "to_str_type_args",
+        AnonymousType_to_str_type_args
+    },
+    {
+        "invalid_type_arg",
+        AnonymousType_invalid_type_arg
     }
 };
 
@@ -23268,6 +23460,30 @@ bake_test_case Lambda_testcases[] = {
     {
         "param_out_of_scope",
         Lambda_param_out_of_scope
+    },
+    {
+        "reduce_lambda_init",
+        Lambda_reduce_lambda_init
+    },
+    {
+        "reduce_init_eval_error",
+        Lambda_reduce_init_eval_error
+    },
+    {
+        "invalid_collection",
+        Lambda_invalid_collection
+    },
+    {
+        "contains_not_comparable",
+        Lambda_contains_not_comparable
+    },
+    {
+        "sort_by_not_comparable",
+        Lambda_sort_by_not_comparable
+    },
+    {
+        "to_str",
+        Lambda_to_str
     }
 };
 
@@ -23571,6 +23787,130 @@ bake_test_case CollectionOps_testcases[] = {
     {
         "methods_in_async",
         CollectionOps_methods_in_async
+    },
+    {
+        "sort_odd_count",
+        CollectionOps_sort_odd_count
+    },
+    {
+        "concat_implicit_cast_elems",
+        CollectionOps_concat_implicit_cast_elems
+    },
+    {
+        "pop_dollar_var",
+        CollectionOps_pop_dollar_var
+    },
+    {
+        "push_component_var",
+        CollectionOps_push_component_var
+    },
+    {
+        "push_non_collection",
+        CollectionOps_push_non_collection
+    },
+    {
+        "push_expression",
+        CollectionOps_push_expression
+    },
+    {
+        "push_expression_element",
+        CollectionOps_push_expression_element
+    },
+    {
+        "push_invalid_arg",
+        CollectionOps_push_invalid_arg
+    },
+    {
+        "remove_wrong_arg_count",
+        CollectionOps_remove_wrong_arg_count
+    },
+    {
+        "insert_index_not_number",
+        CollectionOps_insert_index_not_number
+    },
+    {
+        "contains_wrong_arg_count",
+        CollectionOps_contains_wrong_arg_count
+    },
+    {
+        "unknown_method",
+        CollectionOps_unknown_method
+    },
+    {
+        "slice_bound_not_number",
+        CollectionOps_slice_bound_not_number
+    },
+    {
+        "slice_invalid_bound",
+        CollectionOps_slice_invalid_bound
+    },
+    {
+        "slice_invalid_left",
+        CollectionOps_slice_invalid_left
+    },
+    {
+        "slice_left_eval_error",
+        CollectionOps_slice_left_eval_error
+    },
+    {
+        "slice_from_eval_error",
+        CollectionOps_slice_from_eval_error
+    },
+    {
+        "slice_to_eval_error",
+        CollectionOps_slice_to_eval_error
+    },
+    {
+        "contains_arg_eval_error",
+        CollectionOps_contains_arg_eval_error
+    },
+    {
+        "method_left_eval_error",
+        CollectionOps_method_left_eval_error
+    },
+    {
+        "struct_value_map",
+        CollectionOps_struct_value_map
+    },
+    {
+        "contains_invalid_arg",
+        CollectionOps_contains_invalid_arg
+    },
+    {
+        "reduce_invalid_init",
+        CollectionOps_reduce_invalid_init
+    },
+    {
+        "concat_invalid_right",
+        CollectionOps_concat_invalid_right
+    },
+    {
+        "concat_map_different_types",
+        CollectionOps_concat_map_different_types
+    },
+    {
+        "concat_map_w_vector",
+        CollectionOps_concat_map_w_vector
+    },
+    {
+        "push_arg_eval_error",
+        CollectionOps_push_arg_eval_error
+    },
+    {
+        "push_index_eval_error",
+        CollectionOps_push_index_eval_error
+    },
+    {
+        "to_str",
+        CollectionOps_to_str
+    },
+    {
+        "single_elem_initializer_invalid",
+        CollectionOps_single_elem_initializer_invalid
+    },
+    {
+        "copy_collection_elem_error",
+        CollectionOps_copy_collection_elem_error
     }
 };
 
@@ -23773,7 +24113,7 @@ static bake_test_suite suites[] = {
         "AsyncBlock",
         AsyncBlock_setup,
         NULL,
-        191,
+        199,
         AsyncBlock_testcases,
         1,
         AsyncBlock_params
@@ -23845,7 +24185,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        471,
+        474,
         Expr_testcases,
         2,
         Expr_params
@@ -23913,7 +24253,7 @@ static bake_test_suite suites[] = {
         "Query",
         Query_setup,
         NULL,
-        46,
+        52,
         Query_testcases,
         1,
         Query_params
@@ -23922,7 +24262,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         Reactivity_setup,
         NULL,
-        227,
+        229,
         Reactivity_testcases,
         1,
         Reactivity_params
@@ -23940,7 +24280,7 @@ static bake_test_suite suites[] = {
         "SkipUnknown",
         SkipUnknown_setup,
         NULL,
-        56,
+        60,
         SkipUnknown_testcases,
         1,
         SkipUnknown_params
@@ -23976,7 +24316,7 @@ static bake_test_suite suites[] = {
         "TemplateProp",
         TemplateProp_setup,
         NULL,
-        158,
+        159,
         TemplateProp_testcases,
         1,
         TemplateProp_params
@@ -24042,14 +24382,14 @@ static bake_test_suite suites[] = {
         "SerializeType",
         NULL,
         NULL,
-        18,
+        19,
         SerializeType_testcases
     },
     {
         "ValueType",
         ValueType_setup,
         NULL,
-        32,
+        36,
         ValueType_testcases,
         1,
         ValueType_params
@@ -24058,7 +24398,7 @@ static bake_test_suite suites[] = {
         "AnonymousType",
         AnonymousType_setup,
         NULL,
-        23,
+        25,
         AnonymousType_testcases,
         1,
         AnonymousType_params
@@ -24067,7 +24407,7 @@ static bake_test_suite suites[] = {
         "Lambda",
         Lambda_setup,
         NULL,
-        108,
+        114,
         Lambda_testcases,
         1,
         Lambda_params
@@ -24076,7 +24416,7 @@ static bake_test_suite suites[] = {
         "CollectionOps",
         CollectionOps_setup,
         NULL,
-        75,
+        106,
         CollectionOps_testcases,
         1,
         CollectionOps_params

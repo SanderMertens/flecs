@@ -306,3 +306,30 @@ void SerializeType_opaque_dep(void) {
 
     ecs_fini(world);
 }
+
+void SerializeType_typecache_struct_dep(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_int(ecs_script_run(world, NULL,
+        HEAD "const v: vector(f32) = [1]", NULL), 0);
+
+    ecs_entity_t inner = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "flecs.script.typecache.Inner" }),
+        .members = {{ "x", ecs_id(ecs_f32_t) }}
+    });
+    test_assert(inner != 0);
+
+    ecs_entity_t outer = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Outer" }),
+        .members = {{ "inner", inner }}
+    });
+
+    char *str = ecs_type_to_script(world, outer);
+    test_str(str, "struct Outer(inner: flecs.script.typecache.Inner)\n");
+    ecs_os_free(str);
+
+    test_int(ecs_script_run(world, NULL,
+        HEAD "const w: vector(Outer) = []", NULL), 0);
+
+    ecs_fini(world);
+}

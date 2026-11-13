@@ -9920,3 +9920,200 @@ void AsyncBlock_error_assign_component_unresolved(void) {
 
     ecs_fini(world);
 }
+
+void AsyncBlock_to_str_emit_call_break(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        HEAD "event Build(slot: i32)"
+        LINE "event Ping"
+        LINE "fn log(x: i32) { }"
+        LINE "async {"
+        LINE "  emit Build(slot: 7)"
+        LINE "  emit Ping"
+        LINE "  log(10)"
+        LINE "  for i in 0..5 {"
+        LINE "    break"
+        LINE "  }"
+        LINE "}",
+        &ir_desc, NULL);
+    test_assert(script != NULL);
+
+    char *str = ecs_script_ast_to_str(script, false);
+    test_str(str,
+    HEAD "{"
+    LINE "  entity: struct Build {"
+    LINE "    component: struct: {slot:@i32}"
+    LINE "  }"
+    LINE "  entity: struct Ping "
+    LINE "  fn: log(x: i32) {}"
+    LINE "  "
+    LINE "  async: {"
+    LINE "    emit: Build {slot:7}"
+    LINE "    emit: Ping {}"
+    LINE "    call: @log({10})"
+    LINE "    for: i in 0 .. 5 {"
+    LINE "      {"
+    LINE "        break: "
+    LINE "      }"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    LINE "");
+    ecs_os_free(str);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void AsyncBlock_error_assign_index_not_number(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "export mut v: i32[] = [1, 2]"
+        LINE "async {"
+        LINE "  v[\"a\"] = 3"
+        LINE "}", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+
+void AsyncBlock_error_assign_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "Tag" });
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "e { Tag }"
+        LINE "async {"
+        LINE "  e[Tag].x = 1"
+        LINE "}", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+
+
+void AsyncBlock_error_assign_dead_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "using flecs.script"
+            LINE "struct Bag(items: vector(i32))"
+            LINE "e { Bag: {[1]} }"
+            LINE "async {"
+            LINE "  await next_frame()"
+            LINE "  e[Bag].items = [2]"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_delete(world, e);
+
+    ecs_log_set_level(-4);
+    ecs_script_tasks_progress(world);
+    ecs_script_tasks_progress(world);
+
+    test_assert(!ecs_is_alive(world, e));
+
+    ecs_fini(world);
+}
+
+
+void AsyncBlock_error_assign_index_eval(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut v: i32[] = [1, 2]"
+            LINE "const w: i32[] = [0]"
+            LINE "async {"
+            LINE "  v[w[10]] = 3"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    ecs_log_set_level(-4);
+    ecs_script_tasks_progress(world);
+
+    ecs_value_t v = ecs_mut_var_get(world, ecs_lookup(world, "v"));
+    char *str = ecs_ptr_to_expr(world, v.type, v.ptr);
+    test_str(str, "[1, 2]");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_slice_assign_after_index(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "struct Bag(items: vector(i32))"
+            LINE "export mut bags: Bag[] = [{[1, 2, 3]}]"
+            LINE "async {"
+            LINE "  bags[0].items[0..2] = [5]"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    ecs_value_t v = ecs_mut_var_get(world, ecs_lookup(world, "bags"));
+    char *str = ecs_ptr_to_expr(world, v.type, v.ptr);
+    test_str(str, "[{items: [5, 3]}]");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_call_fn_returning_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut count: i32 = 0"
+            LINE "fn f() -> string {"
+            LINE "  count += 1"
+            LINE "  \"hello\""
+            LINE "}"
+            LINE "async {"
+            LINE "  f()"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "count")).ptr, 1);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_error_emit_value_eval(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "event Build(slot: i32)"
+            LINE "const w: i32[] = [0]"
+            LINE "async {"
+            LINE "  emit Build(slot: w[10])"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    ecs_log_set_level(-4);
+    ecs_script_tasks_progress(world);
+
+    ecs_fini(world);
+}

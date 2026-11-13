@@ -1697,7 +1697,13 @@
                 "deser_json_primitive",
                 "json_roundtrip",
                 "type_info_json",
-                "ptr_to_expr"
+                "ptr_to_expr",
+                "init_w_dead_constraint",
+                "struct_set_value_string",
+                "set_value_empty",
+                "set_value_empty_to_entity",
+                "struct_set_string_zero",
+                "struct_set_string_lookup_action"
             ]
         }]
     }

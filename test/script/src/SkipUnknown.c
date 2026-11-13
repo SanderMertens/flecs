@@ -1713,3 +1713,78 @@ void SkipUnknown_unknown_fn_return_expr(void) {
 
     ecs_fini(world);
 }
+
+void SkipUnknown_unknown_emit_value_in_async(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "event Build(slot: i32)"
+    LINE "async {"
+    LINE "  emit Build(slot: NsUnknown[NsUnknown].slot)"
+    LINE "}"
+    LINE "a {}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &skip_unknown_desc, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+
+    ecs_fini(world);
+}
+
+void SkipUnknown_unknown_assign_expr_in_async(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export mut x: i32 = 1"
+    LINE "async {"
+    LINE "  x = NsUnknown[NsUnknown].value"
+    LINE "}"
+    LINE "a {}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &skip_unknown_desc, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "x")).ptr, 1);
+
+    ecs_fini(world);
+}
+
+void SkipUnknown_unknown_assign_entity_in_async(void) {
+    test_quarantine("12 Nov 2026");
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "async {"
+    LINE "  NsUnknownEnt[Position].x = 10"
+    LINE "}"
+    LINE "a {}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &skip_unknown_desc, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    ecs_script_tasks_progress(world);
+
+    ecs_fini(world);
+}
+
+void SkipUnknown_unknown_assign_index_in_async(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export mut v: i32[] = [1, 2]"
+    LINE "async {"
+    LINE "  v[NsUnknown[NsUnknown].i] = 10"
+    LINE "}"
+    LINE "a {}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &skip_unknown_desc, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    ecs_script_tasks_progress(world);
+
+    ecs_value_t v = ecs_mut_var_get(world, ecs_lookup(world, "v"));
+    char *str = ecs_ptr_to_expr(world, v.type, v.ptr);
+    test_str(str, "[1, 2]");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}

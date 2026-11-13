@@ -1641,6 +1641,12 @@ void ValueType_deser_json_primitive(void);
 void ValueType_json_roundtrip(void);
 void ValueType_type_info_json(void);
 void ValueType_ptr_to_expr(void);
+void ValueType_init_w_dead_constraint(void);
+void ValueType_struct_set_value_string(void);
+void ValueType_set_value_empty(void);
+void ValueType_set_value_empty_to_entity(void);
+void ValueType_struct_set_string_zero(void);
+void ValueType_struct_set_string_lookup_action(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -8040,6 +8046,30 @@ bake_test_case ValueType_testcases[] = {
     {
         "ptr_to_expr",
         ValueType_ptr_to_expr
+    },
+    {
+        "init_w_dead_constraint",
+        ValueType_init_w_dead_constraint
+    },
+    {
+        "struct_set_value_string",
+        ValueType_struct_set_value_string
+    },
+    {
+        "set_value_empty",
+        ValueType_set_value_empty
+    },
+    {
+        "set_value_empty_to_entity",
+        ValueType_set_value_empty_to_entity
+    },
+    {
+        "struct_set_string_zero",
+        ValueType_struct_set_string_zero
+    },
+    {
+        "struct_set_string_lookup_action",
+        ValueType_struct_set_string_lookup_action
     }
 };
 
@@ -8230,7 +8260,7 @@ static bake_test_suite suites[] = {
         "ValueType",
         NULL,
         NULL,
-        73,
+        79,
         ValueType_testcases
     }
 };

@@ -1243,3 +1243,167 @@ void Query_bind_not_entity(void) {
 
     ecs_fini(world);
 }
+
+void Query_bind_var_twice(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t other = ecs_entity(world, { .name = "other" });
+    ecs_add_id(world, parent, tag);
+    ecs_entity(world, { .name = "a", .parent = parent });
+    ecs_entity(world, { .name = "b", .parent = other });
+
+    const char *expr =
+    HEAD "const p: entity = parent"
+    LINE "query q { (flecs.core.ChildOf, $p), Tag($p) }"
+    LINE "for e in q {"
+    LINE "  \"m_{e.name()}\" {}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") == 0);
+
+    ecs_fini(world);
+}
+
+void Query_bind_too_many_vars(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "Tag" });
+    ecs_entity(world, { .name = "x" });
+
+    const char *expr =
+    HEAD "const p1: entity = x"
+    LINE "const p2: entity = x"
+    LINE "const p3: entity = x"
+    LINE "const p4: entity = x"
+    LINE "const p5: entity = x"
+    LINE "const p6: entity = x"
+    LINE "const p7: entity = x"
+    LINE "const p8: entity = x"
+    LINE "const p9: entity = x"
+    LINE "query q { Tag($p1), Tag($p2), Tag($p3), Tag($p4), Tag($p5), "
+    LINE "  Tag($p6), Tag($p7), Tag($p8), Tag($p9) }"
+    LINE "for e in q {"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Query_reactive_bind_src(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t likes = ecs_entity(world, { .name = "Likes" });
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t bob = ecs_entity(world, { .name = "bob" });
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+    ecs_add_id(world, a, tag);
+    ecs_add_id(world, b, tag);
+    ecs_add_pair(world, bob, likes, a);
+
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "const p: entity = bob"
+            LINE "query q { Tag, Likes($p, $this) }"
+            LINE "for e in q {"
+            LINE "  \"m_{e.name()}\" {}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") == 0);
+
+    ecs_add_pair(world, bob, likes, b);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") != 0);
+
+    ecs_fini(world);
+}
+
+void Query_reactive_bind_first(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t likes = ecs_entity(world, { .name = "Likes" });
+    ecs_entity_t bob = ecs_entity(world, { .name = "bob" });
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+    ecs_add_pair(world, a, likes, bob);
+
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "const r: entity = Likes"
+            LINE "query q { $r($this, bob) }"
+            LINE "for e in q {"
+            LINE "  \"m_{e.name()}\" {}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") == 0);
+
+    ecs_add_pair(world, b, likes, bob);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") != 0);
+
+    ecs_fini(world);
+}
+
+
+
+
+void Query_comments_and_strings(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+    ecs_add_id(world, a, tag);
+    ecs_add_id(world, b, tag);
+
+    const char *expr =
+    HEAD "query q {"
+    LINE "  // comment with } brace"
+    LINE "  Tag, /* block } comment */"
+    LINE "  $this != \"b}\\\"c\""
+    LINE "}"
+    LINE "for e in q {"
+    LINE "  \"m_{e.name()}\" {}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "m_a") != 0);
+    test_assert(ecs_lookup(world, "m_b") != 0);
+
+    ecs_fini(world);
+}
+
+void Query_nested_braces(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "Tag" });
+
+    const char *expr =
+    HEAD "query q { Tag { } }"
+    LINE "a {}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}

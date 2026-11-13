@@ -1279,7 +1279,15 @@
                 "progress_resumes_only_resolved",
                 "resolve_after_delete_while_awaiting",
                 "delete_keeps_resolved_block_ready",
-                "finished_block_keeps_resolved_block_ready"
+                "finished_block_keeps_resolved_block_ready",
+                "to_str_emit_call_break",
+                "error_assign_index_not_number",
+                "error_assign_tag",
+                "error_assign_dead_entity",
+                "error_assign_index_eval",
+                "slice_assign_after_index",
+                "call_fn_returning_string",
+                "error_emit_value_eval"
             ]
         }, {
             "id": "Input",
@@ -2762,7 +2770,10 @@
                 "match_multiple_patterns_const",
                 "match_multiple_patterns_enum",
                 "match_multiple_patterns_no_match",
-                "error_match_multiple_patterns"
+                "error_match_multiple_patterns",
+                "match_multiple_patterns_to_str",
+                "conditional_vector_w_strings",
+                "bitwise_not_uptr"
             ]
         }, {
             "id": "ExprAst",
@@ -3515,7 +3526,13 @@
                 "bind_loop_var",
                 "bind_src",
                 "bind_unset",
-                "bind_not_entity"
+                "bind_not_entity",
+                "bind_var_twice",
+                "bind_too_many_vars",
+                "reactive_bind_src",
+                "reactive_bind_first",
+                "comments_and_strings",
+                "nested_braces"
             ]
         }, {
             "id": "Reactivity",
@@ -3750,7 +3767,9 @@
                 "for_query_duplicate_anonymous_kept",
                 "for_new_expr_kept",
                 "template_for_query_anonymous_kept",
-                "template_query_batch_single_update"
+                "template_query_batch_single_update",
+                "remove_sibling_template_w_for",
+                "for_range_from_var"
             ]
         }, {
             "id": "ConstVar",
@@ -3864,7 +3883,11 @@
                 "warn_once_for_unknown_using",
                 "unknown_fn_body_const",
                 "unknown_fn_body_const_type",
-                "unknown_fn_return_expr"
+                "unknown_fn_return_expr",
+                "unknown_emit_value_in_async",
+                "unknown_assign_expr_in_async",
+                "unknown_assign_entity_in_async",
+                "unknown_assign_index_in_async"
             ]
         }, {
             "id": "StructInheritance",
@@ -4230,7 +4253,8 @@
                 "prop_default_from_nested_struct_const",
                 "prop_default_from_nested_struct_const_member",
                 "interface_prop_deleted_template",
-                "interface_prop_as_tag_deleted_template"
+                "interface_prop_as_tag_deleted_template",
+                "prop_w_own_template_type"
             ]
         }, {
             "id": "TemplateVectorProp",
@@ -4695,7 +4719,8 @@
                 "roundtrip",
                 "primitive",
                 "not_a_type",
-                "opaque_dep"
+                "opaque_dep",
+                "typecache_struct_dep"
             ]
         }, {
             "id": "ValueType",
@@ -4735,7 +4760,11 @@
                 "ptr_to_expr",
                 "expr_roundtrip",
                 "serialize_type",
-                "ast_to_str"
+                "ast_to_str",
+                "const_member_on_primitive_value",
+                "const_from_unconstrained",
+                "template_call_on_primitive_value",
+                "const_primitive_from_template"
             ]
         }, {
             "id": "AnonymousType",
@@ -4766,7 +4795,9 @@
                 "args_on_non_kind",
                 "value_component",
                 "serialize_type",
-                "serialize_type_roundtrip"
+                "serialize_type_roundtrip",
+                "to_str_type_args",
+                "invalid_type_arg"
             ]
         }, {
             "id": "Lambda",
@@ -4882,7 +4913,13 @@
                 "filter_non_bool",
                 "body_without_braces",
                 "unresolved_in_body",
-                "param_out_of_scope"
+                "param_out_of_scope",
+                "reduce_lambda_init",
+                "reduce_init_eval_error",
+                "invalid_collection",
+                "contains_not_comparable",
+                "sort_by_not_comparable",
+                "to_str"
             ]
         }, {
             "id": "CollectionOps",
@@ -4965,7 +5002,38 @@
                 "sort_empty",
                 "contains_w_lambda",
                 "index_of_map",
-                "methods_in_async"
+                "methods_in_async",
+                "sort_odd_count",
+                "concat_implicit_cast_elems",
+                "pop_dollar_var",
+                "push_component_var",
+                "push_non_collection",
+                "push_expression",
+                "push_expression_element",
+                "push_invalid_arg",
+                "remove_wrong_arg_count",
+                "insert_index_not_number",
+                "contains_wrong_arg_count",
+                "unknown_method",
+                "slice_bound_not_number",
+                "slice_invalid_bound",
+                "slice_invalid_left",
+                "slice_left_eval_error",
+                "slice_from_eval_error",
+                "slice_to_eval_error",
+                "contains_arg_eval_error",
+                "method_left_eval_error",
+                "struct_value_map",
+                "contains_invalid_arg",
+                "reduce_invalid_init",
+                "concat_invalid_right",
+                "concat_map_different_types",
+                "concat_map_w_vector",
+                "push_arg_eval_error",
+                "push_index_eval_error",
+                "to_str",
+                "single_elem_initializer_invalid",
+                "copy_collection_elem_error"
             ]
         }]
     }

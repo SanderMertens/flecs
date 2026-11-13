@@ -231,12 +231,4 @@ ecs_entity_t flecs_script_map_type(
     return flecs_script_kind_type(world, ecs_id(EcsMap), &value);
 }
 
-ecs_entity_t flecs_script_value_type(
-    ecs_world_t *world,
-    ecs_entity_t type)
-{
-    EcsValue value = { .type = type };
-    return flecs_script_kind_type(world, ecs_id(EcsValue), &value);
-}
-
 #endif

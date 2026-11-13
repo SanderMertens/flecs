@@ -11853,3 +11853,78 @@ void Reactivity_template_query_batch_single_update(void) {
 
     ecs_fini(world);
 }
+
+void Reactivity_remove_sibling_template_w_for(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t config = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Config" }),
+        .members = {
+            {"flag", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    bool flag = true;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "Ta {}"
+            LINE "Tb {}"
+            LINE "template A {"
+            LINE "  for i in 0..2 {"
+            LINE "    \"c_{i}\" { Ta }"
+            LINE "  }"
+            LINE "}"
+            LINE "template B {"
+            LINE "  for i in 0..2 {"
+            LINE "    \"c_{i}\" { Tb }"
+            LINE "  }"
+            LINE "}"
+            LINE "A x()"
+            LINE "const cfg = Config[Config]"
+            LINE "if cfg.flag {"
+            LINE "  B x()"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    test_assert(ecs_get(world, script, EcsScript)->error == NULL);
+
+    ecs_entity_t ta = ecs_lookup(world, "Ta");
+    ecs_entity_t tb = ecs_lookup(world, "Tb");
+    ecs_entity_t c0 = ecs_lookup(world, "x.c_0");
+    test_assert(c0 != 0);
+    test_assert(ecs_has_id(world, c0, ta));
+    test_assert(ecs_has_id(world, c0, tb));
+
+    flag = false;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    test_assert(ecs_lookup(world, "x.c_0") == c0);
+    test_assert(ecs_has_id(world, c0, ta));
+    test_assert(!ecs_has_id(world, c0, tb));
+
+    ecs_fini(world);
+}
+
+void Reactivity_for_range_from_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "const n: i32 = 1"
+            LINE "for i in n..3 {"
+            LINE "  \"e_{i}\" {}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    test_assert(ecs_get(world, script, EcsScript)->error == NULL);
+
+    test_assert(ecs_lookup(world, "e_0") == 0);
+    test_assert(ecs_lookup(world, "e_1") != 0);
+    test_assert(ecs_lookup(world, "e_2") != 0);
+
+    ecs_fini(world);
+}

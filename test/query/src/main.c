@@ -750,6 +750,7 @@ void Basic_recycled_pair(void);
 void Basic_recycled_component_id(void);
 void Basic_update_query_replaces_existing(void);
 void Basic_this_value_pair_w_0_value(void);
+void Basic_dont_keep_alive_eq_deleted_entity(void);
 
 // Testsuite 'Combinations'
 void Combinations_setup(void);
@@ -5954,6 +5955,10 @@ bake_test_case Basic_testcases[] = {
     {
         "this_value_pair_w_0_value",
         Basic_this_value_pair_w_0_value
+    },
+    {
+        "dont_keep_alive_eq_deleted_entity",
+        Basic_dont_keep_alive_eq_deleted_entity
     }
 };
 
@@ -14949,7 +14954,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        249,
+        250,
         Basic_testcases,
         1,
         Basic_params
