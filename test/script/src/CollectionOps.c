@@ -1686,3 +1686,538 @@ void CollectionOps_methods_in_async(void) {
 
     ecs_fini(world);
 }
+
+void CollectionOps_sort_odd_count(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(a: vector(i64), b: vector(i64))"
+    LINE "const v = [5, 3, 9, 1, 4]"
+    LINE "const w = [6, 2, 8]"
+    LINE "e { Result: {v.sort(), w.sort()} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{a: [1, 3, 4, 5, 9], b: [2, 6, 8]}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_concat_implicit_cast_elems(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(a: vector(i32), b: vector(i32), c: vector(i64))"
+    LINE "const x: u8[] = [1, 2]"
+    LINE "const y: i32[] = [3]"
+    LINE "const z: u64[] = [4]"
+    LINE "const w: i64[] = [5]"
+    LINE "e { Result: {x + y, y + x, z + w} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{a: [1, 2, 3], b: [3, 1, 2], c: [4, 5]}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_pop_dollar_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut v: i32[] = [1, 2, 3]"
+            LINE "export mut out: i32 = 0"
+            LINE "async {"
+            LINE "  const x = $v.pop()"
+            LINE "  out = x"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "out")).ptr, 3);
+    ecs_value_t v = ecs_mut_var_get(world, ecs_lookup(world, "v"));
+    char *str = ecs_ptr_to_expr(world, v.type, v.ptr);
+    test_str(str, "[1, 2]");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_push_component_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "struct Bag(items: vector(i32))"
+            LINE "e { Bag: {[1]} }"
+            LINE "const ent: entity = e"
+            LINE "async {"
+            LINE "  $ent[Bag].items.push(2)"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    ecs_entity_t bag = ecs_lookup(world, "Bag");
+    const void *ptr = ecs_get_id(world, ecs_lookup(world, "e"), bag);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, bag, ptr);
+    test_str(str, "{items: [1, 2]}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_push_non_collection(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "export mut x: i32 = 0"
+        LINE "async {"
+        LINE "  x.push(1)"
+        LINE "}", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_push_expression(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "export mut v: i32[] = [1, 2]"
+        LINE "async {"
+        LINE "  const x = (v + v).pop()"
+        LINE "}", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_push_expression_element(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "struct Bag(items: vector(i32))"
+        LINE "export mut bags: Bag[] = [{[1]}]"
+        LINE "async {"
+        LINE "  const x = (bags + bags)[0].items.pop()"
+        LINE "}", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+
+void CollectionOps_push_invalid_arg(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "export mut v: i32[] = [1, 2]"
+        LINE "async {"
+        LINE "  v.push($undefined)"
+        LINE "}", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_remove_wrong_arg_count(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "export mut v: i32[] = [1, 2]"
+        LINE "async {"
+        LINE "  v.remove(0, 1)"
+        LINE "}", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_insert_index_not_number(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "export mut v: i32[] = [1, 2]"
+        LINE "async {"
+        LINE "  v.insert(\"a\", 1)"
+        LINE "}", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_contains_wrong_arg_count(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const v = [1, 2]"
+        LINE "const x = v.contains()", &ir_desc, NULL) != 0);
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const w = [1, 2]"
+        LINE "const y = w.sort(1)", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_unknown_method(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const v = [1, 2]"
+        LINE "const x = v.foo()", &ir_desc, NULL) != 0);
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const w = [1, 2]"
+        LINE "const y = w.map()", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_slice_bound_not_number(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const v = [1, 2, 3]"
+        LINE "const w = v[\"a\"..2]", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_slice_invalid_bound(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const v = [1, 2, 3]"
+        LINE "const w = v[$undefined..2]", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_slice_invalid_left(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const w = $undefined[0..2]", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_slice_left_eval_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const v = [1, 2, 3]"
+        LINE "const w = v[0..5][0..1]", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_slice_from_eval_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const v = [1, 2, 3]"
+        LINE "const w = v[v[10]..]", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_slice_to_eval_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const v = [1, 2, 3]"
+        LINE "const w = v[..v[10]]", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_contains_arg_eval_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const v = [1, 2, 3]"
+        LINE "const w = v.contains(v[10])", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_method_left_eval_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const v = [1, 2, 3]"
+        LINE "const w = v[0..5].sum()", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_struct_value_map(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "struct Point(x: f64, y: f64)"
+            LINE "export mut m: map(i32, Point) = [1: {1, 2}, 2: {3, 4}]"
+            LINE "export mut n: map(i32, Point) = [1: {0, 0}]"
+            LINE "async {"
+            LINE "  m = m + [3: {5, 6}]"
+            LINE "  m.remove(2)"
+            LINE "  n = m.map_values((p) -> { p })"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    ecs_value_t m = ecs_mut_var_get(world, ecs_lookup(world, "m"));
+    char *str = ecs_ptr_to_expr(world, m.type, m.ptr);
+    test_str(str, "[1: {x: 1, y: 2}, 3: {x: 5, y: 6}]");
+    ecs_os_free(str);
+
+    ecs_value_t n = ecs_mut_var_get(world, ecs_lookup(world, "n"));
+    str = ecs_ptr_to_expr(world, n.type, n.ptr);
+    test_str(str, "[1: {x: 1, y: 2}, 3: {x: 5, y: 6}]");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_contains_invalid_arg(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const v = [1, 2]"
+        LINE "const x = v.contains($undefined)", &ir_desc, NULL) != 0);
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const w = [1, 2]"
+        LINE "const y = w.contains(\"a\")", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_reduce_invalid_init(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const v = [1, 2]"
+        LINE "const x = v.reduce((acc, el) -> { acc + el }, $undefined)",
+        &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_concat_invalid_right(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const v = [1, 2]"
+        LINE "const x = v + $undefined", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_concat_map_different_types(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(a: f64, b: f64, c: i32)"
+    LINE "const a: map(i32, f64) = [1: 1.5]"
+    LINE "const b: map(i32, i32) = [2: 2]"
+    LINE "const c = a + b"
+    LINE "e { Result: {c[1], c[2], c.count()} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{a: 1.5, b: 2, c: 2}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_concat_map_w_vector(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const a: map(i32, i32) = [1: 1]"
+        LINE "const b: i32[] = [2]"
+        LINE "const x = a + b", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+
+void CollectionOps_push_arg_eval_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut v: i32[] = [1, 2]"
+            LINE "async {"
+            LINE "  v.push(v[10])"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    ecs_log_set_level(-4);
+    ecs_script_tasks_progress(world);
+
+    ecs_value_t v = ecs_mut_var_get(world, ecs_lookup(world, "v"));
+    char *str = ecs_ptr_to_expr(world, v.type, v.ptr);
+    test_str(str, "[1, 2]");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_push_index_eval_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "struct Bag(items: vector(i32))"
+            LINE "export mut v: Bag[] = [{[1]}, {[2]}]"
+            LINE "const w: i32[] = [0]"
+            LINE "async {"
+            LINE "  v[w[10]].items.push(1)"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    ecs_log_set_level(-4);
+    ecs_script_tasks_progress(world);
+
+    ecs_value_t v = ecs_mut_var_get(world, ecs_lookup(world, "v"));
+    char *str = ecs_ptr_to_expr(world, v.type, v.ptr);
+    test_str(str, "[{items: [1]}, {items: [2]}]");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+
+void CollectionOps_to_str(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        HEAD "struct Bag(items: vector(i32))"
+        LINE "export mut v: i32[] = [1, 2, 3]"
+        LINE "export mut bags: Bag[] = [{[1]}]"
+        LINE "e { Bag: {[1]} }"
+        LINE "const a = v[1..2]"
+        LINE "const b = v[..2]"
+        LINE "const c = v[1..]"
+        LINE "async {"
+        LINE "  v.push(4, 5)"
+        LINE "  bags[0].items.push(2)"
+        LINE "  e[Bag].items.push(3)"
+        LINE "  const x = v.pop()"
+        LINE "  v[0..1] = [7]"
+        LINE "  v[..1] = [8]"
+        LINE "  v[1..] = [9]"
+        LINE "  bags[0].items[0] = 3"
+        LINE "}",
+        &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
+
+    char *str = ecs_script_ast_to_str(script, false);
+    test_str(str,
+    HEAD "{"
+    LINE "  entity: struct Bag {"
+    LINE "    component: struct: {items:flecs.script.typecache.vector<i32>}"
+    LINE "  }"
+    LINE "  export mut: v : i32[] = {1, 2, 3}"
+    LINE "  export mut: bags : Bag[] = {{{1}}}"
+    LINE "  entity: e {"
+    LINE "    component: Bag: {{1}}"
+    LINE "  }"
+    LINE "  const: a = $v[1..2]"
+    LINE "  const: b = $v[..2]"
+    LINE "  const: c = $v[1..]"
+    LINE "  async: {"
+    LINE "    call: v.push(i32(4), i32(5))"
+    LINE "    call: bags[0].items.push(i32(2))"
+    LINE "    call: @e[@Bag].items.push(i32(3))"
+    LINE "    const: x = v.pop()"
+    LINE "    assign: v[0..1] = {7}"
+    LINE "    assign: v[..1] = {8}"
+    LINE "    assign: v[1..] = {9}"
+    LINE "    assign: bags[0].items[0] = 3"
+    LINE "  }"
+    LINE "}"
+    LINE "");
+    ecs_os_free(str);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void CollectionOps_single_elem_initializer_invalid(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const v: i32[] = {$undefined}", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_copy_collection_elem_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const s = [\"a\", \"b\"]"
+        LINE "const v: i32[] = s", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}

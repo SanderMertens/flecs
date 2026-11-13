@@ -1281,3 +1281,35 @@ void Monitor_delete_pair_target_in_use(void) {
     test_expect_abort();
     ecs_delete(world, parent);
 }
+
+static void Monitor_run_w_callback(ecs_iter_t *it) {
+    while (ecs_iter_next(it)) {
+        it->callback(it);
+    }
+}
+
+void Monitor_not_only_w_run_bypass_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    MonitorEvents ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_pair(EcsChildOf, EcsWildcard), .oper = EcsNot }
+        },
+        .events = { EcsMonitor },
+        .callback = Monitor_record_events,
+        .run = Monitor_run_w_callback,
+        .flags_ = EcsObserverBypassQuery,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world);
+    test_int(ctx.count, 1);
+    test_uint(ctx.events[0], EcsOnAdd);
+    test_uint(ctx.entities[0], e);
+
+    ecs_delete(world, o);
+
+    ecs_fini(world);
+}

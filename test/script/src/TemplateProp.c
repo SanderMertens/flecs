@@ -6372,3 +6372,15 @@ void TemplateProp_interface_prop_as_tag_deleted_template(void) {
 
     ecs_fini(world);
 }
+
+void TemplateProp_prop_w_own_template_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "template T {"
+        LINE "  prop t: T = {}"
+        LINE "}", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}

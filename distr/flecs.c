@@ -52186,10 +52186,6 @@ ecs_entity_t flecs_script_map_type(
     ecs_entity_t key_type,
     ecs_entity_t elem_type);
 
-ecs_entity_t flecs_script_value_type(
-    ecs_world_t *world,
-    ecs_entity_t type);
-
 ecs_entity_t flecs_script_kind_component(
     const ecs_world_t *world,
     ecs_entity_t kind);
@@ -128666,14 +128662,6 @@ ecs_entity_t flecs_script_map_type(
 {
     EcsMap value = { .key_type = key_type, .type = elem_type };
     return flecs_script_kind_type(world, ecs_id(EcsMap), &value);
-}
-
-ecs_entity_t flecs_script_value_type(
-    ecs_world_t *world,
-    ecs_entity_t type)
-{
-    EcsValue value = { .type = type };
-    return flecs_script_kind_type(world, ecs_id(EcsValue), &value);
 }
 
 #endif

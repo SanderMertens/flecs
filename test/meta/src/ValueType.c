@@ -1855,3 +1855,138 @@ void ValueType_ptr_to_expr(void) {
 
     ecs_fini(world);
 }
+
+static ecs_entity_t ValueType_lookup_custom(
+    ecs_world_t *world,
+    const char *value,
+    void *ctx)
+{
+    (void)world;
+    if (!ecs_os_strcmp(value, "Custom")) {
+        return *(ecs_entity_t*)ctx;
+    }
+    return 0;
+}
+
+void ValueType_init_w_dead_constraint(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t dead = ecs_new(world);
+    ecs_delete(world, dead);
+
+    ecs_log_set_level(-4);
+    ecs_entity_t t = ecs_value_type(world, { .type = dead });
+    test_assert(t == 0);
+
+    ecs_fini(world);
+}
+
+void ValueType_struct_set_value_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Base" }),
+        .members = {{ "x", ecs_id(ecs_i32_t) }}
+    });
+
+    ecs_entity_t derived = ecs_entity(world, { .name = "Derived" });
+    ecs_add_pair(world, derived, EcsIsA, base);
+    ecs_struct(world, {
+        .entity = derived,
+        .members = {{ "y", ecs_id(ecs_i32_t) }}
+    });
+
+    ecs_entity_t t = ecs_value_type(world, { .type = base });
+
+    ecs_value_t v = {0};
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &v);
+    const char *name = "Derived";
+    test_int(0, ecs_meta_set_value(&cur,
+        &(ecs_value_t){ecs_id(ecs_string_t), &name}));
+    test_uint(v.type, derived);
+    test_assert(v.ptr == NULL);
+
+    const char *null_name = NULL;
+    cur = ecs_meta_cursor(world, t, &v);
+    test_int(0, ecs_meta_set_value(&cur,
+        &(ecs_value_t){ecs_id(ecs_string_t), &null_name}));
+    test_uint(v.type, 0);
+    test_assert(v.ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void ValueType_set_value_empty(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_value_type(world, { .type = ecs_id(ecs_i32_t) });
+
+    ecs_value_t v = ecs_value_new(world, ecs_id(ecs_i32_t));
+    ecs_value_t src = {0};
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &v);
+    test_int(0, ecs_meta_set_value(&cur, &(ecs_value_t){t, &src}));
+
+    test_uint(v.type, 0);
+    test_assert(v.ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void ValueType_set_value_empty_to_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_value_type(world, { .type = ecs_id(ecs_i32_t) });
+
+    ecs_value_t src = {0};
+    ecs_entity_t e = 0;
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_entity_t), &e);
+
+    ecs_log_set_level(-4);
+    test_assert(0 != ecs_meta_set_value(&cur, &(ecs_value_t){t, &src}));
+    test_uint(e, 0);
+
+    ecs_fini(world);
+}
+
+void ValueType_struct_set_string_zero(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Base" }),
+        .members = {{ "x", ecs_id(ecs_i32_t) }}
+    });
+
+    ecs_entity_t t = ecs_value_type(world, { .type = base });
+
+    ecs_value_t v = { .type = base };
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &v);
+    test_int(0, ecs_meta_set_string(&cur, "#0"));
+
+    test_uint(v.type, 0);
+    test_assert(v.ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void ValueType_struct_set_string_lookup_action(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct(world, {
+        .members = {{ "x", ecs_id(ecs_i32_t) }}
+    });
+
+    ecs_entity_t t = ecs_value_type(world, { .type = base });
+
+    ecs_value_t v = {0};
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &v);
+    cur.lookup_action = ValueType_lookup_custom;
+    cur.lookup_ctx = &base;
+    test_int(0, ecs_meta_set_string(&cur, "Custom"));
+
+    test_uint(v.type, base);
+    test_assert(v.ptr == NULL);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}

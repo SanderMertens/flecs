@@ -12112,3 +12112,32 @@ void Basic_dont_keep_alive_delete_pair_target(void) {
 
     ecs_fini(world);
 }
+
+void Basic_dont_keep_alive_eq_deleted_entity(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$this == e",
+        .cache_kind = cache_kind,
+        .flags = EcsQueryDontKeepAlive
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e);
+    test_bool(ecs_query_next(&it), false);
+
+    ecs_delete(world, e);
+    test_assert(!ecs_is_alive(world, e));
+
+    it = ecs_query_iter(world, q);
+    test_bool(ecs_query_next(&it), false);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

@@ -783,3 +783,63 @@ void ValueType_ast_to_str(void) {
 
     ecs_fini(world);
 }
+
+void ValueType_const_member_on_primitive_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "const x: value(i32) = 10"
+    LINE "e { Position: {x.y, 0} }";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void ValueType_const_from_unconstrained(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    FACADE_HEAD
+    LINE "struct Holder(f: value(Facade))"
+    LINE "const a: value = Brick(height: 3)"
+    LINE "e { Holder: {f: a} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    const ecs_value_t *v = ecs_get_id(world, e, ecs_lookup(world, "Holder"));
+    test_assert(v != NULL);
+    test_uint(v->type, ecs_lookup(world, "Brick"));
+
+    ecs_fini(world);
+}
+
+void ValueType_template_call_on_primitive_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const x: value(i32) = 10"
+    LINE "const y = x(height: 3)";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void ValueType_const_primitive_from_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    FACADE_HEAD
+    LINE "const x: value(i32) = Brick(height: 3)";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}

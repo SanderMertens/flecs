@@ -262,10 +262,6 @@ ecs_entity_t flecs_script_map_type(
     ecs_entity_t key_type,
     ecs_entity_t elem_type);
 
-ecs_entity_t flecs_script_value_type(
-    ecs_world_t *world,
-    ecs_entity_t type);
-
 ecs_entity_t flecs_script_kind_component(
     const ecs_world_t *world,
     ecs_entity_t kind);

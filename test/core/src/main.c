@@ -2783,6 +2783,7 @@ void Monitor_on_remove_any_not_invoked_for_delete_empty(void);
 void Monitor_delete_pair_target_in_use(void);
 void Monitor_dont_keep_alive_delete_pair_target(void);
 void Monitor_dont_keep_alive_single_term_delete_target(void);
+void Monitor_not_only_w_run_bypass_query(void);
 
 // Testsuite 'Prefab'
 void Prefab_setup(void);
@@ -14664,6 +14665,10 @@ bake_test_case Monitor_testcases[] = {
     {
         "dont_keep_alive_single_term_delete_target",
         Monitor_dont_keep_alive_single_term_delete_target
+    },
+    {
+        "not_only_w_run_bypass_query",
+        Monitor_not_only_w_run_bypass_query
     }
 };
 
@@ -18784,7 +18789,7 @@ static bake_test_suite suites[] = {
         "Monitor",
         NULL,
         NULL,
-        34,
+        35,
         Monitor_testcases
     },
     {

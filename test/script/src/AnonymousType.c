@@ -519,3 +519,37 @@ void AnonymousType_serialize_type_roundtrip(void) {
     ecs_fini(world2);
     ecs_fini(world);
 }
+
+void AnonymousType_to_str_type_args(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        HEAD "const a: vector(f32) = [1, 2]"
+        LINE "const b: map(i32, string) = [1: \"a\"]"
+        LINE "const c: vector() = []",
+        NULL, NULL);
+    test_assert(script != NULL);
+
+    char *str = ecs_script_ast_to_str(script, false);
+    test_str(str,
+    HEAD "{"
+    LINE "  const: a : vector(@f32) = {1, 2}"
+    LINE "  const: b : map(@i32, @string) = {1:a}"
+    LINE "  const: c : vector() = {}"
+    LINE "}"
+    LINE "");
+    ecs_os_free(str);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void AnonymousType_invalid_type_arg(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const t = vector($undefined)", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}

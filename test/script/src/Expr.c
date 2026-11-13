@@ -14347,3 +14347,61 @@ void Expr_error_match_multiple_patterns(void) {
 
     ecs_fini(world);
 }
+
+void Expr_match_multiple_patterns_to_str(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        HEAD "const i = 1"
+        LINE "const r = match i { 1, 2: 10; 3, 4, 5: 20; _: 30 }",
+        &ir_desc, NULL);
+    test_assert(script != NULL);
+
+    char *str = ecs_script_ast_to_str(script, false);
+    test_str(str,
+    HEAD "{"
+    LINE "  const: i = 1"
+    LINE "  const: r = match @i {"
+    LINE "  1, 2: 10"
+    LINE "  3, 4, 5: 20"
+    LINE "  @_: 30"
+    LINE "}"
+    LINE ""
+    LINE "}"
+    LINE "");
+    ecs_os_free(str);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Expr_conditional_vector_w_strings(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const c = true"
+    LINE "export const r: string[] = c ? [\"a]\", \"b\\\"]\"] : [\"d\"]";
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_value_t v = ecs_const_var_get(world, ecs_lookup(world, "r"));
+    char *str = ecs_ptr_to_expr(world, v.type, v.ptr);
+    test_str(str, "[\"a]\", \"b\\\"]\"]");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void Expr_bitwise_not_uptr(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const a: uptr = 1"
+    LINE "export const r = ~a";
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_value_t v = ecs_const_var_get(world, ecs_lookup(world, "r"));
+    test_uint(v.type, ecs_id(ecs_uptr_t));
+    test_uint(*(ecs_uptr_t*)v.ptr, ~(ecs_uptr_t)1);
+
+    ecs_fini(world);
+}
