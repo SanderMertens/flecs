@@ -5680,10 +5680,6 @@ void Prefab_prefab_ordered_children_child_offset_w_smaller_child_id(void) {
     ecs_fini(world);
 }
 
-void Prefab_prefab_ordered_children_nested(void) {
-    // Implement testcase
-}
-
 void Prefab_prefab_w_union(void) {
     ecs_world_t *world = ecs_mini();
 

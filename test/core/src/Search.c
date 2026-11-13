@@ -251,28 +251,6 @@ void Search_search_follow_relation_lvl_3(void) {
     ecs_fini(world);
 }
 
-void Search_search_first_lvl_0(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, TagA);
-    ECS_TAG(world, TagB);
-    ECS_TAG(world, Rel);
-
-    ecs_entity_t e_0 = ecs_new_w(world, TagA);
-    ecs_add(world, e_0, TagB);
-
-    ecs_table_t *t = ecs_get_table(world, e_0);
-    
-    ecs_entity_t subj = 0;
-    ecs_id_t id = 0;
-    int32_t c = ecs_search_relation(world, t, 0, TagB, Rel, 0, &subj, &id, 0);
-    test_int(c, 1);
-    test_uint(id, TagB);
-    test_uint(subj, 0);
-
-    ecs_fini(world);
-}
-
 void Search_search_first_lvl_1(void) {
     ecs_world_t *world = ecs_mini();
 

@@ -2669,10 +2669,6 @@ void Edit_set_replaces_tag_stmt(void) {
     ecs_fini(world);
 }
 
-void Edit_explore(void) {
-}
-
-
 void Edit_set_f32_shortest_repr(void) {
     ecs_world_t *world = ecs_init();
 

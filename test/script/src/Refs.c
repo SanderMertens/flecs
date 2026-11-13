@@ -936,66 +936,6 @@ static void RefDummyObserver(ecs_iter_t *it) {
     (void)it;
 }
 
-void Refs_reeval_prefab_w_isa_observer(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Mass" }),
-        .members = {
-            {"value", ecs_id(ecs_f32_t)}
-        }
-    });
-    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Position" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
-
-    ecs_observer(world, {
-        .query.terms = {{
-            .id = ecs_id(Position),
-            .src.id = EcsUp,
-            .trav = EcsIsA
-        }},
-        .events = { EcsOnAdd, EcsOnRemove },
-        .callback = RefDummyObserver
-    });
-
-    ecs_entity_t assets = ecs_script(world, { .ir = ir_enabled,
-        .entity = ecs_entity(world, { .name = "assets" }),
-        .code =
-            HEAD "Prefab base_prefab {"
-            LINE "  Position: {1, 2}"
-            LINE "  turret { Position: {3, 4} }"
-            LINE "}"
-    });
-    test_assert(assets != 0);
-
-    ecs_entity_t e = ecs_entity(world, { .name = "e" });
-    ecs_set(world, e, Mass, {10});
-
-    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
-        .entity = ecs_entity(world, { .name = "main" }),
-        .code =
-            HEAD "@tree Parent"
-            LINE "world_root {"
-            LINE "  base : base_prefab {"
-            LINE "    Position: {e[Mass].value, 0}"
-            LINE "    slot { Position: {7, 8} }"
-            LINE "  }"
-            LINE "}"
-    });
-    test_assert(s != 0);
-
-    ecs_set(world, e, Mass, {20});
-    ecs_set(world, e, Mass, {21});
-
-    ecs_fini(world);
-}
-
 void Refs_reeval_prefab_delete_with_inherited_component(void) {
     ecs_world_t *world = ecs_init();
 

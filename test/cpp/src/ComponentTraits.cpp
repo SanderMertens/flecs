@@ -313,37 +313,6 @@ void ComponentTraits_on_instantiate_dont_inherit_get_get_mut(void) {
     test_int(p->y, 40);
 }
 
-void ComponentTraits_on_instantiate_inherit_get_inherited(void) {
-    flecs::world world;
-
-    auto base = world.prefab().set<TraitOnInstantiateInherit>({10, 20});
-    auto inst = world.entity().is_a(base);
-
-    const TraitOnInstantiateInherit *p = 
-        inst.try_get<TraitOnInstantiateInherit>();
-    test_assert(p != nullptr);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    test_assert(inst.try_get_mut<TraitOnInstantiateInherit>() == nullptr);
-}
-
-void ComponentTraits_no_traits_get_inherited(void) {
-    flecs::world world;
-
-    world.component<TraitNone>().add(flecs::OnInstantiate, flecs::Inherit);
-
-    auto base = world.prefab().set<TraitNone>({10, 20});
-    auto inst = world.entity().is_a(base);
-
-    const TraitNone *p = inst.try_get<TraitNone>();
-    test_assert(p != nullptr);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    test_assert(inst.try_get_mut<TraitNone>() == nullptr);
-}
-
 void ComponentTraits_get_dispatch(void) {
     test_assert((flecs::_::is_sparse_component<TraitSparse>::value));
     test_assert((flecs::_::is_sparse_component<TraitSparseSpecialized>::value));

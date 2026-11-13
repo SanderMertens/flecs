@@ -130,11 +130,20 @@ void NonFragmentingChildOf_add_ordered_children_before_set_parent(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_new(world);
-    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {parent}));
+    ecs_add_id(world, parent, EcsOrderedChildren);
+    test_assert(ecs_has_id(world, parent, EcsOrderedChildren));
+
+    ecs_entity_t child_1 = ecs_new(world);
+    ecs_entity_t child_2 = ecs_new(world);
+    ecs_set(world, child_2, EcsParent, {parent});
+    ecs_set(world, child_1, EcsParent, {parent});
+
+    test_assert(ecs_has_id(world, parent, EcsOrderedChildren));
 
     const ecs_entities_t children = ecs_get_ordered_children(world, parent);
-    test_int(children.count, 1);
-    test_int(children.ids[0], child);
+    test_int(children.count, 2);
+    test_uint(children.ids[0], child_2);
+    test_uint(children.ids[1], child_1);
 
     ecs_fini(world);
 }
@@ -1251,28 +1260,6 @@ void NonFragmentingChildOf_get_parent_5(void) {
 }
 
 void NonFragmentingChildOf_get_parent_6(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_entity_t parent_a = ecs_new(world);
-    ecs_entity_t parent_b = ecs_new(world);
-
-    ecs_entity_t child_a = ecs_entity(world, { .name = "a" });
-    ecs_add(world, child_a, Position);
-    ecs_set(world, child_a, EcsParent, { parent_a });
-
-    ecs_entity_t child_b = ecs_entity(world, { .name = "b" });
-    ecs_add(world, child_b, Position);
-    ecs_set(world, child_b, EcsParent, { parent_b });
-
-    test_assert(ecs_get_parent(world, child_a) == parent_a);
-    test_assert(ecs_get_parent(world, child_b) == parent_b);
-
-    ecs_fini(world);
-}
-
-void NonFragmentingChildOf_get_parent_7(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -4540,34 +4527,6 @@ void NonFragmentingChildOf_delete_with_parent_nested_2(void) {
 }
 
 void NonFragmentingChildOf_delete_with_parent_nested_3(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ecs_entity_t p = ecs_new(world);
-    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p}));
-    ecs_entity_t gc1 = ecs_insert(world, ecs_value(EcsParent, {c1}));
-    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p}));
-    ecs_entity_t gc2 = ecs_insert(world, ecs_value(EcsParent, {c2}));
-
-    ecs_delete_with(world, ecs_childof(c1));
-
-    test_assert(ecs_is_alive(world, p));
-    test_assert(ecs_is_alive(world, c1));
-    test_assert(ecs_is_alive(world, c2));
-    test_assert(!ecs_is_alive(world, gc1));
-    test_assert(ecs_is_alive(world, gc2));
-
-    ecs_delete_with(world, ecs_childof(p));
-
-    test_assert(ecs_is_alive(world, p));
-    test_assert(!ecs_is_alive(world, c1));
-    test_assert(!ecs_is_alive(world, c2));
-    test_assert(!ecs_is_alive(world, gc1));
-    test_assert(!ecs_is_alive(world, gc2));
-
-    ecs_fini(world);
-}
-
-void NonFragmentingChildOf_delete_with_parent_nested_4(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new(world);

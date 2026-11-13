@@ -74,6 +74,22 @@ static void test_fclose(FILE *file) {
     }
 }
 
+static char *test_log_message = NULL;
+
+static void test_log_callback(
+    int32_t level,
+    const char *file,
+    int32_t line,
+    const char *msg)
+{
+    (void)file;
+    (void)line;
+    if (level <= -3) {
+        ecs_os_free(test_log_message);
+        test_log_message = ecs_os_strdup(msg);
+    }
+}
+
 void Include_include_cycle(void) {
     memset(test_files, 0, sizeof(test_files));
     test_fopen_remap_from = NULL;
@@ -200,15 +216,25 @@ void Include_include_parent_dir_not_allowed(void) {
     os_api.fread_ = test_fread;
     os_api.fclose_ = test_fclose;
     os_api.abort_ = test_abort;
+    os_api.log_ = test_log_callback;
     ecs_os_set_api(&os_api);
 
-    ecs_log_set_level(-5);
+    ecs_log_set_level(-2);
+    test_log_message = NULL;
 
     test_files[0] = (test_file_t){ "parent.flecs", "include ../other.flecs\n", 0 };
+    test_files[1] = (test_file_t){ "../other.flecs", "Foo{}\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) != 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+
+    test_assert(test_log_message != NULL);
+    test_assert(strstr(test_log_message,
+        "include path '../other.flecs' must not contain '..'") != NULL);
+    ecs_os_free(test_log_message);
+    test_log_message = NULL;
 
     ecs_fini(world);
 }
@@ -432,15 +458,25 @@ void Include_include_rejects_absolute_unix_path(void) {
     os_api.fread_ = test_fread;
     os_api.fclose_ = test_fclose;
     os_api.abort_ = test_abort;
+    os_api.log_ = test_log_callback;
     ecs_os_set_api(&os_api);
 
-    ecs_log_set_level(-5);
+    ecs_log_set_level(-2);
+    test_log_message = NULL;
 
     test_files[0] = (test_file_t){ "parent.flecs", "include /etc/passwd\n", 0 };
+    test_files[1] = (test_file_t){ "/etc/passwd.flecs", "Foo{}\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) != 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+
+    test_assert(test_log_message != NULL);
+    test_assert(strstr(test_log_message,
+        "include path '/etc/passwd' must be relative") != NULL);
+    ecs_os_free(test_log_message);
+    test_log_message = NULL;
 
     ecs_fini(world);
 }
@@ -460,15 +496,25 @@ void Include_include_rejects_windows_drive_letter(void) {
     os_api.fread_ = test_fread;
     os_api.fclose_ = test_fclose;
     os_api.abort_ = test_abort;
+    os_api.log_ = test_log_callback;
     ecs_os_set_api(&os_api);
 
-    ecs_log_set_level(-5);
+    ecs_log_set_level(-2);
+    test_log_message = NULL;
 
     test_files[0] = (test_file_t){ "parent.flecs", "include C:/foo.flecs\n", 0 };
+    test_files[1] = (test_file_t){ "C:/foo.flecs", "Foo{}\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) != 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+
+    test_assert(test_log_message != NULL);
+    test_assert(strstr(test_log_message,
+        "include path 'C:/foo.flecs' must be relative") != NULL);
+    ecs_os_free(test_log_message);
+    test_log_message = NULL;
 
     ecs_fini(world);
 }

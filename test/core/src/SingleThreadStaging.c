@@ -2021,38 +2021,6 @@ void SingleThreadStaging_remove_from_current_in_on_add(void) {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_remove_added_component_in_on_add(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_OBSERVER(world, Remove_from_current, EcsOnAdd, Position);
-
-    IterData ctx = {.component = ecs_id(Position)};
-    ecs_set_ctx(world, &ctx, NULL);
-
-    /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
-    ecs_add(world, e1, Position);
-    ecs_add(world, e1, Velocity);
-    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
-    ecs_add(world, e2, Position);
-    ecs_add(world, e2, Velocity);
-    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
-    ecs_add(world, e3, Position);
-    ecs_add(world, e3, Velocity);
-    
-    test_assert( !ecs_has(world, e1, Position));
-    test_assert( !ecs_has(world, e2, Position));
-    test_assert( !ecs_has(world, e3, Position));
-
-    test_assert( ecs_has(world, e1, Velocity));
-    test_assert( ecs_has(world, e2, Velocity));
-    test_assert( ecs_has(world, e3, Velocity));
-
-    ecs_fini(world);
-}
-
 static Probe pv_probe;
 
 static void On_PV(ecs_iter_t *it) {

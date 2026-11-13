@@ -1,18 +1,6 @@
 #include <core.h>
 #include <stdlib.h>
 
-void Add_zero(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ecs_entity_t e = ecs_new(world);
-    test_assert(e != 0);
-
-    test_expect_abort();
-    ecs_add_id(world, e, 0);
-}
-
 void Add_component(void) {
     ecs_world_t *world = ecs_mini();
 

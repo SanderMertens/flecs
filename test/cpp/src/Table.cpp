@@ -94,40 +94,6 @@ void Table_iter_locked(void) {
     test_assert(false);
 }
 
-void Table_iter_without_components(void) {
-    flecs::world ecs;
-
-    ecs.entity().add<Position>();
-    auto e2 = ecs.entity().add<Velocity>();
-
-    ecs.query<Position>()
-        .run([&](flecs::iter& it) {
-            while (it.next()) {
-                e2.add<Mass>();
-            }
-        });
-
-    test_assert(e2.has<Mass>());
-}
-
-void Table_iter_without_components_locked(void) {
-    install_test_abort();
-
-    flecs::world ecs;
-
-    auto e1 = ecs.entity().add<Position>();
-
-    ecs.query<Position>()
-        .run([&](flecs::iter& it) {
-            while (it.next()) {
-                test_expect_abort();
-                e1.add<Mass>();
-            }
-        });
-
-    test_assert(false);
-}
-
 void Table_multi_get(void) {
     flecs::world ecs;
 

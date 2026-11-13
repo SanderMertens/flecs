@@ -564,12 +564,15 @@ void Cursor_set_entity_to_0(void) {
 void Cursor_set_id(void) {
     ecs_world_t *world = ecs_init();
 
+    ecs_entity_t rel = ecs_new(world);
+    ecs_entity_t tgt = ecs_new(world);
+
     ecs_id_t value = 0;
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_id_t), &value);
-    test_ok( ecs_meta_set_uint(&cur, 500) );
+    test_ok( ecs_meta_set_id(&cur, ecs_pair(rel, tgt)) );
 
-    test_uint(value, 500);
+    test_uint(value, ecs_pair(rel, tgt));
 
     ecs_fini(world);
 }
@@ -1020,7 +1023,7 @@ void Cursor_set_str_to_char(void) {
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_char_t), &value);
     test_ok( ecs_meta_set_string(&cur, "10") );
 
-    test_bool(value, 10);
+    test_int(value, '1');
 
     ecs_fini(world);
 }
@@ -2216,7 +2219,7 @@ void Cursor_struct_member_i32(void) {
     test_ok( ecs_meta_member(&cur, "x"));
     test_ok( ecs_meta_set_int(&cur, 10) );
 
-    test_bool(value.x, 10);
+    test_int(value.x, 10);
 
     ecs_fini(world);
 }
@@ -2248,8 +2251,8 @@ void Cursor_struct_member_i32_i32(void) {
     test_ok( ecs_meta_member(&cur, "y"));
     test_ok( ecs_meta_set_int(&cur, 20) );
 
-    test_bool(value.x, 10);
-    test_bool(value.y, 20);
+    test_int(value.x, 10);
+    test_int(value.y, 20);
 
     ecs_fini(world);
 }
@@ -2281,8 +2284,8 @@ void Cursor_struct_member_i32_i32_reverse(void) {
     test_ok( ecs_meta_member(&cur, "x"));
     test_ok( ecs_meta_set_int(&cur, 10) );
 
-    test_bool(value.x, 10);
-    test_bool(value.y, 20);
+    test_int(value.x, 10);
+    test_int(value.y, 20);
 
     ecs_fini(world);
 }
@@ -2327,8 +2330,8 @@ void Cursor_struct_member_nested_i32_i32(void) {
         test_ok( ecs_meta_pop(&cur) );
     test_ok( ecs_meta_pop(&cur) );
 
-    test_bool(value.n_1.x, 10);
-    test_bool(value.n_1.y, 20);
+    test_int(value.n_1.x, 10);
+    test_int(value.n_1.y, 20);
 
     ecs_fini(world);
 }
@@ -2383,10 +2386,10 @@ void Cursor_struct_member_2_nested_i32_i32(void) {
         test_ok( ecs_meta_pop(&cur) );
     test_ok( ecs_meta_pop(&cur) );
 
-    test_bool(value.n_1.x, 10);
-    test_bool(value.n_1.y, 20);
-    test_bool(value.n_2.x, 30);
-    test_bool(value.n_2.y, 40);
+    test_int(value.n_1.x, 10);
+    test_int(value.n_1.y, 20);
+    test_int(value.n_2.x, 30);
+    test_int(value.n_2.y, 40);
 
     ecs_fini(world);
 }
@@ -2441,10 +2444,10 @@ void Cursor_struct_member_2_nested_i32_i32_reverse(void) {
         test_ok( ecs_meta_pop(&cur) );
     test_ok( ecs_meta_pop(&cur) );
 
-    test_bool(value.n_1.x, 10);
-    test_bool(value.n_1.y, 20);
-    test_bool(value.n_2.x, 30);
-    test_bool(value.n_2.y, 40);
+    test_int(value.n_1.x, 10);
+    test_int(value.n_1.y, 20);
+    test_int(value.n_2.x, 30);
+    test_int(value.n_2.y, 40);
 
     ecs_fini(world);
 }
@@ -2493,10 +2496,10 @@ void Cursor_struct_dotmember(void) {
     test_ok( ecs_meta_set_int(&cur, 30) );
     test_ok( ecs_meta_pop(&cur) );
 
-    test_bool(value.n_1.x, 10);
-    test_bool(value.n_1.y, 20);
-    test_bool(value.n_2.x, 30);
-    test_bool(value.n_2.y, 40);
+    test_int(value.n_1.x, 10);
+    test_int(value.n_1.y, 20);
+    test_int(value.n_2.x, 30);
+    test_int(value.n_2.y, 40);
 
     ecs_fini(world);
 }
@@ -2549,10 +2552,10 @@ void Cursor_struct_dotmember_assign_twice(void) {
     test_ok( ecs_meta_set_int(&cur, 35) );
     test_ok( ecs_meta_pop(&cur) );
 
-    test_bool(value.n_1.x, 15);
-    test_bool(value.n_1.y, 25);
-    test_bool(value.n_2.x, 35);
-    test_bool(value.n_2.y, 45);
+    test_int(value.n_1.x, 15);
+    test_int(value.n_1.y, 25);
+    test_int(value.n_2.x, 35);
+    test_int(value.n_2.y, 45);
 
     ecs_fini(world);
 }
@@ -2604,10 +2607,10 @@ void Cursor_struct_member_after_dotmember(void) {
         test_ok( ecs_meta_pop(&cur) );
     test_ok( ecs_meta_pop(&cur) );
 
-    test_bool(value.n_1.x, 10);
-    test_bool(value.n_1.y, 20);
-    test_bool(value.n_2.x, 30);
-    test_bool(value.n_2.y, 40);
+    test_int(value.n_1.x, 10);
+    test_int(value.n_1.y, 20);
+    test_int(value.n_2.x, 30);
+    test_int(value.n_2.y, 40);
 
     ecs_fini(world);
 }
@@ -2645,24 +2648,28 @@ void Cursor_struct_next_after_dotmember(void) {
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
     test_ok( ecs_meta_push(&cur) );
-        test_ok( ecs_meta_dotmember(&cur, "n_2.y"));
-        test_ok( ecs_meta_set_int(&cur, 40) );
-        test_ok( ecs_meta_dotmember(&cur, "n_2.x"));
-        test_ok( ecs_meta_set_int(&cur, 30) );
+        test_ok( ecs_meta_dotmember(&cur, "n_1.x"));
+        test_str(ecs_meta_get_member(&cur), "x");
+        test_ok( ecs_meta_set_int(&cur, 10) );
+        test_ok( ecs_meta_dotmember(&cur, "n_1.y"));
+        test_str(ecs_meta_get_member(&cur), "y");
+        test_ok( ecs_meta_set_int(&cur, 20) );
 
-        test_ok( ecs_meta_member(&cur, "n_1"));
+        test_ok( ecs_meta_next(&cur) );
+        test_str(ecs_meta_get_member(&cur), "n_2");
         test_ok( ecs_meta_push(&cur) );
-            test_ok( ecs_meta_member(&cur, "y"));
-            test_ok( ecs_meta_set_int(&cur, 20) );
-            test_ok( ecs_meta_member(&cur, "x"));
-            test_ok( ecs_meta_set_int(&cur, 10) );
+            test_str(ecs_meta_get_member(&cur), "x");
+            test_ok( ecs_meta_set_int(&cur, 30) );
+            test_ok( ecs_meta_next(&cur) );
+            test_str(ecs_meta_get_member(&cur), "y");
+            test_ok( ecs_meta_set_int(&cur, 40) );
         test_ok( ecs_meta_pop(&cur) );
     test_ok( ecs_meta_pop(&cur) );
 
-    test_bool(value.n_1.x, 10);
-    test_bool(value.n_1.y, 20);
-    test_bool(value.n_2.x, 30);
-    test_bool(value.n_2.y, 40);
+    test_int(value.n_1.x, 10);
+    test_int(value.n_1.y, 20);
+    test_int(value.n_2.x, 30);
+    test_int(value.n_2.y, 40);
 
     ecs_fini(world);
 }
@@ -2738,15 +2745,15 @@ void Cursor_struct_pop_after_dotmember(void) {
         test_ok( ecs_meta_pop(&cur) );
     test_ok( ecs_meta_pop(&cur) );
 
-    test_bool(value.n_1.n_1.x, 10);
-    test_bool(value.n_1.n_1.y, 20);
-    test_bool(value.n_1.n_2.x, 30);
-    test_bool(value.n_1.n_2.y, 40);
+    test_int(value.n_1.n_1.x, 10);
+    test_int(value.n_1.n_1.y, 20);
+    test_int(value.n_1.n_2.x, 30);
+    test_int(value.n_1.n_2.y, 40);
 
-    test_bool(value.n_2.n_1.x, 50);
-    test_bool(value.n_2.n_1.y, 60);
-    test_bool(value.n_2.n_2.x, 70);
-    test_bool(value.n_2.n_2.y, 80);
+    test_int(value.n_2.n_1.x, 50);
+    test_int(value.n_2.n_1.y, 60);
+    test_int(value.n_2.n_2.x, 70);
+    test_int(value.n_2.n_2.y, 80);
 
     ecs_fini(world);
 }
@@ -3383,6 +3390,13 @@ void Cursor_vector_i32_empty_after_3(void) {
     test_int(((int32_t*)value.array)[0], 10);
     test_int(((int32_t*)value.array)[1], 20);
     test_int(((int32_t*)value.array)[2], 30);
+
+    cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(value.count, 0);
     ecs_os_free(value.array);
 
     ecs_fini(world);

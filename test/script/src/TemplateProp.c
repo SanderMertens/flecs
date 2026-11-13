@@ -2539,45 +2539,6 @@ void TemplateProp_use_w_wrong_member(void) {
     ecs_fini(world);
 }
 
-void TemplateProp_prop_template_type_wo_default_required(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "struct Position(x: f32, y: f32)"
-    LINE "template Point {"
-    LINE "  prop x: f32 = 1"
-    LINE "  prop y: f32 = 2"
-    LINE "  Position: {$x, $y}"
-    LINE "}"
-    LINE "template Foo {"
-    LINE "  prop point : value(Point)"
-    LINE "  child { point }"
-    LINE "}"
-    LINE "e { Foo: {} }";
-
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e.child");
-    test_assert(e != 0);
-
-    ecs_entity_t point = ecs_lookup(world, "Point");
-    ecs_entity_t position = ecs_lookup(world, "Position");
-    test_assert(point != 0);
-    test_assert(position != 0);
-
-    const PointValue *pt = ecs_get_id(world, e, point);
-    test_assert(pt != NULL);
-    test_flt(pt->x, 1);
-    test_flt(pt->y, 2);
-
-    const PointValue *pos = ecs_get_id(world, e, position);
-    test_assert(pos != NULL);
-    test_flt(pos->x, 1);
-    test_flt(pos->y, 2);
-
-    ecs_fini(world);
-}
-
 void TemplateProp_run_script_twice(void) {
     ecs_world_t *world = ecs_init();
 

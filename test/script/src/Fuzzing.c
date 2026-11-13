@@ -9927,22 +9927,6 @@ void Fuzzing_150(void) {
     ecs_fini(world);
 }
 
-void Fuzzing_139(void) {
-    // Implement testcase
-}
-
-void Fuzzing_142(void) {
-    // Implement testcase
-}
-
-void Fuzzing_143(void) {
-    // Implement testcase
-}
-
-void Fuzzing_148(void) {
-    // Implement testcase
-}
-
 void Fuzzing_rerun_empty_struct_in_use(void) {
     const char *expr =
     HEAD "struct Facade()"

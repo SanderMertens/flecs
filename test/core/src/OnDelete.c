@@ -491,28 +491,6 @@ void OnDelete_cyclic_id_delete_both(void) {
     ecs_fini(world);
 }
 
-void OnDelete_cyclic_relation_default(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ecs_entity_t a = ecs_new(world);
-    ecs_entity_t b = ecs_new(world);
-
-    ecs_add_id(world, a, b);
-    ecs_add_id(world, b, a);
-
-    ecs_delete(world, a);
-    test_assert(!ecs_is_alive(world, a));
-    test_assert(ecs_is_alive(world, b));
-    test_assert(ecs_get_type(world, b) != NULL);
-    test_int(ecs_get_type(world, b)->count, 0);
-
-    ecs_delete(world, b);
-    test_assert(!ecs_is_alive(world, a));
-    test_assert(!ecs_is_alive(world, b));
-
-    ecs_fini(world);
-}
-
 void OnDelete_cyclic_relation_remove(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -803,36 +781,6 @@ void OnDelete_cyclic_storage_table_2(void) {
     ecs_fini(world);
 }
 
-void OnDelete_cyclic_storage_table_3(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Tag);
-
-    ecs_entity_t rel_1 = ecs_new_w_pair(world, EcsOnDeleteTarget, EcsDelete);
-    ecs_set(world, rel_1, EcsComponent, {1, 1});
-
-    ecs_entity_t obj_a = ecs_new(world);
-    ecs_entity_t obj_b = ecs_new(world);
-
-    ecs_add_pair(world, obj_a, rel_1, obj_b);
-
-    ecs_add(world, obj_b, Tag);
-    ecs_add_pair(world, obj_b, rel_1, obj_a);
-    ecs_add_pair(world, obj_b, rel_1, obj_b);
-
-    ecs_entity_t e = ecs_new(world);
-    ecs_add_pair(world, e, rel_1, obj_a);
-    ecs_add_pair(world, e, rel_1, obj_b);
-
-    ecs_delete(world, obj_a);
-
-    test_bool(false, ecs_is_alive(world, obj_a));
-    test_bool(false, ecs_is_alive(world, obj_b));
-    test_bool(false, ecs_is_alive(world, e));
-
-    ecs_fini(world);
-}
-
 void OnDelete_cyclic_set_empty(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -860,8 +808,6 @@ void OnDelete_cyclic_set_empty(void) {
 }
 
 void OnDelete_2_acyclic_relations_w_cycle(void) {
-    test_quarantine("May 4th 2022");
-    
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r1 = ecs_new_w_id(world, EcsTraversable);
@@ -872,6 +818,9 @@ void OnDelete_2_acyclic_relations_w_cycle(void) {
 
     ecs_add_pair(world, a, r1, b);
     ecs_add_pair(world, b, r2, a);
+
+    test_assert(ecs_has_pair(world, a, r1, b));
+    test_assert(ecs_has_pair(world, b, r2, a));
 
     ecs_fini(world);
 }

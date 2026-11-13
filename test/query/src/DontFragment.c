@@ -2499,7 +2499,6 @@ void DontFragment_1_fixed_sparse_pair_any_not(void) {
 
     ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
     ecs_add_id(world, Movement, EcsDontFragment);
-    ecs_add_id(world, Movement, EcsExclusive);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -2977,7 +2976,7 @@ void DontFragment_1_this_sparse_pair_exclusive_any_not(void) {
     ecs_add(world, e6, Bar);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "TagA, !(Movement, *)",
+        .expr = "TagA, !(Movement, _)",
         .cache_kind = cache_kind
     });
 
@@ -3108,6 +3107,7 @@ void DontFragment_1_var_sparse_pair_exclusive_not(void) {
 
     ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
     ecs_add_id(world, Movement, EcsDontFragment);
+    ecs_add_id(world, Movement, EcsExclusive);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);

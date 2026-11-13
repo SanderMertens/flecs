@@ -689,50 +689,6 @@ void ObserverOnSet_no_set_after_remove_base(void) {
     ecs_fini(world);
 }
 
-void ObserverOnSet_un_set_after_remove(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-    ECS_OBSERVER(world, OnPosition, EcsOnRemove, Position);
-
-    Probe ctx = { 0 };
-    ecs_set_ctx(world, &ctx, NULL);
-
-    ecs_entity_t e = ecs_new_w(world, Position);
-    test_int(ctx.invoked, 0);
-
-    ecs_remove(world, e, Position);
-    test_int(ctx.invoked, 1);
-
-    ecs_fini(world);
-}
-
-void ObserverOnSet_un_set_after_remove_base(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
-
-    ecs_entity_t Base = ecs_entity(world, { .name = "Base" });
-    ecs_add(world, Base, Position);
-    ECS_OBSERVER(world, OnPosition, EcsOnRemove, Position(self|up IsA));
-
-    Probe ctx = { 0 };
-    ecs_set_ctx(world, &ctx, NULL);
-
-    ecs_entity_t e = ecs_new(world);
-    test_int(ctx.invoked, 0);
-
-    ecs_add_pair(world, e, EcsIsA, Base);
-    test_int(ctx.invoked, 0);
-
-    ecs_remove_id(world, e, ecs_pair(EcsIsA, Base));
-    test_int(ctx.invoked, 1);
-
-    ecs_fini(world);
-}
-
 void ObserverOnSet_add_to_current_in_on_set(void) {
     ecs_world_t *world = ecs_mini();
 

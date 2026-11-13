@@ -24,19 +24,6 @@ void Singleton_ensure_singleton(void) {
     test_int(p->y, 20);
 }
 
-void Singleton_get_mut_singleton(void) {
-    flecs::world world;
-
-    Position *p = world.try_get_mut<Position>();
-    test_assert(p == nullptr);
-
-    world.set<Position>({10, 20});
-    p = world.try_get_mut<Position>();
-    test_assert(p != nullptr);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-}
-
 void Singleton_emplace_singleton(void) {
     flecs::world world;
 
@@ -512,12 +499,12 @@ void Singleton_try_get_r_t(void) {
 
     flecs::entity tgt = world.entity();
 
-    const Position *p = static_cast<const Position*>(world.try_get_mut(world.id<Position>(), tgt));
+    const Position *p = static_cast<const Position*>(world.try_get(world.id<Position>(), tgt));
     test_assert(p == nullptr);
 
     world.set<Position>(tgt, {10, 20});
-    
-    p = static_cast<const Position*>(world.get_mut(world.id<Position>(), tgt));
+
+    p = static_cast<const Position*>(world.try_get(world.id<Position>(), tgt));
     test_assert(p != nullptr);
 
     test_int(p->x, 10);

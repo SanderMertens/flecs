@@ -1388,7 +1388,7 @@ void CollectionOps_push_map(void) {
     ecs_fini(world);
 }
 
-void CollectionOps_push_outside_async(void) {
+void CollectionOps_pop_outside_async(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_log_set_level(-4);
@@ -1809,8 +1809,8 @@ void CollectionOps_push_expression(void) {
     ecs_log_set_level(-4);
     test_assert(ecs_script_run_w_desc(world, NULL,
         HEAD "export mut v: i32[] = [1, 2]"
-        LINE "async {"
-        LINE "  const x = (v + v).pop()"
+        LINE "fn add(x: i32) {"
+        LINE "  (v + v).push(x)"
         LINE "}", &ir_desc, NULL) != 0);
 
     ecs_fini(world);
@@ -1823,8 +1823,8 @@ void CollectionOps_push_expression_element(void) {
     test_assert(ecs_script_run_w_desc(world, NULL,
         HEAD "struct Bag(items: vector(i32))"
         LINE "export mut bags: Bag[] = [{[1]}]"
-        LINE "async {"
-        LINE "  const x = (bags + bags)[0].items.pop()"
+        LINE "fn add(x: i32) {"
+        LINE "  (bags + bags)[0].items.push(x)"
         LINE "}", &ir_desc, NULL) != 0);
 
     ecs_fini(world);

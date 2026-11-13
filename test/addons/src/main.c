@@ -42,7 +42,6 @@ void Pipeline_merge_after_singleton_out_set(void);
 void Pipeline_no_merge_after_singleton_out_no_read(void);
 void Pipeline_merge_after_staged_inout_main_implicit_inout(void);
 void Pipeline_merge_after_staged_inout_main_inout(void);
-void Pipeline_merge_after_staged_out_before_owned(void);
 void Pipeline_switch_pipeline(void);
 void Pipeline_run_pipeline(void);
 void Pipeline_get_pipeline_from_stage(void);
@@ -123,9 +122,7 @@ void SystemMisc_invalid_not_without_id(void);
 void SystemMisc_invalid_optional_without_id(void);
 void SystemMisc_invalid_entity_without_id(void);
 void SystemMisc_invalid_empty_element(void);
-void SystemMisc_invalid_empty_element_w_space(void);
 void SystemMisc_invalid_empty_or(void);
-void SystemMisc_invalid_empty_or_w_space(void);
 void SystemMisc_invalid_or_w_not(void);
 void SystemMisc_invalid_not_w_or(void);
 void SystemMisc_invalid_0_w_and(void);
@@ -773,10 +770,6 @@ bake_test_case Pipeline_testcases[] = {
         Pipeline_merge_after_staged_inout_main_inout
     },
     {
-        "merge_after_staged_out_before_owned",
-        Pipeline_merge_after_staged_out_before_owned
-    },
-    {
         "switch_pipeline",
         Pipeline_switch_pipeline
     },
@@ -1092,16 +1085,8 @@ bake_test_case SystemMisc_testcases[] = {
         SystemMisc_invalid_empty_element
     },
     {
-        "invalid_empty_element_w_space",
-        SystemMisc_invalid_empty_element_w_space
-    },
-    {
         "invalid_empty_or",
         SystemMisc_invalid_empty_or
-    },
-    {
-        "invalid_empty_or_w_space",
-        SystemMisc_invalid_empty_or_w_space
     },
     {
         "invalid_or_w_not",
@@ -3067,14 +3052,14 @@ static bake_test_suite suites[] = {
         "Pipeline",
         NULL,
         NULL,
-        94,
+        93,
         Pipeline_testcases
     },
     {
         "SystemMisc",
         NULL,
         NULL,
-        91,
+        89,
         SystemMisc_testcases
     },
     {

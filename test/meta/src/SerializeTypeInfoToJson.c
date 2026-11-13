@@ -421,12 +421,19 @@ void SerializeTypeInfoToJson_custom_primitive_type(void) {
 void SerializeTypeInfoToJson_custom_array_type(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t at = ecs_array(world, {
-        .type = ecs_id(ecs_i32_t),
-        .count = 3
+    ecs_entity_t ct = ecs_opaque(world, {
+        .entity = ecs_component(world, {
+            .type.size = 12,
+            .type.alignment = 4
+        }),
+        .type.as_type = ecs_array(world, {
+            .type = ecs_id(ecs_i32_t),
+            .count = 3
+        }),
+        .type.serialize = DummySerialize
     });
 
-    char *str = ecs_type_info_to_json(world, at);
+    char *str = ecs_type_info_to_json(world, ct);
     test_assert(str != NULL);
     test_str(str, "[\"array\", [\"int\"], 3]");
     ecs_os_free(str);

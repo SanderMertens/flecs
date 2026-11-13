@@ -1555,18 +1555,6 @@ void Meta_script_to_std_vector_std_string(void) {
     test_str(v.at(1).c_str(), "World");
 }
 
-void Meta_anonymous_opaque_as_type_parent(void) {
-    // Implement testcase
-}
-
-void Meta_named_opaque_as_type_parent(void) {
-    // Implement testcase
-}
-
-void Meta_parented_opaque_as_type_parent(void) {
-    // Implement testcase
-}
-
 void Meta_ser_deser_std_optional_int(void) {
     flecs::world world;
 

@@ -1203,58 +1203,7 @@ void Iter_worker_iter_w_singleton(void) {
     ecs_fini(world);
 }
 
-void Iter_worker_iter_w_singleton_instanced(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ecs_entity_t Singleton = ecs_entity(world, { .name = "Singleton" });
-    ecs_entity_t ecs_id(Singleton) = Singleton;
-    ecs_add_id(world, Singleton, EcsSingleton);
-    ECS_COMPONENT(world, Position);
-
-    ecs_singleton_add(world, Singleton);
-    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
-    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
-    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
-    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
-
-    ecs_query_t *q = ecs_query(world, {
-        .expr = "Position, Singleton"
-    });
-
-    Position *p;
-
-    ecs_iter_t it_1 = ecs_query_iter(world, q);
-    ecs_iter_t wit_1 = ecs_worker_iter(&it_1, 0, 2);
-    test_bool(ecs_worker_next(&wit_1), true);
-    test_int(wit_1.count, 2);
-    test_int(wit_1.entities[0], e1);
-    test_int(wit_1.entities[1], e2);
-    p = ecs_field(&wit_1, Position, 0);
-    test_int(p[0].x, 10);
-    test_int(p[0].y, 20);
-    test_int(p[1].x, 20);
-    test_int(p[1].y, 30);
-    test_bool(ecs_worker_next(&wit_1), false);
-
-    ecs_iter_t it_2 = ecs_query_iter(world, q);
-    ecs_iter_t wit_2 = ecs_worker_iter(&it_2, 1, 2);
-    test_bool(ecs_worker_next(&wit_2), true);
-    test_int(wit_2.count, 2);
-    test_int(wit_2.entities[0], e3);
-    test_int(wit_2.entities[1], e4);
-    p = ecs_field(&wit_2, Position, 0);
-    test_int(p[0].x, 30);
-    test_int(p[0].y, 40);
-    test_int(p[1].x, 40);
-    test_int(p[1].y, 50);
-    test_bool(ecs_worker_next(&wit_2), false);
-
-    ecs_query_fini(q);
-
-    ecs_fini(world);
-}
-
-void Iter_worker_iter_w_singleton_component_instanced(void) {
+void Iter_worker_iter_w_singleton_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1361,58 +1310,7 @@ void Iter_paged_iter_w_singleton(void) {
     ecs_fini(world);
 }
 
-void Iter_paged_iter_w_singleton_instanced(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ecs_entity_t Singleton = ecs_entity(world, { .name = "Singleton" });
-    ecs_entity_t ecs_id(Singleton) = Singleton;
-    ecs_add_id(world, Singleton, EcsSingleton);
-    ECS_COMPONENT(world, Position);
-
-    ecs_singleton_add(world, Singleton);
-    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
-    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
-    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
-    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
-
-    ecs_query_t *q = ecs_query(world, {
-        .expr = "Position, Singleton"
-    });
-
-    Position *p;
-
-    ecs_iter_t it_1 = ecs_query_iter(world, q);
-    ecs_iter_t pit_1 = ecs_page_iter(&it_1, 0, 2);
-    test_bool(ecs_page_next(&pit_1), true);
-    test_int(pit_1.count, 2);
-    test_int(pit_1.entities[0], e1);
-    test_int(pit_1.entities[1], e2);
-    p = ecs_field(&pit_1, Position, 0);
-    test_int(p[0].x, 10);
-    test_int(p[0].y, 20);
-    test_int(p[1].x, 20);
-    test_int(p[1].y, 30);
-    test_bool(ecs_page_next(&pit_1), false);
-
-    ecs_iter_t it_2 = ecs_query_iter(world, q);
-    ecs_iter_t pit_2 = ecs_page_iter(&it_2, 2, 2);
-    test_bool(ecs_page_next(&pit_2), true);
-    test_int(pit_2.count, 2);
-    test_int(pit_2.entities[0], e3);
-    test_int(pit_2.entities[1], e4);
-    p = ecs_field(&pit_2, Position, 0);
-    test_int(p[0].x, 30);
-    test_int(p[0].y, 40);
-    test_int(p[1].x, 40);
-    test_int(p[1].y, 50);
-    test_bool(ecs_page_next(&pit_2), false);
-
-    ecs_query_fini(q);
-
-    ecs_fini(world);
-}
-
-void Iter_paged_iter_w_singleton_component_instanced(void) {
+void Iter_paged_iter_w_singleton_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);

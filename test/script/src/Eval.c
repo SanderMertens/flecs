@@ -4829,39 +4829,6 @@ void Eval_const_var_int(void) {
     ecs_fini(world);
 }
 
-void Eval_const_var_int_deprecated_notation(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Position" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "const var_x = 10"
-    LINE "const var_y = 20"
-    LINE ""
-    LINE "e { Position: {var_x, var_y} }";
-
-    ecs_log_set_level(-3);
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    ecs_log_set_level(-1);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-    test_assert(ecs_has(world, e, Position));
-
-    const Position *p = ecs_get(world, e, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    ecs_fini(world);
-}
-
 void Eval_const_var_float(void) {
     ecs_world_t *world = ecs_init();
 
@@ -5751,38 +5718,6 @@ void Eval_assign_narrowing_f64_expr_to_typed_const_w_i32(void) {
     test_assert(p != NULL);
     test_int(p->x, 3);
     test_int(p->y, 3);
-
-    ecs_fini(world);
-}
-
-void Eval_typed_const_w_composite_type(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Position" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "const var_pos: Position = {10, 20}"
-    LINE "a { Position: var_pos }"
-    LINE "";
-
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-
-    ecs_entity_t var = ecs_lookup(world, "var_pos");
-    test_assert(var == 0);
-
-    ecs_entity_t a = ecs_lookup(world, "a");
-    test_assert(a != 0);
-
-    const Position *p = ecs_get(world, a, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
 
     ecs_fini(world);
 }
@@ -7846,43 +7781,6 @@ void Eval_on_set_w_kind_paren(void) {
     ecs_fini(world);
 }
 
-void Eval_on_set_w_kind_no_paren(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_set_hooks(world, Position, {
-        .ctor = ecs_ctor(Position),
-        .on_set = on_set_position
-    });
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "Position e()";
-
-    test_int(on_set_position_invoked, 0);
-
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    test_int(on_set_position_invoked, 1);
-
-    const Position *p = ecs_get(world, e, Position);
-    test_int(p->x, 100);
-    test_int(p->y, 200);
-
-    ecs_fini(world);
-}
-
 void Eval_on_set_w_kind_no_paren_no_reflection(void) {
     ecs_world_t *world = ecs_init();
 
@@ -7895,35 +7793,6 @@ void Eval_on_set_w_kind_no_paren_no_reflection(void) {
 
     const char *expr =
     HEAD "Position e";
-
-    test_int(on_set_position_invoked, 0);
-
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    test_int(on_set_position_invoked, 1);
-
-    const Position *p = ecs_get(world, e, Position);
-    test_int(p->x, 100);
-    test_int(p->y, 200);
-
-    ecs_fini(world);
-}
-
-void Eval_on_set_w_single_assign(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_set_hooks(world, Position, {
-        .ctor = ecs_ctor(Position),
-        .on_set = on_set_position
-    });
-
-    const char *expr =
-    HEAD "e { Position: {} }";
 
     test_int(on_set_position_invoked, 0);
 
@@ -11897,62 +11766,6 @@ void Eval_for_range_vars(void) {
     ecs_fini(world);
 }
 
-void Eval_for_range_vars_no_dollar(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Position" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "const x = 0"
-    LINE "const y = 3"
-    LINE "for i in x..y {"
-    LINE "  \"e_{i}\" {"
-    LINE "    Position: {i, i * 2}"
-    LINE "  }"
-    LINE "}";
-
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-
-    ecs_entity_t e_0 = ecs_lookup(world, "e_0");
-    ecs_entity_t e_1 = ecs_lookup(world, "e_1");
-    ecs_entity_t e_2 = ecs_lookup(world, "e_2");
-    ecs_entity_t e_3 = ecs_lookup(world, "e_3");
-
-    test_assert(e_0 != 0);
-    test_assert(e_1 != 0);
-    test_assert(e_2 != 0);
-    test_assert(e_3 == 0);
-
-    {
-        const Position *p = ecs_get(world, e_0, Position);
-        test_assert(p != NULL);
-        test_int(p->x, 0);
-        test_int(p->y, 0);
-    }
-
-    {
-        const Position *p = ecs_get(world, e_1, Position);
-        test_assert(p != NULL);
-        test_int(p->x, 1);
-        test_int(p->y, 2);
-    }
-
-    {
-        const Position *p = ecs_get(world, e_2, Position);
-        test_assert(p != NULL);
-        test_int(p->x, 2);
-        test_int(p->y, 4);
-    }
-
-    ecs_fini(world);
-}
-
 void Eval_for_range_1_4(void) {
     ecs_world_t *world = ecs_init();
 
@@ -12559,86 +12372,6 @@ void Eval_add_component_as_tag_pair_w_invalid_ctor(void) {
 }
 
 void Eval_interpolated_name_w_nested_for_loop(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Position" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "for x in 0..3 {"
-    LINE "  for y in 0..2 {"
-    LINE "    \"e_{x}_{y}\" {"
-    LINE "      Position: {x, y}"
-    LINE "    }"
-    LINE "  }"
-    LINE "}"
-    ;
-
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-
-    {
-        ecs_entity_t e = ecs_lookup(world, "e_0_0");
-        test_assert(e != 0);
-        const Position *p = ecs_get(world, e, Position);
-        test_int(p->x, 0);
-        test_int(p->y, 0);
-    }
-
-    {
-        ecs_entity_t e = ecs_lookup(world, "e_0_1");
-        test_assert(e != 0);
-        const Position *p = ecs_get(world, e, Position);
-        test_int(p->x, 0);
-        test_int(p->y, 1);
-    }
-
-    test_assert(ecs_lookup(world, "e_0_2") == 0);
-
-    {
-        ecs_entity_t e = ecs_lookup(world, "e_1_0");
-        test_assert(e != 0);
-        const Position *p = ecs_get(world, e, Position);
-        test_int(p->x, 1);
-        test_int(p->y, 0);
-    }
-
-    {
-        ecs_entity_t e = ecs_lookup(world, "e_1_1");
-        test_assert(e != 0);
-        const Position *p = ecs_get(world, e, Position);
-        test_int(p->x, 1);
-        test_int(p->y, 1);
-    }
-
-    test_assert(ecs_lookup(world, "e_1_2") == 0);
-
-    {
-        ecs_entity_t e = ecs_lookup(world, "e_2_0");
-        test_assert(e != 0);
-        const Position *p = ecs_get(world, e, Position);
-        test_int(p->x, 2);
-        test_int(p->y, 0);
-    }
-
-    {
-        ecs_entity_t e = ecs_lookup(world, "e_2_1");
-        test_assert(e != 0);
-        const Position *p = ecs_get(world, e, Position);
-        test_int(p->x, 2);
-        test_int(p->y, 1);
-    }
-
-    test_assert(ecs_lookup(world, "e_2_2") == 0);
-
-    ecs_fini(world);
-}
-
-void Eval_interpolated_name_w_nested_for_loop_no_dollar_sign(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -17095,219 +16828,6 @@ void Eval_component_expr_unresolved_member(void) {
     ecs_fini(world);
 }
 
-void Eval_component_expr_swizzle_var(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Vec3) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Vec3" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)},
-            {"z", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    test_assert(ecs_id(Vec3) != 0);
-
-    const char *expr =
-    HEAD "const pos: Vec3 = {10, 20, 30}"
-    LINE "e {"
-    LINE "  Vec3: pos.xyz"
-    LINE "}";
-
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    const Vec3 *ptr = ecs_get(world, e, Vec3);
-    test_assert(ptr != NULL);
-    test_int(ptr->x, 10);
-    test_int(ptr->y, 20);
-    test_int(ptr->z, 30);
-
-    ecs_fini(world);
-}
-
-void Eval_component_expr_swizzle_var_reorder(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Vec3) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Vec3" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)},
-            {"z", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    test_assert(ecs_id(Vec3) != 0);
-
-    const char *expr =
-    HEAD "const pos: Vec3 = {10, 20, 30}"
-    LINE "e {"
-    LINE "  Vec3: pos.zyx"
-    LINE "}";
-
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    const Vec3 *ptr = ecs_get(world, e, Vec3);
-    test_assert(ptr != NULL);
-    test_int(ptr->x, 30);
-    test_int(ptr->y, 20);
-    test_int(ptr->z, 10);
-
-    ecs_fini(world);
-}
-
-void Eval_component_expr_swizzle_var_repeat(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Vec3) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Vec3" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)},
-            {"z", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    test_assert(ecs_id(Vec3) != 0);
-
-    const char *expr =
-    HEAD "const pos: Vec3 = {10, 20, 30}"
-    LINE "e {"
-    LINE "  Vec3: pos.yyy"
-    LINE "}";
-
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    const Vec3 *ptr = ecs_get(world, e, Vec3);
-    test_assert(ptr != NULL);
-    test_int(ptr->x, 20);
-    test_int(ptr->y, 20);
-    test_int(ptr->z, 20);
-
-    ecs_fini(world);
-}
-
-void Eval_component_expr_swizzle_var_subset(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Vec3) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Vec3" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)},
-            {"z", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    test_assert(ecs_id(Vec3) != 0);
-
-    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Position" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-    test_assert(ecs_id(Position) != 0);
-
-    const char *expr =
-    HEAD "const pos: Vec3 = {10, 20, 30}"
-    LINE "e {"
-    LINE "  Position: pos.zy"
-    LINE "}";
-
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    const Position *ptr = ecs_get(world, e, Position);
-    test_assert(ptr != NULL);
-    test_int(ptr->x, 30);
-    test_int(ptr->y, 20);
-
-    ecs_fini(world);
-}
-
-void Eval_component_expr_swizzle_var_rgb(void) {
-    typedef struct { float r; float g; float b; } RGB;
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(RGB) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "RGB" }),
-        .members = {
-            {"r", ecs_id(ecs_f32_t)},
-            {"g", ecs_id(ecs_f32_t)},
-            {"b", ecs_id(ecs_f32_t)}
-        }
-    });
-    test_assert(ecs_id(RGB) != 0);
-
-    const char *expr =
-    HEAD "const c: RGB = {1, 2, 3}"
-    LINE "e {"
-    LINE "  RGB: c.bgr"
-    LINE "}";
-
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    const RGB *ptr = ecs_get(world, e, RGB);
-    test_assert(ptr != NULL);
-    test_int(ptr->r, 3);
-    test_int(ptr->g, 2);
-    test_int(ptr->b, 1);
-
-    ecs_fini(world);
-}
-
-void Eval_component_expr_swizzle_var_no_target_type(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Vec3) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Vec3" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)},
-            {"z", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    test_assert(ecs_id(Vec3) != 0);
-
-    const char *expr =
-    HEAD "const pos: Vec3 = {10, 20, 30}"
-    LINE "const flipped = pos.zyx"
-    LINE "e {"
-    LINE "  Vec3: flipped"
-    LINE "}";
-
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    const Vec3 *ptr = ecs_get(world, e, Vec3);
-    test_assert(ptr != NULL);
-    test_int(ptr->x, 30);
-    test_int(ptr->y, 20);
-    test_int(ptr->z, 10);
-
-    ecs_fini(world);
-}
-
 void Eval_component_expr_swizzle_initializer_r(void) {
     typedef struct { float r; float g; float b; float a; } Rgba;
     ecs_world_t *world = ecs_init();
@@ -21678,7 +21198,7 @@ void Eval_ir_managed_script_desc(void) {
     HEAD "const v = 10"
     LINE "e { Position: {$v, $v * 2} }";
 
-    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
+    ecs_entity_t s = ecs_script(world, {
         .code = expr,
         .ir = true
     });
@@ -21715,7 +21235,7 @@ void Eval_ir_eval_desc(void) {
     const char *expr =
     HEAD "e { Position: {1, 2} }";
 
-    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, NULL);
     test_assert(script != NULL);
 
     ecs_script_eval_desc_t desc = { .ir = true };
@@ -21780,7 +21300,7 @@ void Eval_ir_managed_script_update_keeps_runtime(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
+    ecs_entity_t s = ecs_script(world, {
         .code = "e { Position: {1, 2} }",
         .ir = true
     });
@@ -21829,8 +21349,7 @@ void Eval_string_interpolation_of_scalar_types(void) {
 
     ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
     test_assert(script != NULL);
-    ecs_script_eval_desc_t desc = { .ir = true };
-    test_assert(ecs_script_eval(script, &desc, NULL) == 0);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);

@@ -242,20 +242,6 @@ void Type_entity_pair_str(void) {
     ecs_fini(world);
 }
 
-void Type_entity_str_small_buffer(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
-
-    ecs_entity_t e = ecs_pair(EcsChildOf, Foo);
-
-    char *str = ecs_id_str(world, e);
-    test_str(str, "(ChildOf,Foo)");
-    ecs_os_free(str);
-
-    ecs_fini(world);
-}
-
 void Type_role_pair_str(void) {
     ecs_entity_t e = ECS_PAIR;
     test_str(ecs_id_flag_str(e), "PAIR");

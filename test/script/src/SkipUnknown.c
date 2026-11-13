@@ -1719,13 +1719,29 @@ void SkipUnknown_unknown_emit_value_in_async(void) {
 
     const char *expr =
     HEAD "event Build(slot: i32)"
+    LINE "export mut got: i32 = 0"
+    LINE "async {"
+    LINE "  const e = await Build"
+    LINE "  got = 1"
+    LINE "}"
     LINE "async {"
     LINE "  emit Build(slot: NsUnknown[NsUnknown].slot)"
     LINE "}"
     LINE "a {}";
 
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &skip_unknown_desc, NULL) == 0);
+    ecs_entity_t s = ecs_script(world, {
+        .code = expr,
+        .ir = ir_enabled,
+        .skip_unknown = true
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
     test_assert(ecs_lookup(world, "a") != 0);
+    ecs_script_tasks_progress(world);
+    ecs_script_tasks_progress(world);
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "got")).ptr, 0);
 
     ecs_fini(world);
 }
