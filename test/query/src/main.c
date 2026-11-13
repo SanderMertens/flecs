@@ -559,6 +559,8 @@ void Basic_1_wildcard_src_w_pair_rel_var(void);
 void Basic_1_wildcard_src_w_pair_tgt_this(void);
 void Basic_1_wildcard_src_w_pair_rel_this(void);
 void Basic_1_any_src(void);
+void Basic_1_any_src_component(void);
+void Basic_1_any_src_component_w_this_component(void);
 void Basic_1_any_src_w_pair(void);
 void Basic_2_any_src(void);
 void Basic_2_any_src_w_pair(void);
@@ -571,8 +573,11 @@ void Basic_1_any_src_w_pair_rel_this(void);
 void Basic_1_any_src_any_tgt_w_rel_fixed(void);
 void Basic_1_any_src_any_rel_w_tgt_fixed(void);
 void Basic_1_any_src_w_childof_pair_any_tgt(void);
+void Basic_1_any_src_empty(void);
 void Basic_1_any_src_pair_tgt_wildcard_empty(void);
 void Basic_1_any_src_pair_rel_wildcard_empty(void);
+void Basic_1_any_src_any_tgt_w_rel_fixed_empty(void);
+void Basic_1_any_src_any_rel_w_tgt_fixed_empty(void);
 void Basic_1_any_src_pair_w_tag_query_empty(void);
 void Basic_1_any_src_tag_w_pair_query_empty(void);
 void Basic_not_any(void);
@@ -5186,6 +5191,14 @@ bake_test_case Basic_testcases[] = {
         Basic_1_any_src
     },
     {
+        "1_any_src_component",
+        Basic_1_any_src_component
+    },
+    {
+        "1_any_src_component_w_this_component",
+        Basic_1_any_src_component_w_this_component
+    },
+    {
         "1_any_src_w_pair",
         Basic_1_any_src_w_pair
     },
@@ -5234,12 +5247,24 @@ bake_test_case Basic_testcases[] = {
         Basic_1_any_src_w_childof_pair_any_tgt
     },
     {
+        "1_any_src_empty",
+        Basic_1_any_src_empty
+    },
+    {
         "1_any_src_pair_tgt_wildcard_empty",
         Basic_1_any_src_pair_tgt_wildcard_empty
     },
     {
         "1_any_src_pair_rel_wildcard_empty",
         Basic_1_any_src_pair_rel_wildcard_empty
+    },
+    {
+        "1_any_src_any_tgt_w_rel_fixed_empty",
+        Basic_1_any_src_any_tgt_w_rel_fixed_empty
+    },
+    {
+        "1_any_src_any_rel_w_tgt_fixed_empty",
+        Basic_1_any_src_any_rel_w_tgt_fixed_empty
     },
     {
         "1_any_src_pair_w_tag_query_empty",
@@ -14919,7 +14944,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        252,
+        257,
         Basic_testcases,
         1,
         Basic_params

@@ -212,11 +212,15 @@ void* flecs_field_shared(
         return NULL;
     }
 
+    ecs_entity_t src = it->sources[index];
+    if (src == EcsWildcard) {
+        return NULL;
+    }
+
     ecs_check(!(flecs_field_cr(it, index)->flags & EcsIdSparse),
         ECS_INVALID_OPERATION,
         "use ecs_field_at to access fields for sparse components");
 
-    ecs_entity_t src = it->sources[index];
     ecs_record_t *r = flecs_entities_get(it->world, src);
     ecs_table_t *table = r->table;
     int32_t row = ECS_RECORD_TO_ROW(r->row);
