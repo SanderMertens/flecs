@@ -13186,11 +13186,15 @@ void* flecs_field_shared(
         return NULL;
     }
 
+    ecs_entity_t src = it->sources[index];
+    if (src == EcsWildcard) {
+        return NULL;
+    }
+
     ecs_check(!(flecs_field_cr(it, index)->flags & EcsIdSparse),
         ECS_INVALID_OPERATION,
         "use ecs_field_at to access fields for sparse components");
 
-    ecs_entity_t src = it->sources[index];
     ecs_record_t *r = flecs_entities_get(it->world, src);
     ecs_table_t *table = r->table;
     int32_t row = ECS_RECORD_TO_ROW(r->row);
@@ -85825,24 +85829,6 @@ static bool flecs_query_or_from(
     return flecs_query_x_from(op, redo, ctx, EcsOrFrom);
 }
 
-static bool flecs_query_ids_check(
-    ecs_component_record_t *cur)
-{
-    if (!flecs_table_cache_count(&cur->cache)) {
-        if (!(cur->flags & EcsIdOrderedChildren)) {
-            return false;
-        }
-
-        ecs_assert(cur->pair != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        if (!ecs_vec_count(&cur->pair->ordered_children)) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 static bool flecs_query_ids_in_use(
     ecs_component_record_t *cur)
 {
@@ -85884,7 +85870,7 @@ static bool flecs_query_ids(
             return false;
         }
 
-        if (!flecs_query_ids_check(cur)) {
+        if (!flecs_query_ids_in_use(cur)) {
             return false;
         }
     }
@@ -85926,7 +85912,7 @@ static bool flecs_query_idsright(
             it->sources[op->field_index] = EcsWildcard;
             ECS_CONST_CAST(int16_t*, it->columns)[op->field_index] = -1;
             ECS_TERMSET_SET(it->set_fields, 1u << op->field_index);
-            return flecs_query_ids_check(cur);
+            return flecs_query_ids_in_use(cur);
         }
 
         if (!cur) {

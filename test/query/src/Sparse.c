@@ -1583,6 +1583,7 @@ void Sparse_sparse_written_up_2_levels(void) {
 }
 
 void Sparse_ecs_field_on_sparse_self(void) {
+    install_test_abort();
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1605,6 +1606,7 @@ void Sparse_ecs_field_on_sparse_self(void) {
 }
 
 void Sparse_ecs_field_on_sparse_up(void) {
+    install_test_abort();
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);

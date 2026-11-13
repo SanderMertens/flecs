@@ -7687,6 +7687,7 @@ void DontFragment_this_wildcard_wildcard_pair_w_empty_pair(void) {
 }
 
 void DontFragment_ecs_field_on_dont_fragment_up(void) {
+    install_test_abort();
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
