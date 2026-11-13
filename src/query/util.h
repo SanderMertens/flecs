@@ -45,10 +45,6 @@ const char* flecs_term_ref_var_name(
 bool flecs_term_ref_is_wildcard(
     ecs_term_ref_t *ref);
 
-/* Does term use builtin predicates (eq, neq, ...) */
-bool flecs_term_is_builtin_pred(
-    ecs_term_t *term);
-
 /* Does term have fixed id */
 bool flecs_term_is_fixed_id(
     ecs_query_t *q,
@@ -90,6 +86,10 @@ const char* flecs_query_op_str(
     uint16_t kind);
 
 #endif // FLECS_QUERY_PLANS
+
+/* Does term use builtin predicates (eq, neq, ...) */
+bool flecs_term_is_builtin_pred(
+    ecs_term_t *term);
 
 /* Convert term to string */
 void flecs_term_to_buf(

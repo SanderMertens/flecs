@@ -416,7 +416,7 @@ ecs_script_vars_t* flecs_expr_iterate_vars_push(
     return vars;
 }
 
-static bool flecs_expr_collection_elem_type(
+static bool flecs_expr_collection_elem_type_count(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_entity_t *elem_type,
@@ -446,8 +446,8 @@ static bool flecs_expr_collection_cast_allowed(
 {
     ecs_entity_t from_elem, to_elem;
     int32_t from_count, to_count;
-    if (!flecs_expr_collection_elem_type(world, from, &from_elem, &from_count) ||
-        !flecs_expr_collection_elem_type(world, to, &to_elem, &to_count))
+    if (!flecs_expr_collection_elem_type_count(world, from, &from_elem, &from_count) ||
+        !flecs_expr_collection_elem_type_count(world, to, &to_elem, &to_count))
     {
         return false;
     }

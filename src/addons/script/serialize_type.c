@@ -413,8 +413,8 @@ static int flecs_type_to_script_visit(
         deps[1] = ecs_get(world, type, EcsMap)->type;
         break;
     case EcsValueType: {
-        const EcsValue *v = ecs_get(world, type, EcsValue);
-        deps[0] = v ? v->type : 0;
+        const EcsValue *value = ecs_get(world, type, EcsValue);
+        deps[0] = value ? value->type : 0;
         break;
     }
     case EcsPrimitiveType:

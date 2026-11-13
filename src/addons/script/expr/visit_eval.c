@@ -1159,9 +1159,10 @@ static int flecs_expr_iterate_collection_eval(
     void *result = out->value.ptr;
     out->owned = true;
 
+    ecs_expr_value_t init_val = {0};
     ecs_expr_value_t *init = NULL;
     if (node->init) {
-        init = flecs_expr_eval_result(ctx, node->init, &(ecs_expr_value_t){0});
+        init = flecs_expr_eval_result(ctx, node->init, &init_val);
         if (!init) {
             return -1;
         }
@@ -1170,6 +1171,7 @@ static int flecs_expr_iterate_collection_eval(
     if (node->collection_kind == EcsMapType) {
         ecs_assert(node->kind == EcsExprIterateContains,
             ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(init != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_map_key_t key = 0;
         if (flecs_value_blit_u64(world, &init->value, &key)) {
             return -1;
@@ -1196,6 +1198,7 @@ static int flecs_expr_iterate_collection_eval(
     switch(node->kind) {
     case EcsExprIterateContains:
     case EcsExprIterateIndexOf: {
+        ecs_assert(init != NULL, ECS_INTERNAL_ERROR, NULL);
         int32_t found = -1;
         for (i = 0; i < count; i ++) {
             if (flecs_type_info_equals(
@@ -1304,12 +1307,14 @@ static FLECS_SCRIPT_NOINLINE int flecs_expr_iterate_visit_eval(
     ecs_expr_eval_desc_t lambda_desc = {0};
     ecs_script_vars_t *vars = NULL;
     ecs_script_var_t *params = NULL;
+    ecs_expr_lambda_t *lambda = node->lambda;
 
-    if (node->lambda) {
+    if (lambda) {
         vars = flecs_expr_iterate_vars_push(
             world, node, desc ? desc->vars : NULL);
         ecs_assert(vars != NULL, ECS_INTERNAL_ERROR, NULL);
         params = ecs_vec_first(&vars->vars);
+        ecs_assert(params != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (desc) {
             lambda_desc = *desc;
@@ -1347,7 +1352,8 @@ static FLECS_SCRIPT_NOINLINE int flecs_expr_iterate_visit_eval(
     }
 
     bool is_sort = node->kind == EcsExprIterateSort;
-    const ecs_type_info_t *key_ti = is_sort ? node->lambda->node.type_info : NULL;
+    ecs_assert(!is_sort || lambda != NULL, ECS_INTERNAL_ERROR, NULL);
+    const ecs_type_info_t *key_ti = is_sort ? lambda->node.type_info : NULL;
     ecs_vec_t keys = {0};
     if (is_sort) {
         ecs_vec_init(NULL, &keys, key_ti->size, count);
@@ -1382,11 +1388,12 @@ static FLECS_SCRIPT_NOINLINE int flecs_expr_iterate_visit_eval(
             .owned = false
         };
 
+        ecs_expr_value_t lambda_val = {0};
         ecs_expr_value_t *val = &elem_val;
-        if (node->lambda) {
+        if (lambda) {
             params[node->elem_var].value.ptr = elem;
             val = flecs_expr_eval_result(
-                ctx, node->lambda->body, &(ecs_expr_value_t){0});
+                ctx, lambda->body, &lambda_val);
         }
 
         if (val && is_sort) {
@@ -1404,8 +1411,8 @@ static FLECS_SCRIPT_NOINLINE int flecs_expr_iterate_visit_eval(
         }
     }
 
+    ctx->desc = desc;
     if (vars) {
-        ctx->desc = desc;
         ecs_script_vars_pop(vars);
     }
 
@@ -1864,7 +1871,6 @@ static int flecs_expr_visit_eval_priv(
         break;
     case EcsExprLambda:
         ecs_abort(ECS_INTERNAL_ERROR, "unexpected lambda expression");
-        break;
     case EcsExprComponent:
         result = flecs_expr_component_visit_eval(
             ctx, (ecs_expr_element_t*)node, out);
@@ -1890,22 +1896,13 @@ static int flecs_expr_visit_eval_priv(
     return result;
 }
 
-int flecs_expr_visit_eval(
+static int flecs_expr_visit_eval_w_stack(
     const ecs_script_t *script,
     ecs_expr_node_t *node,
     const ecs_expr_eval_desc_t *desc,
-    ecs_value_t *out)
+    ecs_value_t *out,
+    ecs_expr_stack_t *stack)
 {
-    ecs_expr_stack_t *stack = NULL, stack_local;
-    if (desc && desc->runtime) {
-        stack = flecs_script_runtime_expr_stack(desc->runtime);
-    }
-
-    if (!stack) {
-        stack = &stack_local;
-        flecs_expr_stack_init(stack);
-    }
-
     flecs_expr_stack_push(stack);
 
     ecs_expr_value_t val_tmp;
@@ -1980,11 +1977,39 @@ int flecs_expr_visit_eval(
     result = 0;
 done:
     flecs_expr_stack_pop(stack);
-    if (stack == &stack_local) {
-        flecs_expr_stack_fini(stack);
+    return result;
+}
+
+static FLECS_SCRIPT_NOINLINE int flecs_expr_visit_eval_w_local_stack(
+    const ecs_script_t *script,
+    ecs_expr_node_t *node,
+    const ecs_expr_eval_desc_t *desc,
+    ecs_value_t *out)
+{
+    ecs_expr_stack_t stack;
+    flecs_expr_stack_init(&stack);
+    int result = flecs_expr_visit_eval_w_stack(
+        script, node, desc, out, &stack);
+    flecs_expr_stack_fini(&stack);
+    return result;
+}
+
+int flecs_expr_visit_eval(
+    const ecs_script_t *script,
+    ecs_expr_node_t *node,
+    const ecs_expr_eval_desc_t *desc,
+    ecs_value_t *out)
+{
+    if (desc && desc->runtime) {
+        ecs_expr_stack_t *stack = flecs_script_runtime_expr_stack(
+            desc->runtime);
+        if (stack) {
+            return flecs_expr_visit_eval_w_stack(
+                script, node, desc, out, stack);
+        }
     }
 
-    return result;
+    return flecs_expr_visit_eval_w_local_stack(script, node, desc, out);
 }
 
 #endif

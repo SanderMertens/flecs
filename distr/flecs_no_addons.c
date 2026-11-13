@@ -1470,6 +1470,10 @@ int flecs_term_finalize(
     ecs_term_t *term,
     ecs_query_validator_ctx_t *ctx);
 
+/* Does term use builtin predicates (eq, neq, ...) */
+bool flecs_term_is_builtin_pred(
+    ecs_term_t *term);
+
 /* Convert term to string */
 void flecs_term_to_buf(
     const ecs_world_t *world,
@@ -3105,22 +3109,8 @@ const char* flecs_errstr_5(
     char *str);
 
 /* Portable count-trailing-zeros for 64-bit values. Input must be nonzero. */
-static inline int32_t flecs_ctz64(uint64_t v) {
-#if defined(__clang__) || defined(__GNUC__)
-    return (int32_t)__builtin_ctzll(v);
-#elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_ARM64))
-    unsigned long idx;
-    _BitScanForward64(&idx, v);
-    return (int32_t)idx;
-#else
-    int32_t count = 0;
-    while ((v & 1u) == 0u) {
-        v >>= 1;
-        count ++;
-    }
-    return count;
-#endif
-}
+int32_t flecs_ctz64(
+    uint64_t v);
 
 #endif
 
@@ -12390,6 +12380,25 @@ const char* flecs_errstr_5(
     return flecs_errstr_intern(5, str);
 }
 
+int32_t flecs_ctz64(
+    uint64_t v)
+{
+#if defined(__clang__) || defined(__GNUC__)
+    return (int32_t)__builtin_ctzll(v);
+#elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_ARM64))
+    unsigned long idx;
+    _BitScanForward64(&idx, v);
+    return (int32_t)idx;
+#else
+    int32_t count = 0;
+    while ((v & 1u) == 0u) {
+        v >>= 1;
+        count ++;
+    }
+    return count;
+#endif
+}
+
 void flecs_observable_init(
     ecs_observable_t *observable)
 {
@@ -15062,7 +15071,7 @@ static int flecs_multi_observer_init(
             if (not_term->id == ecs_pair(EcsChildOf, 0)) {
                 not_term->id = ecs_pair(EcsChildOf, EcsWildcard);
                 not_term->second.id = EcsWildcard | EcsSelf | EcsIsVariable;
-                not_term->flags_ &= ~EcsTermMatchAny;
+                ECS_BIT_CLEAR16(not_term->flags_, EcsTermMatchAny);
             }
 
             not_term->oper = EcsOptional;
@@ -24577,7 +24586,7 @@ static bool flecs_query_table_has_self_ids(
         }
 
         if (term->id == ecs_pair(EcsChildOf, 0)) {
-            if (table->flags & (EcsTableHasChildOf|EcsTableHasParent)) {
+            if (table && (table->flags & (EcsTableHasChildOf|EcsTableHasParent))) {
                 return false;
             }
             continue;
@@ -24690,6 +24699,19 @@ const ecs_query_t* ecs_query_get(
         flecs_poly_assert(poly_comp->poly, ecs_query_t);
         return poly_comp->poly;
     }
+}
+
+bool flecs_term_is_builtin_pred(
+    ecs_term_t *term)
+{
+    if (term->first.id & EcsIsEntity) {
+        ecs_entity_t id = ECS_TERM_REF_ID(&term->first);
+        if (id == EcsPredEq || id == EcsPredMatch || id == EcsPredLookup) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 static void flecs_query_str_add_id(

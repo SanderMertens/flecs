@@ -75,8 +75,10 @@ static void flecs_script_query_slots_init(
 {
     flecs_script_query_slots_clear(query_slots);
     ecs_vec_set_count_t(NULL, query_slots, ecs_script_query_slot_t, count);
-    ecs_os_memset_n(ecs_vec_first(query_slots), 0,
-        ecs_script_query_slot_t, count);
+    if (count) {
+        ecs_os_memset_n(ecs_vec_first(query_slots), 0,
+            ecs_script_query_slot_t, count);
+    }
 }
 
 static void flecs_script_for_slot_mark(

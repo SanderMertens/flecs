@@ -705,7 +705,6 @@ done:
 static int flecs_expr_interpolated_string_visit_type(
     ecs_script_t *script,
     ecs_expr_interpolated_string_t *node,
-    ecs_meta_cursor_t *cur,
     const ecs_expr_eval_desc_t *desc)
 {
     ecs_allocator_t *a = &flecs_script_impl(script)->allocator;
@@ -4255,7 +4254,7 @@ static int flecs_expr_visit_type_ex(
         break;
     case EcsExprInterpolatedString:
         r = flecs_expr_interpolated_string_visit_type(
-            script, (ecs_expr_interpolated_string_t*)node, cur, desc);
+            script, (ecs_expr_interpolated_string_t*)node, desc);
         break;
     case EcsExprEmptyInitializer:
         r = flecs_expr_empty_initializer_visit_type(

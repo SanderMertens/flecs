@@ -1264,7 +1264,7 @@ static int flecs_multi_observer_init(
             if (not_term->id == ecs_pair(EcsChildOf, 0)) {
                 not_term->id = ecs_pair(EcsChildOf, EcsWildcard);
                 not_term->second.id = EcsWildcard | EcsSelf | EcsIsVariable;
-                not_term->flags_ &= ~EcsTermMatchAny;
+                ECS_BIT_CLEAR16(not_term->flags_, EcsTermMatchAny);
             }
 
             not_term->oper = EcsOptional;

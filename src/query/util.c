@@ -92,19 +92,6 @@ ecs_var_id_t flecs_itovar(int64_t val) {
     return flecs_ito(uint8_t, val);
 }
 
-bool flecs_term_is_builtin_pred(
-    ecs_term_t *term)
-{
-    if (term->first.id & EcsIsEntity) {
-        ecs_entity_t id = ECS_TERM_REF_ID(&term->first);
-        if (id == EcsPredEq || id == EcsPredMatch || id == EcsPredLookup) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 const char* flecs_term_ref_var_name(
     ecs_term_ref_t *ref)
 {
@@ -515,6 +502,19 @@ char* ecs_query_plans(
 }
 
 #endif // FLECS_QUERY_PLANS
+
+bool flecs_term_is_builtin_pred(
+    ecs_term_t *term)
+{
+    if (term->first.id & EcsIsEntity) {
+        ecs_entity_t id = ECS_TERM_REF_ID(&term->first);
+        if (id == EcsPredEq || id == EcsPredMatch || id == EcsPredLookup) {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 static void flecs_query_str_add_id(
     const ecs_world_t *world,
