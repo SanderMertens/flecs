@@ -2775,7 +2775,7 @@ static int flecs_script_type_assign_member(
         ecs_meta_cursor_t cur = ecs_meta_cursor(world, *type, NULL);
         if (!ecs_meta_push(&cur) && !ecs_meta_try_dotmember(&cur, member)) {
             *type = ecs_meta_get_type(&cur);
-            *offset += flecs_ito(int32_t,
+            *offset += flecs_uto(int32_t,
                 (uintptr_t)ecs_meta_get_ptr(&cur));
             return 0;
         }
@@ -2978,6 +2978,8 @@ static int flecs_script_type_assign_var(
     }
 
     ecs_script_template_t *template = v->template;
+    ecs_assert(!node->parent || root->member != NULL,
+        ECS_INTERNAL_ERROR, NULL);
     *var_type = node->global ? root->global_type
         : node->parent ? root->member->type
         : root->var->value.type;
@@ -3262,6 +3264,7 @@ static int flecs_script_type_node(
     case EcsAstCall:
         return flecs_script_type_call(t, (ecs_script_call_t*)node);
     case EcsAstReturn: {
+        ecs_assert(t->fn_node != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_entity_t type = t->fn_node->eval_return_type;
         return flecs_script_type_check_expr(
             t, &((ecs_script_return_t*)node)->expr, &type);

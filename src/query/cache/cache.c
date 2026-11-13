@@ -738,14 +738,7 @@ ecs_query_cache_t* flecs_query_cache_init(
     ecs_observer_desc_t observer_desc = { .query = desc };
     observer_desc.query.flags |= EcsQueryNested;
 
-    ecs_flags32_t query_flags = const_desc->flags;
     desc.flags |= EcsQueryMatchEmptyTables | EcsQueryTableOnly | EcsQueryNested;
-
-    /* order_by is not compatible with matching empty tables, as it causes
-     * a query to return table slices, not entire tables. */
-    if (const_desc->order_by_callback) {
-        query_flags &= ~EcsQueryMatchEmptyTables;
-    }
 
     ecs_query_t *q = result->query = ecs_query_init(world, &desc);
     if (!q) {

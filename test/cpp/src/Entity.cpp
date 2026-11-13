@@ -3882,7 +3882,8 @@ void Entity_null_entity_w_0(void) {
 void Entity_null_entity_w_world_w_0(void) {
     flecs::world ecs;
 
-    flecs::entity e = flecs::entity(ecs, static_cast<flecs::entity_t>(0));
+    flecs::entity_t id = 0;
+    flecs::entity e = flecs::entity(ecs, id);
     test_assert(e.id() == 0);
     test_assert(e.world().c_ptr() == ecs.c_ptr());
 }
