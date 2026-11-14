@@ -129,7 +129,7 @@ bool flecs_name_is_id(
         const char *ptr;
         char ch;
         for (ptr = name + 1; (ch = ptr[0]); ptr ++) {
-            if (!isdigit(ch)) {
+            if (!isdigit((unsigned char)ch)) {
                 return false;
             }
         }
@@ -365,7 +365,7 @@ static ecs_entity_t flecs_get_parent_from_path(
         }
 
         path ++;
-        while (path[0] && isdigit(path[0])) {
+        while (path[0] && isdigit((unsigned char)path[0])) {
             path ++; /* Skip id part of path */
         }
 

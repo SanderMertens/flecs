@@ -90,7 +90,7 @@ const char* flecs_json_parse(
             token_kind[0] = JsonString;
             return json;
         }
-    } else if (isdigit(ch) || (ch == '-')) {
+    } else if (isdigit((unsigned char)ch) || (ch == '-')) {
         token_kind[0] = JsonNumber;
         const char *result = flecs_parse_digit(json, token, ECS_MAX_TOKEN_SIZE);
         if (!result) {
@@ -107,7 +107,7 @@ const char* flecs_json_parse(
         }
 
         return result;
-    } else if (isalpha(ch)) {
+    } else if (isalpha((unsigned char)ch)) {
         if (!ecs_os_strncmp(json, "null", 4)) {
             token_kind[0] = JsonNull;
             json += 4;
@@ -121,7 +121,7 @@ const char* flecs_json_parse(
             json += 5;
         }
 
-        if (isalpha(json[0]) || isdigit(json[0])) {
+        if (isalpha((unsigned char)json[0]) || isdigit((unsigned char)json[0])) {
             token_kind[0] = JsonInvalid;
             return NULL;
         }

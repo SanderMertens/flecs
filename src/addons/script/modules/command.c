@@ -211,7 +211,7 @@ int flecs_command_parse_value(
         return -1;
     }
 
-    while (isspace(ptr[0])) {
+    while (isspace((unsigned char)ptr[0])) {
         ptr ++;
     }
 
@@ -440,7 +440,7 @@ static const char* flecs_command_parse_group(
     int32_t depth = 0;
     while (ptr[0]) {
         char ch = ptr[0];
-        if (!depth && (isspace(ch) || ch == ';')) {
+        if (!depth && (isspace((unsigned char)ch) || ch == ';')) {
             break;
         }
 
@@ -485,7 +485,7 @@ static const char* flecs_command_parse_group(
 static const char* flecs_command_skip_separators(
     const char *ptr)
 {
-    while (isspace(ptr[0]) || ptr[0] == ';') {
+    while (isspace((unsigned char)ptr[0]) || ptr[0] == ';') {
         ptr ++;
     }
 
@@ -499,7 +499,7 @@ static int flecs_command_tokenize(
 {
     const char *ptr = cmd;
     while (true) {
-        while (isspace(ptr[0])) {
+        while (isspace((unsigned char)ptr[0])) {
             ptr ++;
         }
 
@@ -956,7 +956,7 @@ static int flecs_command_run_next(
     }
 
     *cmd = end;
-    while ((end > start) && isspace(end[-1])) {
+    while ((end > start) && isspace((unsigned char)end[-1])) {
         end --;
     }
 

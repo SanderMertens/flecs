@@ -49,7 +49,7 @@ static bool flecs_script_query_name_is_entity(
         return false;
     }
 
-    return !isdigit(name[0]);
+    return !isdigit((unsigned char)name[0]);
 }
 
 static void flecs_script_query_unresolved(

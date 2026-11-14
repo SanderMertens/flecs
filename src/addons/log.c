@@ -318,7 +318,7 @@ void flecs_colorize_buf(
         dontAppend = false;
 
         if (!overrideColor) {
-            if (isNum && !isdigit(ch) && !isalpha(ch) && (ch != '.') && (ch != '%')) {
+            if (isNum && !isdigit((unsigned char)ch) && !isalpha((unsigned char)ch) && (ch != '.') && (ch != '%')) {
                 if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
                 isNum = false;
             }
@@ -326,27 +326,27 @@ void flecs_colorize_buf(
             if (isStr && (isStr == ch) && prev != '\\') {
                 isStr = '\0';
             } else if (((ch == '\'') || (ch == '"')) && !isStr &&
-                !isalpha(prev) && (prev != '\\'))
+                !isalpha((unsigned char)prev) && (prev != '\\'))
             {
                 if (enable_colors) ecs_strbuf_appendlit(buf, ECS_CYAN);
                 isStr = ch;
             }
 
-            if ((isdigit(ch) || (ch == '%' && isdigit(prev)) ||
-                (ch == '-' && isdigit(ptr[1]))) && !isNum && !isStr && !isVar &&
-                 !isalpha(prev) && !isdigit(prev) && (prev != '_') &&
+            if ((isdigit((unsigned char)ch) || (ch == '%' && isdigit((unsigned char)prev)) ||
+                (ch == '-' && isdigit((unsigned char)ptr[1]))) && !isNum && !isStr && !isVar &&
+                 !isalpha((unsigned char)prev) && !isdigit((unsigned char)prev) && (prev != '_') &&
                  (prev != '.'))
             {
                 if (enable_colors) ecs_strbuf_appendlit(buf, ECS_GREEN);
                 isNum = true;
             }
 
-            if (isVar && !isalpha(ch) && !isdigit(ch) && ch != '_') {
+            if (isVar && !isalpha((unsigned char)ch) && !isdigit((unsigned char)ch) && ch != '_') {
                 if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
                 isVar = false;
             }
 
-            if (!isStr && !isVar && ch == '$' && isalpha(ptr[1])) {
+            if (!isStr && !isVar && ch == '$' && isalpha((unsigned char)ptr[1])) {
                 if (enable_colors) ecs_strbuf_appendlit(buf, ECS_CYAN);
                 isVar = true;
             }

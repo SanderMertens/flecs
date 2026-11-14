@@ -1735,7 +1735,9 @@
                 "duplicate_names_different_scopes",
                 "set_duplicate_name_via_explicit_id",
                 "set_duplicate_name_then_reparent_owner",
-                "set_duplicate_name_resets_to_self"
+                "set_duplicate_name_resets_to_self",
+                "lookup_hash_non_ascii",
+                "entity_init_hash_non_ascii"
             ]
         }, {
             "id": "Singleton",

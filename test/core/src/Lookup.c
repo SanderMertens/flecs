@@ -1331,3 +1331,29 @@ void Lookup_set_duplicate_name_resets_to_self(void) {
 
     ecs_fini(world);
 }
+
+void Lookup_lookup_hash_non_ascii(void) {
+    ecs_world_t *world = ecs_mini();
+
+    /* Bytes >= 0x80 are negative when stored in a char, which must not be
+     * passed to the <ctype.h> functions as-is. */
+    test_uint(0, ecs_lookup(world, "#\xC3\xA9"));
+    test_uint(0, ecs_lookup(world, "#1\xC3\xA9"));
+
+    ecs_fini(world);
+}
+
+void Lookup_entity_init_hash_non_ascii(void) {
+    ecs_world_t *world = ecs_mini();
+
+    /* Not an id, since the characters after '#' are not all digits */
+    test_uint(0, ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "#\xC3\xA9"
+    }));
+
+    test_assert(0 != ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "#1\xC3\xA9"
+    }));
+
+    ecs_fini(world);
+}
