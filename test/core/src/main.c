@@ -3002,6 +3002,10 @@ void Prefab_prefab_child_added_after_parent_became_prefab_instantiate(void);
 void Prefab_prefab_grandchild_added_after_parent_became_prefab(void);
 void Prefab_prefab_child_added_after_prefab_removed_from_parent(void);
 void Prefab_prefab_child_bulk_init_after_parent_became_prefab(void);
+void Prefab_prefab_children_after_adding_prefab_to_disabled_parent(void);
+void Prefab_prefab_child_added_after_disabled_parent_became_prefab(void);
+void Prefab_prefab_child_added_after_prefab_removed_from_disabled_parent(void);
+void Prefab_instantiate_child_added_after_disabled_parent_became_prefab(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -15528,6 +15532,22 @@ bake_test_case Prefab_testcases[] = {
     {
         "prefab_child_bulk_init_after_parent_became_prefab",
         Prefab_prefab_child_bulk_init_after_parent_became_prefab
+    },
+    {
+        "prefab_children_after_adding_prefab_to_disabled_parent",
+        Prefab_prefab_children_after_adding_prefab_to_disabled_parent
+    },
+    {
+        "prefab_child_added_after_disabled_parent_became_prefab",
+        Prefab_prefab_child_added_after_disabled_parent_became_prefab
+    },
+    {
+        "prefab_child_added_after_prefab_removed_from_disabled_parent",
+        Prefab_prefab_child_added_after_prefab_removed_from_disabled_parent
+    },
+    {
+        "instantiate_child_added_after_disabled_parent_became_prefab",
+        Prefab_instantiate_child_added_after_disabled_parent_became_prefab
     }
 };
 
@@ -18776,7 +18796,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        231,
+        235,
         Prefab_testcases
     },
     {

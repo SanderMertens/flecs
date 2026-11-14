@@ -66584,6 +66584,7 @@ void flecs_bootstrap_prefab(
         .query.terms = {
             { .id = EcsPrefab },
         },
+        .query.flags = EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_on_add_prefab,
         .global_observer = true
@@ -66593,6 +66594,7 @@ void flecs_bootstrap_prefab(
         .query.terms = {
             { .id = EcsPrefab },
         },
+        .query.flags = EcsQueryMatchDisabled,
         .events = {EcsOnRemove},
         .callback = flecs_on_remove_prefab,
         .global_observer = true
