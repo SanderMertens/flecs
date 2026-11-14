@@ -3006,6 +3006,7 @@ void Prefab_prefab_children_after_adding_prefab_to_disabled_parent(void);
 void Prefab_prefab_child_added_after_disabled_parent_became_prefab(void);
 void Prefab_prefab_child_added_after_prefab_removed_from_disabled_parent(void);
 void Prefab_instantiate_child_added_after_disabled_parent_became_prefab(void);
+void Prefab_add_prefab_to_parent_w_children_in_many_tables(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -15548,6 +15549,10 @@ bake_test_case Prefab_testcases[] = {
     {
         "instantiate_child_added_after_disabled_parent_became_prefab",
         Prefab_instantiate_child_added_after_disabled_parent_became_prefab
+    },
+    {
+        "add_prefab_to_parent_w_children_in_many_tables",
+        Prefab_add_prefab_to_parent_w_children_in_many_tables
     }
 };
 
@@ -18796,7 +18801,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        235,
+        236,
         Prefab_testcases
     },
     {

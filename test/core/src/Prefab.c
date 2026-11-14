@@ -7458,3 +7458,25 @@ void Prefab_instantiate_child_added_after_disabled_parent_became_prefab(void) {
 
     ecs_fini(world);
 }
+
+void Prefab_add_prefab_to_parent_w_children_in_many_tables(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_entity_t children[16];
+    int32_t i, j;
+    for (i = 0; i < 16; i ++) {
+        children[i] = ecs_new_w_pair(world, EcsChildOf, p);
+        for (j = 0; j < i; j ++) {
+            ecs_add_id(world, children[i], ecs_new(world));
+        }
+    }
+
+    ecs_add_id(world, p, EcsPrefab);
+
+    for (i = 0; i < 16; i ++) {
+        test_assert(ecs_has_id(world, children[i], EcsPrefab));
+    }
+
+    ecs_fini(world);
+}

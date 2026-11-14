@@ -3084,7 +3084,8 @@
                 "prefab_children_after_adding_prefab_to_disabled_parent",
                 "prefab_child_added_after_disabled_parent_became_prefab",
                 "prefab_child_added_after_prefab_removed_from_disabled_parent",
-                "instantiate_child_added_after_disabled_parent_became_prefab"
+                "instantiate_child_added_after_disabled_parent_became_prefab",
+                "add_prefab_to_parent_w_children_in_many_tables"
             ]
         }, {
             "id": "World",

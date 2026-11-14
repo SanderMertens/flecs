@@ -66454,12 +66454,24 @@ static void flecs_on_add_prefab(ecs_iter_t *it) {
             flecs_ordered_children_set_prefab(world, cr);
         }
 
+        ecs_vec_t children;
+        ecs_vec_init_t(NULL, &children, ecs_entity_t, 0);
+
         ecs_iter_t cit = ecs_children(world, p);
         while (ecs_children_next(&cit)) {
             for (int32_t j = 0; j < cit.count; j ++) {
-                ecs_add_id(world, cit.entities[j], EcsPrefab);
+                ecs_vec_append_t(NULL, &children, ecs_entity_t)[0] =
+                    cit.entities[j];
             }
         }
+
+        int32_t j, count = ecs_vec_count(&children);
+        ecs_entity_t *entities = ecs_vec_first_t(&children, ecs_entity_t);
+        for (j = 0; j < count; j ++) {
+            ecs_add_id(world, entities[j], EcsPrefab);
+        }
+
+        ecs_vec_fini_t(NULL, &children, ecs_entity_t);
     }
 }
 
