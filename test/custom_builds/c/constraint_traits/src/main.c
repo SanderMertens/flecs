@@ -16,7 +16,9 @@ int main(int argc, char *argv[]) {
     assert(ecs_has_id(world, rel, EcsAcyclic));
 
     assert(ecs_has_id(world, EcsChildOf, EcsRelationship));
-    assert(ecs_has_id(world, EcsDontInherit, EcsTarget));
+    ecs_entity_t tgt = ecs_new(world);
+    ecs_add_id(world, tgt, EcsTarget);
+    assert(ecs_has_id(world, tgt, EcsTarget));
 
     return ecs_fini(world);
 }
