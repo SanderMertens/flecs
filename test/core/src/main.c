@@ -1122,6 +1122,11 @@ void NonFragmentingChildOf_delete_parent_w_observer_deleting_sibling(void);
 void NonFragmentingChildOf_delete_parent_w_observer_reparenting_sibling(void);
 void NonFragmentingChildOf_delete_parent_used_as_target_w_observer_deleting_sibling(void);
 void NonFragmentingChildOf_delete_parent_used_as_target_w_observer_reparenting_sibling(void);
+void NonFragmentingChildOf_instantiate_child_wo_prefab_tag(void);
+void NonFragmentingChildOf_instantiate_child_wo_prefab_tag_w_prefab_sibling(void);
+void NonFragmentingChildOf_instantiate_child_wo_prefab_tag_w_children(void);
+void NonFragmentingChildOf_instantiate_nested_child_wo_prefab_tag(void);
+void NonFragmentingChildOf_get_instance_child_after_child_wo_prefab_tag(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -2983,6 +2988,11 @@ void Prefab_add_inherit_w_override_with_to_prefab_after_instantiate(void);
 void Prefab_add_component_to_prefab_during_instantiate(void);
 void Prefab_add_component_to_prefab_during_instantiate_w_parent(void);
 void Prefab_dont_inherit_dont_fragment_component(void);
+void Prefab_instantiate_child_wo_prefab_tag(void);
+void Prefab_instantiate_child_wo_prefab_tag_w_prefab_sibling(void);
+void Prefab_instantiate_child_wo_prefab_tag_w_children(void);
+void Prefab_instantiate_nested_child_wo_prefab_tag(void);
+void Prefab_instantiate_child_wo_prefab_tag_ordered_children(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -8131,6 +8141,26 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "delete_parent_used_as_target_w_observer_reparenting_sibling",
         NonFragmentingChildOf_delete_parent_used_as_target_w_observer_reparenting_sibling
+    },
+    {
+        "instantiate_child_wo_prefab_tag",
+        NonFragmentingChildOf_instantiate_child_wo_prefab_tag
+    },
+    {
+        "instantiate_child_wo_prefab_tag_w_prefab_sibling",
+        NonFragmentingChildOf_instantiate_child_wo_prefab_tag_w_prefab_sibling
+    },
+    {
+        "instantiate_child_wo_prefab_tag_w_children",
+        NonFragmentingChildOf_instantiate_child_wo_prefab_tag_w_children
+    },
+    {
+        "instantiate_nested_child_wo_prefab_tag",
+        NonFragmentingChildOf_instantiate_nested_child_wo_prefab_tag
+    },
+    {
+        "get_instance_child_after_child_wo_prefab_tag",
+        NonFragmentingChildOf_get_instance_child_after_child_wo_prefab_tag
     }
 };
 
@@ -15433,6 +15463,26 @@ bake_test_case Prefab_testcases[] = {
     {
         "dont_inherit_dont_fragment_component",
         Prefab_dont_inherit_dont_fragment_component
+    },
+    {
+        "instantiate_child_wo_prefab_tag",
+        Prefab_instantiate_child_wo_prefab_tag
+    },
+    {
+        "instantiate_child_wo_prefab_tag_w_prefab_sibling",
+        Prefab_instantiate_child_wo_prefab_tag_w_prefab_sibling
+    },
+    {
+        "instantiate_child_wo_prefab_tag_w_children",
+        Prefab_instantiate_child_wo_prefab_tag_w_children
+    },
+    {
+        "instantiate_nested_child_wo_prefab_tag",
+        Prefab_instantiate_nested_child_wo_prefab_tag
+    },
+    {
+        "instantiate_child_wo_prefab_tag_ordered_children",
+        Prefab_instantiate_child_wo_prefab_tag_ordered_children
     }
 };
 
@@ -18527,7 +18577,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        334,
+        339,
         NonFragmentingChildOf_testcases
     },
     {
@@ -18681,7 +18731,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        217,
+        222,
         Prefab_testcases
     },
     {

@@ -7066,3 +7066,119 @@ void Prefab_dont_inherit_dont_fragment_component(void) {
 
     ecs_fini(world);
 }
+
+void Prefab_instantiate_child_wo_prefab_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c = ecs_entity(world, { .name = "Child", .parent = p });
+    test_assert(ecs_has_id(world, c, EcsPrefab));
+    ecs_remove_id(world, c, EcsPrefab);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_lookup_child(world, i, "Child") == 0);
+
+    int32_t count = 0;
+    ecs_iter_t it = ecs_children(world, i);
+    while (ecs_children_next(&it)) {
+        count += it.count;
+    }
+    test_int(count, 0);
+
+    ecs_fini(world);
+}
+
+void Prefab_instantiate_child_wo_prefab_tag_w_prefab_sibling(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t a = ecs_entity(world, { .name = "A", .parent = p });
+    ecs_entity_t b = ecs_entity(world, { .name = "B", .parent = p });
+    test_assert(ecs_has_id(world, a, EcsPrefab));
+    test_assert(ecs_has_id(world, b, EcsPrefab));
+    ecs_remove_id(world, b, EcsPrefab);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_lookup_child(world, i, "A") != 0);
+    test_assert(ecs_lookup_child(world, i, "B") == 0);
+
+    int32_t count = 0;
+    ecs_iter_t it = ecs_children(world, i);
+    while (ecs_children_next(&it)) {
+        count += it.count;
+    }
+    test_int(count, 1);
+
+    ecs_fini(world);
+}
+
+void Prefab_instantiate_child_wo_prefab_tag_w_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c = ecs_entity(world, { .name = "Child", .parent = p });
+    ecs_entity_t gc = ecs_entity(world, { .name = "GrandChild", .parent = c });
+    test_assert(ecs_has_id(world, c, EcsPrefab));
+    test_assert(ecs_has_id(world, gc, EcsPrefab));
+    ecs_remove_id(world, c, EcsPrefab);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_lookup_child(world, i, "Child") == 0);
+
+    int32_t count = 0;
+    ecs_iter_t it = ecs_children(world, i);
+    while (ecs_children_next(&it)) {
+        count += it.count;
+    }
+    test_int(count, 0);
+
+    ecs_fini(world);
+}
+
+void Prefab_instantiate_nested_child_wo_prefab_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c = ecs_entity(world, { .name = "Child", .parent = p });
+    ecs_entity_t gc = ecs_entity(world, { .name = "GrandChild", .parent = c });
+    test_assert(ecs_has_id(world, c, EcsPrefab));
+    test_assert(ecs_has_id(world, gc, EcsPrefab));
+    ecs_remove_id(world, gc, EcsPrefab);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t i_c = ecs_lookup_child(world, i, "Child");
+    test_assert(i_c != 0);
+    test_assert(ecs_lookup_child(world, i_c, "GrandChild") == 0);
+
+    int32_t count = 0;
+    ecs_iter_t it = ecs_children(world, i_c);
+    while (ecs_children_next(&it)) {
+        count += it.count;
+    }
+    test_int(count, 0);
+
+    ecs_fini(world);
+}
+
+void Prefab_instantiate_child_wo_prefab_tag_ordered_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+    ecs_entity_t a = ecs_entity(world, { .name = "A", .parent = p });
+    ecs_entity_t b = ecs_entity(world, { .name = "B", .parent = p });
+    ecs_entity_t c = ecs_entity(world, { .name = "C", .parent = p });
+    test_assert(ecs_has_id(world, a, EcsPrefab));
+    test_assert(ecs_has_id(world, b, EcsPrefab));
+    test_assert(ecs_has_id(world, c, EcsPrefab));
+    ecs_remove_id(world, b, EcsPrefab);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entities_t children = ecs_get_ordered_children(world, i);
+    test_int(children.count, 2);
+    test_str(ecs_get_name(world, children.ids[0]), "A");
+    test_str(ecs_get_name(world, children.ids[1]), "C");
+    test_assert(ecs_lookup_child(world, i, "B") == 0);
+
+    ecs_fini(world);
+}

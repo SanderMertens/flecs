@@ -454,6 +454,10 @@ void flecs_instantiate(
                     continue;
                 }
 
+                if (!(range.table->flags & EcsTableIsPrefab)) {
+                    continue;
+                }
+
                 flecs_instantiate_children(
                     world, base, instance, range, ctx, depth);
             }
@@ -462,6 +466,10 @@ void flecs_instantiate(
             if (flecs_table_cache_iter((ecs_table_cache_t*)cr, &it, EcsTableEmpty|EcsTableNotEmpty)) {
                 const ecs_table_cache_elem_t *elem;
                 while ((elem = flecs_table_cache_next(&it))) {
+                    if (!(elem->table->flags & EcsTableIsPrefab)) {
+                        continue;
+                    }
+
                     ecs_table_range_t range = {
                         elem->table,
                         0,

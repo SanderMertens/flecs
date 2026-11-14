@@ -9256,3 +9256,112 @@ void NonFragmentingChildOf_instantiate_prefab_w_dont_inherit_child(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_instantiate_child_wo_prefab_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c = ecs_insert(world, ecs_value(EcsParent, {p}));
+    test_assert(ecs_has_id(world, c, EcsPrefab));
+    ecs_remove_id(world, c, EcsPrefab);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+
+    int32_t count = 0;
+    ecs_iter_t it = ecs_children(world, i);
+    while (ecs_children_next(&it)) {
+        count += it.count;
+    }
+    test_int(count, 0);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_instantiate_child_wo_prefab_tag_w_prefab_sibling(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t a = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_entity_t b = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_entity_t c = ecs_insert(world, ecs_value(EcsParent, {p}));
+    test_assert(ecs_has_id(world, a, EcsPrefab));
+    test_assert(ecs_has_id(world, b, EcsPrefab));
+    test_assert(ecs_has_id(world, c, EcsPrefab));
+    ecs_remove_id(world, b, EcsPrefab);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entities_t children = ecs_get_ordered_children(world, i);
+    test_int(children.count, 2);
+    test_assert(ecs_has_pair(world, children.ids[0], EcsIsA, a));
+    test_assert(ecs_has_pair(world, children.ids[1], EcsIsA, c));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_instantiate_child_wo_prefab_tag_w_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_entity_t gc = ecs_insert(world, ecs_value(EcsParent, {c}));
+    test_assert(ecs_has_id(world, c, EcsPrefab));
+    test_assert(ecs_has_id(world, gc, EcsPrefab));
+    ecs_remove_id(world, c, EcsPrefab);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+
+    int32_t count = 0;
+    ecs_iter_t it = ecs_children(world, i);
+    while (ecs_children_next(&it)) {
+        count += it.count;
+    }
+    test_int(count, 0);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_instantiate_nested_child_wo_prefab_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_entity_t gc = ecs_insert(world, ecs_value(EcsParent, {c}));
+    test_assert(ecs_has_id(world, c, EcsPrefab));
+    test_assert(ecs_has_id(world, gc, EcsPrefab));
+    ecs_remove_id(world, gc, EcsPrefab);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entities_t children = ecs_get_ordered_children(world, i);
+    test_int(children.count, 1);
+    ecs_entity_t i_c = children.ids[0];
+    test_assert(ecs_has_pair(world, i_c, EcsIsA, c));
+
+    int32_t count = 0;
+    ecs_iter_t it = ecs_children(world, i_c);
+    while (ecs_children_next(&it)) {
+        count += it.count;
+    }
+    test_int(count, 0);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_get_instance_child_after_child_wo_prefab_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_entity_t c3 = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_entity_t c4 = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_remove_id(world, c2, EcsPrefab);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entities_t entities = ecs_get_ordered_children(world, i);
+    test_int(entities.count, 3);
+    test_assert(ecs_get_target(world, i, c1, 0) == entities.ids[0]);
+    test_assert(ecs_get_target(world, i, c3, 0) == entities.ids[1]);
+    test_assert(ecs_get_target(world, i, c4, 0) == entities.ids[2]);
+
+    ecs_fini(world);
+}

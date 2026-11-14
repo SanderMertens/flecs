@@ -99,6 +99,10 @@ static void flecs_prefab_spawner_build_from_cr(
             continue;
         }
 
+        if (!(table->flags & EcsTableIsPrefab)) {
+            continue;
+        }
+
         ecs_tree_spawner_child_t *elem = ecs_vec_append_t(
             NULL, spawner, ecs_tree_spawner_child_t);
         elem->parent_index = parent_index;

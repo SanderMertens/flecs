@@ -116,6 +116,21 @@ ecs_entity_t flecs_get_prefab_instance_child(
 
     ecs_vec_t *v = &childof_cr->pair->ordered_children;
     int32_t index = flecs_uto(int32_t, *index_ptr);
+
+    ecs_component_record_t *prefab_cr = flecs_components_get(
+        world, ecs_childof(ecs_get_parent(world, prefab_child)));
+    if (prefab_cr) {
+        ecs_vec_t *pv = &prefab_cr->pair->ordered_children;
+        ecs_entity_t *prefab_children = ecs_vec_first_t(pv, ecs_entity_t);
+        int32_t i, prefab_index = index;
+        for (i = 0; i < prefab_index; i ++) {
+            ecs_record_t *r = flecs_entities_get(world, prefab_children[i]);
+            if (!(r->table->flags & EcsTableIsPrefab)) {
+                index --;
+            }
+        }
+    }
+
     ecs_check(ecs_vec_count(v) > index, ECS_INVALID_OPERATION,
         "cannot get target for '%s': children of '%s' have changed since "
         "prefab instantiation",

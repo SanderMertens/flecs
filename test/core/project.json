@@ -1155,7 +1155,12 @@
                 "delete_parent_w_observer_deleting_sibling",
                 "delete_parent_w_observer_reparenting_sibling",
                 "delete_parent_used_as_target_w_observer_deleting_sibling",
-                "delete_parent_used_as_target_w_observer_reparenting_sibling"
+                "delete_parent_used_as_target_w_observer_reparenting_sibling",
+                "instantiate_child_wo_prefab_tag",
+                "instantiate_child_wo_prefab_tag_w_prefab_sibling",
+                "instantiate_child_wo_prefab_tag_w_children",
+                "instantiate_nested_child_wo_prefab_tag",
+                "get_instance_child_after_child_wo_prefab_tag"
             ]
         }, {
             "id": "Hierarchies",
@@ -3061,7 +3066,12 @@
                 "add_inherit_w_override_with_to_prefab_after_instantiate",
                 "add_component_to_prefab_during_instantiate",
                 "add_component_to_prefab_during_instantiate_w_parent",
-                "dont_inherit_dont_fragment_component"
+                "dont_inherit_dont_fragment_component",
+                "instantiate_child_wo_prefab_tag",
+                "instantiate_child_wo_prefab_tag_w_prefab_sibling",
+                "instantiate_child_wo_prefab_tag_w_children",
+                "instantiate_nested_child_wo_prefab_tag",
+                "instantiate_child_wo_prefab_tag_ordered_children"
             ]
         }, {
             "id": "World",
