@@ -3071,7 +3071,16 @@
                 "instantiate_child_wo_prefab_tag_w_prefab_sibling",
                 "instantiate_child_wo_prefab_tag_w_children",
                 "instantiate_nested_child_wo_prefab_tag",
-                "instantiate_child_wo_prefab_tag_ordered_children"
+                "instantiate_child_wo_prefab_tag_ordered_children",
+                "prefab_child_added_after_parent_became_prefab",
+                "prefab_child_new_w_pair_after_parent_became_prefab",
+                "prefab_child_entity_init_after_parent_became_prefab",
+                "prefab_child_deferred_after_parent_became_prefab",
+                "prefab_child_w_parent_component_after_parent_became_prefab",
+                "prefab_child_added_after_parent_became_prefab_instantiate",
+                "prefab_grandchild_added_after_parent_became_prefab",
+                "prefab_child_added_after_prefab_removed_from_parent",
+                "prefab_child_bulk_init_after_parent_became_prefab"
             ]
         }, {
             "id": "World",

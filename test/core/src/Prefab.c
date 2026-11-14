@@ -7182,3 +7182,211 @@ void Prefab_instantiate_child_wo_prefab_tag_ordered_children(void) {
 
     ecs_fini(world);
 }
+
+void Prefab_prefab_child_added_after_parent_became_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_entity_t a = ecs_new(world);
+    ecs_add_pair(world, a, EcsChildOf, p);
+    test_assert(!ecs_has_id(world, a, EcsPrefab));
+
+    ecs_add_id(world, p, EcsPrefab);
+    test_assert(ecs_has_id(world, a, EcsPrefab));
+
+    ecs_entity_t b = ecs_new(world);
+    ecs_add_pair(world, b, EcsChildOf, p);
+    test_assert(ecs_has_pair(world, b, EcsChildOf, p));
+    test_assert(ecs_has_id(world, b, EcsPrefab));
+
+    ecs_fini(world);
+}
+
+void Prefab_prefab_child_new_w_pair_after_parent_became_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_entity_t a = ecs_new_w_pair(world, EcsChildOf, p);
+    test_assert(!ecs_has_id(world, a, EcsPrefab));
+
+    ecs_add_id(world, p, EcsPrefab);
+    test_assert(ecs_has_id(world, a, EcsPrefab));
+
+    ecs_entity_t b = ecs_new_w_pair(world, EcsChildOf, p);
+    test_assert(ecs_has_pair(world, b, EcsChildOf, p));
+    test_assert(ecs_has_id(world, b, EcsPrefab));
+
+    ecs_fini(world);
+}
+
+void Prefab_prefab_child_entity_init_after_parent_became_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_entity_t a = ecs_entity(world, { .parent = p });
+    test_assert(!ecs_has_id(world, a, EcsPrefab));
+    ecs_entity_t c = ecs_entity(world, { .parent = p, .name = "c" });
+    test_assert(!ecs_has_id(world, c, EcsPrefab));
+
+    ecs_add_id(world, p, EcsPrefab);
+    test_assert(ecs_has_id(world, a, EcsPrefab));
+    test_assert(ecs_has_id(world, c, EcsPrefab));
+
+    ecs_entity_t b = ecs_entity(world, { .parent = p });
+    test_assert(ecs_has_pair(world, b, EcsChildOf, p));
+    test_assert(ecs_has_id(world, b, EcsPrefab));
+
+    ecs_entity_t e = ecs_entity(world, { .parent = p, .name = "e" });
+    test_assert(ecs_has_pair(world, e, EcsChildOf, p));
+    test_assert(ecs_has_id(world, e, EcsPrefab));
+
+    ecs_fini(world);
+}
+
+void Prefab_prefab_child_deferred_after_parent_became_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_entity_t a = ecs_new(world);
+    ecs_add_pair(stage, a, EcsChildOf, p);
+    ecs_merge(stage);
+    test_assert(ecs_has_pair(world, a, EcsChildOf, p));
+    test_assert(!ecs_has_id(world, a, EcsPrefab));
+
+    ecs_add_id(stage, p, EcsPrefab);
+    ecs_merge(stage);
+    test_assert(ecs_has_id(world, a, EcsPrefab));
+
+    ecs_entity_t b = ecs_new(world);
+    ecs_add_pair(stage, b, EcsChildOf, p);
+    ecs_merge(stage);
+    test_assert(ecs_has_pair(world, b, EcsChildOf, p));
+    test_assert(ecs_has_id(world, b, EcsPrefab));
+
+    ecs_fini(world);
+}
+
+void Prefab_prefab_child_w_parent_component_after_parent_became_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_entity_t a = ecs_new(world);
+    ecs_set(world, a, EcsParent, {p});
+    test_assert(!ecs_has_id(world, a, EcsPrefab));
+
+    ecs_add_id(world, p, EcsPrefab);
+    test_assert(ecs_has_id(world, a, EcsPrefab));
+
+    ecs_entity_t b = ecs_new(world);
+    ecs_set(world, b, EcsParent, {p});
+    test_assert(ecs_get_parent(world, b) == p);
+    test_assert(ecs_has_id(world, b, EcsPrefab));
+
+    ecs_fini(world);
+}
+
+void Prefab_prefab_child_added_after_parent_became_prefab_instantiate(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_entity_t a = ecs_new(world);
+    ecs_set_name(world, a, "a");
+    ecs_add_pair(world, a, EcsChildOf, p);
+
+    ecs_add_id(world, p, EcsPrefab);
+
+    ecs_entity_t b = ecs_new(world);
+    ecs_set_name(world, b, "b");
+    ecs_add_pair(world, b, EcsChildOf, p);
+    ecs_set(world, b, Position, {10, 20});
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ia = ecs_lookup_from(world, i, "a");
+    test_assert(ia != 0);
+    test_assert(ia != a);
+    test_assert(ecs_get_parent(world, ia) == i);
+    test_assert(!ecs_has_id(world, ia, EcsPrefab));
+    ecs_entity_t ib = ecs_lookup_from(world, i, "b");
+    test_assert(ib != 0);
+    test_assert(ib != b);
+    test_assert(ecs_get_parent(world, ib) == i);
+    test_assert(!ecs_has_id(world, ib, EcsPrefab));
+    const Position *pos = ecs_get(world, ib, Position);
+    test_assert(pos != NULL);
+    test_int(pos->x, 10);
+    test_int(pos->y, 20);
+
+    ecs_fini(world);
+}
+
+void Prefab_prefab_grandchild_added_after_parent_became_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_entity_t c = ecs_new(world);
+    ecs_add_pair(world, c, EcsChildOf, p);
+    ecs_entity_t g1 = ecs_new(world);
+    ecs_add_pair(world, g1, EcsChildOf, c);
+    test_assert(!ecs_has_id(world, g1, EcsPrefab));
+
+    ecs_add_id(world, p, EcsPrefab);
+    test_assert(ecs_has_id(world, c, EcsPrefab));
+    test_assert(ecs_has_id(world, g1, EcsPrefab));
+
+    ecs_entity_t g2 = ecs_new(world);
+    ecs_add_pair(world, g2, EcsChildOf, c);
+    test_assert(ecs_has_pair(world, g2, EcsChildOf, c));
+    test_assert(ecs_has_id(world, g2, EcsPrefab));
+
+    ecs_fini(world);
+}
+
+void Prefab_prefab_child_added_after_prefab_removed_from_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t a = ecs_new(world);
+    ecs_add_pair(world, a, EcsChildOf, p);
+    test_assert(ecs_has_id(world, a, EcsPrefab));
+
+    ecs_remove_id(world, p, EcsPrefab);
+
+    ecs_entity_t b = ecs_new(world);
+    ecs_add_pair(world, b, EcsChildOf, p);
+    test_assert(ecs_has_pair(world, b, EcsChildOf, p));
+    test_assert(!ecs_has_id(world, b, EcsPrefab));
+
+    ecs_fini(world);
+}
+
+void Prefab_prefab_child_bulk_init_after_parent_became_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new(world);
+    const ecs_entity_t *a = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 2,
+        .ids = { ecs_childof(p) }
+    });
+    test_assert(a != NULL);
+    ecs_entity_t a0 = a[0];
+    test_assert(!ecs_has_id(world, a0, EcsPrefab));
+
+    ecs_add_id(world, p, EcsPrefab);
+    test_assert(ecs_has_id(world, a0, EcsPrefab));
+
+    const ecs_entity_t *b = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 2,
+        .ids = { ecs_childof(p) }
+    });
+    test_assert(b != NULL);
+    test_assert(ecs_has_pair(world, b[0], EcsChildOf, p));
+    test_assert(ecs_has_id(world, b[0], EcsPrefab));
+    test_assert(ecs_has_pair(world, b[1], EcsChildOf, p));
+    test_assert(ecs_has_id(world, b[1], EcsPrefab));
+
+    ecs_fini(world);
+}

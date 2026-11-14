@@ -109,4 +109,8 @@ void flecs_table_clear_edges_for_base(
     ecs_world_t *world,
     ecs_entity_t base);
 
+void flecs_table_clear_edges_for_parent(
+    ecs_world_t *world,
+    ecs_entity_t parent);
+
 #endif

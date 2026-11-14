@@ -993,6 +993,10 @@ void flecs_table_clear_edges_for_base(
     ecs_world_t *world,
     ecs_entity_t base);
 
+void flecs_table_clear_edges_for_parent(
+    ecs_world_t *world,
+    ecs_entity_t parent);
+
 #endif
 
 #ifdef FLECS_SANITIZE
@@ -45720,6 +45724,45 @@ void flecs_table_clear_edges(
     flecs_table_clear_edge_set(world, table, true);
 }
 
+static void flecs_table_clear_incoming_add_edges(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id)
+{
+    ecs_vec_t *incoming = &table->_->incoming[0];
+    int32_t i;
+    for (i = ecs_vec_count(incoming) - 1; i >= 0; i --) {
+        ecs_graph_incoming_t *in = ecs_vec_get_t(
+            incoming, ecs_graph_incoming_t, i);
+        if (in->id == id) {
+            flecs_graph_edge_remove(world, in->from, id, false);
+        }
+    }
+}
+
+void flecs_table_clear_edges_for_parent(
+    ecs_world_t *world,
+    ecs_entity_t parent)
+{
+    ecs_id_t id = ecs_childof(parent);
+    ecs_component_record_t *cr = flecs_components_get(world, id);
+    if (!cr) {
+        return;
+    }
+
+    ecs_table_cache_iter_t it;
+    if (!flecs_table_cache_iter(
+        &cr->cache, &it, EcsTableEmpty|EcsTableNotEmpty))
+    {
+        return;
+    }
+
+    const ecs_table_cache_elem_t *elem;
+    while ((elem = flecs_table_cache_next(&it))) {
+        flecs_table_clear_incoming_add_edges(world, elem->tr->hdr.table, id);
+    }
+}
+
 void flecs_table_clear_edges_for_base(
     ecs_world_t *world,
     ecs_entity_t base)
@@ -45740,16 +45783,9 @@ void flecs_table_clear_edges_for_base(
     const ecs_table_cache_elem_t *elem;
     while ((elem = flecs_table_cache_next(&it))) {
         ecs_table_t *table = elem->tr->hdr.table;
-
-        ecs_vec_t *incoming = &table->_->incoming[0];
         int32_t i, count;
-        for (i = ecs_vec_count(incoming) - 1; i >= 0; i --) {
-            ecs_graph_incoming_t *in = ecs_vec_get_t(
-                incoming, ecs_graph_incoming_t, i);
-            if (in->id == id) {
-                flecs_graph_edge_remove(world, in->from, id, false);
-            }
-        }
+
+        flecs_table_clear_incoming_add_edges(world, table, id);
 
         if (!table->_->traversable_count) {
             continue;
@@ -66409,6 +66445,9 @@ static void flecs_on_add_prefab(ecs_iter_t *it) {
     for (int32_t i = 0; i < it->count; i ++) {
         ecs_entity_t p = it->entities[i];
 
+        flecs_table_clear_edges_for_parent(
+            ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world)), p);
+
         ecs_component_record_t *cr = flecs_components_get(
             world, ecs_childof(p));
         if (cr && (cr->flags & EcsIdOrderedChildren)) {
@@ -66421,6 +66460,14 @@ static void flecs_on_add_prefab(ecs_iter_t *it) {
                 ecs_add_id(world, cit.entities[j], EcsPrefab);
             }
         }
+    }
+}
+
+static void flecs_on_remove_prefab(ecs_iter_t *it) {
+    for (int32_t i = 0; i < it->count; i ++) {
+        flecs_table_clear_edges_for_parent(
+            ECS_CONST_CAST(ecs_world_t*, ecs_get_world(it->world)),
+            it->entities[i]);
     }
 }
 
@@ -66539,6 +66586,15 @@ void flecs_bootstrap_prefab(
         },
         .events = {EcsOnAdd},
         .callback = flecs_on_add_prefab,
+        .global_observer = true
+    });
+
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = EcsPrefab },
+        },
+        .events = {EcsOnRemove},
+        .callback = flecs_on_remove_prefab,
         .global_observer = true
     });
 

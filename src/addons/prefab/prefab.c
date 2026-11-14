@@ -48,6 +48,9 @@ static void flecs_on_add_prefab(ecs_iter_t *it) {
     for (int32_t i = 0; i < it->count; i ++) {
         ecs_entity_t p = it->entities[i];
 
+        flecs_table_clear_edges_for_parent(
+            ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world)), p);
+
         ecs_component_record_t *cr = flecs_components_get(
             world, ecs_childof(p));
         if (cr && (cr->flags & EcsIdOrderedChildren)) {
@@ -60,6 +63,14 @@ static void flecs_on_add_prefab(ecs_iter_t *it) {
                 ecs_add_id(world, cit.entities[j], EcsPrefab);
             }
         }
+    }
+}
+
+static void flecs_on_remove_prefab(ecs_iter_t *it) {
+    for (int32_t i = 0; i < it->count; i ++) {
+        flecs_table_clear_edges_for_parent(
+            ECS_CONST_CAST(ecs_world_t*, ecs_get_world(it->world)),
+            it->entities[i]);
     }
 }
 
@@ -178,6 +189,15 @@ void flecs_bootstrap_prefab(
         },
         .events = {EcsOnAdd},
         .callback = flecs_on_add_prefab,
+        .global_observer = true
+    });
+
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = EcsPrefab },
+        },
+        .events = {EcsOnRemove},
+        .callback = flecs_on_remove_prefab,
         .global_observer = true
     });
 

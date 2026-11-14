@@ -2993,6 +2993,15 @@ void Prefab_instantiate_child_wo_prefab_tag_w_prefab_sibling(void);
 void Prefab_instantiate_child_wo_prefab_tag_w_children(void);
 void Prefab_instantiate_nested_child_wo_prefab_tag(void);
 void Prefab_instantiate_child_wo_prefab_tag_ordered_children(void);
+void Prefab_prefab_child_added_after_parent_became_prefab(void);
+void Prefab_prefab_child_new_w_pair_after_parent_became_prefab(void);
+void Prefab_prefab_child_entity_init_after_parent_became_prefab(void);
+void Prefab_prefab_child_deferred_after_parent_became_prefab(void);
+void Prefab_prefab_child_w_parent_component_after_parent_became_prefab(void);
+void Prefab_prefab_child_added_after_parent_became_prefab_instantiate(void);
+void Prefab_prefab_grandchild_added_after_parent_became_prefab(void);
+void Prefab_prefab_child_added_after_prefab_removed_from_parent(void);
+void Prefab_prefab_child_bulk_init_after_parent_became_prefab(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -15483,6 +15492,42 @@ bake_test_case Prefab_testcases[] = {
     {
         "instantiate_child_wo_prefab_tag_ordered_children",
         Prefab_instantiate_child_wo_prefab_tag_ordered_children
+    },
+    {
+        "prefab_child_added_after_parent_became_prefab",
+        Prefab_prefab_child_added_after_parent_became_prefab
+    },
+    {
+        "prefab_child_new_w_pair_after_parent_became_prefab",
+        Prefab_prefab_child_new_w_pair_after_parent_became_prefab
+    },
+    {
+        "prefab_child_entity_init_after_parent_became_prefab",
+        Prefab_prefab_child_entity_init_after_parent_became_prefab
+    },
+    {
+        "prefab_child_deferred_after_parent_became_prefab",
+        Prefab_prefab_child_deferred_after_parent_became_prefab
+    },
+    {
+        "prefab_child_w_parent_component_after_parent_became_prefab",
+        Prefab_prefab_child_w_parent_component_after_parent_became_prefab
+    },
+    {
+        "prefab_child_added_after_parent_became_prefab_instantiate",
+        Prefab_prefab_child_added_after_parent_became_prefab_instantiate
+    },
+    {
+        "prefab_grandchild_added_after_parent_became_prefab",
+        Prefab_prefab_grandchild_added_after_parent_became_prefab
+    },
+    {
+        "prefab_child_added_after_prefab_removed_from_parent",
+        Prefab_prefab_child_added_after_prefab_removed_from_parent
+    },
+    {
+        "prefab_child_bulk_init_after_parent_became_prefab",
+        Prefab_prefab_child_bulk_init_after_parent_became_prefab
     }
 };
 
@@ -18731,7 +18776,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        222,
+        231,
         Prefab_testcases
     },
     {
