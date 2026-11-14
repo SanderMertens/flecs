@@ -315,9 +315,6 @@ void flecs_bootstrap_constraint_traits(
     ecs_add_id(world, EcsParentDepth, EcsRelationship);
     ecs_add_id(world, ecs_id(EcsPoly), EcsRelationship);
 
-    /* Targets */
-    ecs_add_id(world, EcsDontInherit, EcsTarget);
-
     /* Traversable relationships are always acyclic */
     ecs_add_pair(world, EcsTraversable, EcsWith, EcsAcyclic);
 

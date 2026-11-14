@@ -942,6 +942,20 @@ void NonFragmentingChildOf_instantiate_w_dont_inherit(void);
 void NonFragmentingChildOf_instantiate_w_inherit(void);
 void NonFragmentingChildOf_instantiate_w_auto_override(void);
 void NonFragmentingChildOf_instantiate_w_isa(void);
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab(void);
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_2_children(void);
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_nested(void);
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_inherit(void);
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_dont_inherit_component(void);
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_auto_override(void);
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_isa(void);
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_sparse(void);
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_dont_fragment(void);
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_on_set(void);
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_twice(void);
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_at_depth(void);
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_variant(void);
+void NonFragmentingChildOf_instantiate_prefab_w_dont_inherit_child(void);
 void NonFragmentingChildOf_instantiate_tree_twice(void);
 void NonFragmentingChildOf_instantiate_tree_twice_different_table(void);
 void NonFragmentingChildOf_instantiate_tree_at_depth_1_w_parent(void);
@@ -7397,6 +7411,62 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "instantiate_w_isa",
         NonFragmentingChildOf_instantiate_w_isa
+    },
+    {
+        "instantiate_dont_inherit_prefab",
+        NonFragmentingChildOf_instantiate_dont_inherit_prefab
+    },
+    {
+        "instantiate_dont_inherit_prefab_2_children",
+        NonFragmentingChildOf_instantiate_dont_inherit_prefab_2_children
+    },
+    {
+        "instantiate_dont_inherit_prefab_nested",
+        NonFragmentingChildOf_instantiate_dont_inherit_prefab_nested
+    },
+    {
+        "instantiate_dont_inherit_prefab_w_inherit",
+        NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_inherit
+    },
+    {
+        "instantiate_dont_inherit_prefab_w_dont_inherit_component",
+        NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_dont_inherit_component
+    },
+    {
+        "instantiate_dont_inherit_prefab_w_auto_override",
+        NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_auto_override
+    },
+    {
+        "instantiate_dont_inherit_prefab_w_isa",
+        NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_isa
+    },
+    {
+        "instantiate_dont_inherit_prefab_w_sparse",
+        NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_sparse
+    },
+    {
+        "instantiate_dont_inherit_prefab_w_dont_fragment",
+        NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_dont_fragment
+    },
+    {
+        "instantiate_dont_inherit_prefab_w_on_set",
+        NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_on_set
+    },
+    {
+        "instantiate_dont_inherit_prefab_twice",
+        NonFragmentingChildOf_instantiate_dont_inherit_prefab_twice
+    },
+    {
+        "instantiate_dont_inherit_prefab_at_depth",
+        NonFragmentingChildOf_instantiate_dont_inherit_prefab_at_depth
+    },
+    {
+        "instantiate_dont_inherit_prefab_variant",
+        NonFragmentingChildOf_instantiate_dont_inherit_prefab_variant
+    },
+    {
+        "instantiate_prefab_w_dont_inherit_child",
+        NonFragmentingChildOf_instantiate_prefab_w_dont_inherit_child
     },
     {
         "instantiate_tree_twice",
@@ -18457,7 +18527,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        320,
+        334,
         NonFragmentingChildOf_testcases
     },
     {

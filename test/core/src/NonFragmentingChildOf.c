@@ -8757,3 +8757,502 @@ void NonFragmentingChildOf_delete_parent_used_as_target_w_observer_reparenting_s
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsDontInherit);
+        ecs_entity_t p_c = ecs_insert(world, ecs_value(EcsParent, { p }));
+        ecs_set(world, p_c, Position, {11, 21});
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_has_pair(world, i, EcsIsA, p));
+    test_assert(!ecs_has_id(world, i, EcsDontInherit));
+
+    ecs_entities_t entities = ecs_get_ordered_children(world, i);
+    test_int(entities.count, 1);
+
+    ecs_entity_t i_c = entities.ids[0];
+    test_assert(i_c != p_c);
+    test_assert(!ecs_has_pair(world, i_c, EcsIsA, p_c));
+    test_assert(!ecs_has_pair(world, i_c, EcsIsA, EcsWildcard));
+    test_assert(!ecs_has_id(world, i_c, EcsPrefab));
+    test_assert(ecs_get_parent(world, i_c) == i);
+    test_assert(ecs_owns(world, i_c, Position));
+    {
+        const Position *ptr = ecs_get(world, i_c, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 11);
+        test_int(ptr->y, 21);
+    }
+
+    ecs_set(world, p_c, Position, {12, 22});
+    {
+        const Position *ptr = ecs_get(world, i_c, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 11);
+        test_int(ptr->y, 21);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_2_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsDontInherit);
+        ecs_entity_t p_c_1 = ecs_insert(world, ecs_value(EcsParent, { p }));
+        ecs_set(world, p_c_1, Position, {11, 21});
+        ecs_entity_t p_c_2 = ecs_insert(world, ecs_value(EcsParent, { p }));
+        ecs_set(world, p_c_2, Position, {12, 22});
+        ecs_set(world, p_c_2, Velocity, {1, 2});
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entities_t entities = ecs_get_ordered_children(world, i);
+    test_int(entities.count, 2);
+
+    ecs_entity_t i_c_1 = entities.ids[0];
+    ecs_entity_t i_c_2 = entities.ids[1];
+    test_assert(!ecs_has_pair(world, i_c_1, EcsIsA, EcsWildcard));
+    test_assert(!ecs_has_pair(world, i_c_2, EcsIsA, EcsWildcard));
+    test_assert(ecs_get_parent(world, i_c_1) == i);
+    test_assert(ecs_get_parent(world, i_c_2) == i);
+    test_assert(!ecs_has(world, i_c_1, Velocity));
+    {
+        const Position *ptr = ecs_get(world, i_c_1, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 11);
+        test_int(ptr->y, 21);
+    } {
+        const Position *ptr = ecs_get(world, i_c_2, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 12);
+        test_int(ptr->y, 22);
+    } {
+        const Velocity *ptr = ecs_get(world, i_c_2, Velocity);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 1);
+        test_int(ptr->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_nested(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsDontInherit);
+        ecs_entity_t p_c = ecs_insert(world, ecs_value(EcsParent, { p }));
+        ecs_set(world, p_c, Position, {11, 21});
+            ecs_entity_t p_gc = ecs_insert(world, ecs_value(EcsParent, { p_c }));
+            ecs_set(world, p_gc, Position, {12, 22});
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entities_t entities = ecs_get_ordered_children(world, i);
+    test_int(entities.count, 1);
+
+    ecs_entity_t i_c = entities.ids[0];
+    test_assert(!ecs_has_pair(world, i_c, EcsIsA, EcsWildcard));
+    test_assert(ecs_get_parent(world, i_c) == i);
+    {
+        const Position *ptr = ecs_get(world, i_c, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 11);
+        test_int(ptr->y, 21);
+    }
+
+    entities = ecs_get_ordered_children(world, i_c);
+    test_int(entities.count, 1);
+
+    ecs_entity_t i_gc = entities.ids[0];
+    test_assert(i_gc != p_gc);
+    test_assert(!ecs_has_pair(world, i_gc, EcsIsA, EcsWildcard));
+    test_assert(ecs_get_parent(world, i_gc) == i_c);
+    {
+        const Position *ptr = ecs_get(world, i_gc, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 12);
+        test_int(ptr->y, 22);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_inherit(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsDontInherit);
+        ecs_entity_t p_c = ecs_insert(world, ecs_value(EcsParent, { p }));
+        ecs_set(world, p_c, Position, {11, 21});
+        ecs_set(world, p_c, Velocity, {1, 2});
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entities_t entities = ecs_get_ordered_children(world, i);
+    test_int(entities.count, 1);
+
+    ecs_entity_t i_c = entities.ids[0];
+    test_assert(!ecs_has_pair(world, i_c, EcsIsA, p_c));
+    test_assert(ecs_owns(world, i_c, Position));
+    test_assert(ecs_owns(world, i_c, Velocity));
+    {
+        const Position *ptr = ecs_get(world, i_c, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 11);
+        test_int(ptr->y, 21);
+    } {
+        const Velocity *ptr = ecs_get(world, i_c, Velocity);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 1);
+        test_int(ptr->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_dont_inherit_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsDontInherit);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsDontInherit);
+        ecs_entity_t p_c = ecs_insert(world, ecs_value(EcsParent, { p }));
+        ecs_set(world, p_c, Position, {11, 21});
+        ecs_set(world, p_c, Velocity, {1, 2});
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entities_t entities = ecs_get_ordered_children(world, i);
+    test_int(entities.count, 1);
+
+    ecs_entity_t i_c = entities.ids[0];
+    test_assert(!ecs_has_pair(world, i_c, EcsIsA, p_c));
+    test_assert(!ecs_has(world, i_c, Velocity));
+    {
+        const Position *ptr = ecs_get(world, i_c, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 11);
+        test_int(ptr->y, 21);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_auto_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsDontInherit);
+        ecs_entity_t p_c = ecs_insert(world, ecs_value(EcsParent, { p }));
+        ecs_set(world, p_c, Position, {11, 21});
+        ecs_set(world, p_c, Velocity, {1, 2});
+        ecs_auto_override(world, p_c, Velocity);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entities_t entities = ecs_get_ordered_children(world, i);
+    test_int(entities.count, 1);
+
+    ecs_entity_t i_c = entities.ids[0];
+    test_assert(!ecs_has_pair(world, i_c, EcsIsA, p_c));
+    test_assert(ecs_owns(world, i_c, Velocity));
+    {
+        const Velocity *ptr = ecs_get(world, i_c, Velocity);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 1);
+        test_int(ptr->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_isa(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Velocity, {1, 2});
+    ecs_set(world, base, Mass, {100});
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsDontInherit);
+        ecs_entity_t p_c = ecs_insert(world, ecs_value(EcsParent, { p }));
+        ecs_set(world, p_c, Position, {11, 21});
+        ecs_add_pair(world, p_c, EcsIsA, base);
+        ecs_set(world, p_c, Mass, {200});
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entities_t entities = ecs_get_ordered_children(world, i);
+    test_int(entities.count, 1);
+
+    ecs_entity_t i_c = entities.ids[0];
+    test_assert(!ecs_has_pair(world, i_c, EcsIsA, p_c));
+    test_assert(ecs_owns_pair(world, i_c, EcsIsA, base));
+    test_assert(ecs_has(world, i_c, Velocity));
+    test_assert(!ecs_owns(world, i_c, Velocity));
+    test_assert(ecs_owns(world, i_c, Mass));
+    {
+        const Position *ptr = ecs_get(world, i_c, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 11);
+        test_int(ptr->y, 21);
+    } {
+        const Velocity *ptr = ecs_get(world, i_c, Velocity);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 1);
+        test_int(ptr->y, 2);
+    } {
+        const Mass *ptr = ecs_get(world, i_c, Mass);
+        test_assert(ptr != NULL);
+        test_flt(*ptr, 200);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_sparse(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsDontInherit);
+        ecs_entity_t p_c = ecs_insert(world, ecs_value(EcsParent, { p }));
+        ecs_set(world, p_c, Position, {11, 21});
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entities_t entities = ecs_get_ordered_children(world, i);
+    test_int(entities.count, 1);
+
+    ecs_entity_t i_c = entities.ids[0];
+    test_assert(!ecs_has_pair(world, i_c, EcsIsA, p_c));
+    test_assert(ecs_owns(world, i_c, Position));
+    {
+        const Position *ptr = ecs_get(world, i_c, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 11);
+        test_int(ptr->y, 21);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_dont_fragment(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsDontInherit);
+        ecs_entity_t p_c = ecs_insert(world, ecs_value(EcsParent, { p }));
+        ecs_set(world, p_c, Position, {11, 21});
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entities_t entities = ecs_get_ordered_children(world, i);
+    test_int(entities.count, 1);
+
+    ecs_entity_t i_c = entities.ids[0];
+    test_assert(!ecs_has_pair(world, i_c, EcsIsA, p_c));
+    test_assert(ecs_owns(world, i_c, Position));
+    {
+        const Position *ptr = ecs_get(world, i_c, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 11);
+        test_int(ptr->y, 21);
+    }
+
+    ecs_fini(world);
+}
+
+static int dont_inherit_on_set_invoked = 0;
+static Position dont_inherit_on_set_value;
+
+static void DontInheritOnSet(ecs_iter_t *it) {
+    Position *p = ecs_field(it, Position, 0);
+    test_int(it->count, 1);
+    dont_inherit_on_set_invoked ++;
+    dont_inherit_on_set_value = p[0];
+}
+
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_w_on_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsDontInherit);
+        ecs_entity_t p_c = ecs_insert(world, ecs_value(EcsParent, { p }));
+        ecs_set(world, p_c, Position, {11, 21});
+
+    dont_inherit_on_set_invoked = 0;
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = DontInheritOnSet
+    });
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entities_t entities = ecs_get_ordered_children(world, i);
+    test_int(entities.count, 1);
+    test_assert(!ecs_has_pair(world, entities.ids[0], EcsIsA, p_c));
+
+    test_int(dont_inherit_on_set_invoked, 1);
+    test_int(dont_inherit_on_set_value.x, 11);
+    test_int(dont_inherit_on_set_value.y, 21);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_twice(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsDontInherit);
+        ecs_entity_t p_c = ecs_insert(world, ecs_value(EcsParent, { p }));
+        ecs_set(world, p_c, Position, {11, 21});
+
+    ecs_entity_t i_1 = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t i_2 = ecs_new_w_pair(world, EcsIsA, p);
+
+    ecs_entities_t entities = ecs_get_ordered_children(world, i_1);
+    test_int(entities.count, 1);
+    ecs_entity_t i_c_1 = entities.ids[0];
+
+    entities = ecs_get_ordered_children(world, i_2);
+    test_int(entities.count, 1);
+    ecs_entity_t i_c_2 = entities.ids[0];
+
+    test_assert(i_c_1 != i_c_2);
+    test_assert(!ecs_has_pair(world, i_c_1, EcsIsA, p_c));
+    test_assert(!ecs_has_pair(world, i_c_2, EcsIsA, p_c));
+    test_assert(ecs_get_table(world, i_c_1) == ecs_get_table(world, i_c_2));
+    {
+        const Position *ptr = ecs_get(world, i_c_1, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 11);
+        test_int(ptr->y, 21);
+    } {
+        const Position *ptr = ecs_get(world, i_c_2, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 11);
+        test_int(ptr->y, 21);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_at_depth(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsDontInherit);
+        ecs_entity_t p_c = ecs_insert(world, ecs_value(EcsParent, { p }));
+        ecs_set(world, p_c, Position, {11, 21});
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t i = ecs_insert(world, ecs_value(EcsParent, { parent }));
+    ecs_add_pair(world, i, EcsIsA, p);
+
+    ecs_entities_t entities = ecs_get_ordered_children(world, i);
+    test_int(entities.count, 1);
+
+    ecs_entity_t i_c = entities.ids[0];
+    test_assert(!ecs_has_pair(world, i_c, EcsIsA, p_c));
+    test_assert(ecs_has_id(world, i_c, ecs_value_pair(EcsParentDepth, 2)));
+    {
+        const Position *ptr = ecs_get(world, i_c, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 11);
+        test_int(ptr->y, 21);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_instantiate_dont_inherit_prefab_variant(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsDontInherit);
+        ecs_entity_t p_c = ecs_insert(world, ecs_value(EcsParent, { p }));
+        ecs_set(world, p_c, Position, {11, 21});
+
+    ecs_entity_t v = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_pair(world, v, EcsIsA, p);
+    test_assert(!ecs_has_id(world, v, EcsDontInherit));
+
+    ecs_entities_t entities = ecs_get_ordered_children(world, v);
+    test_int(entities.count, 1);
+
+    ecs_entity_t v_c = entities.ids[0];
+    test_assert(!ecs_has_pair(world, v_c, EcsIsA, p_c));
+    test_assert(ecs_has_id(world, v_c, EcsPrefab));
+    {
+        const Position *ptr = ecs_get(world, v_c, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 11);
+        test_int(ptr->y, 21);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_instantiate_prefab_w_dont_inherit_child(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+        ecs_entity_t p_c = ecs_insert(world, ecs_value(EcsParent, { p }));
+        ecs_set(world, p_c, Position, {11, 21});
+        ecs_add_id(world, p_c, EcsDontInherit);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entities_t entities = ecs_get_ordered_children(world, i);
+    test_int(entities.count, 1);
+
+    ecs_entity_t i_c = entities.ids[0];
+    test_assert(ecs_has_pair(world, i_c, EcsIsA, p_c));
+    test_assert(!ecs_owns_id(world, i_c, EcsDontInherit));
+
+    ecs_fini(world);
+}
