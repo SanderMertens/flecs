@@ -118,7 +118,7 @@ struct system final : entity
     template <typename Func>
     system& each(Func&& func) {
         using CallbackComponents =
-            typename _::each_callback_args<arg_list_t<Func>>::type;
+            typename _::each_callback_args<_::each_callback_arg_list_t<Func>>::type;
         ecs_system_desc_t desc = {};
         _::set_each_callback<false>(desc, FLECS_FWD(func), CallbackComponents{});
         ecs_system_update(world_, id_, &desc);
@@ -130,7 +130,7 @@ struct system final : entity
     template <typename Func>
     system& run_each(Func&& func) {
         using CallbackComponents =
-            typename _::each_callback_args<arg_list_t<Func>>::type;
+            typename _::each_callback_args<_::each_callback_arg_list_t<Func>>::type;
         ecs_system_desc_t desc = {};
         _::set_each_callback<true>(desc, FLECS_FWD(func), CallbackComponents{});
         ecs_system_update(world_, id_, &desc);
@@ -200,7 +200,7 @@ template <typename Func>
 inline system system_builder<Components...>::each(Func&& func) {
     if constexpr (sizeof...(Components) == 0) {
         using CallbackComponents =
-            typename _::each_callback_args<arg_list_t<Func>>::type;
+            typename _::each_callback_args<_::each_callback_arg_list_t<Func>>::type;
         return this->each_callback(CallbackComponents{}, FLECS_FWD(func));
     } else {
         // Faster version of each() that iterates the query on the C++ side.

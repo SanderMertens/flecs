@@ -90,15 +90,28 @@ template <typename ClassType, typename ReturnType, typename... Args>
 struct function_traits_impl<ReturnType(ClassType::*)(Args...) const volatile&&>
     : function_traits_defs<ReturnType, Args...> {};
 
-/** @private Primary template for function_traits_no_cv. */
+/** @private Primary template for function_traits_call_op. */
 template <typename T, typename V = void>
-struct function_traits_no_cv
+struct function_traits_call_op
     : function_traits_impl<T> {};
 
 /** @private Specialization for callable objects with operator(). */
 template <typename T>
-struct function_traits_no_cv<T, decltype((void)&T::operator())>
+struct function_traits_call_op<T, decltype((void)&T::operator())>
     : function_traits_impl<decltype(&T::operator())> {};
+
+/** @private Primary template for function_traits_no_cv. */
+template <typename T, bool = std::is_bind_expression<T>::value>
+struct function_traits_no_cv
+    : function_traits_call_op<T> {};
+
+/** @private Specialization for std::bind objects. Their operator() is an
+ * overloaded template, so its signature cannot be deduced. Taking the address
+ * of it is not reliably SFINAE-friendly (e.g. on MSVC), so it is never
+ * attempted for bind expressions. */
+template <typename T>
+struct function_traits_no_cv<T, true>
+    : function_traits_impl<T> {};
 
 /** @private Front-facing template that decays T before extracting traits. */
 template <typename T>

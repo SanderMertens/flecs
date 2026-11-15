@@ -780,7 +780,7 @@ static const char* flecs_script_parse_lhs(
             } else if (!ecs_os_strcmp(expr, "false")) {
                 *out = (ecs_expr_node_t*)flecs_expr_bool(parser, false);
             } else {
-                char *last_elem = strrchr(expr, '.');
+                char *last_elem = ECS_CONST_CAST(char*, strrchr(expr, '.'));
                 if (last_elem && last_elem[1] == '$') {
                     /* Scoped global variable */
                     ecs_expr_variable_t *v = flecs_expr_variable(parser, expr);

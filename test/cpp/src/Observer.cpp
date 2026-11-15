@@ -1,4 +1,5 @@
 #include <cpp.h>
+#include <functional>
 
 struct ObserverUnit {
     int32_t hp;
@@ -2213,4 +2214,35 @@ void Observer_no_terms_on_add(void) {
 
     test_int(count, 1);
     test_assert(last == e);
+}
+
+namespace {
+class ObserverBindEntityClass {
+public:
+    void my_func(flecs::entity e) {
+        last = e;
+        count ++;
+    }
+
+    flecs::entity last;
+    int32_t count = 0;
+};
+}
+
+void Observer_each_w_std_bind_entity(void) {
+    flecs::world ecs;
+
+    ObserverBindEntityClass obj;
+
+    ecs.observer()
+        .with<Position>()
+        .event(flecs::OnAdd)
+        .each(std::bind(&ObserverBindEntityClass::my_func, &obj,
+            std::placeholders::_1));
+
+    flecs::entity e = ecs.entity();
+    e.add<Position>();
+
+    test_int(obj.count, 1);
+    test_assert(obj.last == e);
 }

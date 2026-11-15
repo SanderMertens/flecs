@@ -7,6 +7,7 @@
 
 // STL includes
 #include <type_traits>
+#include <functional> // std::is_bind_expression
 
 /**
  * @defgroup cpp C++ API

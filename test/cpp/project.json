@@ -706,7 +706,8 @@
                 "lookup_and_update_ctx",
                 "set_group",
                 "run_w_0_src_query",
-                "multithread_system_frame_offset"
+                "multithread_system_frame_offset",
+                "each_w_std_bind_entity"
             ]
         }, {
             "id": "Event",
@@ -1259,7 +1260,8 @@
                 "set_w_on_add_adding_other_w_world",
                 "set_w_on_add_adding_other_w_stage",
                 "no_terms_custom_event",
-                "no_terms_on_add"
+                "no_terms_on_add",
+                "each_w_std_bind_entity"
             ]
         }, {
             "id": "ComponentLifecycle",
@@ -1622,7 +1624,8 @@
                 "get_type_info_R_t_tag",
                 "get_type_info_R_T_tag",
                 "fini_w_scoped_component_added_to_builtin",
-                "fini_w_scoped_tag_added_to_builtin"
+                "fini_w_scoped_tag_added_to_builtin",
+                "each_w_std_bind_entity"
             ]
         }, {
             "id": "Singleton",

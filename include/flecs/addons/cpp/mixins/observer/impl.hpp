@@ -55,7 +55,7 @@ struct observer final : entity
     template <typename Func>
     observer& each(Func&& func) {
         using CallbackComponents =
-            typename _::each_callback_args<arg_list_t<Func>>::type;
+            typename _::each_callback_args<_::each_callback_arg_list_t<Func>>::type;
         ecs_observer_desc_t desc = {};
         _::set_each_callback<false>(desc, FLECS_FWD(func), CallbackComponents{});
         ecs_observer_update(world_, id_, &desc);
@@ -67,7 +67,7 @@ struct observer final : entity
     template <typename Func>
     observer& run_each(Func&& func) {
         using CallbackComponents =
-            typename _::each_callback_args<arg_list_t<Func>>::type;
+            typename _::each_callback_args<_::each_callback_arg_list_t<Func>>::type;
         ecs_observer_desc_t desc = {};
         _::set_each_callback<true>(desc, FLECS_FWD(func), CallbackComponents{});
         ecs_observer_update(world_, id_, &desc);
