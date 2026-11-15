@@ -24758,7 +24758,7 @@ const char* ecs_cpp_trim_module(
             type_name += 2;
         } else {
             // Type is not a child of current parent, trim entire path
-            char *ptr = strrchr(type_name, ':');
+            const char *ptr = strrchr(type_name, ':');
             if (ptr) {
                 type_name = ptr + 1;
             }
@@ -26269,7 +26269,7 @@ static void flecs_parser_errorv(
             }
 
             /* Strip newlines from current statement, if any */            
-            char *newline_ptr = strchr(expr, '\n');
+            const char *newline_ptr = strchr(expr, '\n');
             if (newline_ptr) {
                 /* Strip newline from expr */
                 ecs_strbuf_appendstrn(&msg_buf, expr, 
@@ -46515,13 +46515,13 @@ static void http_connection_free(ecs_http_connection_impl_t *conn) {
 
 // https://stackoverflow.com/questions/10156409/convert-hex-string-char-to-int
 static char http_hex_2_int(char a, char b){
-    a = (a <= '9') ? (char)(a - '0') : (char)((a & 0x7) + 9);
-    b = (b <= '9') ? (char)(b - '0') : (char)((b & 0x7) + 9);
-    if (a < 0) {
+    int ia = (a <= '9') ? (a - '0') : ((a & 0x7) + 9);
+    int ib = (b <= '9') ? (b - '0') : ((b & 0x7) + 9);
+    if (ia < 0) {
         return 0;
     }
 
-    return (char)((a << 4) + b);
+    return (char)((ia << 4) + ib);
 }
 
 static void http_decode_url_str(
@@ -47233,6 +47233,7 @@ static int http_accept_connections(
                     addr_host, addr_port, ecs_os_strerror(errno));
             }
 
+            http_close(&sock);
             ecs_os_mutex_unlock(srv->lock);
             goto done;
         }
@@ -47278,9 +47279,8 @@ static int http_accept_connections(
 
 done:
     ecs_os_mutex_lock(srv->lock);
-    if (http_socket_is_valid(sock) && errno != EBADF) {
-        http_close(&sock);
-        srv->sock = sock;
+    if (http_socket_is_valid(srv->sock)) {
+        http_close(&srv->sock);
     }
 
     ecs_os_mutex_unlock(srv->lock);
@@ -108218,7 +108218,7 @@ static const char* flecs_script_parse_lhs(
             } else if (!ecs_os_strcmp(expr, "false")) {
                 *out = (ecs_expr_node_t*)flecs_expr_bool(parser, false);
             } else {
-                char *last_elem = strrchr(expr, '.');
+                char *last_elem = ECS_CONST_CAST(char*, strrchr(expr, '.'));
                 if (last_elem && last_elem[1] == '$') {
                     /* Scoped global variable */
                     ecs_expr_variable_t *v = flecs_expr_variable(parser, expr);
@@ -114975,7 +114975,7 @@ static int flecs_expr_identifier_variable_member_visit_type(
     const ecs_expr_eval_desc_t *desc,
     bool swizzle_expand_allowed)
 {
-    char *member_sep = strchr(node->value, '.');
+    char *member_sep = ECS_CONST_CAST(char*, strchr(node->value, '.'));
     while (member_sep) {
         if (member_sep != node->value && member_sep[-1] == '\\') {
             member_sep = strchr(member_sep + 1, '.');
@@ -116416,7 +116416,7 @@ static int flecs_expr_function_visit_type(
         ecs_expr_identifier_t *ident = (ecs_expr_identifier_t*)node->left;
         func_identifier = ident->value;
 
-        last_elem = strrchr(func_identifier, '.');
+        last_elem = ECS_CONST_CAST(char*, strrchr(func_identifier, '.'));
         if (last_elem && last_elem != ident->value && last_elem[-1] != '\\') {
             node->function_name = last_elem + 1;
             last_elem[0] = '\0';
@@ -116430,7 +116430,7 @@ static int flecs_expr_function_visit_type(
         /* This is a method. Just like identifiers, method strings can contain
          * separators. Split off last separator to get the method. */
         ecs_expr_member_t *member = (ecs_expr_member_t*)node->left;
-        last_elem = strrchr(member->member_name, '.');
+        last_elem = ECS_CONST_CAST(char*, strrchr(member->member_name, '.'));
         if (!last_elem) {
             node->left = member->left;
             node->function_name = member->member_name;

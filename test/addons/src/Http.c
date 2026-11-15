@@ -1,4 +1,9 @@
 #include <addons.h>
+#ifndef _WIN32
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#endif
 
 static bool OnRequest(
     const ecs_http_request_t* request, 
@@ -212,3 +217,63 @@ void Http_empty_target_encoded_path(void) {
 
     ecs_http_server_fini(srv);
 }
+
+#ifndef _WIN32
+static void* Http_stop_thread(void *arg) {
+    ecs_http_server_stop((ecs_http_server_t*)arg);
+    return NULL;
+}
+
+void Http_stop_double_close(void) {
+    ecs_set_os_api_impl();
+
+    int probe = open("/dev/null", O_RDONLY);
+    test_assert(probe >= 0);
+    close(probe);
+    int base = probe;
+
+    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
+        .port = 27791,
+        .callback = OnRequest
+    });
+    test_assert(srv != NULL);
+    test_int(ecs_http_server_start(srv), 0);
+
+    ecs_os_sleep(0, 200 * 1000 * 1000);
+    probe = -1;
+    {
+        int fd;
+        for (fd = base; fd < base + 16; fd ++) {
+            struct stat st;
+            if (!fstat(fd, &st) && S_ISSOCK(st.st_mode)) {
+                probe = fd;
+                break;
+            }
+        }
+    }
+    test_assert(probe != -1);
+
+    ecs_os_thread_t stopper = ecs_os_thread_new(Http_stop_thread, srv);
+    test_assert(stopper != 0);
+
+    while (fcntl(probe, F_GETFD) != -1) { }
+
+    int reused[8];
+    int i;
+    for (i = 0; i < 8; i ++) {
+        reused[i] = open("/dev/null", O_RDONLY);
+        test_assert(reused[i] >= 0);
+    }
+
+    ecs_os_thread_join(stopper);
+
+    for (i = 0; i < 8; i ++) {
+        test_assert(fcntl(reused[i], F_GETFD) != -1);
+        close(reused[i]);
+    }
+
+    ecs_http_server_fini(srv);
+}
+#else
+void Http_stop_double_close(void) { }
+#endif

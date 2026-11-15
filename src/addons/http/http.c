@@ -261,13 +261,13 @@ static void http_connection_free(ecs_http_connection_impl_t *conn) {
 
 // https://stackoverflow.com/questions/10156409/convert-hex-string-char-to-int
 static char http_hex_2_int(char a, char b){
-    a = (a <= '9') ? (char)(a - '0') : (char)((a & 0x7) + 9);
-    b = (b <= '9') ? (char)(b - '0') : (char)((b & 0x7) + 9);
-    if (a < 0) {
+    int ia = (a <= '9') ? (a - '0') : ((a & 0x7) + 9);
+    int ib = (b <= '9') ? (b - '0') : ((b & 0x7) + 9);
+    if (ia < 0) {
         return 0;
     }
 
-    return (char)((a << 4) + b);
+    return (char)((ia << 4) + ib);
 }
 
 static void http_decode_url_str(
@@ -979,6 +979,7 @@ static int http_accept_connections(
                     addr_host, addr_port, ecs_os_strerror(errno));
             }
 
+            http_close(&sock);
             ecs_os_mutex_unlock(srv->lock);
             goto done;
         }
@@ -1024,9 +1025,8 @@ static int http_accept_connections(
 
 done:
     ecs_os_mutex_lock(srv->lock);
-    if (http_socket_is_valid(sock) && errno != EBADF) {
-        http_close(&sock);
-        srv->sock = sock;
+    if (http_socket_is_valid(srv->sock)) {
+        http_close(&srv->sock);
     }
 
     ecs_os_mutex_unlock(srv->lock);
