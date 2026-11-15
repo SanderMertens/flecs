@@ -116,6 +116,7 @@ jobs:
             git
           pacboy: >-
             toolchain:p
+            make:p
             cmake:p
 
       - name: create cmake build folders
@@ -156,9 +157,9 @@ jobs:
           - { os: ubuntu-latest, cc: gcc-12, cxx: g++-12 }
           - { os: ubuntu-24.04, cc: gcc-13, cxx: g++-13 }
           - { os: ubuntu-24.04, cc: gcc-14, cxx: g++-14 }
-          - { os: ubuntu-latest, cc: clang-14, cxx: clang++-14 }
-          - { os: ubuntu-latest, cc: clang-15, cxx: clang++-15 }
-          - { os: ubuntu-latest, cc: clang-16, cxx: clang++-16 }
+          - { os: ubuntu-24.04, cc: clang-14, cxx: clang++-14 }
+          - { os: ubuntu-24.04, cc: clang-15, cxx: clang++-15 }
+          - { os: ubuntu-24.04, cc: clang-16, cxx: clang++-16 }
           - { os: ubuntu-latest, cc: clang-17, cxx: clang++-17 }
           - { os: ubuntu-latest, cc: clang-18, cxx: clang++-18 }
 
@@ -782,9 +783,9 @@ jobs:
           - { os: ubuntu-latest, cc: gcc-12, cxx: g++-12 }
           - { os: ubuntu-24.04, cc: gcc-13, cxx: g++-13 }
           - { os: ubuntu-24.04, cc: gcc-14, cxx: g++-14 }
-          - { os: ubuntu-latest, cc: clang-14, cxx: clang++-14 }
-          - { os: ubuntu-latest, cc: clang-15, cxx: clang++-15 }
-          - { os: ubuntu-latest, cc: clang-16, cxx: clang++-16 }
+          - { os: ubuntu-24.04, cc: clang-14, cxx: clang++-14 }
+          - { os: ubuntu-24.04, cc: clang-15, cxx: clang++-15 }
+          - { os: ubuntu-24.04, cc: clang-16, cxx: clang++-16 }
           - { os: ubuntu-latest, cc: clang-17, cxx: clang++-17 }
           - { os: ubuntu-latest, cc: clang-18, cxx: clang++-18 }
 
@@ -1017,6 +1018,7 @@ jobs:
             git
           pacboy: >-
             toolchain:p
+            make:p
             cmake:p
 
       - name: install bake

@@ -201,7 +201,7 @@ const char* ecs_cpp_trim_module(
             type_name += 2;
         } else {
             // Type is not a child of current parent, trim entire path
-            char *ptr = strrchr(type_name, ':');
+            const char *ptr = strrchr(type_name, ':');
             if (ptr) {
                 type_name = ptr + 1;
             }

@@ -367,7 +367,7 @@ static int flecs_add_member_to_struct(
             "the base of other structs", name);
         ecs_vec_init_if_t(&s->members, ecs_member_t);
         ecs_member_t *elem = ecs_vec_append_t(NULL, &s->members, ecs_member_t);
-        elem->name = NULL;
+        ecs_os_zeromem(elem);
         flecs_set_struct_member(elem, member_entity, &m, unit);
         count ++;
     }

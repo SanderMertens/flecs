@@ -1338,3 +1338,51 @@ void StructTypes_struct_wo_members_add_member(void) {
 
     ecs_fini(world);
 }
+
+static void* (*struct_test_os_malloc)(ecs_size_t size);
+static void* (*struct_test_os_realloc)(void *ptr, ecs_size_t size);
+
+static void* struct_test_poison_malloc(ecs_size_t size) {
+    void *result = struct_test_os_malloc(size);
+    if (result) {
+        ecs_os_memset(result, 0xAA, size);
+    }
+    return result;
+}
+
+static void* struct_test_poison_realloc(void *ptr, ecs_size_t size) {
+    void *result = struct_test_os_realloc(ptr, size);
+    if (result && !ptr) {
+        ecs_os_memset(result, 0xAA, size);
+    }
+    return result;
+}
+
+void StructTypes_member_size_initialized_on_layout_error(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    struct_test_os_malloc = os_api.malloc_;
+    struct_test_os_realloc = os_api.realloc_;
+    os_api.malloc_ = struct_test_poison_malloc;
+    os_api.realloc_ = struct_test_poison_realloc;
+    os_api.log_level_ = -4;
+    ecs_os_set_api(&os_api);
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_entity(world, { .name = "T" });
+
+    ecs_log_set_level(-4);
+    test_int(ecs_struct_add_member(world, t, &(ecs_member_t){
+        .name = "x", .type = ecs_id(ecs_i32_t), .count = INT32_MAX
+    }), -1);
+
+    const EcsStruct *st = ecs_get(world, t, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 1);
+
+    const ecs_member_t *m = ecs_vec_first_t(&st->members, ecs_member_t);
+    test_int(m->size, 0);
+
+    ecs_fini(world);
+}
