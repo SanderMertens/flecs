@@ -597,7 +597,7 @@ static void flecs_parser_errorv(
             }
 
             /* Strip newlines from current statement, if any */            
-            char *newline_ptr = strchr(expr, '\n');
+            const char *newline_ptr = strchr(expr, '\n');
             if (newline_ptr) {
                 /* Strip newline from expr */
                 ecs_strbuf_appendstrn(&msg_buf, expr, 

@@ -185,6 +185,7 @@ void StructTypes_i32_i64_i32(void);
 void StructTypes_incomplete_member(void);
 void StructTypes_partial_type(void);
 void StructTypes_partial_type_custom_offset(void);
+void StructTypes_member_size_initialized_on_layout_error(void);
 void StructTypes_struct_w_short_notation(void);
 void StructTypes_value_range(void);
 void StructTypes_error_range(void);
@@ -2327,6 +2328,10 @@ bake_test_case StructTypes_testcases[] = {
     {
         "partial_type_custom_offset",
         StructTypes_partial_type_custom_offset
+    },
+    {
+        "member_size_initialized_on_layout_error",
+        StructTypes_member_size_initialized_on_layout_error
     },
     {
         "struct_w_short_notation",
@@ -8081,7 +8086,7 @@ static bake_test_suite suites[] = {
         "StructTypes",
         NULL,
         NULL,
-        42,
+        43,
         StructTypes_testcases
     },
     {

@@ -1849,7 +1849,7 @@ static int flecs_expr_identifier_variable_member_visit_type(
     const ecs_expr_eval_desc_t *desc,
     bool swizzle_expand_allowed)
 {
-    char *member_sep = strchr(node->value, '.');
+    char *member_sep = ECS_CONST_CAST(char*, strchr(node->value, '.'));
     while (member_sep) {
         if (member_sep != node->value && member_sep[-1] == '\\') {
             member_sep = strchr(member_sep + 1, '.');
@@ -3290,7 +3290,7 @@ static int flecs_expr_function_visit_type(
         ecs_expr_identifier_t *ident = (ecs_expr_identifier_t*)node->left;
         func_identifier = ident->value;
 
-        last_elem = strrchr(func_identifier, '.');
+        last_elem = ECS_CONST_CAST(char*, strrchr(func_identifier, '.'));
         if (last_elem && last_elem != ident->value && last_elem[-1] != '\\') {
             node->function_name = last_elem + 1;
             last_elem[0] = '\0';
@@ -3304,7 +3304,7 @@ static int flecs_expr_function_visit_type(
         /* This is a method. Just like identifiers, method strings can contain
          * separators. Split off last separator to get the method. */
         ecs_expr_member_t *member = (ecs_expr_member_t*)node->left;
-        last_elem = strrchr(member->member_name, '.');
+        last_elem = ECS_CONST_CAST(char*, strrchr(member->member_name, '.'));
         if (!last_elem) {
             node->left = member->left;
             node->function_name = member->member_name;

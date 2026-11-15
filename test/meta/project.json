@@ -198,6 +198,7 @@
                 "incomplete_member",
                 "partial_type",
                 "partial_type_custom_offset",
+                "member_size_initialized_on_layout_error",
                 "struct_w_short_notation",
                 "value_range",
                 "error_range",
