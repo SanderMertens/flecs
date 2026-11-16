@@ -61148,6 +61148,29 @@ static int flecs_rtt_gen_collection_hook(
     return 0;
 }
 
+static int flecs_rtt_gen_underlying_hook(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    ecs_entity_t underlying,
+    bool equals)
+{
+    if (!underlying || underlying == component ||
+        flecs_rtt_ensure_hook(world, underlying, equals))
+    {
+        return -1;
+    }
+
+    const ecs_type_info_t *underlying_ti = ecs_get_type_info(
+        world, underlying);
+    const ecs_type_info_t *ti = ecs_get_type_info(world, component);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_type_hooks_t hooks = ti->hooks;
+    flecs_rtt_set_hook(&hooks, equals,
+        underlying_ti->hooks.cmp, underlying_ti->hooks.equals);
+    ecs_set_hooks_id(world, component, &hooks);
+    return 0;
+}
+
 static int flecs_rtt_ensure_hook(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -61192,9 +61215,15 @@ static int flecs_rtt_ensure_hook(
         return flecs_rtt_gen_collection_hook(world, type,
             m ? m->type : 0, equals, flecs_rtt_map_cmp, flecs_rtt_map_equals);
     }
-    case EcsPrimitiveType:
+    case EcsEnumType: {
+        const EcsEnum *e = ecs_get(world, type, EcsEnum);
+        return flecs_rtt_gen_underlying_hook(world, type,
+            e ? e->underlying_type : 0, equals);
+    }
     case EcsBitmaskType:
-    case EcsEnumType:
+        return flecs_rtt_gen_underlying_hook(world, type,
+            ecs_id(ecs_u32_t), equals);
+    case EcsPrimitiveType:
     case EcsOpaqueType:
     case EcsValueType:
         break;

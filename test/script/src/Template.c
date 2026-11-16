@@ -10611,3 +10611,47 @@ void Template_template_in_if_scope_in_entity_scope(void) {
 
     ecs_fini(world);
 }
+
+void Template_template_prop_runtime_enum(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t color = ecs_enum(world, {
+        .entity = ecs_entity(world, { .name = "Color" }),
+        .constants = { { .name = "Red" }, { .name = "Green" } }
+    });
+    test_assert(color != 0);
+
+    test_int(ecs_set_rtt_equals(world, color), 0);
+
+    const char *expr =
+    HEAD "template Probe {"
+    LINE "  prop value: Color = Red"
+    LINE "}"
+    LINE "p { Probe(value: Green) }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Template_template_prop_runtime_bitmask(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t flags = ecs_bitmask(world, {
+        .entity = ecs_entity(world, { .name = "Flags" }),
+        .constants = { { .name = "A", .value = 1 }, { .name = "B", .value = 2 } }
+    });
+    test_assert(flags != 0);
+
+    test_int(ecs_set_rtt_equals(world, flags), 0);
+
+    const char *expr =
+    HEAD "template Probe {"
+    LINE "  prop value: Flags = A"
+    LINE "}"
+    LINE "p { Probe(value: B) }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_fini(world);
+}
