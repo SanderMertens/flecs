@@ -15878,29 +15878,10 @@ static bool flecs_component_mark_non_fragmenting_childof(
         return true;
     }
 
-    childof_cr->flags |= EcsIdMarkedForDelete;
-
-    if (force_delete) {
-        flecs_tree_spawner_fini(world, tgt);
-    }
-
     flecs_marked_id_push(world, childof_cr, EcsDelete, true);
 
-    ecs_pair_record_t *pr = childof_cr->pair;
-
-    int32_t i, count = ecs_vec_count(&pr->ordered_children);
-    ecs_entity_t *children = ecs_vec_first(&pr->ordered_children);
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = children[i];
-
-        ecs_component_record_t *tgt_cr = flecs_components_get(
-            world, ecs_pair(EcsWildcard, e));
-        if (!tgt_cr) {
-            continue;
-        }
-
-        flecs_component_mark_for_delete(world, tgt_cr, 0, true, force_delete);
-    }
+    flecs_component_delete_non_fragmenting_childof(
+        world, childof_cr, force_delete, false);
 
     return false;
 }
