@@ -22347,6 +22347,7 @@ ecs_member_t* ecs_cpp_last_member(
 
 // STL includes
 #include <type_traits>
+#include <functional> // std::is_bind_expression
 
 /**
  * @defgroup cpp C++ API
@@ -23751,15 +23752,28 @@ template <typename ClassType, typename ReturnType, typename... Args>
 struct function_traits_impl<ReturnType(ClassType::*)(Args...) const volatile&&>
     : function_traits_defs<ReturnType, Args...> {};
 
-/** @private Primary template for function_traits_no_cv. */
+/** @private Primary template for function_traits_call_op. */
 template <typename T, typename V = void>
-struct function_traits_no_cv
+struct function_traits_call_op
     : function_traits_impl<T> {};
 
 /** @private Specialization for callable objects with operator(). */
 template <typename T>
-struct function_traits_no_cv<T, decltype((void)&T::operator())>
+struct function_traits_call_op<T, decltype((void)&T::operator())>
     : function_traits_impl<decltype(&T::operator())> {};
+
+/** @private Primary template for function_traits_no_cv. */
+template <typename T, bool = std::is_bind_expression<T>::value>
+struct function_traits_no_cv
+    : function_traits_call_op<T> {};
+
+/** @private Specialization for std::bind objects. Their operator() is an
+ * overloaded template, so its signature cannot be deduced. Taking the address
+ * of it is not reliably SFINAE-friendly (e.g. on MSVC), so it is never
+ * attempted for bind expressions. */
+template <typename T>
+struct function_traits_no_cv<T, true>
+    : function_traits_impl<T> {};
 
 /** @private Front-facing template that decays T before extracting traits. */
 template <typename T>
@@ -31917,6 +31931,22 @@ struct each_callback_args<arg_list<First, Second, Args...>,
     using type = typename each_normalize_args<arg_list<Args...>, Normalize>::type;
 };
 
+/** Get the argument list of an each-callback. Callables for which the
+ * signature cannot be deduced (such as std::bind objects) have no component
+ * arguments. */
+template <typename Func, bool = is_callable<Func>::value>
+struct each_callback_arg_list {
+    using type = arg_list<>;
+};
+
+template <typename Func>
+struct each_callback_arg_list<Func, true> {
+    using type = arg_list_t<Func>;
+};
+
+template <typename Func>
+using each_callback_arg_list_t = typename each_callback_arg_list<Func>::type;
+
 template <typename Delegate, ecs_iter_action_t Action, bool Run,
     typename Desc, typename Func>
 void set_callback(Desc& desc, Func&& func) {
@@ -35486,7 +35516,7 @@ void world_each(const flecs::world& world, Func&& func, arg_list<Components...>)
 
 template <typename Func>
 inline void world::each(Func&& func) const {
-    using Components = typename _::each_callback_args<arg_list_t<Func>, int, false>::type;
+    using Components = typename _::each_callback_args<_::each_callback_arg_list_t<Func>, int, false>::type;
     _::world_each(*this, FLECS_FWD(func), Components{});
 }
 
@@ -35669,7 +35699,7 @@ struct observer final : entity
     template <typename Func>
     observer& each(Func&& func) {
         using CallbackComponents =
-            typename _::each_callback_args<arg_list_t<Func>>::type;
+            typename _::each_callback_args<_::each_callback_arg_list_t<Func>>::type;
         ecs_observer_desc_t desc = {};
         _::set_each_callback<false>(desc, FLECS_FWD(func), CallbackComponents{});
         ecs_observer_update(world_, id_, &desc);
@@ -35681,7 +35711,7 @@ struct observer final : entity
     template <typename Func>
     observer& run_each(Func&& func) {
         using CallbackComponents =
-            typename _::each_callback_args<arg_list_t<Func>>::type;
+            typename _::each_callback_args<_::each_callback_arg_list_t<Func>>::type;
         ecs_observer_desc_t desc = {};
         _::set_each_callback<true>(desc, FLECS_FWD(func), CallbackComponents{});
         ecs_observer_update(world_, id_, &desc);
@@ -36249,7 +36279,7 @@ struct system final : entity
     template <typename Func>
     system& each(Func&& func) {
         using CallbackComponents =
-            typename _::each_callback_args<arg_list_t<Func>>::type;
+            typename _::each_callback_args<_::each_callback_arg_list_t<Func>>::type;
         ecs_system_desc_t desc = {};
         _::set_each_callback<false>(desc, FLECS_FWD(func), CallbackComponents{});
         ecs_system_update(world_, id_, &desc);
@@ -36261,7 +36291,7 @@ struct system final : entity
     template <typename Func>
     system& run_each(Func&& func) {
         using CallbackComponents =
-            typename _::each_callback_args<arg_list_t<Func>>::type;
+            typename _::each_callback_args<_::each_callback_arg_list_t<Func>>::type;
         ecs_system_desc_t desc = {};
         _::set_each_callback<true>(desc, FLECS_FWD(func), CallbackComponents{});
         ecs_system_update(world_, id_, &desc);
@@ -36386,7 +36416,7 @@ template <typename Func>
 inline system system_builder<Components...>::each(Func&& func) {
     if constexpr (sizeof...(Components) == 0) {
         using CallbackComponents =
-            typename _::each_callback_args<arg_list_t<Func>>::type;
+            typename _::each_callback_args<_::each_callback_arg_list_t<Func>>::type;
         return this->each_callback(CallbackComponents{}, FLECS_FWD(func));
     } else {
         // Faster version of each() that iterates the query on the C++ side.

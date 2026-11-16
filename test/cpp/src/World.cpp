@@ -1,4 +1,5 @@
 #include <cpp.h>
+#include <functional>
 
 void World_multi_world_empty(void) {
     flecs::world *w1 = new flecs::world();
@@ -2171,4 +2172,30 @@ void World_fini_w_scoped_tag_added_to_builtin(void) {
 
     test_assert(world.entity<flecs::Identifier>().has<outer::ScopedTag>());
     test_assert(world.lookup("::outer::ScopedTag") != 0);
+}
+
+namespace {
+class WorldBindEntityClass {
+public:
+    void my_func(flecs::entity e) {
+        if (e == expect) {
+            count ++;
+        }
+    }
+
+    flecs::entity expect;
+    int32_t count = 0;
+};
+}
+
+void World_each_w_std_bind_entity(void) {
+    flecs::world ecs;
+
+    WorldBindEntityClass obj;
+    obj.expect = ecs.entity();
+
+    ecs.each(std::bind(&WorldBindEntityClass::my_func, &obj,
+        std::placeholders::_1));
+
+    test_int(obj.count, 1);
 }

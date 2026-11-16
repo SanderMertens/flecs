@@ -1,4 +1,5 @@
 #include <cpp.h>
+#include <functional>
 
 void System_iter(void) {
     flecs::world world;
@@ -2514,4 +2515,34 @@ void System_multithread_system_frame_offset(void) {
         test_assert(expect[i] != 0);
         test_uint(actual[i], expect[i]);
     }
+}
+
+namespace {
+class SystemBindEntityClass {
+public:
+    void my_func(flecs::entity e) {
+        test_assert(e != 0);
+        count ++;
+    }
+
+    int32_t count = 0;
+};
+}
+
+void System_each_w_std_bind_entity(void) {
+    flecs::world world;
+
+    world.entity().add<Tag>();
+    world.entity().add<Tag>();
+
+    SystemBindEntityClass obj;
+
+    world.system("my_system")
+        .with<Tag>()
+        .each(std::bind(&SystemBindEntityClass::my_func, &obj,
+            std::placeholders::_1));
+
+    world.progress();
+
+    test_int(obj.count, 2);
 }

@@ -508,6 +508,22 @@ struct each_callback_args<arg_list<First, Second, Args...>,
     using type = typename each_normalize_args<arg_list<Args...>, Normalize>::type;
 };
 
+/** Get the argument list of an each-callback. Callables for which the
+ * signature cannot be deduced (such as std::bind objects) have no component
+ * arguments. */
+template <typename Func, bool = is_callable<Func>::value>
+struct each_callback_arg_list {
+    using type = arg_list<>;
+};
+
+template <typename Func>
+struct each_callback_arg_list<Func, true> {
+    using type = arg_list_t<Func>;
+};
+
+template <typename Func>
+using each_callback_arg_list_t = typename each_callback_arg_list<Func>::type;
+
 template <typename Delegate, ecs_iter_action_t Action, bool Run,
     typename Desc, typename Func>
 void set_callback(Desc& desc, Func&& func) {

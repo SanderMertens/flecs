@@ -366,7 +366,7 @@ void world_each(const flecs::world& world, Func&& func, arg_list<Components...>)
 
 template <typename Func>
 inline void world::each(Func&& func) const {
-    using Components = typename _::each_callback_args<arg_list_t<Func>, int, false>::type;
+    using Components = typename _::each_callback_args<_::each_callback_arg_list_t<Func>, int, false>::type;
     _::world_each(*this, FLECS_FWD(func), Components{});
 }
 

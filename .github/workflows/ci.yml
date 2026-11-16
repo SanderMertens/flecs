@@ -118,6 +118,7 @@ jobs:
             toolchain:p
             make:p
             cmake:p
+            make:p
 
       - name: create cmake build folders
         run: |
@@ -1020,6 +1021,7 @@ jobs:
             toolchain:p
             make:p
             cmake:p
+            make:p
 
       - name: install bake
         run: |

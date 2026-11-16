@@ -682,6 +682,7 @@ void System_lookup_and_update_ctx(void);
 void System_set_group(void);
 void System_run_w_0_src_query(void);
 void System_multithread_system_frame_offset(void);
+void System_each_w_std_bind_entity(void);
 
 // Testsuite 'Event'
 void Event_evt_1_id_entity(void);
@@ -1220,6 +1221,7 @@ void Observer_set_w_on_add_adding_other_w_world(void);
 void Observer_set_w_on_add_adding_other_w_stage(void);
 void Observer_no_terms_custom_event(void);
 void Observer_no_terms_on_add(void);
+void Observer_each_w_std_bind_entity(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -1571,6 +1573,7 @@ void World_get_type_info_R_t_tag(void);
 void World_get_type_info_R_T_tag(void);
 void World_fini_w_scoped_component_added_to_builtin(void);
 void World_fini_w_scoped_tag_added_to_builtin(void);
+void World_each_w_std_bind_entity(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -4435,6 +4438,10 @@ bake_test_case System_testcases[] = {
     {
         "multithread_system_frame_offset",
         System_multithread_system_frame_offset
+    },
+    {
+        "each_w_std_bind_entity",
+        System_each_w_std_bind_entity
     }
 };
 
@@ -6553,6 +6560,10 @@ bake_test_case Observer_testcases[] = {
     {
         "no_terms_on_add",
         Observer_no_terms_on_add
+    },
+    {
+        "each_w_std_bind_entity",
+        Observer_each_w_std_bind_entity
     }
 };
 
@@ -7927,6 +7938,10 @@ bake_test_case World_testcases[] = {
     {
         "fini_w_scoped_tag_added_to_builtin",
         World_fini_w_scoped_tag_added_to_builtin
+    },
+    {
+        "each_w_std_bind_entity",
+        World_each_w_std_bind_entity
     }
 };
 
@@ -8820,7 +8835,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        78,
+        79,
         System_testcases
     },
     {
@@ -8864,7 +8879,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        90,
+        91,
         Observer_testcases
     },
     {
@@ -8906,7 +8921,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        129,
+        130,
         World_testcases
     },
     {
