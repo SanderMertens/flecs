@@ -42,7 +42,7 @@ struct builder : IBuilder<Base, Components...> {
     T run(Func&& func, Each&&... each_func) {
         using Delegate = run_delegate<decay_t<Func>>;
         set_callback<Delegate, Delegate::run, true>(desc_, FLECS_FWD(func));
-        if constexpr (sizeof...(Each)) {
+        if constexpr (sizeof...(Each) != 0) {
             return each(FLECS_FWD(each_func)...);
         } else {
             return build();
