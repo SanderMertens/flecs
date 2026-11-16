@@ -3572,3 +3572,117 @@ void Pipeline_update_pipeline_replaces_existing(void) {
 
     ecs_fini(world);
 }
+
+static void Pipeline_noop(ecs_iter_t *it) { (void)it; }
+
+void Pipeline_write_wildcard_w_fixed_src_term(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_new(world);
+    ecs_entity_t e = ecs_new_w_id(world, tag);
+    ecs_entity_t system = ecs_new(world);
+    ecs_add_pair(world, system, EcsDependsOn, EcsOnUpdate);
+
+    test_assert(system == ecs_system(world, {
+        .entity = system,
+        .query.terms = {
+            { .id = EcsWildcard, .inout = EcsOut, .src.id = EcsIsEntity },
+            { .id = tag, .src.id = e }
+        },
+        .callback = Pipeline_noop
+    }));
+
+    ecs_progress(world, 0);
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+    test_int(stats->merge_count_total, 1);
+
+    ecs_fini(world);
+}
+
+void Pipeline_write_wildcard_w_var_src_term(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_new(world);
+    ecs_new_w_id(world, tag);
+    ecs_entity_t system = ecs_new(world);
+    ecs_add_pair(world, system, EcsDependsOn, EcsOnUpdate);
+
+    test_assert(system == ecs_system(world, {
+        .entity = system,
+        .query.terms = {
+            { .id = EcsWildcard, .inout = EcsOut, .src.id = EcsIsEntity },
+            { .id = tag, .src.name = "$x" }
+        },
+        .callback = Pipeline_noop
+    }));
+
+    ecs_progress(world, 0);
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+    test_int(stats->merge_count_total, 1);
+
+    ecs_fini(world);
+}
+
+void Pipeline_write_id_w_fixed_src_read_term(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_new(world);
+    ecs_entity_t e = ecs_new_w_id(world, tag);
+    ecs_entity_t system = ecs_new(world);
+    ecs_add_pair(world, system, EcsDependsOn, EcsOnUpdate);
+
+    test_assert(system == ecs_system(world, {
+        .entity = system,
+        .query.terms = {
+            { .id = tag, .inout = EcsOut, .src.id = EcsIsEntity },
+            { .id = tag, .src.id = e }
+        },
+        .callback = Pipeline_noop
+    }));
+
+    ecs_progress(world, 0);
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+    test_int(stats->merge_count_total, 1);
+
+    ecs_fini(world);
+}
+
+void Pipeline_write_wildcard_w_fixed_src_term_merge_next_system(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_new(world);
+    ecs_entity_t e = ecs_new_w_id(world, tag);
+
+    ecs_entity_t s1 = ecs_new(world);
+    ecs_add_pair(world, s1, EcsDependsOn, EcsOnUpdate);
+    test_assert(s1 == ecs_system(world, {
+        .entity = s1,
+        .query.terms = {
+            { .id = EcsWildcard, .inout = EcsOut, .src.id = EcsIsEntity },
+            { .id = tag, .src.id = e }
+        },
+        .callback = Pipeline_noop
+    }));
+
+    ecs_entity_t s2 = ecs_new(world);
+    ecs_add_pair(world, s2, EcsDependsOn, EcsOnUpdate);
+    test_assert(s2 == ecs_system(world, {
+        .entity = s2,
+        .query.terms = {
+            { .id = tag, .src.id = e }
+        },
+        .callback = Pipeline_noop
+    }));
+
+    ecs_progress(world, 0);
+
+    /* Writes of the first system must still cause a merge before the second
+     * system, which reads the written component. */
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+    test_int(stats->merge_count_total, 2);
+
+    ecs_fini(world);
+}
