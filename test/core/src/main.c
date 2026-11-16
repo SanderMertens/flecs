@@ -2633,6 +2633,7 @@ void Observer_not_term_on_remove_batched_w_remove(void);
 void Observer_not_term_on_add_batched_w_add(void);
 void Observer_not_term_on_remove_other_entity_matches_up_parent(void);
 void Observer_not_term_on_remove_other_entity_matches_dont_fragment(void);
+void Observer_on_add_dont_fragment_rel_w_var_target(void);
 
 // Testsuite 'ObserverOnSet'
 void ObserverOnSet_set_1_of_1(void);
@@ -14066,6 +14067,10 @@ bake_test_case Observer_testcases[] = {
     {
         "not_term_on_remove_other_entity_matches_dont_fragment",
         Observer_not_term_on_remove_other_entity_matches_dont_fragment
+    },
+    {
+        "on_add_dont_fragment_rel_w_var_target",
+        Observer_on_add_dont_fragment_rel_w_var_target
     }
 };
 
@@ -18614,7 +18619,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        435,
+        436,
         Observer_testcases
     },
     {

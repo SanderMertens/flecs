@@ -16652,3 +16652,52 @@ void Observer_on_set_multi_observer_add_w_world(void) {
     test_expect_abort_code(ECS_LOCKED_STORAGE);
     ecs_set(world, e, Position, {1, 2});
 }
+
+static void Observer_dont_fragment_rel_w_var_target(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+
+    test_int(it->count, 1);
+    Position *p = ecs_field_at(it, Position, 0, 0);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Observer_on_add_dont_fragment_rel_w_var_target(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+    ecs_add_id(world, ecs_id(Position), EcsRelationship);
+
+    ecs_entity_t trait = ecs_new_w_id(world, EcsTrait);
+    ecs_entity_t tgt = ecs_new_w_id(world, trait);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.terms = {
+            { .first.id = ecs_id(Position), .second.name = "$TraitSrc" },
+            { .first.name = "$TraitSrc" },
+            { .first.id = trait, .src.name = "$TraitSrc" }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer_dont_fragment_rel_w_var_target,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set_pair(world, e, Position, tgt, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_add_id(world, e, tgt);
+    test_int(ctx.invoked, 1);
+    test_uint(ctx.e[0], e);
+    test_uint(ctx.event, EcsOnAdd);
+
+    const Position *p = ecs_get_pair(world, e, Position, tgt);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
