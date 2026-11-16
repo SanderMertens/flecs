@@ -8221,9 +8221,14 @@ ecs_entity_t ecs_clone(
     }
 
     ecs_type_t dst_type = dst_table->type;
+    ecs_flags32_t added_flags = dst_table->flags & EcsTableAddEdgeFlags;
+    if (dst_table->flags & EcsTableHasChildOf) {
+        added_flags |= EcsTableEdgeReparent;
+    }
+
     ecs_table_diff_t diff = {
         .added = dst_type,
-        .added_flags = dst_table->flags & EcsTableAddEdgeFlags
+        .added_flags = added_flags
     };
 
     ecs_record_t *dst_r = flecs_entities_get(world, dst);

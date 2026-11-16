@@ -1281,6 +1281,12 @@ void OrderedChildren_lookup_after_clear(void);
 void OrderedChildren_bulk_create_ordered_children(void);
 void OrderedChildren_get_ordered_children_from_prefab_instance_nested_children(void);
 void OrderedChildren_ordered_children_parent_is_traversable(void);
+void OrderedChildren_clone_child_get_ordered_children(void);
+void OrderedChildren_clone_child_remove_parent(void);
+void OrderedChildren_clone_child_delete_clone(void);
+void OrderedChildren_clone_child_delete_parent(void);
+void OrderedChildren_clone_child_fini(void);
+void OrderedChildren_clone_child_w_parent_component_sibling_remove_parent(void);
 
 // Testsuite 'Has'
 void Has_1_of_1(void);
@@ -8739,6 +8745,30 @@ bake_test_case OrderedChildren_testcases[] = {
     {
         "ordered_children_parent_is_traversable",
         OrderedChildren_ordered_children_parent_is_traversable
+    },
+    {
+        "clone_child_get_ordered_children",
+        OrderedChildren_clone_child_get_ordered_children
+    },
+    {
+        "clone_child_remove_parent",
+        OrderedChildren_clone_child_remove_parent
+    },
+    {
+        "clone_child_delete_clone",
+        OrderedChildren_clone_child_delete_clone
+    },
+    {
+        "clone_child_delete_parent",
+        OrderedChildren_clone_child_delete_parent
+    },
+    {
+        "clone_child_fini",
+        OrderedChildren_clone_child_fini
+    },
+    {
+        "clone_child_w_parent_component_sibling_remove_parent",
+        OrderedChildren_clone_child_w_parent_component_sibling_remove_parent
     }
 };
 
@@ -18471,7 +18501,7 @@ static bake_test_suite suites[] = {
         "OrderedChildren",
         NULL,
         NULL,
-        48,
+        54,
         OrderedChildren_testcases
     },
     {
