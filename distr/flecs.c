@@ -22550,6 +22550,7 @@ int ecs_fini(
      * policies get a chance to execute. */
     ecs_dbg_1("#[bold]cleanup root entities");
     ecs_log_push_1();
+    world->flags |= EcsWorldFiniRoots;
     flecs_fini_roots(world);
     ecs_log_pop_1();
 
@@ -79293,6 +79294,10 @@ static void flecs_query_cache_on_rematch_event(
     ecs_assert(impl->cache != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_world_t *world = it->world;
+
+    if (world->flags & (EcsWorldFiniRoots|EcsWorldFini)) {
+        return;
+    }
 
     if (it->table->flags & EcsTableHasParent) {
         const ecs_term_t *term = &o->query->terms[it->term_index];

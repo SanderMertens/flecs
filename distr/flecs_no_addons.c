@@ -20095,6 +20095,7 @@ int ecs_fini(
      * policies get a chance to execute. */
     ecs_dbg_1("#[bold]cleanup root entities");
     ecs_log_push_1();
+    world->flags |= EcsWorldFiniRoots;
     flecs_fini_roots(world);
     ecs_log_pop_1();
 
