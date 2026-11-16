@@ -1551,6 +1551,7 @@ void Scopes_max_scope_nesting(void);
 
 // Testsuite 'Traversal'
 void Traversal_setup(void);
+void Traversal_fini_no_revalidate_alloc(void);
 void Traversal_this_self_up_childof(void);
 void Traversal_this_up_childof(void);
 void Traversal_this_written_self_up_childof(void);
@@ -9086,6 +9087,10 @@ bake_test_case Scopes_testcases[] = {
 
 bake_test_case Traversal_testcases[] = {
     {
+        "fini_no_revalidate_alloc",
+        Traversal_fini_no_revalidate_alloc
+    },
+    {
         "this_self_up_childof",
         Traversal_this_self_up_childof
     },
@@ -15021,7 +15026,7 @@ static bake_test_suite suites[] = {
         "Traversal",
         Traversal_setup,
         NULL,
-        186,
+        187,
         Traversal_testcases,
         1,
         Traversal_params

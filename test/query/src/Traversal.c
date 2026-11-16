@@ -14160,3 +14160,64 @@ void Traversal_this_up_isa_inherited_value_pair(void) {
 
     ecs_fini(world);
 }
+
+static int64_t fini_alloc_bytes = 0;
+static bool fini_alloc_count = false;
+static void* fini_malloc(ecs_size_t size) {
+    if (fini_alloc_count) fini_alloc_bytes += size;
+    return malloc(size);
+}
+static void* fini_realloc(void *ptr, ecs_size_t size) {
+    if (fini_alloc_count) fini_alloc_bytes += size;
+    return realloc(ptr, size);
+}
+static void* fini_calloc(ecs_size_t size) {
+    if (fini_alloc_count) fini_alloc_bytes += size;
+    return calloc(1, size);
+}
+
+void Traversal_fini_no_revalidate_alloc(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t default_api = ecs_os_api;
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.malloc_ = fini_malloc;
+    os_api.realloc_ = fini_realloc;
+    os_api.calloc_ = fini_calloc;
+    ecs_os_set_api(&os_api);
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t tags[200];
+    int i, j;
+    for (i = 0; i < 200; i ++) {
+        tags[i] = ecs_new(world);
+    }
+
+    for (i = 0; i < 10; i ++) {
+        ecs_query(world, {
+            .terms = {{ ecs_id(Position), .src.id = EcsSelf|EcsUp, .trav = EcsChildOf }},
+            .cache_kind = EcsQueryCacheAuto
+        });
+    }
+
+    for (i = 0; i < 200; i ++) {
+        ecs_entity_t root = ecs_new(world);
+        ecs_entity_t parent = ecs_new_w_pair(world, EcsChildOf, root);
+        ecs_add(world, parent, Position);
+        ecs_add_id(world, parent, tags[i]);
+        for (j = 0; j < 200; j ++) {
+            ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+            ecs_add_id(world, child, tags[j]);
+        }
+    }
+
+    fini_alloc_bytes = 0;
+    fini_alloc_count = true;
+    ecs_fini(world);
+    fini_alloc_count = false;
+
+    ecs_os_set_api(&default_api);
+
+    test_assert(fini_alloc_bytes < 1024 * 1024);
+}
