@@ -3227,7 +3227,7 @@ The arrows in this diagram indicate the direction in which the query is traversi
 
 Using the relationship traversal feature will in most cases provide better performance than doing the traversal in user code. This is especially true for cached queries, where the results of traversal are cached. Relationship traversal can in some edge cases cause performance degradation, especially in applications with large numbers of cached queries and deep hierarchies. See the section on performance & rematching for more details.
 
-Any relationship used for traversal must have the [Traversable](Relationships.md#traversable-property) property. Attempting to create a query that traverses a relationship that does not have the `Traversable` property will cause query creation to fail. This safeguards against creating queries that could end up in an infinite traversal loop when a cyclic relationship is encountered.
+Any relationship used for traversal must have the [Traversable](ComponentTraits.md#traversable-trait) property. Attempting to create a query that traverses a relationship that does not have the `Traversable` property will cause query creation to fail. This safeguards against creating queries that could end up in an infinite traversal loop when a cyclic relationship is encountered.
 
 Relationship traversal works for both variable and fixed [sources](#source).
 
@@ -4837,7 +4837,7 @@ q.run(it -> {
 ### Component Inheritance
 Component inheritance allows for a query to match entities with a component and all subsets of that component, as defined by the `IsA` relationship. Component inheritance is enabled for all queries by default, for components where it applies.
 
-It is possible to prevent inheriting from a component from by adding the [Final](Relationships.md#final-property) property. Queries for components with the `Final` property will not attempt to resolve component inheritance.
+It is possible to prevent inheriting from a component from by adding the [Final](ComponentTraits.md#final-trait) property. Queries for components with the `Final` property will not attempt to resolve component inheritance.
 
 Inheritance relationships can, but are not required to mirror inheritance of the types used as long as it does not impact the layout of the type. Component inheritance is most often used with tags.
 
@@ -4935,13 +4935,13 @@ Query q = world.query(Unit.class);
 </div>
 
 ### Transitive Relationships
-When a [transitive relationship](Relationships.md#transitive-relationships) is used by a query, a query will automatically look up or test against pairs that satisfy the transitive property. Transitivity is usually defined as:
+When a [transitive relationship](#transitive-relationships) is used by a query, a query will automatically look up or test against pairs that satisfy the transitive property. Transitivity is usually defined as:
 
 > If R(X, Y) and R(Y, Z) then R(X, Z)
 
 In this example, `R` is the transitive relationship and `X`, `Y` and `Z` are entities that are used both as source and second element. A typical example of a transitive relationship is `LocatedIn`. If Bob (X) is located in Manhattan (Y) and Manhattan (Y) is located in New York (Z), then Bob (X) is also located in New York (Z). Therefore "located in" is transitive.
 
-A relationship can be made transitive by adding the [transitive](Relationships.md#transitive-property) property. This would ensure that both `(LocatedIn, ManHattan)` and `(LocatedIn, NewYork)` queries would match `Bob`. When the location is replaced with a variable, the variable will assume all values encountered while traversing the transitive relationship. For example, `(LocatedIn, $Place)` would return results with `Place = [ManHattan, NewYork]` for `Bob`, and a result with `Place = [NewYork]` for `ManHattan`.
+A relationship can be made transitive by adding the [transitive](ComponentTraits.md#transitive-trait) property. This would ensure that both `(LocatedIn, ManHattan)` and `(LocatedIn, NewYork)` queries would match `Bob`. When the location is replaced with a variable, the variable will assume all values encountered while traversing the transitive relationship. For example, `(LocatedIn, $Place)` would return results with `Place = [ManHattan, NewYork]` for `Bob`, and a result with `Place = [NewYork]` for `ManHattan`.
 
 An example of a builtin relationship that has the `Transitive` property is the `IsA` relationship.
 
@@ -5207,7 +5207,7 @@ Query q = world.query()
 </div>
 
 ### Reflexive Relationships
-When a query matches a [reflexive](Relationships.md#reflexive-property) relationship, a query term will evaluate to true if the source and target are equal. Reflexivity can be defined as:
+When a query matches a [reflexive](ComponentTraits.md#reflexive-trait) relationship, a query term will evaluate to true if the source and target are equal. Reflexivity can be defined as:
 
 > R(X, X)
 

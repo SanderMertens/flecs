@@ -542,7 +542,7 @@ System.out.println("Component size: " + c.size());
 </ul>
 </div>
 
-Because components are stored as regular entities, they can in theory also be deleted. To prevent unexpected accidents however, by default components are registered with a tag that prevents them from being deleted. If this tag were to be removed, deleting a component would cause it to be removed from all entities. For more information on these policies, see [Relationship cleanup properties](Relationships.md#cleanup-properties).
+Because components are stored as regular entities, they can in theory also be deleted. To prevent unexpected accidents however, by default components are registered with a tag that prevents them from being deleted. If this tag were to be removed, deleting a component would cause it to be removed from all entities. For more information on these policies, see [Cleanup traits](ComponentTraits.md#cleanup-traits).
 
 ### Tag
 A tag is a component that does not have any data. In Flecs tags can be either empty types (in C++) or regular entities (C & C++) that do not have the `EcsComponent` component (or have an `EcsComponent` component with size 0). Tags can be added & removed using the same APIs as adding & removing components, but because tags have no data, they cannot be assigned a value. Because tags (like components) are regular entities, they can be created & deleted at runtime.
@@ -683,7 +683,7 @@ e2.has(enemy); // false!
 
 Note that both options in the C++ example achieve the same effect. The only difference is that in option 1 the tag is fixed at compile time, whereas in option 2 the tag can be created dynamically at runtime.
 
-When a tag is deleted, the same rules apply as for components (see [Relationship cleanup properties](Relationships.md#cleanup-properties)).
+When a tag is deleted, the same rules apply as for components (see [Cleanup traits](ComponentTraits.md#cleanup-traits)).
 
 ### Pair
 A pair is a combination of two entity ids. Pairs can be used to store entity relationships, where the first id represents the relationship kind and the second id represents the relationship target (called "object"). This is best explained by an example:
