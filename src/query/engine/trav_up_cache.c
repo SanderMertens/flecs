@@ -270,8 +270,9 @@ int flecs_query_up_reachable(
         ecs_entity_index_t *entity_index = ecs_eis(world);
         r = flecs_entity_index_get_any(entity_index, 
             ECS_PAIR_SECOND(cr_rel->id));
-        ecs_assert(r->dense < entity_index->alive_count, 
-            ECS_INTERNAL_ERROR, NULL);
+        if (!r || r->dense >= entity_index->alive_count) {
+            goto not_found;
+        }
         parent = ecs_vec_get_t(&entity_index->dense, uint64_t, r->dense)[0];
     }
 

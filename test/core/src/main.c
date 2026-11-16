@@ -1108,6 +1108,7 @@ void NonFragmentingChildOf_delete_parent_w_observer_deleting_sibling(void);
 void NonFragmentingChildOf_delete_parent_w_observer_reparenting_sibling(void);
 void NonFragmentingChildOf_delete_parent_used_as_target_w_observer_deleting_sibling(void);
 void NonFragmentingChildOf_delete_parent_used_as_target_w_observer_reparenting_sibling(void);
+void NonFragmentingChildOf_delete_mixed_hierarchy_w_on_remove_up_observer(void);
 void NonFragmentingChildOf_delete_root_w_parent_table_cleared_before_children(void);
 void NonFragmentingChildOf_delete_root_w_ordered_parent_table_cleared_before_children(void);
 
@@ -8069,6 +8070,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "delete_parent_used_as_target_w_observer_reparenting_sibling",
         NonFragmentingChildOf_delete_parent_used_as_target_w_observer_reparenting_sibling
+    },
+    {
+        "delete_mixed_hierarchy_w_on_remove_up_observer",
+        NonFragmentingChildOf_delete_mixed_hierarchy_w_on_remove_up_observer
     },
     {
         "delete_root_w_parent_table_cleared_before_children",
@@ -18497,7 +18502,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        322,
+        323,
         NonFragmentingChildOf_testcases
     },
     {

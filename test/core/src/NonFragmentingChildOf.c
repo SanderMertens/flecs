@@ -8758,6 +8758,32 @@ void NonFragmentingChildOf_delete_parent_used_as_target_w_observer_reparenting_s
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_delete_mixed_hierarchy_w_on_remove_up_observer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t ancestor = ecs_new(world);
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_pair(EcsChildOf, EcsWildcard) },
+            { .id = ancestor, .src.id = EcsUp }
+        },
+        .events = { EcsOnRemove },
+        .callback = DummyObserver
+    });
+
+    ecs_entity_t root = ecs_new_w_id(world, ancestor);
+    ecs_entity_t parent = ecs_new_w_parent(world, root, NULL);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_delete(world, root);
+
+    test_assert(!ecs_is_alive(world, root));
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, child));
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_delete_root_w_parent_table_cleared_before_children(void) {
     ecs_world_t *world = ecs_mini();
 
