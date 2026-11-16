@@ -1142,6 +1142,7 @@
                 "delete_parent_w_observer_reparenting_sibling",
                 "delete_parent_used_as_target_w_observer_deleting_sibling",
                 "delete_parent_used_as_target_w_observer_reparenting_sibling",
+                "delete_mixed_hierarchy_w_on_remove_up_observer",
                 "delete_root_w_parent_table_cleared_before_children",
                 "delete_root_w_ordered_parent_table_cleared_before_children"
             ]
