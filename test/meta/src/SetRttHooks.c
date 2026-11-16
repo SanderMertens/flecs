@@ -673,6 +673,96 @@ void SetRttHooks_equals_struct_w_inline_array_in_use(void) {
     ecs_fini(world);
 }
 
+void SetRttHooks_compare_runtime_enum(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_enum(world, {
+        .entity = ecs_entity(world, { .name = "Color" }),
+        .constants = {{ .name = "Red" }, { .name = "Green" }, { .name = "Blue" }}
+    });
+
+    test_int(ecs_set_rtt_compare(world, t), 0);
+
+    ecs_i32_t a = 0, b = 2, c = 0;
+    test_assert(value_cmp(world, t, &a, &b) < 0);
+    test_assert(value_cmp(world, t, &b, &a) > 0);
+    test_int(value_cmp(world, t, &a, &c), 0);
+
+    ecs_fini(world);
+}
+
+void SetRttHooks_equals_runtime_enum(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_enum(world, {
+        .entity = ecs_entity(world, { .name = "Color" }),
+        .constants = {{ .name = "Red" }, { .name = "Green" }, { .name = "Blue" }}
+    });
+
+    test_int(ecs_set_rtt_equals(world, t), 0);
+
+    ecs_i32_t a = 0, b = 2, c = 0;
+    test_bool(value_eq(world, t, &a, &b), false);
+    test_bool(value_eq(world, t, &a, &c), true);
+
+    ecs_fini(world);
+}
+
+void SetRttHooks_equals_runtime_enum_w_underlying_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_enum(world, {
+        .entity = ecs_entity(world, { .name = "Color" }),
+        .underlying_type = ecs_id(ecs_u8_t),
+        .constants = {{ .name = "Red" }, { .name = "Green" }, { .name = "Blue" }}
+    });
+
+    test_int(ecs_set_rtt_compare(world, t), 0);
+    test_int(ecs_set_rtt_equals(world, t), 0);
+
+    ecs_u8_t a = 1, b = 2, c = 1;
+    test_assert(value_cmp(world, t, &a, &b) < 0);
+    test_bool(value_eq(world, t, &a, &b), false);
+    test_bool(value_eq(world, t, &a, &c), true);
+
+    ecs_fini(world);
+}
+
+void SetRttHooks_compare_runtime_bitmask(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_bitmask(world, {
+        .entity = ecs_entity(world, { .name = "Flags" }),
+        .constants = {{ .name = "A", .value = 1 }, { .name = "B", .value = 2 }}
+    });
+
+    test_int(ecs_set_rtt_compare(world, t), 0);
+
+    ecs_u32_t a = 1, b = 3, c = 1;
+    test_assert(value_cmp(world, t, &a, &b) < 0);
+    test_assert(value_cmp(world, t, &b, &a) > 0);
+    test_int(value_cmp(world, t, &a, &c), 0);
+
+    ecs_fini(world);
+}
+
+void SetRttHooks_equals_runtime_bitmask(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_bitmask(world, {
+        .entity = ecs_entity(world, { .name = "Flags" }),
+        .constants = {{ .name = "A", .value = 1 }, { .name = "B", .value = 2 }}
+    });
+
+    test_int(ecs_set_rtt_equals(world, t), 0);
+
+    ecs_u32_t a = 1, b = 3, c = 1;
+    test_bool(value_eq(world, t, &a, &b), false);
+    test_bool(value_eq(world, t, &a, &c), true);
+
+    ecs_fini(world);
+}
+
 void SetRttHooks_compare_struct_w_nested_struct_after_primitive(void) {
     ecs_world_t *world = ecs_init();
 

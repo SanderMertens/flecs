@@ -1767,7 +1767,9 @@
                 "template_in_root_scope_no_name",
                 "template_in_anonymous_entity_scope",
                 "template_in_interpolated_entity_scope",
-                "template_in_if_scope_in_entity_scope"
+                "template_in_if_scope_in_entity_scope",
+                "template_prop_runtime_enum",
+                "template_prop_runtime_bitmask"
             ]
         }, {
             "id": "Mut",

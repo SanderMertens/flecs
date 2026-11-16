@@ -1726,6 +1726,8 @@ void Template_template_in_root_scope_no_name(void);
 void Template_template_in_anonymous_entity_scope(void);
 void Template_template_in_interpolated_entity_scope(void);
 void Template_template_in_if_scope_in_entity_scope(void);
+void Template_template_prop_runtime_enum(void);
+void Template_template_prop_runtime_bitmask(void);
 
 // Testsuite 'Mut'
 void Mut_setup(void);
@@ -11631,6 +11633,14 @@ bake_test_case Template_testcases[] = {
     {
         "template_in_if_scope_in_entity_scope",
         Template_template_in_if_scope_in_entity_scope
+    },
+    {
+        "template_prop_runtime_enum",
+        Template_template_prop_runtime_enum
+    },
+    {
+        "template_prop_runtime_bitmask",
+        Template_template_prop_runtime_bitmask
     }
 };
 
@@ -24014,7 +24024,7 @@ static bake_test_suite suites[] = {
         "Template",
         Template_setup,
         NULL,
-        219,
+        221,
         Template_testcases,
         1,
         Template_params

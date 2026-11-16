@@ -1562,6 +1562,11 @@ void SetRttHooks_compare_struct_in_use(void);
 void SetRttHooks_equals_struct_in_use(void);
 void SetRttHooks_compare_array_of_struct_in_use(void);
 void SetRttHooks_equals_struct_w_inline_array_in_use(void);
+void SetRttHooks_compare_runtime_enum(void);
+void SetRttHooks_equals_runtime_enum(void);
+void SetRttHooks_equals_runtime_enum_w_underlying_type(void);
+void SetRttHooks_compare_runtime_bitmask(void);
+void SetRttHooks_equals_runtime_bitmask(void);
 void SetRttHooks_compare_struct_w_nested_struct_after_primitive(void);
 void SetRttHooks_equals_struct_w_nested_struct_after_primitive(void);
 
@@ -7735,6 +7740,26 @@ bake_test_case SetRttHooks_testcases[] = {
         SetRttHooks_equals_struct_w_inline_array_in_use
     },
     {
+        "compare_runtime_enum",
+        SetRttHooks_compare_runtime_enum
+    },
+    {
+        "equals_runtime_enum",
+        SetRttHooks_equals_runtime_enum
+    },
+    {
+        "equals_runtime_enum_w_underlying_type",
+        SetRttHooks_equals_runtime_enum_w_underlying_type
+    },
+    {
+        "compare_runtime_bitmask",
+        SetRttHooks_compare_runtime_bitmask
+    },
+    {
+        "equals_runtime_bitmask",
+        SetRttHooks_equals_runtime_bitmask
+    },
+    {
         "compare_struct_w_nested_struct_after_primitive",
         SetRttHooks_compare_struct_w_nested_struct_after_primitive
     },
@@ -8243,7 +8268,7 @@ static bake_test_suite suites[] = {
         "SetRttHooks",
         NULL,
         NULL,
-        24,
+        29,
         SetRttHooks_testcases
     },
     {
