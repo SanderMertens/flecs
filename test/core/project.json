@@ -1320,7 +1320,13 @@
                 "lookup_after_clear",
                 "bulk_create_ordered_children",
                 "get_ordered_children_from_prefab_instance_nested_children",
-                "ordered_children_parent_is_traversable"
+                "ordered_children_parent_is_traversable",
+                "clone_child_get_ordered_children",
+                "clone_child_remove_parent",
+                "clone_child_delete_clone",
+                "clone_child_delete_parent",
+                "clone_child_fini",
+                "clone_child_w_parent_component_sibling_remove_parent"
             ]
         }, {
             "id": "Has",

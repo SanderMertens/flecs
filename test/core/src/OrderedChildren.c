@@ -1786,3 +1786,107 @@ void OrderedChildren_ordered_children_parent_is_traversable(void) {
 
     ecs_fini(world);
 }
+
+void OrderedChildren_clone_child_get_ordered_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_entity_t clone = ecs_clone(world, 0, child, false);
+    test_assert(clone != 0);
+    test_assert(ecs_has_pair(world, clone, EcsChildOf, parent));
+
+    ecs_entities_t oc = ecs_get_ordered_children(world, parent);
+    test_int(oc.count, 2);
+    test_uint(oc.ids[0], child);
+    test_uint(oc.ids[1], clone);
+
+    ecs_fini(world);
+}
+
+void OrderedChildren_clone_child_remove_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_entity_t clone = ecs_clone(world, 0, child, false);
+    ecs_remove_pair(world, clone, EcsChildOf, parent);
+    test_assert(!ecs_has_pair(world, clone, EcsChildOf, parent));
+
+    ecs_entities_t oc = ecs_get_ordered_children(world, parent);
+    test_int(oc.count, 1);
+    test_uint(oc.ids[0], child);
+
+    ecs_fini(world);
+}
+
+void OrderedChildren_clone_child_delete_clone(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_entity_t clone = ecs_clone(world, 0, child, false);
+    ecs_delete(world, clone);
+    test_assert(!ecs_is_alive(world, clone));
+
+    ecs_entities_t oc = ecs_get_ordered_children(world, parent);
+    test_int(oc.count, 1);
+    test_uint(oc.ids[0], child);
+
+    ecs_fini(world);
+}
+
+void OrderedChildren_clone_child_delete_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_entity_t clone = ecs_clone(world, 0, child, false);
+    ecs_delete(world, parent);
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, child));
+    test_assert(!ecs_is_alive(world, clone));
+
+    ecs_fini(world);
+}
+
+void OrderedChildren_clone_child_fini(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_entity_t clone = ecs_clone(world, 0, child, false);
+    test_assert(clone != 0);
+
+    ecs_fini(world);
+}
+
+void OrderedChildren_clone_child_w_parent_component_sibling_remove_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child_a = ecs_new(world);
+    ecs_set(world, child_a, EcsParent, {parent});
+    ecs_entity_t child_b = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_entity_t clone = ecs_clone(world, 0, child_b, false);
+    ecs_remove_pair(world, clone, EcsChildOf, parent);
+    test_assert(!ecs_has_pair(world, clone, EcsChildOf, parent));
+
+    ecs_entities_t oc = ecs_get_ordered_children(world, parent);
+    test_int(oc.count, 2);
+    test_uint(oc.ids[0], child_a);
+    test_uint(oc.ids[1], child_b);
+
+    ecs_fini(world);
+}
