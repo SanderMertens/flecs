@@ -1562,6 +1562,8 @@ void SetRttHooks_compare_struct_in_use(void);
 void SetRttHooks_equals_struct_in_use(void);
 void SetRttHooks_compare_array_of_struct_in_use(void);
 void SetRttHooks_equals_struct_w_inline_array_in_use(void);
+void SetRttHooks_compare_struct_w_nested_struct_after_primitive(void);
+void SetRttHooks_equals_struct_w_nested_struct_after_primitive(void);
 
 // Testsuite 'ValueType'
 void ValueType_init_unconstrained(void);
@@ -7731,6 +7733,14 @@ bake_test_case SetRttHooks_testcases[] = {
     {
         "equals_struct_w_inline_array_in_use",
         SetRttHooks_equals_struct_w_inline_array_in_use
+    },
+    {
+        "compare_struct_w_nested_struct_after_primitive",
+        SetRttHooks_compare_struct_w_nested_struct_after_primitive
+    },
+    {
+        "equals_struct_w_nested_struct_after_primitive",
+        SetRttHooks_equals_struct_w_nested_struct_after_primitive
     }
 };
 
@@ -8233,7 +8243,7 @@ static bake_test_suite suites[] = {
         "SetRttHooks",
         NULL,
         NULL,
-        22,
+        24,
         SetRttHooks_testcases
     },
     {
