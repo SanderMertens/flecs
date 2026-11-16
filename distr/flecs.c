@@ -64592,36 +64592,23 @@ static void flecs_pipeline_reset_write_state(
     write_state->write_barrier = false;
 }
 
-static bool flecs_pipeline_check_term(
-    ecs_world_t *world,
+/* Resolve the inout kind of a term and whether it reads/writes a component
+ * outside of the matched ($this) storage. Returns false if the term should be
+ * ignored by the pipeline. */
+static bool flecs_pipeline_term_inout(
     ecs_term_t *term,
-    bool is_active,
-    ecs_write_state_t *write_state)    
+    int16_t *inout_out,
+    bool *from_any_out,
+    bool *is_fixed_src_out)
 {
-    (void)world;
-
     ecs_term_ref_t *src = &term->src;
-    if (term->inout == EcsInOutFilter) {
-        return false;
-    }
-
-    ecs_id_t id = term->id;
     int16_t oper = term->oper;
     int16_t inout = term->inout;
     bool from_any = ecs_term_match_0(term);
     bool from_this = ecs_term_match_this(term);
     bool is_shared = !from_any && (!from_this || !(src->id & EcsSelf));
-    bool is_fixed_src = !from_any && !from_this;
 
-    ecs_write_kind_t ws = flecs_pipeline_get_write_state(write_state, id);
-
-    if (from_this && ws >= WriteStateToStage) {
-        /* A staged write could have happened for an id that's matched on the
-         * main storage. Even if the id isn't read, still insert a merge so that
-         * a write to the main storage after the staged write doesn't get 
-         * overwritten. */
-        return true;
-    }
+    *is_fixed_src_out = !from_any && !from_this;
 
     if (inout == EcsInOutDefault) {
         if (from_any) {
@@ -64643,22 +64630,42 @@ static bool flecs_pipeline_check_term(
         from_any = true;
     }
 
-    if (from_any || is_fixed_src) {
-        switch(inout) {
-        case EcsOut:
-        case EcsInOut:
-            if (is_active) {
-                /* Only flag component as written if system is active */
-                flecs_pipeline_set_write_state(write_state, id);
-            }
-            break;
-        case EcsInOutDefault:
-        case EcsInOutNone:
-        case EcsInOutFilter:
-        case EcsIn:
-            break;
-        }
+    *inout_out = inout;
+    *from_any_out = from_any;
+    return true;
+}
 
+/* Check whether a term reads a component that could have been written to the
+ * stage by a previous system, which requires a merge. */
+static bool flecs_pipeline_check_term(
+    ecs_world_t *world,
+    ecs_term_t *term,
+    ecs_write_state_t *write_state)    
+{
+    (void)world;
+
+    if (term->inout == EcsInOutFilter) {
+        return false;
+    }
+
+    ecs_write_kind_t ws = flecs_pipeline_get_write_state(
+        write_state, term->id);
+
+    if (ecs_term_match_this(term) && ws >= WriteStateToStage) {
+        /* A staged write could have happened for an id that's matched on the
+         * main storage. Even if the id isn't read, still insert a merge so that
+         * a write to the main storage after the staged write doesn't get 
+         * overwritten. */
+        return true;
+    }
+
+    int16_t inout;
+    bool from_any, is_fixed_src;
+    if (!flecs_pipeline_term_inout(term, &inout, &from_any, &is_fixed_src)) {
+        return false;
+    }
+
+    if (from_any || is_fixed_src) {
         switch(inout) {
         case EcsIn:
         case EcsInOut:
@@ -64679,6 +64686,36 @@ static bool flecs_pipeline_check_term(
     return false;
 }
 
+/* Flag components that a term writes to the stage. */
+static void flecs_pipeline_write_term(
+    ecs_term_t *term,
+    ecs_write_state_t *write_state)
+{
+    if (term->inout == EcsInOutFilter) {
+        return;
+    }
+
+    int16_t inout;
+    bool from_any, is_fixed_src;
+    if (!flecs_pipeline_term_inout(term, &inout, &from_any, &is_fixed_src)) {
+        return;
+    }
+
+    if (from_any || is_fixed_src) {
+        switch(inout) {
+        case EcsOut:
+        case EcsInOut:
+            flecs_pipeline_set_write_state(write_state, term->id);
+            break;
+        case EcsInOutDefault:
+        case EcsInOutNone:
+        case EcsInOutFilter:
+        case EcsIn:
+            break;
+        }
+    }
+}
+
 static bool flecs_pipeline_check_terms(
     ecs_world_t *world,
     ecs_query_t *query,
@@ -64689,20 +64726,17 @@ static bool flecs_pipeline_check_terms(
     ecs_term_t *terms = query->terms;
     int32_t t, term_count = query->term_count;
 
-    /* Check This terms first. This way if a term indicating writing to a stage
-     * was added before a This term, it won't cause merging. */
+    /* Check reads of all terms before flagging the writes of the system. A
+     * system can't merge in the middle of running, so its own writes should
+     * never cause a merge before the system. */
     for (t = 0; t < term_count; t ++) {
-        ecs_term_t *term = &terms[t];
-        if (ecs_term_match_this(term)) {
-            needs_merge |= flecs_pipeline_check_term(world, term, is_active, ws);
-        }
+        needs_merge |= flecs_pipeline_check_term(world, &terms[t], ws);
     }
 
-    /* Now check non-$this terms */
-    for (t = 0; t < term_count; t ++) {
-        ecs_term_t *term = &terms[t];
-        if (!ecs_term_match_this(term)) {
-            needs_merge |= flecs_pipeline_check_term(world, term, is_active, ws);
+    /* Only flag components as written if system is active */
+    if (is_active) {
+        for (t = 0; t < term_count; t ++) {
+            flecs_pipeline_write_term(&terms[t], ws);
         }
     }
 
