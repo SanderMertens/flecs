@@ -672,3 +672,98 @@ void SetRttHooks_equals_struct_w_inline_array_in_use(void) {
 
     ecs_fini(world);
 }
+
+void SetRttHooks_compare_struct_w_nested_struct_after_primitive(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_f32_t r;
+    } SetRttColor;
+
+    typedef struct {
+        ecs_i32_t id;
+        SetRttColor color;
+    } SetRttSettings;
+
+    ECS_COMPONENT(world, SetRttColor);
+
+    ecs_struct(world, {
+        .entity = ecs_id(SetRttColor),
+        .members = {
+            {"r", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_entity(world, { .name = "Settings" });
+    ecs_struct(world, {
+        .entity = t,
+        .members = {
+            {"id", ecs_id(ecs_i32_t)},
+            {"color", ecs_id(SetRttColor)}
+        }
+    });
+
+    test_int(ecs_set_rtt_compare(world, t), 0);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, t);
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.cmp != NULL);
+    test_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
+
+    SetRttSettings a = {1, {1.0f}};
+    SetRttSettings b = {1, {2.0f}};
+    SetRttSettings c = {1, {1.0f}};
+
+    test_assert(value_cmp(world, t, &a, &b) < 0);
+    test_assert(value_cmp(world, t, &b, &a) > 0);
+    test_int(value_cmp(world, t, &a, &c), 0);
+
+    ecs_fini(world);
+}
+
+void SetRttHooks_equals_struct_w_nested_struct_after_primitive(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_f32_t r;
+    } SetRttColor;
+
+    typedef struct {
+        ecs_i32_t id;
+        SetRttColor color;
+    } SetRttSettings;
+
+    ECS_COMPONENT(world, SetRttColor);
+
+    ecs_struct(world, {
+        .entity = ecs_id(SetRttColor),
+        .members = {
+            {"r", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_entity(world, { .name = "Settings" });
+    ecs_struct(world, {
+        .entity = t,
+        .members = {
+            {"id", ecs_id(ecs_i32_t)},
+            {"color", ecs_id(SetRttColor)}
+        }
+    });
+
+    test_int(ecs_set_rtt_equals(world, t), 0);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, t);
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.equals != NULL);
+    test_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
+    SetRttSettings a = {1, {1.0f}};
+    SetRttSettings b = {1, {2.0f}};
+    SetRttSettings c = {1, {1.0f}};
+
+    test_bool(value_eq(world, t, &a, &b), false);
+    test_bool(value_eq(world, t, &a, &c), true);
+
+    ecs_fini(world);
+}

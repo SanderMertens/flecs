@@ -60652,18 +60652,9 @@ static void flecs_rtt_struct_hooks(
         hooks->lifecycle_ctx_free(hooks->lifecycle_ctx);
     }
 
-    ecs_rtt_struct_ctx_t *ctx = flecs_rtt_struct_members(
+    hooks->lifecycle_ctx = flecs_rtt_struct_members(
         world, ti, members, member_count, hooks);
-    if (hooks->ctor || hooks->dtor || hooks->move || hooks->copy ||
-        hooks->cmp || hooks->equals)
-    {
-        hooks->lifecycle_ctx = ctx;
-        hooks->lifecycle_ctx_free = flecs_rtt_free_lifecycle_struct_ctx;
-    } else {
-        flecs_rtt_free_lifecycle_struct_ctx(ctx);
-        hooks->lifecycle_ctx = NULL;
-        hooks->lifecycle_ctx_free = flecs_rtt_free_lifecycle_nop;
-    }
+    hooks->lifecycle_ctx_free = flecs_rtt_free_lifecycle_struct_ctx;
 }
 
 /*

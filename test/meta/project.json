@@ -1615,7 +1615,9 @@
                 "compare_struct_in_use",
                 "equals_struct_in_use",
                 "compare_array_of_struct_in_use",
-                "equals_struct_w_inline_array_in_use"
+                "equals_struct_w_inline_array_in_use",
+                "compare_struct_w_nested_struct_after_primitive",
+                "equals_struct_w_nested_struct_after_primitive"
             ]
         }, {
             "id": "ValueType",
