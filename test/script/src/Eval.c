@@ -26158,3 +26158,22 @@ void Eval_named_entity_w_tag_in_for_loop_no_warn(void) {
     ecs_os_set_api_defaults();
     ecs_log_set_level(-1);
 }
+
+void Eval_fini_w_prefab_hierarchy_w_inherited_child(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "a { prefab A {} }"
+    LINE "b {"
+    LINE "  prefab B { c {} }"
+    LINE "  prefab C : b.B {}"
+    LINE "}"
+    LINE "x : b.C {}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "b.B.c") != 0);
+    test_assert(ecs_lookup(world, "x") != 0);
+
+    ecs_fini(world);
+}
