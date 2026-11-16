@@ -94,7 +94,7 @@ decltype(auto) value_cast(A&& value) {
 
 template <typename... T, typename A>
 auto value_id(world_t *world, const A&) {
-    if constexpr (sizeof...(T)) {
+    if constexpr (sizeof...(T) != 0) {
         return make_id<T...>(world);
     } else {
         return make_id<A>(world);
@@ -132,8 +132,9 @@ bool has_component(world_t *world, flecs::entity_t entity, Id id) {
     }
     if constexpr (Id::sparse && is_enum_v<typename Id::type>) {
         return ecs_has_pair(world, entity, id.id, flecs::Wildcard);
+    } else {
+        return false;
     }
-    return false;
 }
 
 template <bool Mutable, bool Required, bool Ensure = false, typename Id>
