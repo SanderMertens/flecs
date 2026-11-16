@@ -4141,6 +4141,7 @@ struct ecs_world_t {
     ecs_os_cond_t sync_cond;         /* Signal that worker thread job is done */
     ecs_os_mutex_t sync_mutex;       /* Mutex for job_cond */
     int32_t workers_running;         /* Number of threads running */
+    ecs_ftime_t worker_delta_time;   /* Delta time workers use for current pipeline run */
     int32_t workers_waiting;         /* Number of workers waiting on sync */
     ecs_pipeline_state_t* pq;        /* Pointer to the pipeline for the workers to execute */
     bool workers_use_task_api;       /* Workers are short-lived tasks, not long-running threads */
@@ -65568,7 +65569,7 @@ static void* flecs_worker(void *arg) {
 
         ecs_dbg_3("worker %d: run", stage->id);
         flecs_run_pipeline_ops(world, stage, stage->id, world->stage_count, 
-            world->info.delta_time);
+            world->worker_delta_time);
 
         ecs_set_scope((ecs_world_t*)stage, old_scope);
 
@@ -65743,6 +65744,9 @@ void flecs_workers_progress(
     flecs_poly_assert(world, ecs_world_t);
     ecs_assert(!ecs_is_stage(world), ECS_INVALID_OPERATION, 
         "cannot call progress while world is deferred");
+
+    /* Delta time for workers, set before they are signaled */
+    world->worker_delta_time = delta_time;
 
     /* Make sure workers are running and ready */
     flecs_wait_for_workers(world);

@@ -1404,3 +1404,32 @@ void MultiThread_create_query_from_stage(void) {
     }
     ecs_fini(world);
 }
+
+static void CheckDelta(ecs_iter_t *it) {
+    ecs_ftime_t *expect = it->ctx;
+    test_assert(it->delta_time == *expect);
+}
+
+void MultiThread_run_pipeline_worker_delta_time(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_ftime_t expect = 0.5;
+    ecs_system(world, {
+        .phase = EcsOnUpdate,
+        .query.terms = {{ ecs_id(Position) }},
+        .multi_threaded = true,
+        .callback = CheckDelta,
+        .ctx = &expect
+    });
+    ecs_bulk_new(world, Position, 64);
+    set_worker_kind(world, 4);
+
+    /* world->info.delta_time is 1.0 from frame_begin, but the pipeline is run
+     * with 0.5. Workers must use the delta_time passed to run_pipeline. */
+    ecs_frame_begin(world, 1.0);
+    ecs_run_pipeline(world, 0, 0.5);
+    ecs_frame_end(world);
+
+    ecs_fini(world);
+}

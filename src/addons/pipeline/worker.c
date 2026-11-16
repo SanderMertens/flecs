@@ -56,7 +56,7 @@ static void* flecs_worker(void *arg) {
 
         ecs_dbg_3("worker %d: run", stage->id);
         flecs_run_pipeline_ops(world, stage, stage->id, world->stage_count, 
-            world->info.delta_time);
+            world->worker_delta_time);
 
         ecs_set_scope((ecs_world_t*)stage, old_scope);
 
@@ -231,6 +231,9 @@ void flecs_workers_progress(
     flecs_poly_assert(world, ecs_world_t);
     ecs_assert(!ecs_is_stage(world), ECS_INVALID_OPERATION, 
         "cannot call progress while world is deferred");
+
+    /* Delta time for workers, set before they are signaled */
+    world->worker_delta_time = delta_time;
 
     /* Make sure workers are running and ready */
     flecs_wait_for_workers(world);
