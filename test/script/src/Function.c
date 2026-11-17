@@ -3330,3 +3330,36 @@ void Function_update_script_w_fn_twice(void) {
 
     ecs_fini(world);
 }
+
+void Function_match_case_w_multiline_binary_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "fn f(s: i32) -> i32 {"
+    LINE "  match s {"
+    LINE "    0: (2 +"
+    LINE "      3)"
+    LINE "    _: 4"
+    LINE "  }"
+    LINE "}"
+    LINE "Foo { Position: {f(0), f(1)} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 5);
+    test_int(p->y, 4);
+
+    ecs_fini(world);
+}

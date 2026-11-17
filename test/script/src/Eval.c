@@ -26177,3 +26177,33 @@ void Eval_fini_w_prefab_hierarchy_w_inherited_child(void) {
 
     ecs_fini(world);
 }
+
+void Eval_typed_var_w_multiline_binary_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const v: f32 = 10 +"
+    LINE "  5 *"
+    LINE "  2"
+    LINE "Foo { Position: {v, 20} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 20);
+    test_int(ptr->y, 20);
+
+    ecs_fini(world);
+}

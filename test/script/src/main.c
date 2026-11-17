@@ -831,6 +831,7 @@ void Eval_interpolated_name_in_for_loop_no_warn(void);
 void Eval_child_of_interpolated_name_in_for_loop_no_warn(void);
 void Eval_named_entity_w_tag_in_for_loop_no_warn(void);
 void Eval_fini_w_prefab_hierarchy_w_inherited_child(void);
+void Eval_typed_var_w_multiline_binary_expr(void);
 
 // Testsuite 'Collection'
 void Collection_setup(void);
@@ -1504,6 +1505,7 @@ void Function_redeclare_fn_in_scope(void);
 void Function_same_fn_name_in_different_scopes(void);
 void Function_update_script_w_fn(void);
 void Function_update_script_w_fn_twice(void);
+void Function_match_case_w_multiline_binary_expr(void);
 
 // Testsuite 'Template'
 void Template_setup(void);
@@ -8116,6 +8118,10 @@ bake_test_case Eval_testcases[] = {
     {
         "fini_w_prefab_hierarchy_w_inherited_child",
         Eval_fini_w_prefab_hierarchy_w_inherited_child
+    },
+    {
+        "typed_var_w_multiline_binary_expr",
+        Eval_typed_var_w_multiline_binary_expr
     }
 };
 
@@ -10754,6 +10760,10 @@ bake_test_case Function_testcases[] = {
     {
         "update_script_w_fn_twice",
         Function_update_script_w_fn_twice
+    },
+    {
+        "match_case_w_multiline_binary_expr",
+        Function_match_case_w_multiline_binary_expr
     }
 };
 
@@ -23961,7 +23971,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        821,
+        822,
         Eval_testcases,
         1,
         Eval_params
@@ -24015,7 +24025,7 @@ static bake_test_suite suites[] = {
         "Function",
         Function_setup,
         NULL,
-        120,
+        121,
         Function_testcases,
         1,
         Function_params

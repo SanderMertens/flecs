@@ -108203,6 +108203,7 @@ static const char* flecs_script_parse_rhs(
 
                 *out = (ecs_expr_node_t*)result;
 
+                pos = flecs_parser_skip_newlines(parser, pos);
                 pos = flecs_script_parse_lhs(parser, pos, tokenizer,
                     result->operator, &result->right);
                 if (!pos) {
