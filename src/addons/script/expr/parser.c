@@ -688,6 +688,7 @@ static const char* flecs_script_parse_rhs(
                 elems[0].compare = (ecs_expr_node_t*)flecs_expr_bool(parser, true);
                 elems[1].compare = (ecs_expr_node_t*)flecs_expr_identifier(parser, "_");
 
+                pos = flecs_parser_skip_newlines(parser, pos);
                 pos = flecs_script_parse_expr(parser, pos, 0, &elems[0].expr);
                 if (!pos) {
                     goto error;
@@ -695,6 +696,7 @@ static const char* flecs_script_parse_rhs(
 
                 Parse_1(':', {});
 
+                pos = flecs_parser_skip_newlines(parser, pos);
                 pos = flecs_script_parse_expr(parser, pos, 0, &elems[1].expr);
                 if (!pos) {
                     goto error;

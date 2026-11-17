@@ -26207,3 +26207,33 @@ void Eval_typed_var_w_multiline_binary_expr(void) {
 
     ecs_fini(world);
 }
+
+void Eval_typed_var_w_multiline_conditional(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const s: i32 = 1"
+    LINE "const v: f32 = s == 0 ? 10 :"
+    LINE "  s == 1 ? 30 : 40"
+    LINE "Foo { Position: {v, 20} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 30);
+    test_int(ptr->y, 20);
+
+    ecs_fini(world);
+}
