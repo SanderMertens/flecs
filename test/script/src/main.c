@@ -675,6 +675,8 @@ void Eval_const_var_from_large_component_member_no_leak(void);
 void Eval_const_var_from_large_array_element_no_leak(void);
 void Eval_update_script_that_declares_script_entity(void);
 void Eval_update_script_that_declares_parent_of_script_entity(void);
+void Eval_update_script_that_declares_struct_w_script_entity_name(void);
+void Eval_update_script_that_declares_enum_w_script_entity_name(void);
 void Eval_script_refers_to_script_entity(void);
 void Eval_vector_of_struct_w_array_member(void);
 void Eval_rerun_script_w_enum_type_w_underlying_type_in_use(void);
@@ -7492,6 +7494,14 @@ bake_test_case Eval_testcases[] = {
     {
         "update_script_that_declares_parent_of_script_entity",
         Eval_update_script_that_declares_parent_of_script_entity
+    },
+    {
+        "update_script_that_declares_struct_w_script_entity_name",
+        Eval_update_script_that_declares_struct_w_script_entity_name
+    },
+    {
+        "update_script_that_declares_enum_w_script_entity_name",
+        Eval_update_script_that_declares_enum_w_script_entity_name
     },
     {
         "script_refers_to_script_entity",
@@ -23961,7 +23971,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        821,
+        823,
         Eval_testcases,
         1,
         Eval_params
