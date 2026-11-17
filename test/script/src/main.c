@@ -833,6 +833,7 @@ void Eval_named_entity_w_tag_in_for_loop_no_warn(void);
 void Eval_fini_w_prefab_hierarchy_w_inherited_child(void);
 void Eval_typed_var_w_multiline_binary_expr(void);
 void Eval_typed_var_w_multiline_conditional(void);
+void Eval_typed_var_w_newline_after_assign(void);
 
 // Testsuite 'Collection'
 void Collection_setup(void);
@@ -8127,6 +8128,10 @@ bake_test_case Eval_testcases[] = {
     {
         "typed_var_w_multiline_conditional",
         Eval_typed_var_w_multiline_conditional
+    },
+    {
+        "typed_var_w_newline_after_assign",
+        Eval_typed_var_w_newline_after_assign
     }
 };
 
@@ -23976,7 +23981,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        823,
+        824,
         Eval_testcases,
         1,
         Eval_params

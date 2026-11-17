@@ -71837,6 +71837,7 @@ static const char* flecs_script_parse_var(
         LookAhead(
             case '=': {
                 Consume();
+                pos = flecs_parser_skip_newlines(parser, pos);
 
                 LookAhead_1(EcsTokKeywordAwait,
                     Error("'%s %s: %s = await ...' is invalid, "

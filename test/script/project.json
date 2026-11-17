@@ -839,7 +839,8 @@
                 "named_entity_w_tag_in_for_loop_no_warn",
                 "fini_w_prefab_hierarchy_w_inherited_child",
                 "typed_var_w_multiline_binary_expr",
-                "typed_var_w_multiline_conditional"
+                "typed_var_w_multiline_conditional",
+                "typed_var_w_newline_after_assign"
             ]
         }, {
             "id": "Collection",
