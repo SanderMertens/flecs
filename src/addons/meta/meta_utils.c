@@ -403,7 +403,7 @@ int flecs_meta_ser_bitmask(
     while (ecs_map_next(&it)) {
         ecs_bitmask_constant_t *c = ecs_map_ptr(&it);
         ecs_map_key_t key = ecs_map_key(&it);
-        if ((value & key) == key) {
+        if (key && (value & key) == key) {
             ecs_strbuf_list_appendstr(str, ecs_get_name(world, c->constant));
             value -= (uint32_t)key;
         }
@@ -448,7 +448,7 @@ int flecs_meta_ser_map_key(
         while (ecs_map_next(&it)) {
             ecs_bitmask_constant_t *constant = ecs_map_ptr(&it);
             ecs_map_key_t constant_key = ecs_map_key(&it);
-            if ((value & constant_key) == constant_key) {
+            if (constant_key && (value & constant_key) == constant_key) {
                 ecs_strbuf_list_appendstr(str,
                     ecs_get_name(world, constant->constant));
                 value -= (uint32_t)constant_key;

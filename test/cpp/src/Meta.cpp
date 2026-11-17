@@ -375,6 +375,42 @@ void Meta_bitmask(void) {
     test_str(ecs.to_expr(ptr).c_str(), "{toppings: Lettuce|Bacon}");
 }
 
+struct AccessBits : flecs::bitmask {
+    static constexpr uint32_t None = 0;
+    static constexpr uint32_t Read = 0x1;
+    static constexpr uint32_t Write = 0x2;
+};
+
+struct AccessLevel {
+    uint32_t bits;
+};
+
+void Meta_bitmask_w_zero_constant(void) {
+    flecs::world ecs;
+
+    ecs.component<AccessBits>()
+        .bit("None", AccessBits::None)
+        .bit("Read", AccessBits::Read)
+        .bit("Write", AccessBits::Write);
+
+    ecs.component<AccessLevel>()
+        .member<AccessBits>("bits");
+
+    auto e = ecs.entity()
+        .set<AccessLevel>({AccessBits::Read | AccessBits::Write});
+
+    const AccessLevel *ptr = e.try_get<AccessLevel>();
+    std::string expr(ecs.to_expr(ptr).c_str());
+
+    // None has value 0 and must not match every value
+    test_assert(expr.find("None") == std::string::npos);
+    test_assert(expr.find("Read") != std::string::npos);
+    test_assert(expr.find("Write") != std::string::npos);
+
+    e.set<AccessLevel>({0});
+    test_str(ecs.to_expr(ptr).c_str(), "{bits: 0}");
+}
+
 struct Int {
     int32_t v;
 };
