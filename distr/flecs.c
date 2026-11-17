@@ -98494,6 +98494,16 @@ bool flecs_script_can_own_entity(
         return false;
     }
 
+    ecs_entity_t parent = ecs_get_parent(world, e);
+    if (parent && !ecs_has_pair(world, parent, ecs_id(EcsScript), script)) {
+        if (ecs_has(world, parent, EcsStruct) ||
+            ecs_has(world, parent, EcsEnum) ||
+            ecs_has(world, parent, EcsBitmask))
+        {
+            return false;
+        }
+    }
+
     return true;
 }
 

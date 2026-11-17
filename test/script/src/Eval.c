@@ -20327,6 +20327,62 @@ void Eval_update_script_that_declares_parent_of_script_entity(void) {
     ecs_fini(world);
 }
 
+void Eval_update_script_that_declares_struct_w_script_entity_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_entity(world, { .name = "Position" });
+
+    const char *code =
+    HEAD "struct Position {"
+    LINE "  x { member: {f32} }"
+    LINE "  y { member: {f32} }"
+    LINE "}";
+
+    test_assert(ecs_script_update(world, s, 0, code) == 0);
+    test_assert(ecs_is_alive(world, s));
+
+    test_assert(ecs_script_update(world, s, 0, code) == 0);
+    test_assert(ecs_is_alive(world, s));
+
+    test_assert(ecs_script_update(world, s, 0, "") == 0);
+    test_assert(ecs_is_alive(world, s));
+
+    ecs_fini(world);
+}
+
+void Eval_update_script_that_declares_enum_w_script_entity_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_entity(world, { .name = "Color" });
+
+    const char *code =
+    HEAD "enum Color {"
+    LINE "  flecs.core.constant Red"
+    LINE "  flecs.core.constant Green"
+    LINE "  flecs.core.constant Blue"
+    LINE "}";
+
+    test_assert(ecs_script_update(world, s, 0, code) == 0);
+    test_assert(ecs_is_alive(world, s));
+
+    test_assert(ecs_script_update(world, s, 0, code) == 0);
+    test_assert(ecs_is_alive(world, s));
+    test_assert(ecs_has(world, s, EcsEnum));
+    test_assert(ecs_lookup(world, "Color.Red") != 0);
+    test_assert(ecs_lookup(world, "Color.Green") != 0);
+    test_assert(ecs_lookup(world, "Color.Blue") != 0);
+
+    test_assert(ecs_script_update(world, s, 0, "") == 0);
+    test_assert(ecs_is_alive(world, s));
+
+    int32_t value = 1;
+    char *str = ecs_ptr_to_expr(world, s, &value);
+    test_str(str, "Green");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
 void Eval_script_refers_to_script_entity(void) {
     ecs_world_t *world = ecs_init();
 

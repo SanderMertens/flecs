@@ -682,6 +682,8 @@
                 "const_var_from_large_array_element_no_leak",
                 "update_script_that_declares_script_entity",
                 "update_script_that_declares_parent_of_script_entity",
+                "update_script_that_declares_struct_w_script_entity_name",
+                "update_script_that_declares_enum_w_script_entity_name",
                 "script_refers_to_script_entity",
                 "vector_of_struct_w_array_member",
                 "rerun_script_w_enum_type_w_underlying_type_in_use",
