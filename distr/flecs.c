@@ -88733,8 +88733,13 @@ bool flecs_query_sparse_with(
         return flecs_query_sparse_wildcard(op, redo, ctx, id, false, not, 0);
     }
 
-    return flecs_query_sparse_with_id(op, redo, ctx, not,
+    bool result = flecs_query_sparse_with_id(op, redo, ctx, not,
         redo ? NULL : flecs_components_get(ctx->world, id), NULL);
+    if (result && !not && op->field_index != -1) {
+        ctx->it->ids[op->field_index] = id;
+    }
+
+    return result;
 }
 
 bool flecs_query_sparse_up(

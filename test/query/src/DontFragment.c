@@ -7742,3 +7742,45 @@ void DontFragment_ecs_field_at_on_dont_fragment_up(void) {
     ecs_query_fini(q);
     ecs_fini(world);
 }
+
+void DontFragment_this_written_sparse_pair_tgt_var_written(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+    ecs_add_id(world, ecs_id(Position), EcsRelationship);
+
+    ecs_entity_t tgt = ecs_new(world);
+    ecs_entity_t e = ecs_new(world);
+    ecs_set_pair(world, e, Position, tgt, {10, 20});
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .first.id = ecs_id(Position), .second.name = "$x" }},
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    int32_t this_var = ecs_query_find_var(q, "this");
+    test_assert(this_var != -1);
+    int32_t x_var = ecs_query_find_var(q, "x");
+    test_assert(x_var != -1);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_set_var(&it, this_var, e);
+    ecs_iter_set_var(&it, x_var, tgt);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_pair(ecs_id(Position), tgt), ecs_field_id(&it, 0));
+    test_uint(tgt, ecs_iter_get_var(&it, x_var));
+    {
+        Position *p = ecs_field_at(&it, Position, 0, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 20);
+    }
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
