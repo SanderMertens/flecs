@@ -7,6 +7,7 @@
 #include <string>
 #include <optional>
 #include <vector>
+#include <map>
 #include <stddef.h>
 
 struct Position {

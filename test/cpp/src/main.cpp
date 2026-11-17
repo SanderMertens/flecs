@@ -1333,6 +1333,12 @@ void ComponentLifecycle_on_validate_hook_blocks_on_set(void);
 void ComponentLifecycle_on_validate_hook_blocks_observer(void);
 void ComponentLifecycle_delete_w_on_remove_hook_removing_other_w_world(void);
 void ComponentLifecycle_delete_w_on_remove_hook_removing_other_w_stage(void);
+void ComponentLifecycle_vector_of_unique_ptr_member(void);
+void ComponentLifecycle_nested_vector_of_unique_ptr_member(void);
+void ComponentLifecycle_array_of_vector_of_unique_ptr_member(void);
+void ComponentLifecycle_map_of_unique_ptr_member(void);
+void ComponentLifecycle_vector_of_int_member_is_copyable(void);
+void ComponentLifecycle_recursive_vector_member_is_copyable(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref_by_ptr(void);
@@ -7003,6 +7009,30 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "delete_w_on_remove_hook_removing_other_w_stage",
         ComponentLifecycle_delete_w_on_remove_hook_removing_other_w_stage
+    },
+    {
+        "vector_of_unique_ptr_member",
+        ComponentLifecycle_vector_of_unique_ptr_member
+    },
+    {
+        "nested_vector_of_unique_ptr_member",
+        ComponentLifecycle_nested_vector_of_unique_ptr_member
+    },
+    {
+        "array_of_vector_of_unique_ptr_member",
+        ComponentLifecycle_array_of_vector_of_unique_ptr_member
+    },
+    {
+        "map_of_unique_ptr_member",
+        ComponentLifecycle_map_of_unique_ptr_member
+    },
+    {
+        "vector_of_int_member_is_copyable",
+        ComponentLifecycle_vector_of_int_member_is_copyable
+    },
+    {
+        "recursive_vector_member_is_copyable",
+        ComponentLifecycle_recursive_vector_member_is_copyable
     }
 };
 
@@ -8886,7 +8916,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        109,
+        115,
         ComponentLifecycle_testcases
     },
     {

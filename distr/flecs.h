@@ -26298,6 +26298,104 @@ struct is_flecs_constructible {
 
 namespace _ {
 
+constexpr size_t aggregate_initializers_max = 32;
+
+template <typename T, typename... Visited>
+constexpr bool is_deep_copy_constructible();
+
+struct aggregate_field_any {
+    constexpr explicit aggregate_field_any(size_t) { }
+
+    template <typename U>
+    operator U() const;
+};
+
+template <typename T, typename... Visited>
+struct deep_copy_constructible_trait
+    : std::bool_constant<is_deep_copy_constructible<T, Visited...>()> { };
+
+template <typename... Visited>
+struct aggregate_field_copyable {
+    constexpr explicit aggregate_field_copyable(size_t) { }
+
+    template <typename U, enable_if_t<std::conjunction_v<
+        std::negation<is_same<U, aggregate_field_copyable>>,
+        deep_copy_constructible_trait<U, Visited...>>, int> = 0>
+    operator U() const;
+};
+
+template <typename T, typename Probe, typename Indices, typename = void>
+struct is_aggregate_initializable : std::false_type { };
+
+template <typename T, typename Probe, size_t... I>
+struct is_aggregate_initializable<T, Probe, std::index_sequence<I...>,
+    std::void_t<decltype(T{ Probe{I}... })>> : std::true_type { };
+
+template <typename T, size_t N = 0, bool Found = false>
+constexpr size_t aggregate_initializer_count() {
+    constexpr bool valid = is_aggregate_initializable<T,
+        aggregate_field_any, std::make_index_sequence<N>>::value;
+    if constexpr (Found && !valid) {
+        return N - 1;
+    } else if constexpr (N == aggregate_initializers_max) {
+        return valid ? N : 0;
+    } else {
+        return aggregate_initializer_count<T, N + 1, Found || valid>();
+    }
+}
+
+template <typename T, typename... Visited>
+constexpr bool is_aggregate_deep_copy_constructible() {
+    constexpr size_t count = aggregate_initializer_count<T>();
+    if constexpr (count == 0) {
+        return true;
+    } else {
+        return is_aggregate_initializable<T,
+            aggregate_field_copyable<T, Visited...>,
+            std::make_index_sequence<count>>::value;
+    }
+}
+
+template <typename T, typename = void>
+struct is_allocator_aware_container : std::false_type { };
+
+template <typename T>
+struct is_allocator_aware_container<T, std::void_t<
+    typename T::value_type, typename T::allocator_type>> : std::true_type { };
+
+template <typename T>
+struct is_std_pair : std::false_type { };
+
+template <typename First, typename Second>
+struct is_std_pair<std::pair<First, Second>> : std::true_type { };
+
+template <typename T>
+struct is_initializer_list : std::false_type { };
+
+template <typename Element>
+struct is_initializer_list<std::initializer_list<Element>> : std::true_type { };
+
+template <typename T, typename... Visited>
+constexpr bool is_deep_copy_constructible() {
+    using U = std::remove_cv_t<T>;
+    if constexpr ((is_same_v<U, Visited> || ...)) {
+        return true;
+    } else if constexpr (!is_copy_constructible_v<U>) {
+        return false;
+    } else if constexpr (is_std_pair<U>::value) {
+        return is_deep_copy_constructible<typename U::first_type, U, Visited...>() &&
+            is_deep_copy_constructible<typename U::second_type, U, Visited...>();
+    } else if constexpr (is_initializer_list<U>::value) {
+        return is_deep_copy_constructible<typename U::value_type, U, Visited...>();
+    } else if constexpr (is_allocator_aware_container<U>::value) {
+        return is_deep_copy_constructible<typename U::value_type, U, Visited...>();
+    } else if constexpr (std::is_aggregate_v<U> && !std::is_union_v<U>) {
+        return is_aggregate_deep_copy_constructible<U, Visited...>();
+    } else {
+        return true;
+    }
+}
+
 template <typename T, bool Destroy>
 ecs_xtor_t xtor(ecs_flags32_t& flags) {
     constexpr bool trivial = Destroy ? is_trivially_destructible_v<T> : is_trivially_constructible_v<T>;
@@ -26324,6 +26422,43 @@ ecs_xtor_t xtor(ecs_flags32_t& flags) {
     }
 }
 
+template <typename T, bool Move, bool Construct, bool Destroy, bool Legal>
+struct transfer_hook {
+    static conditional_t<Move, ecs_move_t, ecs_copy_t> callback() {
+        return nullptr;
+    }
+};
+
+template <typename T, bool Move, bool Construct, bool Destroy>
+struct transfer_hook<T, Move, Construct, Destroy, true> {
+    static void invoke(void *dst_ptr, conditional_t<Move, void*, const void*> src_ptr,
+        int32_t count, const ecs_type_info_t *info)
+    {
+        (void)info;
+        ecs_assert(info->size == ECS_SIZEOF(T), ECS_INTERNAL_ERROR, nullptr);
+        T *dst = static_cast<T*>(dst_ptr);
+        auto src = static_cast<conditional_t<Move, T*, const T*>>(src_ptr);
+        for (int32_t i = 0; i < count; i ++) {
+            using Value = conditional_t<Move, T&&, const T&>;
+            if constexpr (Destroy && !Construct && is_trivially_move_assignable_v<T>) {
+                dst[i].~T();
+            }
+            if constexpr (Construct) {
+                FLECS_PLACEMENT_NEW(&dst[i], T(static_cast<Value>(src[i])));
+            } else {
+                dst[i] = static_cast<Value>(src[i]);
+            }
+            if constexpr (Destroy && (Construct || !is_trivially_move_assignable_v<T>)) {
+                src[i].~T();
+            }
+        }
+    }
+
+    static conditional_t<Move, ecs_move_t, ecs_copy_t> callback() {
+        return invoke;
+    }
+};
+
 template <typename T, bool Move, bool Construct, bool Destroy = false>
 conditional_t<Move, ecs_move_t, ecs_copy_t> transfer(ecs_flags32_t& flags) {
     constexpr bool trivial = (Construct
@@ -26333,7 +26468,8 @@ conditional_t<Move, ecs_move_t, ecs_copy_t> transfer(ecs_flags32_t& flags) {
     constexpr bool legal = (Construct
         ? (Move ? is_move_constructible_v<T> : is_copy_constructible_v<T>)
         : (Move ? is_move_assignable_v<T> : is_copy_assignable_v<T>)) &&
-        (!Destroy || is_destructible_v<T>);
+        (!Destroy || is_destructible_v<T>) &&
+        (Move || !is_copy_constructible_v<T> || is_deep_copy_constructible<T>());
     constexpr auto illegal = Move
         ? (Construct
             ? (Destroy ? ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL : ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL)
@@ -26341,32 +26477,11 @@ conditional_t<Move, ecs_move_t, ecs_copy_t> transfer(ecs_flags32_t& flags) {
         : (Construct ? ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL : ECS_TYPE_HOOK_COPY_ILLEGAL);
     if constexpr (trivial) {
         return nullptr;
-    } else if constexpr (!legal) {
-        flags |= illegal;
-        return nullptr;
     } else {
-        return [](void *dst_ptr, conditional_t<Move, void*, const void*> src_ptr,
-            int32_t count, const ecs_type_info_t *info)
-        {
-            (void)info;
-            ecs_assert(info->size == ECS_SIZEOF(T), ECS_INTERNAL_ERROR, nullptr);
-            T *dst = static_cast<T*>(dst_ptr);
-            auto src = static_cast<conditional_t<Move, T*, const T*>>(src_ptr);
-            for (int32_t i = 0; i < count; i ++) {
-                using Value = conditional_t<Move, T&&, const T&>;
-                if constexpr (Destroy && !Construct && is_trivially_move_assignable_v<T>) {
-                    dst[i].~T();
-                }
-                if constexpr (Construct) {
-                    FLECS_PLACEMENT_NEW(&dst[i], T(static_cast<Value>(src[i])));
-                } else {
-                    dst[i] = static_cast<Value>(src[i]);
-                }
-                if constexpr (Destroy && (Construct || !is_trivially_move_assignable_v<T>)) {
-                    src[i].~T();
-                }
-            }
-        };
+        if constexpr (!legal) {
+            flags |= illegal;
+        }
+        return transfer_hook<T, Move, Construct, Destroy, legal>::callback();
     }
 }
 

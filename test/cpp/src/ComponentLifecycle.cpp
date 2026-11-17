@@ -2973,3 +2973,161 @@ void ComponentLifecycle_delete_w_on_remove_hook_removing_other_w_stage(void) {
 
     test_assert(!e.is_alive());
 }
+
+struct VectorOfUniquePtr {
+    std::vector<std::unique_ptr<int>> value;
+};
+
+void ComponentLifecycle_vector_of_unique_ptr_member(void) {
+    flecs::world ecs;
+
+    flecs::entity c = ecs.component<VectorOfUniquePtr>();
+    test_assert(c != 0);
+
+    const flecs::type_hooks_t *h = ecs_get_hooks_id(ecs, c);
+    test_assert(h != nullptr);
+    test_assert(h->move != nullptr);
+    test_assert(h->move_ctor != nullptr);
+    test_assert(h->flags & ECS_TYPE_HOOK_COPY_ILLEGAL);
+    test_assert(h->flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL);
+
+    flecs::entity e = ecs.entity();
+    e.set<VectorOfUniquePtr>({});
+    e.get_mut<VectorOfUniquePtr>().value.emplace_back(new int(10));
+
+    const VectorOfUniquePtr& v = e.get<VectorOfUniquePtr>();
+    test_int(v.value.size(), 1);
+    test_int(*v.value[0], 10);
+}
+
+struct NestedVectorOfUniquePtr {
+    int x;
+    VectorOfUniquePtr nested;
+    std::string name;
+};
+
+void ComponentLifecycle_nested_vector_of_unique_ptr_member(void) {
+    flecs::world ecs;
+
+    flecs::entity c = ecs.component<NestedVectorOfUniquePtr>();
+    test_assert(c != 0);
+
+    const flecs::type_hooks_t *h = ecs_get_hooks_id(ecs, c);
+    test_assert(h != nullptr);
+    test_assert(h->move != nullptr);
+    test_assert(h->move_ctor != nullptr);
+    test_assert(h->flags & ECS_TYPE_HOOK_COPY_ILLEGAL);
+    test_assert(h->flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL);
+
+    flecs::entity e = ecs.entity();
+    e.set<NestedVectorOfUniquePtr>({});
+    e.get_mut<NestedVectorOfUniquePtr>().nested.value.emplace_back(new int(10));
+
+    const NestedVectorOfUniquePtr& v = e.get<NestedVectorOfUniquePtr>();
+    test_int(v.nested.value.size(), 1);
+    test_int(*v.nested.value[0], 10);
+}
+
+struct ArrayOfVectorOfUniquePtr {
+    std::string name;
+    std::vector<std::unique_ptr<int>> values[2];
+};
+
+void ComponentLifecycle_array_of_vector_of_unique_ptr_member(void) {
+    flecs::world ecs;
+
+    flecs::entity c = ecs.component<ArrayOfVectorOfUniquePtr>();
+    test_assert(c != 0);
+
+    const flecs::type_hooks_t *h = ecs_get_hooks_id(ecs, c);
+    test_assert(h != nullptr);
+    test_assert(h->move != nullptr);
+    test_assert(h->move_ctor != nullptr);
+    test_assert(h->flags & ECS_TYPE_HOOK_COPY_ILLEGAL);
+    test_assert(h->flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL);
+}
+
+struct MapOfUniquePtr {
+    std::map<int, std::unique_ptr<int>> value;
+};
+
+void ComponentLifecycle_map_of_unique_ptr_member(void) {
+    flecs::world ecs;
+
+    flecs::entity c = ecs.component<MapOfUniquePtr>();
+    test_assert(c != 0);
+
+    const flecs::type_hooks_t *h = ecs_get_hooks_id(ecs, c);
+    test_assert(h != nullptr);
+    test_assert(h->move != nullptr);
+    test_assert(h->move_ctor != nullptr);
+    test_assert(h->flags & ECS_TYPE_HOOK_COPY_ILLEGAL);
+    test_assert(h->flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL);
+
+    flecs::entity e = ecs.entity();
+    e.set<MapOfUniquePtr>({});
+    e.get_mut<MapOfUniquePtr>().value[1].reset(new int(10));
+
+    const MapOfUniquePtr& v = e.get<MapOfUniquePtr>();
+    test_int(v.value.size(), 1);
+    test_int(*v.value.at(1), 10);
+}
+
+struct VectorOfInt {
+    std::map<std::string, int> map;
+    std::vector<int> value;
+};
+
+void ComponentLifecycle_vector_of_int_member_is_copyable(void) {
+    flecs::world ecs;
+
+    flecs::entity c = ecs.component<VectorOfInt>();
+    test_assert(c != 0);
+
+    const flecs::type_hooks_t *h = ecs_get_hooks_id(ecs, c);
+    test_assert(h != nullptr);
+    test_assert(h->move != nullptr);
+    test_assert(h->move_ctor != nullptr);
+    test_assert(h->copy != nullptr);
+    test_assert(h->copy_ctor != nullptr);
+    test_assert(!(h->flags & ECS_TYPE_HOOK_COPY_ILLEGAL));
+    test_assert(!(h->flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL));
+
+    flecs::entity e = ecs.entity();
+    e.set<VectorOfInt>({{{"a", 1}}, {10, 20}});
+
+    flecs::entity i = e.clone();
+    const VectorOfInt& v = i.get<VectorOfInt>();
+    test_int(v.value.size(), 2);
+    test_int(v.value[0], 10);
+    test_int(v.value[1], 20);
+    test_int(v.map.at("a"), 1);
+}
+
+struct RecursiveVector {
+    int value;
+    std::vector<RecursiveVector> children;
+};
+
+void ComponentLifecycle_recursive_vector_member_is_copyable(void) {
+    flecs::world ecs;
+
+    flecs::entity c = ecs.component<RecursiveVector>();
+    test_assert(c != 0);
+
+    const flecs::type_hooks_t *h = ecs_get_hooks_id(ecs, c);
+    test_assert(h != nullptr);
+    test_assert(h->copy != nullptr);
+    test_assert(h->copy_ctor != nullptr);
+    test_assert(!(h->flags & ECS_TYPE_HOOK_COPY_ILLEGAL));
+    test_assert(!(h->flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL));
+
+    flecs::entity e = ecs.entity();
+    e.set<RecursiveVector>({1, {{2, {}}}});
+
+    flecs::entity i = e.clone();
+    const RecursiveVector& v = i.get<RecursiveVector>();
+    test_int(v.value, 1);
+    test_int(v.children.size(), 1);
+    test_int(v.children[0].value, 2);
+}

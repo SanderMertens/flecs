@@ -1374,7 +1374,13 @@
                 "on_validate_hook_blocks_on_set",
                 "on_validate_hook_blocks_observer",
                 "delete_w_on_remove_hook_removing_other_w_world",
-                "delete_w_on_remove_hook_removing_other_w_stage"
+                "delete_w_on_remove_hook_removing_other_w_stage",
+                "vector_of_unique_ptr_member",
+                "nested_vector_of_unique_ptr_member",
+                "array_of_vector_of_unique_ptr_member",
+                "map_of_unique_ptr_member",
+                "vector_of_int_member_is_copyable",
+                "recursive_vector_member_is_copyable"
             ]
         }, {
             "id": "Refs",
