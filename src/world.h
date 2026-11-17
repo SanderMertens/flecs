@@ -157,6 +157,7 @@ struct ecs_world_t {
     ecs_os_cond_t sync_cond;         /* Signal that worker thread job is done */
     ecs_os_mutex_t sync_mutex;       /* Mutex for job_cond */
     int32_t workers_running;         /* Number of threads running */
+    ecs_ftime_t worker_delta_time;   /* Delta time workers use for current pipeline run */
     int32_t workers_waiting;         /* Number of workers waiting on sync */
     ecs_pipeline_state_t* pq;        /* Pointer to the pipeline for the workers to execute */
     bool workers_use_task_api;       /* Workers are short-lived tasks, not long-running threads */

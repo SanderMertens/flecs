@@ -469,7 +469,8 @@
                 "bulk_new_in_no_readonly_w_multithread",
                 "bulk_new_in_no_readonly_w_multithread_2",
                 "run_first_worker_on_main",
-                "run_single_thread_on_main"
+                "run_single_thread_on_main",
+                "run_pipeline_worker_delta_time"
             ]
         }, {
             "id": "MultiThreadStaging",
