@@ -368,6 +368,7 @@ typedef struct ecs_script_fn_param_t {
     ecs_script_node_t node;
     const char *name;
     const char *type;
+    ecs_expr_node_t *type_args;
     ecs_script_type_dims_t type_dims;
     ecs_entity_t eval_type;
     int32_t sp;
@@ -378,6 +379,7 @@ typedef struct ecs_script_function_node_t {
     ecs_script_node_t return_type_node;
     const char *name;
     const char *return_type;
+    ecs_expr_node_t *return_type_args;
     ecs_script_type_dims_t return_type_dims;
     ecs_vec_t params;
     ecs_script_scope_t *body;

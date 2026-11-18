@@ -1566,7 +1566,13 @@
                 "struct_vector_param",
                 "vector_return",
                 "array_return",
-                "vector_param_no_leak"
+                "vector_param_no_leak",
+                "type_args_param",
+                "type_args_param_w_const",
+                "type_args_param_w_dims",
+                "type_args_return",
+                "type_args_invalid_param_type",
+                "type_args_to_str"
             ]
         }, {
             "id": "Template",

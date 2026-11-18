@@ -3525,3 +3525,130 @@ void Function_vector_param_no_leak(void) {
 
     ecs_fini(world);
 }
+
+void Function_type_args_param(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(v: f32)"
+    LINE "fn total(v: vector(f32)) -> f32 { v.sum() }"
+    LINE "e { Result: {total([1, 2, 3])} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{v: 6}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void Function_type_args_param_w_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(v: f32)"
+    LINE "const N = 2"
+    LINE "fn second(v: array(f32, N)) -> f32 { v[1] }"
+    LINE "e { Result: {second([10, 20])} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{v: 20}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void Function_type_args_param_w_dims(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(v: string)"
+    LINE "fn second(v: map(i32, string)[]) -> string { v[1][2] }"
+    LINE "e { Result: {second([[1: \"a\"], [2: \"b\"]])} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{v: \"b\"}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void Function_type_args_return(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(v: vector(i32))"
+    LINE "fn twice(v: i32[]) -> vector(i32) { v.map((el) -> { el * 2 }) }"
+    LINE "e { Result: {twice([1, 2, 3])} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{v: [2, 4, 6]}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void Function_type_args_invalid_param_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "fn f(a: f32(1)) -> f32 { a }",
+        &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Function_type_args_to_str(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        HEAD "fn f(a: vector(f32)[], b: map(i32, string)) -> array(f32, 2)[] { [] }",
+        NULL, NULL);
+    test_assert(script != NULL);
+
+    char *str = ecs_script_ast_to_str(script, false);
+    test_str(str,
+    HEAD "{"
+    LINE "  fn: f(a: vector(@f32)[], b: map(@i32, @string)) -> array(@f32, 2)[] {"
+    LINE "    return: {}"
+    LINE "  }"
+    LINE "  "
+    LINE "}"
+    LINE "");
+    ecs_os_free(str);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
