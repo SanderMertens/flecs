@@ -1530,6 +1530,12 @@ void Function_struct_vector_param(void);
 void Function_vector_return(void);
 void Function_array_return(void);
 void Function_vector_param_no_leak(void);
+void Function_type_args_param(void);
+void Function_type_args_param_w_const(void);
+void Function_type_args_param_w_dims(void);
+void Function_type_args_return(void);
+void Function_type_args_invalid_param_type(void);
+void Function_type_args_to_str(void);
 
 // Testsuite 'Template'
 void Template_setup(void);
@@ -10899,6 +10905,30 @@ bake_test_case Function_testcases[] = {
     {
         "vector_param_no_leak",
         Function_vector_param_no_leak
+    },
+    {
+        "type_args_param",
+        Function_type_args_param
+    },
+    {
+        "type_args_param_w_const",
+        Function_type_args_param_w_const
+    },
+    {
+        "type_args_param_w_dims",
+        Function_type_args_param_w_dims
+    },
+    {
+        "type_args_return",
+        Function_type_args_return
+    },
+    {
+        "type_args_invalid_param_type",
+        Function_type_args_invalid_param_type
+    },
+    {
+        "type_args_to_str",
+        Function_type_args_to_str
     }
 };
 
@@ -24220,7 +24250,7 @@ static bake_test_suite suites[] = {
         "Function",
         Function_setup,
         NULL,
-        127,
+        133,
         Function_testcases,
         1,
         Function_params

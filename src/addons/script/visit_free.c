@@ -145,8 +145,10 @@ int flecs_script_visit_free_node(
         ecs_script_fn_param_t *params = ecs_vec_first(&fn->params);
         int32_t i, count = ecs_vec_count(&fn->params);
         for (i = 0; i < count; i ++) {
+            flecs_expr_visit_free(script, params[i].type_args);
             flecs_script_type_dims_free(script, &params[i].type_dims);
         }
+        flecs_expr_visit_free(script, fn->return_type_args);
         flecs_script_type_dims_free(script, &fn->return_type_dims);
         ecs_vec_fini_t(a, &fn->params, ecs_script_fn_param_t);
         break;

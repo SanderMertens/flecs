@@ -970,6 +970,13 @@ static const char* flecs_script_fn_params(
                     p->name = Token(0);
                     p->type = Token(2);
 
+                    LookAhead_1('(',
+                        Consume();
+                        Initializer(')',
+                            p->type_args = INITIALIZER;
+                        )
+                    )
+
                     pos = flecs_script_parse_type_dims(
                         parser, pos, &p->type_dims);
                     if (!pos) {
@@ -1501,6 +1508,14 @@ fn_stmt: {
             Parse_1(EcsTokIdentifier, {
                 fn->return_type = Token(4);
                 fn->return_type_node.pos = parser->pos;
+
+                LookAhead_1('(',
+                    Consume();
+                    Initializer(')',
+                        fn->return_type_args = INITIALIZER;
+                    )
+                )
+
                 pos = flecs_script_parse_type_dims(
                     parser, pos, &fn->return_type_dims);
                 if (!pos) {
