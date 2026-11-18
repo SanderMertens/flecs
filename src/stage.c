@@ -36,6 +36,7 @@ static void flecs_stage_merge(
     ecs_log_push_3();
 
     if (is_stage) {
+        flecs_stage_flush_system_time(stage);
         flecs_commands_flush(world, stage);
     } else {
         /* Merge all stages */
@@ -43,6 +44,7 @@ static void flecs_stage_merge(
         for (i = 0; i < count; i ++) {
             ecs_stage_t *s = (ecs_stage_t*)ecs_get_stage(world, i);
             flecs_poly_assert(s, ecs_stage_t);
+            flecs_stage_flush_system_time(s);
             flecs_commands_flush(world, s);
         }
     }
@@ -69,6 +71,19 @@ void flecs_stage_merge_post_frame(
     }
 
     ecs_vec_clear(&stage->post_frame_actions);
+}
+
+void flecs_stage_flush_system_time(
+    ecs_stage_t *stage)
+{
+    int32_t i, count = ecs_vec_count(&stage->system_time_pending);
+    ecs_stage_system_time_t *elems = ecs_vec_first(
+        &stage->system_time_pending);
+    for (i = 0; i < count; i ++) {
+        elems[i].dst[0] += elems[i].time;
+    }
+
+    ecs_vec_clear(&stage->system_time_pending);
 }
 
 ecs_entity_t flecs_stage_set_system(
@@ -101,6 +116,7 @@ static ecs_stage_t* flecs_stage_new(
 
     ecs_allocator_t *a = &stage->allocator;
     ecs_vec_init_t(a, &stage->post_frame_actions, ecs_action_elem_t, 0);
+    ecs_vec_init_t(a, &stage->system_time_pending, ecs_stage_system_time_t, 0);
 
     flecs_commands_init(stage, &stage->cmd_root);
     stage->cmd = &stage->cmd_root;
@@ -120,6 +136,7 @@ static void flecs_stage_free(
     ecs_allocator_t *a = &stage->allocator;
     
     ecs_vec_fini_t(a, &stage->post_frame_actions, ecs_action_elem_t);
+    ecs_vec_fini_t(a, &stage->system_time_pending, ecs_stage_system_time_t);
     ecs_vec_fini(NULL, &stage->variables, 0);
     ecs_vec_fini(NULL, &stage->operations, 0);
 

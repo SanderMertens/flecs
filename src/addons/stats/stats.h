@@ -31,6 +31,9 @@ typedef struct {
     bool is_pointer;
 } ecs_stats_api_t;
 
+double flecs_stats_system_cpu_time(
+    const ecs_world_t *world);
+
 void flecs_stats_api_import(
     ecs_world_t *world,
     ecs_stats_api_t *api);
@@ -45,6 +48,9 @@ void FlecsSystemMonitorImport(
     ecs_world_t *world);
 
 void FlecsPipelineMonitorImport(
+    ecs_world_t *world);
+
+void FlecsWorkerMonitorImport(
     ecs_world_t *world);
 
 void flecs_stats_memory_register_reflection(

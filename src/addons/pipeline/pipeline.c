@@ -590,8 +590,14 @@ int32_t flecs_run_pipeline_ops(
     ecs_assert(!stage_index || op->multi_threaded, ECS_INTERNAL_ERROR, NULL);
 
     ecs_system_t **systems = ecs_vec_first_t(&pq->systems, ecs_system_t*);
-    int32_t end = op->offset + op->count;
+    int32_t start = i, end = op->offset + op->count;
     ecs_stage_t *s = op->immediate ? NULL : stage;
+
+    ecs_time_t st = { 0 };
+    bool measure_time = world->flags & EcsWorldMeasureSystemTime;
+    if (measure_time) {
+        ecs_time_measure(&st);
+    }
 
     for (; i < end; i++) {
         ecs_system_t* sys = systems[i];
@@ -605,9 +611,13 @@ int32_t flecs_run_pipeline_ops(
 
         flecs_run_system(world, s, sys->query->entity, sys, stage_index,
             stage_count, delta_time, NULL);
-
-        ecs_os_linc(&world->info.systems_ran_total);
     }
+
+    if (measure_time) {
+        stage->system_time_total += (ecs_ftime_t)ecs_time_measure(&st);
+    }
+
+    stage->systems_ran_total += i - start;
 
     return i - 1;
 }
@@ -668,16 +678,20 @@ void flecs_run_pipeline(
             ecs_time_measure(&st);
         }
 
+        const int32_t start = pq->cur_i;
         const int32_t i = flecs_run_pipeline_ops(
             world, stage, stage_index, stage_count, delta_time);
+
+        if (op_multi_threaded) {
+            flecs_wait_for_sync(world);
+        }
+
+        world->info.systems_ran_total += (i + 1 - start) * 
+            (op_multi_threaded ? stage_count : 1);
 
         if (measure_time) {
             /* Don't include merge time in system time */
             world->info.system_time_total += (ecs_ftime_t)ecs_time_measure(&st);
-        }
-
-        if (op_multi_threaded) {
-            flecs_wait_for_sync(world);
         }
 
         if (!immediate) {

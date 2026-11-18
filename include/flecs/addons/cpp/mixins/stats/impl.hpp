@@ -18,6 +18,7 @@ inline stats::stats(flecs::world& world) {
     world.component<WorldSummary>();
     world.component<WorldStats>();
     world.component<PipelineStats>();
+    world.component<WorkerStats>();
 }
 
 }

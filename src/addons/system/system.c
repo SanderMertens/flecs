@@ -157,7 +157,16 @@ ecs_entity_t flecs_run_system(
     flecs_stage_set_system(stage, old_system);
 
     if (measure_time) {
-        system_data->time_spent += (ecs_ftime_t)ecs_time_measure(&time_start);
+        ecs_ftime_t time_spent = (ecs_ftime_t)ecs_time_measure(&time_start);
+        if (stage->id > 0 && ECS_BIT_IS_SET(world->flags, EcsWorldReadonly)) {
+            ecs_stage_system_time_t *elem = ecs_vec_append_t(
+                &stage->allocator, &stage->system_time_pending, 
+                ecs_stage_system_time_t);
+            elem->dst = &system_data->time_spent;
+            elem->time = time_spent;
+        } else {
+            system_data->time_spent += time_spent;
+        }
     }
 
     ecs_os_perf_trace_pop(system_data->name);

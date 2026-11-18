@@ -1040,6 +1040,19 @@ static void flecs_stats_memory_get(
             }
         }
     }
+
+    for (p = 0; p < period_count; p ++) {
+        ecs_iter_t it = ecs_each_id(world, 
+            ecs_pair_t(EcsWorkerStats, periods[p]));
+        while (ecs_each_next(&it)) {
+            EcsWorkerStats *ws = ecs_field(&it, EcsWorkerStats, 0);
+            int32_t i, count = it.count;
+            for (i = 0; i < count; i ++) {
+                result->bytes_stats += ecs_vec_size(&ws[i].stats.threads) * 
+                    ECS_SIZEOF(ecs_thread_stats_t);
+            }
+        }
+    }
 }
 
 #ifdef FLECS_REST
@@ -1133,6 +1146,8 @@ ecs_misc_memory_t ecs_misc_memory_get(
     for (int32_t i = 0; i < stage_count; i++) {
         result.bytes_world += ecs_vec_size(&stages[i]->post_frame_actions) *
             ECS_SIZEOF(ecs_action_elem_t);
+        result.bytes_world += ecs_vec_size(&stages[i]->system_time_pending) *
+            ECS_SIZEOF(ecs_stage_system_time_t);
     }
     
     result.bytes_observers = flecs_observers_memory_get(world);
