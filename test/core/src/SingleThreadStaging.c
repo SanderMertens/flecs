@@ -2898,3 +2898,25 @@ void SingleThreadStaging_delete_stage_entity_after_progress(void) {
 
     ecs_fini(world);
 }
+
+void SingleThreadStaging_table_is_locked(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    ecs_table_t *table = ecs_get_table(world, e);
+    test_assert(table != NULL);
+
+    test_bool(ecs_table_is_locked(NULL), false);
+    test_bool(ecs_table_is_locked(table), false);
+    ecs_table_lock(world, table);
+    test_bool(ecs_table_is_locked(table), true);
+    ecs_table_lock(world, table);
+    ecs_table_unlock(world, table);
+    test_bool(ecs_table_is_locked(table), true);
+    ecs_table_unlock(world, table);
+    test_bool(ecs_table_is_locked(table), false);
+
+    ecs_fini(world);
+}

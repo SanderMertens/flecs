@@ -3610,6 +3610,7 @@ void SingleThreadStaging_on_add_after_new_type_in_progress(void);
 void SingleThreadStaging_lock_table(void);
 void SingleThreadStaging_recursive_lock_table(void);
 void SingleThreadStaging_modify_after_lock(void);
+void SingleThreadStaging_table_is_locked(void);
 void SingleThreadStaging_get_object_from_stage(void);
 void SingleThreadStaging_add_to_world_while_readonly(void);
 void SingleThreadStaging_add_to_world_and_stage_while_readonly(void);
@@ -17922,6 +17923,10 @@ bake_test_case SingleThreadStaging_testcases[] = {
         SingleThreadStaging_modify_after_lock
     },
     {
+        "table_is_locked",
+        SingleThreadStaging_table_is_locked
+    },
+    {
         "get_object_from_stage",
         SingleThreadStaging_get_object_from_stage
     },
@@ -18828,7 +18833,7 @@ static bake_test_suite suites[] = {
         "SingleThreadStaging",
         SingleThreadStaging_setup,
         NULL,
-        66,
+        67,
         SingleThreadStaging_testcases
     },
     {

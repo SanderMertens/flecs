@@ -5946,6 +5946,17 @@ void ecs_table_unlock(
     ecs_world_t *world,
     ecs_table_t *table);
 
+/** Check if a table is locked.
+ * Can be used to check whether an operation that modifies the table would
+ * run into a table lock assert.
+ *
+ * @param table The table.
+ * @return True if the table is locked, false if not (or if table is NULL).
+ */
+FLECS_API
+bool ecs_table_is_locked(
+    const ecs_table_t *table);
+
 /** Test a table for flags.
  * Test if a table has all of the provided flags. See
  * include/flecs/private/api_flags.h for a list of table flags that can be used
