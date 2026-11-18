@@ -83,6 +83,7 @@ int ecs_entity_to_json_buf(
         .serialize_inherited =    desc ? desc->serialize_inherited : false,
         .serialize_type_info =    desc ? desc->serialize_type_info : false,
         .component_filter =       desc ? desc->component_filter : NULL,
+        .pretty =                 desc ? desc->pretty : false,
     };
 
     ecs_strbuf_t type_info_buf = ECS_STRBUF_INIT;
@@ -103,7 +104,8 @@ int ecs_entity_to_json_buf(
         return result;
     }
 
-    flecs_json_assemble_output(buf, ser_ctx.type_info_buf, &entity_buf);
+    flecs_json_assemble_output(
+        buf, ser_ctx.type_info_buf, &entity_buf, iter_desc.pretty);
 
     return 0;
 }

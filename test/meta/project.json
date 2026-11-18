@@ -918,7 +918,10 @@
                 "entity_wildcard_parent",
                 "entity_wildcard_tag",
                 "entity_wildcard_pair_target",
-                "entity_wildcard_component"
+                "entity_wildcard_component",
+                "ser_deser_pretty_value",
+                "ser_deser_pretty_entity",
+                "ser_deser_pretty_world"
             ]
         }, {
             "id": "SerializeToJson",
@@ -1016,7 +1019,14 @@
                 "value_roundtrip",
                 "ecs_struct_1_member",
                 "ecs_struct_2_members",
-                "ecs_struct_3_members"
+                "ecs_struct_3_members",
+                "pretty_struct",
+                "pretty_nested",
+                "pretty_empty_scopes",
+                "pretty_string_w_special_chars",
+                "pretty_already_pretty",
+                "pretty_scalar",
+                "pretty_null"
             ]
         }, {
             "id": "SerializeEntityToJson",
@@ -1118,7 +1128,9 @@
                 "serialize_w_quote_in_name",
                 "serialize_w_backslash_in_name",
                 "serialize_w_quote_in_parent_name",
-                "serialize_w_quote_in_alert_message"
+                "serialize_w_quote_in_alert_message",
+                "serialize_w_pretty",
+                "serialize_w_pretty_type_info"
             ]
         }, {
             "id": "SerializeIterToJson",
@@ -1212,7 +1224,8 @@
                 "serialize_childof_var_w_parent",
                 "serialize_childof_wildcard_w_parent",
                 "serialize_table_dont_fragment_no_leak",
-                "serialize_sparse_each"
+                "serialize_sparse_each",
+                "serialize_w_pretty"
             ]
         }, {
             "id": "SerializeIterToRowJson",

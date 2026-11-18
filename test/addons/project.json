@@ -623,7 +623,10 @@
                 "command_run_multiple_error",
                 "command_run_multiple_offset_limit",
                 "root_shell_instructions",
-                "get_stats_wo_stats_import"
+                "get_stats_wo_stats_import",
+                "get_pretty",
+                "query_pretty",
+                "world_pretty"
             ]
         }, {
             "id": "Metrics",
