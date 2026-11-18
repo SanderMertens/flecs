@@ -159,3 +159,136 @@ void Doc_set_uuid_nullptr(void) {
 
     ecs_fini(world);
 }
+
+void Doc_get_set_source_location(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+
+    test_assert(ecs_doc_get_source_location(world, e) == NULL);
+
+    ecs_doc_set_source_location(world, e, "foo.c", 10);
+
+    test_assert( ecs_has(world, e, EcsDocSourceLocation));
+    const EcsDocSourceLocation *loc = ecs_doc_get_source_location(world, e);
+    test_assert(loc != NULL);
+    test_str(loc->file, "foo.c");
+    test_int(loc->line, 10);
+
+    ecs_doc_set_source_location(world, e, "bar.c", 20);
+
+    loc = ecs_doc_get_source_location(world, e);
+    test_assert(loc != NULL);
+    test_str(loc->file, "bar.c");
+    test_int(loc->line, 20);
+
+    ecs_fini(world);
+}
+
+void Doc_set_source_location_copies_file(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+
+    char *file = ecs_os_strdup("foo.c");
+    ecs_doc_set_source_location(world, e, file, 10);
+    test_assert(ecs_doc_get_source_location(world, e)->file != file);
+    ecs_os_free(file);
+
+    const EcsDocSourceLocation *loc = ecs_doc_get_source_location(world, e);
+    test_assert(loc != NULL);
+    test_str(loc->file, "foo.c");
+    test_int(loc->line, 10);
+
+    ecs_fini(world);
+}
+
+void Doc_set_source_location_nullptr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_doc_set_source_location(world, e, "foo.c", 10);
+    test_assert( ecs_has(world, e, EcsDocSourceLocation));
+
+    ecs_doc_set_source_location(world, e, NULL, 0);
+    test_assert( !ecs_has(world, e, EcsDocSourceLocation));
+    test_assert(ecs_doc_get_source_location(world, e) == NULL);
+
+    ecs_fini(world);
+}
+
+void Doc_set_source_location_here(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+
+    int32_t line = __LINE__; ecs_doc_set_source_location_here(world, e);
+
+    const EcsDocSourceLocation *loc = ecs_doc_get_source_location(world, e);
+    test_assert(loc != NULL);
+    test_str(loc->file, __FILE__);
+    test_int(loc->line, line);
+
+    ecs_fini(world);
+}
+
+static void Dummy(ecs_iter_t *it) { }
+
+void Doc_set_source_location_system(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+
+    ecs_doc_set_source_location(world, Dummy, "systems.c", 42);
+
+    const EcsDocSourceLocation *loc = ecs_doc_get_source_location(world, Dummy);
+    test_assert(loc != NULL);
+    test_str(loc->file, "systems.c");
+    test_int(loc->line, 42);
+
+    ecs_fini(world);
+}
+
+void Doc_set_source_location_observer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_OBSERVER(world, Dummy, EcsOnAdd, Position);
+
+    ecs_doc_set_source_location(world, Dummy, "observers.c", 7);
+
+    const EcsDocSourceLocation *loc = ecs_doc_get_source_location(world, Dummy);
+    test_assert(loc != NULL);
+    test_str(loc->file, "observers.c");
+    test_int(loc->line, 7);
+
+    ecs_fini(world);
+}
+
+void Doc_source_location_not_inherited(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_doc_set_source_location(world, base, "foo.c", 10);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(ecs_doc_get_source_location(world, inst) == NULL);
+
+    ecs_fini(world);
+}
+
+void Doc_source_location_reflection(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_doc_set_source_location(world, e, "foo.c", 10);
+
+    const EcsDocSourceLocation *loc = ecs_doc_get_source_location(world, e);
+    char *json = ecs_ptr_to_json(world, ecs_id(EcsDocSourceLocation), loc);
+    test_str(json, "{\"file\":\"foo.c\", \"line\":10}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}

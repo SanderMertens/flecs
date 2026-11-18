@@ -105,7 +105,10 @@
                 "set_link",
                 "set_color",
                 "set_uuid",
-                "get_name_no_doc_name"
+                "get_name_no_doc_name",
+                "set_source_location",
+                "set_source_location_system",
+                "set_source_location_observer"
             ]
         }]
     }

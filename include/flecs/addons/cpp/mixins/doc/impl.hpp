@@ -80,6 +80,20 @@ inline const char* get_color(const flecs::entity_view& e) {
     return ecs_doc_get_color(e.world(), e);
 }
 
+/** Get source location for an entity.
+ *
+ * @see ecs_doc_get_source_location()
+ * @see flecs::doc::set_source_location()
+ * @see flecs::entity_view::doc_source_location()
+ *
+ * @ingroup cpp_addons_doc
+ */
+inline const flecs::doc::SourceLocation* get_source_location(
+    const flecs::entity_view& e) 
+{
+    return ecs_doc_get_source_location(e.world(), e);
+}
+
 /** Set UUID for an entity.
  *
  * @see ecs_doc_set_uuid()
@@ -152,12 +166,27 @@ inline void set_color(flecs::entity& e, const char *color) {
     ecs_doc_set_color(e.world(), e, color);
 }
 
+/** Set source location for an entity.
+ *
+ * @see ecs_doc_set_source_location()
+ * @see flecs::doc::get_source_location()
+ * @see flecs::entity_builder::set_doc_source_location()
+ *
+ * @ingroup cpp_addons_doc
+ */
+inline void set_source_location(
+    flecs::entity& e, const char *file, int32_t line) 
+{
+    ecs_doc_set_source_location(e.world(), e, file, line);
+}
+
 /** @private */
 namespace _ {
 
 /** @private */
 inline void init(flecs::world& world) {
     world.component<doc::Description>("flecs::doc::Description");
+    world.component<doc::SourceLocation>("flecs::doc::SourceLocation");
 }
 
 } // namespace _

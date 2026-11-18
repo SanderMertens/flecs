@@ -21,6 +21,14 @@ void Doc_set_detail_nullptr(void);
 void Doc_set_link_nullptr(void);
 void Doc_set_color_nullptr(void);
 void Doc_set_uuid_nullptr(void);
+void Doc_get_set_source_location(void);
+void Doc_set_source_location_copies_file(void);
+void Doc_set_source_location_nullptr(void);
+void Doc_set_source_location_here(void);
+void Doc_set_source_location_system(void);
+void Doc_set_source_location_observer(void);
+void Doc_source_location_not_inherited(void);
+void Doc_source_location_reflection(void);
 
 // Testsuite 'Pipeline'
 void Pipeline_system_order_same_phase(void);
@@ -700,6 +708,38 @@ bake_test_case Doc_testcases[] = {
     {
         "set_uuid_nullptr",
         Doc_set_uuid_nullptr
+    },
+    {
+        "get_set_source_location",
+        Doc_get_set_source_location
+    },
+    {
+        "set_source_location_copies_file",
+        Doc_set_source_location_copies_file
+    },
+    {
+        "set_source_location_nullptr",
+        Doc_set_source_location_nullptr
+    },
+    {
+        "set_source_location_here",
+        Doc_set_source_location_here
+    },
+    {
+        "set_source_location_system",
+        Doc_set_source_location_system
+    },
+    {
+        "set_source_location_observer",
+        Doc_set_source_location_observer
+    },
+    {
+        "source_location_not_inherited",
+        Doc_source_location_not_inherited
+    },
+    {
+        "source_location_reflection",
+        Doc_source_location_reflection
     }
 };
 
@@ -3100,7 +3140,7 @@ static bake_test_suite suites[] = {
         "Doc",
         NULL,
         NULL,
-        12,
+        20,
         Doc_testcases
     },
     {

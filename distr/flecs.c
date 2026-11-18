@@ -21685,6 +21685,7 @@ const ecs_entity_t EcsDocDetail =                   FLECS_HI_COMPONENT_ID + 117;
 const ecs_entity_t EcsDocLink =                     FLECS_HI_COMPONENT_ID + 118;
 const ecs_entity_t EcsDocColor =                    FLECS_HI_COMPONENT_ID + 119;
 const ecs_entity_t EcsDocUuid =                     FLECS_HI_COMPONENT_ID + 120;
+const ecs_entity_t ecs_id(EcsDocSourceLocation) =   FLECS_HI_COMPONENT_ID + 126;
 #endif
 
 /* REST module components */
@@ -24149,6 +24150,22 @@ static ECS_DTOR(EcsDocDescription, ptr, {
     ecs_os_free((char*)ptr->value);
 })
 
+static ECS_COPY(EcsDocSourceLocation, dst, src, {
+    ecs_os_strset(&dst->file, src->file);
+    dst->line = src->line;
+})
+
+static ECS_MOVE(EcsDocSourceLocation, dst, src, {
+    ecs_os_free(dst->file);
+    dst->file = src->file;
+    dst->line = src->line;
+    src->file = NULL;
+})
+
+static ECS_DTOR(EcsDocSourceLocation, ptr, {
+    ecs_os_free(ptr->file);
+})
+
 static void flecs_doc_set(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -24211,6 +24228,23 @@ void ecs_doc_set_color(
     const char *color)
 {
     flecs_doc_set(world, entity, EcsDocColor, color);
+}
+
+void ecs_doc_set_source_location(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *file,
+    int32_t line)
+{
+    if (file) {
+        ecs_set(world, entity, EcsDocSourceLocation, {
+            /* Safe, file gets copied by copy hook */
+            .file = ECS_CONST_CAST(char*, file),
+            .line = line
+        });
+    } else {
+        ecs_remove(world, entity, EcsDocSourceLocation);
+    }
 }
 
 const char* ecs_doc_get_uuid(
@@ -24291,6 +24325,13 @@ const char* ecs_doc_get_color(
     }
 }
 
+const EcsDocSourceLocation* ecs_doc_get_source_location(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    return ecs_get(world, entity, EcsDocSourceLocation);
+}
+
 void FlecsDocImport(
     ecs_world_t *world)
 {    
@@ -24304,12 +24345,20 @@ void FlecsDocImport(
     flecs_bootstrap_tag(world, EcsDocDetail);
     flecs_bootstrap_tag(world, EcsDocLink);
     flecs_bootstrap_tag(world, EcsDocColor);
+    flecs_bootstrap_component(world, EcsDocSourceLocation);
 
     ecs_set_hooks(world, EcsDocDescription, { 
         .ctor = flecs_default_ctor,
         .move = ecs_move(EcsDocDescription),
         .copy = ecs_copy(EcsDocDescription),
         .dtor = ecs_dtor(EcsDocDescription)
+    });
+
+    ecs_set_hooks(world, EcsDocSourceLocation, { 
+        .ctor = flecs_default_ctor,
+        .move = ecs_move(EcsDocSourceLocation),
+        .copy = ecs_copy(EcsDocSourceLocation),
+        .dtor = ecs_dtor(EcsDocSourceLocation)
     });
 
 #ifdef FLECS_META
@@ -24319,9 +24368,18 @@ void FlecsDocImport(
             { .name = "value", .type = ecs_id(ecs_string_t) }
         }
     });
+
+    ecs_struct(world, {
+        .entity = ecs_id(EcsDocSourceLocation),
+        .members = {
+            { .name = "file", .type = ecs_id(ecs_string_t) },
+            { .name = "line", .type = ecs_id(ecs_i32_t) }
+        }
+    });
 #endif
 
     ecs_add_pair(world, ecs_id(EcsDocDescription), EcsOnInstantiate, EcsDontInherit);
+    ecs_add_pair(world, ecs_id(EcsDocSourceLocation), EcsOnInstantiate, EcsDontInherit);
 #ifdef FLECS_CONSTRAINT_TRAITS
     ecs_add_id(world, ecs_id(EcsDocDescription), EcsRelationship);
 #endif
@@ -76219,6 +76277,23 @@ static ecs_size_t flecs_doc_string_memory_get(
     }
     return result;
 }
+
+static ecs_size_t flecs_doc_source_location_memory_get(
+    const ecs_world_t *world)
+{
+    ecs_size_t result = 0;
+    ecs_iter_t it = ecs_each(world, EcsDocSourceLocation);
+    while (ecs_each_next(&it)) {
+        EcsDocSourceLocation *ptr = ecs_field(&it, EcsDocSourceLocation, 0);
+        int32_t i, count = it.count;
+        for (i = 0; i < count; i ++) {
+            if (ptr[i].file) {
+                result += ecs_os_strlen(ptr[i].file) + 1;
+            }
+        }
+    }
+    return result;
+}
 #endif
 
 ecs_entities_memory_t ecs_entity_memory_get(
@@ -76276,6 +76351,7 @@ ecs_entities_memory_t ecs_entity_memory_get(
     result.bytes_doc_strings += flecs_doc_string_memory_get(world, EcsDocUuid);
     result.bytes_doc_strings += flecs_doc_string_memory_get(world, EcsDocLink);
     result.bytes_doc_strings += flecs_doc_string_memory_get(world, EcsDocColor);
+    result.bytes_doc_strings += flecs_doc_source_location_memory_get(world);
 #endif
 
 error:

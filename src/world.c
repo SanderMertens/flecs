@@ -189,6 +189,7 @@ const ecs_entity_t EcsDocDetail =                   FLECS_HI_COMPONENT_ID + 117;
 const ecs_entity_t EcsDocLink =                     FLECS_HI_COMPONENT_ID + 118;
 const ecs_entity_t EcsDocColor =                    FLECS_HI_COMPONENT_ID + 119;
 const ecs_entity_t EcsDocUuid =                     FLECS_HI_COMPONENT_ID + 120;
+const ecs_entity_t ecs_id(EcsDocSourceLocation) =   FLECS_HI_COMPONENT_ID + 126;
 #endif
 
 /* REST module components */

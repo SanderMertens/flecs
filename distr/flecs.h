@@ -19726,6 +19726,7 @@ extern "C" {
  */
 
 FLECS_API extern const ecs_entity_t ecs_id(EcsDocDescription); /**< Component ID for EcsDocDescription. */
+FLECS_API extern const ecs_entity_t ecs_id(EcsDocSourceLocation); /**< Component ID for EcsDocSourceLocation. */
 
 /** Tag for adding a UUID to entities. 
  * Added to an entity as (EcsDocDescription, EcsUuid) by ecs_doc_set_uuid().
@@ -19763,6 +19764,15 @@ FLECS_API extern const ecs_entity_t EcsDocColor;
 typedef struct EcsDocDescription {
     char *value;           /**< Description value. */
 } EcsDocDescription;
+
+/** Component that stores the location in the source code where an entity 
+ * (such as a system, observer, query or component) is defined.
+ * Added to an entity by ecs_doc_set_source_location().
+ */
+typedef struct EcsDocSourceLocation {
+    char *file;            /**< Source file. */
+    int32_t line;          /**< Line in source file (0 if unknown). */
+} EcsDocSourceLocation;
 
 /** Add UUID to entity.
  * Associate entity with an (external) UUID.
@@ -19864,6 +19874,46 @@ void ecs_doc_set_color(
     ecs_entity_t entity,
     const char *color);
 
+/** Add source location to entity.
+ * Associates an entity with the location in the source code where it is 
+ * defined, which makes it easier to refer back to the code that created a 
+ * system, observer, query, component, etc. If file is NULL, the source 
+ * location is removed from the entity.
+ *
+ * @param world The world.
+ * @param entity The entity to which to add the source location.
+ * @param file The source file.
+ * @param line The line in the source file.
+ *
+ * @see ecs_doc_get_source_location()
+ * @see ecs_doc_set_source_location_here()
+ * @see flecs::doc::set_source_location()
+ * @see flecs::entity_builder::set_doc_source_location()
+ */
+FLECS_API
+void ecs_doc_set_source_location(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *file,
+    int32_t line);
+
+/** Add the current source location to entity.
+ * Convenience macro that calls ecs_doc_set_source_location() with the file 
+ * and line of the code that invokes the macro.
+ *
+ * Example:
+ *
+ * @code
+ * ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
+ * ecs_doc_set_source_location_here(world, Move);
+ * @endcode
+ *
+ * @param world The world.
+ * @param entity The entity to which to add the source location.
+ */
+#define ecs_doc_set_source_location_here(world, entity)\
+    ecs_doc_set_source_location(world, entity, __FILE__, __LINE__)
+
 /** Get UUID from entity.
  * @param world The world.
  * @param entity The entity from which to get the UUID.
@@ -19964,6 +20014,21 @@ const char* ecs_doc_get_link(
  */
 FLECS_API
 const char* ecs_doc_get_color(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Get source location from entity.
+ *
+ * @param world The world.
+ * @param entity The entity from which to get the source location.
+ * @return The source location, or NULL if the entity has none.
+ *
+ * @see ecs_doc_set_source_location()
+ * @see flecs::doc::get_source_location()
+ * @see flecs::entity_view::doc_source_location()
+ */
+FLECS_API
+const EcsDocSourceLocation* ecs_doc_get_source_location(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
@@ -24393,6 +24458,9 @@ namespace doc {
 
 /** flecs.doc.Description component. */
 using Description = EcsDocDescription;
+
+/** flecs.doc.SourceLocation component. */
+using SourceLocation = EcsDocSourceLocation;
 
 /** flecs.doc.Uuid component. */
 static const flecs::entity_t Uuid = EcsDocUuid;
@@ -30223,6 +30291,19 @@ const char* doc_uuid() const {
     return ecs_doc_get_uuid(world_, id_);
 }
 
+/** Get source location.
+ *
+ * @see ecs_doc_get_source_location()
+ * @see flecs::doc::get_source_location()
+ * @see flecs::entity_builder::set_doc_source_location()
+ *
+ * @memberof flecs::entity_view
+ * @ingroup cpp_addons_doc
+ */
+const flecs::doc::SourceLocation* doc_source_location() const {
+    return ecs_doc_get_source_location(world_, id_);
+}
+
 #   endif
 #   ifdef FLECS_ALERTS
 
@@ -30978,6 +31059,31 @@ const Self& set_doc_color(const char *color) const {
  */
 const Self& set_doc_uuid(const char *uuid) const {
     ecs_doc_set_uuid(world_, id_, uuid);
+    return to_base();
+}
+
+/** Set source location.
+ * This adds `flecs.doc.SourceLocation` to the entity, which makes it easier to
+ * refer back to the code where the entity (system, observer, query, ...) is
+ * defined.
+ *
+ * Example:
+ *
+ * @code
+ * world.system<Position>("Move")
+ *   .each([](Position& p) { })
+ *   .set_doc_source_location(__FILE__, __LINE__);
+ * @endcode
+ *
+ * @see ecs_doc_set_source_location()
+ * @see flecs::doc::set_source_location()
+ * @see flecs::entity_view::doc_source_location()
+ *
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_doc
+ */
+const Self& set_doc_source_location(const char *file, int32_t line) const {
+    ecs_doc_set_source_location(world_, id_, file, line);
     return to_base();
 }
 
@@ -36859,6 +36965,20 @@ inline const char* get_color(const flecs::entity_view& e) {
     return ecs_doc_get_color(e.world(), e);
 }
 
+/** Get source location for an entity.
+ *
+ * @see ecs_doc_get_source_location()
+ * @see flecs::doc::set_source_location()
+ * @see flecs::entity_view::doc_source_location()
+ *
+ * @ingroup cpp_addons_doc
+ */
+inline const flecs::doc::SourceLocation* get_source_location(
+    const flecs::entity_view& e) 
+{
+    return ecs_doc_get_source_location(e.world(), e);
+}
+
 /** Set UUID for an entity.
  *
  * @see ecs_doc_set_uuid()
@@ -36931,12 +37051,27 @@ inline void set_color(flecs::entity& e, const char *color) {
     ecs_doc_set_color(e.world(), e, color);
 }
 
+/** Set source location for an entity.
+ *
+ * @see ecs_doc_set_source_location()
+ * @see flecs::doc::get_source_location()
+ * @see flecs::entity_builder::set_doc_source_location()
+ *
+ * @ingroup cpp_addons_doc
+ */
+inline void set_source_location(
+    flecs::entity& e, const char *file, int32_t line) 
+{
+    ecs_doc_set_source_location(e.world(), e, file, line);
+}
+
 /** @private */
 namespace _ {
 
 /** @private */
 inline void init(flecs::world& world) {
     world.component<doc::Description>("flecs::doc::Description");
+    world.component<doc::SourceLocation>("flecs::doc::SourceLocation");
 }
 
 } // namespace _
