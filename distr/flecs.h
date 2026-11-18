@@ -5212,15 +5212,18 @@ char* flecs_chresc(
     char delimiter);
 
 /** Parse an escaped character.
- * Parse a character with a potential escape sequence.
+ * Parse a character with a potential escape sequence. A \uXXXX escape is
+ * written as UTF-8, which can be up to 4 characters.
  *
  * @param in Pointer to a character in the input string.
- * @param out Output string.
+ * @param out Output string (must have space for at least 4 characters).
+ * @param out_len Number of characters written to out.
  * @return Pointer to the character after the last one read.
  */
 const char* flecs_chrparse(
     const char *in,
-    char *out);
+    char *out,
+    int32_t *out_len);
 
 /** Write an escaped string.
  * Write an input string to an output string, escaping characters where necessary.

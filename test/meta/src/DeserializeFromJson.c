@@ -664,6 +664,106 @@ void DeserializeFromJson_struct_string(void) {
     ecs_fini(world);
 }
 
+void DeserializeFromJson_struct_string_w_unicode_escape(void) {
+    typedef struct {
+        char* v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", ecs_id(ecs_string_t)}
+        }
+    });
+
+    test_assert(t != 0);
+
+    T value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": \"a\\u001bb\\u0041\"}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_str(value.v, "a\x1b" "bA");
+
+    ecs_os_free(value.v);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_struct_string_w_unicode_escape_utf8(void) {
+    typedef struct {
+        char* v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", ecs_id(ecs_string_t)}
+        }
+    });
+
+    test_assert(t != 0);
+
+    T value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"v\": \"\\u00e9\\u20AC\\ud83d\\ude00\"}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_str(value.v, "\xc3\xa9\xe2\x82\xac\xf0\x9f\x98\x80");
+
+    ecs_os_free(value.v);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_struct_string_w_unicode_escape_large(void) {
+    typedef struct {
+        char* v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", ecs_id(ecs_string_t)}
+        }
+    });
+
+    test_assert(t != 0);
+
+    char json[600];
+    char expect[400];
+    char *p = json;
+    p += sprintf(p, "{\"v\": \"");
+    int i;
+    for (i = 0; i < 300; i ++) {
+        *(p ++) = 'x';
+        expect[i] = 'x';
+    }
+    sprintf(p, "\\u001b\\u00e9\"}");
+    sprintf(&expect[300], "\x1b\xc3\xa9");
+
+    T value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, json, NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_str(value.v, expect);
+
+    ecs_os_free(value.v);
+
+    ecs_fini(world);
+}
+
 void DeserializeFromJson_struct_entity(void) {
     typedef struct {
         ecs_entity_t v;
@@ -7326,7 +7426,7 @@ void DeserializeFromJson_string_w_unknown_escape_large(void) {
     for (i = 0; i < 300; i ++) {
         *(p ++) = 'x';
     }
-    sprintf(p, "\\u0042\"}");
+    sprintf(p, "\\q\"}");
 
     T value = {0};
     const char *r = ecs_ptr_from_json(world, t, &value, json, NULL);

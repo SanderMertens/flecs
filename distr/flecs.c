@@ -52580,24 +52580,29 @@ const char* flecs_json_parse(
         char *token_ptr = token;
         json ++;
         for (; (ch = json[0]); ) {
-            if (token_ptr - token >= ECS_MAX_TOKEN_SIZE) {
-                /* Token doesn't fit in buffer, signal to app to try again with
-                 * dynamic buffer. */
-                token_kind[0] = JsonLargeString;
-                return start;
-            }
-
             if (ch == '"') {
                 json ++;
                 token_ptr[0] = '\0';
                 break;
             }
 
-            json = flecs_chrparse(json, token_ptr ++);
+            char ch_out[4];
+            int32_t len;
+            json = flecs_chrparse(json, ch_out, &len);
             if (!json) {
                 token_kind[0] = JsonInvalid;
                 return NULL;
             }
+
+            if (token_ptr - token + len >= ECS_MAX_TOKEN_SIZE) {
+                /* Token doesn't fit in buffer, signal to app to try again with
+                 * dynamic buffer. */
+                token_kind[0] = JsonLargeString;
+                return start;
+            }
+
+            ecs_os_memcpy(token_ptr, ch_out, len);
+            token_ptr += len;
         }
 
         if (!ch) {
@@ -52658,7 +52663,8 @@ const char* flecs_json_parse_large_string(
         return NULL; /* can only parse strings */
     }
 
-    char ch, ch_out;
+    char ch, ch_out[4];
+    int32_t len;
     json ++;
     for (; (ch = json[0]); ) {
         if (ch == '"') {
@@ -52666,12 +52672,12 @@ const char* flecs_json_parse_large_string(
             break;
         }
 
-        json = flecs_chrparse(json, &ch_out);
+        json = flecs_chrparse(json, ch_out, &len);
         if (!json) {
             return NULL;
         }
 
-        ecs_strbuf_appendch(buf, ch_out);
+        ecs_strbuf_appendstrn(buf, ch_out, len);
     }
 
     return ch ? json : NULL;
@@ -52837,7 +52843,7 @@ static const char* flecs_json_skip_string(
         return NULL; /* can only skip strings */
     }
 
-    char ch, ch_out;
+    char ch;
     json ++;
     for (; (ch = json[0]); ) {
         if (ch == '"') {
@@ -52845,7 +52851,7 @@ static const char* flecs_json_skip_string(
             break;
         }
 
-        json = flecs_chrparse(json, &ch_out);
+        json = flecs_chrparse(json, NULL, NULL);
         if (!json) {
             return NULL;
         }
@@ -63772,12 +63778,101 @@ char* flecs_chresc(
     return bptr;
 }
 
+static const char* flecs_hex4parse(
+    const char *in,
+    uint32_t *out)
+{
+    uint32_t result = 0;
+    int i;
+    for (i = 0; i < 4; i ++) {
+        char ch = in[i];
+        result <<= 4;
+        if (ch >= '0' && ch <= '9') {
+            result |= (uint32_t)(ch - '0');
+        } else if (ch >= 'a' && ch <= 'f') {
+            result |= (uint32_t)(ch - 'a' + 10);
+        } else if (ch >= 'A' && ch <= 'F') {
+            result |= (uint32_t)(ch - 'A' + 10);
+        } else {
+            return NULL;
+        }
+    }
+
+    *out = result;
+    return in + 4;
+}
+
+static const char* flecs_unicode_chrparse(
+    const char *in,
+    char *out,
+    int32_t *out_len)
+{
+    uint32_t cp;
+    in = flecs_hex4parse(in, &cp);
+    if (!in) {
+        return NULL;
+    }
+
+    if (cp >= 0xD800 && cp <= 0xDBFF) {
+        uint32_t lo;
+        if (in[0] != '\\' || in[1] != 'u') {
+            return NULL;
+        }
+
+        in = flecs_hex4parse(in + 2, &lo);
+        if (!in || lo < 0xDC00 || lo > 0xDFFF) {
+            return NULL;
+        }
+
+        cp = 0x10000 + ((cp - 0xD800) << 10) + (lo - 0xDC00);
+    } else if (cp >= 0xDC00 && cp <= 0xDFFF) {
+        return NULL;
+    }
+
+    char buf[4];
+    int32_t len;
+    if (cp < 0x80) {
+        buf[0] = (char)cp;
+        len = 1;
+    } else if (cp < 0x800) {
+        buf[0] = (char)(0xC0 | (cp >> 6));
+        buf[1] = (char)(0x80 | (cp & 0x3F));
+        len = 2;
+    } else if (cp < 0x10000) {
+        buf[0] = (char)(0xE0 | (cp >> 12));
+        buf[1] = (char)(0x80 | ((cp >> 6) & 0x3F));
+        buf[2] = (char)(0x80 | (cp & 0x3F));
+        len = 3;
+    } else {
+        buf[0] = (char)(0xF0 | (cp >> 18));
+        buf[1] = (char)(0x80 | ((cp >> 12) & 0x3F));
+        buf[2] = (char)(0x80 | ((cp >> 6) & 0x3F));
+        buf[3] = (char)(0x80 | (cp & 0x3F));
+        len = 4;
+    }
+
+    if (out) {
+        ecs_os_memcpy(out, buf, len);
+    }
+
+    if (out_len) {
+        *out_len = len;
+    }
+
+    return in;
+}
+
 const char* flecs_chrparse(
     const char *in,
-    char *out)
+    char *out,
+    int32_t *out_len)
 {
     const char *result = in + 1;
     char ch;
+
+    if (in[0] == '\\' && in[1] == 'u') {
+        return flecs_unicode_chrparse(in + 2, out, out_len);
+    }
 
     if (in[0] == '\\') {
         result ++;
@@ -63831,6 +63926,10 @@ const char* flecs_chrparse(
 
     if (out) {
         *out = ch;
+    }
+
+    if (out_len) {
+        *out_len = 1;
     }
 
     return result;
@@ -107067,15 +107166,16 @@ ecs_expr_value_node_t* flecs_expr_char(
     if(value[0] == '\\' && value[1] == '\'') {
         result->storage.char_ = '\'';
     } else {
-        char ch = 0;
-        const char *ptr = flecs_chrparse(value, &ch);
-        if(!ptr) {
+        char ch[4] = {0};
+        int32_t len;
+        const char *ptr = flecs_chrparse(value, ch, &len);
+        if(!ptr || len != 1) {
             flecs_free_t(
                 &parser->script->allocator, ecs_expr_value_node_t, result);
             return NULL;
         }
 
-        result->storage.char_ = ch;
+        result->storage.char_ = ch[0];
     }
 
     result->ptr = &result->storage.char_;
@@ -110005,11 +110105,15 @@ char* flecs_string_escape(
                 ch = '$';
                 ptr += 2;
             } else {
-                ptr = flecs_chrparse(ptr, &ch);
+                int32_t len;
+                ptr = flecs_chrparse(ptr, out, &len);
                 if (!ptr) {
                     ecs_err("invalid escape sequence in string '%s'", str);
                     return NULL;
                 }
+
+                out += len;
+                continue;
             }
         } else {
             ch = ptr[0];
@@ -123646,7 +123750,8 @@ static char* flecs_command_unescape(
     const char *ptr = start;
     while (ptr < end) {
         if (ptr[0] == '\\') {
-            const char *next = flecs_chrparse(ptr, out);
+            int32_t len;
+            const char *next = flecs_chrparse(ptr, out, &len);
             if (!next) {
                 ecs_err("invalid escape sequence '\\%c'", ptr[1]);
                 ecs_os_free(result);
@@ -123654,12 +123759,12 @@ static char* flecs_command_unescape(
             }
 
             ptr = next;
+            out += len;
         } else {
             out[0] = ptr[0];
             ptr ++;
+            out ++;
         }
-
-        out ++;
     }
 
     out[0] = '\0';
