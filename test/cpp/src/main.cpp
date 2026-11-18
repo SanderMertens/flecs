@@ -512,6 +512,8 @@ void Pairs_set_R_existing_value(void);
 void Pairs_symmetric_w_childof(void);
 void Pairs_modified_tag_second(void);
 void Pairs_modified_tag_first(void);
+void Pairs_childof_and_traversable_rel_in_opposite_directions(void);
+void Pairs_2_traversable_rels_in_opposite_directions(void);
 
 // Testsuite 'Enum'
 void Enum_standard_enum_reflection(void);
@@ -3783,6 +3785,14 @@ bake_test_case Pairs_testcases[] = {
     {
         "modified_tag_first",
         Pairs_modified_tag_first
+    },
+    {
+        "childof_and_traversable_rel_in_opposite_directions",
+        Pairs_childof_and_traversable_rel_in_opposite_directions
+    },
+    {
+        "2_traversable_rels_in_opposite_directions",
+        Pairs_2_traversable_rels_in_opposite_directions
     }
 };
 
@@ -8832,7 +8842,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        70,
+        72,
         Pairs_testcases
     },
     {

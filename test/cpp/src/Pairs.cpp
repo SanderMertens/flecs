@@ -1300,3 +1300,37 @@ void Pairs_modified_tag_first(void) {
 
     test_int(count, 1);
 }
+
+void Pairs_childof_and_traversable_rel_in_opposite_directions(void) {
+    flecs::world world;
+
+    flecs::entity relation = world.entity("relation").add(flecs::Traversable);
+
+    auto a = world.entity("a");
+    auto b = world.entity("b");
+    a.child_of(b);
+    b.add(relation, a);
+
+    test_assert(a.has(flecs::ChildOf, b));
+    test_assert(b.has(relation, a));
+    test_assert(a.parent() == b);
+    test_assert(b.target(relation) == a);
+    test_str(a.path().c_str(), "::b::a");
+}
+
+void Pairs_2_traversable_rels_in_opposite_directions(void) {
+    flecs::world world;
+
+    flecs::entity r1 = world.entity("r1").add(flecs::Traversable);
+    flecs::entity r2 = world.entity("r2").add(flecs::Traversable);
+
+    auto a = world.entity("a");
+    auto b = world.entity("b");
+    a.add(r1, b);
+    b.add(r2, a);
+
+    test_assert(a.has(r1, b));
+    test_assert(b.has(r2, a));
+    test_assert(a.target(r1) == b);
+    test_assert(b.target(r2) == a);
+}
