@@ -890,6 +890,9 @@ void DeserializeFromJson_entity_wildcard_parent(void);
 void DeserializeFromJson_entity_wildcard_tag(void);
 void DeserializeFromJson_entity_wildcard_pair_target(void);
 void DeserializeFromJson_entity_wildcard_component(void);
+void DeserializeFromJson_ser_deser_pretty_value(void);
+void DeserializeFromJson_ser_deser_pretty_entity(void);
+void DeserializeFromJson_ser_deser_pretty_world(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_string_w_control_char(void);
@@ -986,6 +989,13 @@ void SerializeToJson_value_roundtrip(void);
 void SerializeToJson_ecs_struct_1_member(void);
 void SerializeToJson_ecs_struct_2_members(void);
 void SerializeToJson_ecs_struct_3_members(void);
+void SerializeToJson_pretty_struct(void);
+void SerializeToJson_pretty_nested(void);
+void SerializeToJson_pretty_empty_scopes(void);
+void SerializeToJson_pretty_string_w_special_chars(void);
+void SerializeToJson_pretty_already_pretty(void);
+void SerializeToJson_pretty_scalar(void);
+void SerializeToJson_pretty_null(void);
 
 // Testsuite 'SerializeEntityToJson'
 void SerializeEntityToJson_serialize_more_than_256_components(void);
@@ -1086,6 +1096,8 @@ void SerializeEntityToJson_serialize_w_quote_in_name(void);
 void SerializeEntityToJson_serialize_w_backslash_in_name(void);
 void SerializeEntityToJson_serialize_w_quote_in_parent_name(void);
 void SerializeEntityToJson_serialize_w_quote_in_alert_message(void);
+void SerializeEntityToJson_serialize_w_pretty(void);
+void SerializeEntityToJson_serialize_w_pretty_type_info(void);
 
 // Testsuite 'SerializeIterToJson'
 void SerializeIterToJson_table_different_dont_fragment_components(void);
@@ -1178,6 +1190,7 @@ void SerializeIterToJson_serialize_childof_var_w_parent(void);
 void SerializeIterToJson_serialize_childof_wildcard_w_parent(void);
 void SerializeIterToJson_serialize_table_dont_fragment_no_leak(void);
 void SerializeIterToJson_serialize_sparse_each(void);
+void SerializeIterToJson_serialize_w_pretty(void);
 
 // Testsuite 'SerializeIterToRowJson'
 void SerializeIterToRowJson_serialize_this_w_1_tag(void);
@@ -5115,6 +5128,18 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "entity_wildcard_component",
         DeserializeFromJson_entity_wildcard_component
+    },
+    {
+        "ser_deser_pretty_value",
+        DeserializeFromJson_ser_deser_pretty_value
+    },
+    {
+        "ser_deser_pretty_entity",
+        DeserializeFromJson_ser_deser_pretty_entity
+    },
+    {
+        "ser_deser_pretty_world",
+        DeserializeFromJson_ser_deser_pretty_world
     }
 };
 
@@ -5494,6 +5519,34 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "ecs_struct_3_members",
         SerializeToJson_ecs_struct_3_members
+    },
+    {
+        "pretty_struct",
+        SerializeToJson_pretty_struct
+    },
+    {
+        "pretty_nested",
+        SerializeToJson_pretty_nested
+    },
+    {
+        "pretty_empty_scopes",
+        SerializeToJson_pretty_empty_scopes
+    },
+    {
+        "pretty_string_w_special_chars",
+        SerializeToJson_pretty_string_w_special_chars
+    },
+    {
+        "pretty_already_pretty",
+        SerializeToJson_pretty_already_pretty
+    },
+    {
+        "pretty_scalar",
+        SerializeToJson_pretty_scalar
+    },
+    {
+        "pretty_null",
+        SerializeToJson_pretty_null
     }
 };
 
@@ -5889,6 +5942,14 @@ bake_test_case SerializeEntityToJson_testcases[] = {
     {
         "serialize_w_quote_in_alert_message",
         SerializeEntityToJson_serialize_w_quote_in_alert_message
+    },
+    {
+        "serialize_w_pretty",
+        SerializeEntityToJson_serialize_w_pretty
+    },
+    {
+        "serialize_w_pretty_type_info",
+        SerializeEntityToJson_serialize_w_pretty_type_info
     }
 };
 
@@ -6252,6 +6313,10 @@ bake_test_case SerializeIterToJson_testcases[] = {
     {
         "serialize_sparse_each",
         SerializeIterToJson_serialize_sparse_each
+    },
+    {
+        "serialize_w_pretty",
+        SerializeIterToJson_serialize_w_pretty
     }
 };
 
@@ -8088,6 +8153,7 @@ bake_test_case ValueType_testcases[] = {
     }
 };
 
+
 static bake_test_suite suites[] = {
     {
         "PrimitiveTypes",
@@ -8177,28 +8243,28 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        220,
+        223,
         DeserializeFromJson_testcases
     },
     {
         "SerializeToJson",
         NULL,
         NULL,
-        94,
+        101,
         SerializeToJson_testcases
     },
     {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        98,
+        100,
         SerializeEntityToJson_testcases
     },
     {
         "SerializeIterToJson",
         NULL,
         NULL,
-        90,
+        91,
         SerializeIterToJson_testcases
     },
     {

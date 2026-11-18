@@ -340,6 +340,42 @@ if (json == null) {
 </ul>
 </div>
 
+By default the serializer outputs compact JSON. To make the output easier to read and diff, it can be pretty printed with newlines and indentation by setting the `pretty` option. Pretty printed JSON can be deserialized in the same way as compact JSON:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+desc.pretty = true;
+
+char *json = ecs_entity_to_json(world, e, &desc);
+if (!json) {
+    // error
+}
+
+// Pretty print JSON that was serialized without the pretty option
+char *value_json = ecs_ptr_to_json(world, ecs_id(Position), &p);
+char *pretty_json = ecs_json_pretty(value_json);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+desc.pretty = true;
+
+flecs::string json = e.to_json(&desc);
+```
+
+</li>
+</ul>
+</div>
+
+The `pretty` option is also available for `ecs_iter_to_json_desc_t` and `ecs_world_to_json_desc_t`.
+
 For more details on the JSON format and the various serialization options, see the Remote API reference.
 
 ### REST API
@@ -564,6 +600,7 @@ GET entity/<path>
 | matches       | bool     | Serialize matched with queries                  |
 | alerts        | bool     | Serialize active alerts for entity & children   |
 | refs          | entity   | Serialize relationship back references          |
+| pretty        | bool     | Pretty print JSON (newlines and indentation)    |
 
 #### Examples
 
@@ -1383,6 +1420,7 @@ GET /query/?expr=<query expression>
 | query_info    | bool     | Serialize query info                            |
 | query_plan    | bool     | Serialize query plan                            |
 | query_profile | bool     | Serialize query profiling information           |
+| pretty        | bool     | Pretty print JSON (newlines and indentation)    |
 | try           | bool     | Don't throw HTTP error on failure (REST only)   |
 
 #### Examples
@@ -2081,6 +2119,7 @@ GET /world
 |---------------|----------|-------------------------------------------------|
 | builtin       | bool     | Serialize Flecs built-in modules and contents   |
 | modules       | bool     | Serialize modules and contents                  |
+| pretty        | bool     | Pretty print JSON (newlines and indentation)    |
 
 #### Example
 

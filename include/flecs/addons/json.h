@@ -231,6 +231,7 @@ typedef struct ecs_entity_to_json_desc_t {
     /** Callback to determine if a component should be serialized. */
     bool (*component_filter)
         (const ecs_world_t *, ecs_entity_t);
+    bool pretty;               /**< Pretty print output (newlines and indentation). */
 } ecs_entity_to_json_desc_t;
 
 /** Utility used to initialize JSON entity serializer. */
@@ -247,6 +248,7 @@ typedef struct ecs_entity_to_json_desc_t {
     .serialize_refs = 0, \
     .serialize_matches = false, \
     .component_filter = NULL, \
+    .pretty = false, \
 }
 #else
 #define ECS_ENTITY_TO_JSON_INIT {\
@@ -261,6 +263,7 @@ typedef struct ecs_entity_to_json_desc_t {
     0, \
     false, \
     nullptr, \
+    false, \
 }
 #endif
 
@@ -322,6 +325,7 @@ typedef struct ecs_iter_to_json_desc_t {
     bool (*component_filter)
         (const ecs_world_t *, ecs_entity_t);
     ecs_poly_t *query;            /**< Query object (required for serialize_query_[plan|profile]). */
+    bool pretty;                  /**< Pretty print output (newlines and indentation). */
 } ecs_iter_to_json_desc_t;
 
 /** Utility used to initialize JSON iterator serializer. */
@@ -346,7 +350,8 @@ typedef struct ecs_iter_to_json_desc_t {
     .serialize_matches =         false, \
     .serialize_parents_before_children = false,\
     .component_filter =          NULL, \
-    .query =                     NULL \
+    .query =                     NULL, \
+    .pretty =                    false \
 }
 #else
 #define ECS_ITER_TO_JSON_INIT {\
@@ -369,7 +374,8 @@ typedef struct ecs_iter_to_json_desc_t {
     false, \
     false, \
     nullptr, \
-    nullptr \
+    nullptr, \
+    false \
 }
 #endif
 
@@ -404,6 +410,7 @@ int ecs_iter_to_json_buf(
 typedef struct ecs_world_to_json_desc_t {
     bool serialize_builtin;    /**< Serialize Flecs built-in modules and contents. */
     bool serialize_modules;    /**< Serialize modules and contents. */
+    bool pretty;               /**< Pretty print output (newlines and indentation). */
 } ecs_world_to_json_desc_t;
 
 /** Serialize world into JSON string.
@@ -442,6 +449,33 @@ int ecs_world_to_json_buf(
     ecs_world_t *world,
     ecs_strbuf_t *buf_out,
     const ecs_world_to_json_desc_t *desc);
+
+/** Pretty print a JSON string.
+ * This operation reformats a JSON string so that each object member and array
+ * element is written on its own line, indented by nesting depth. This makes
+ * the output of the JSON serializer easier to read and diff. The pretty
+ * printed JSON can be passed to the JSON deserializer.
+ *
+ * Whitespace outside of strings in the input is ignored, so the operation can
+ * also be used to reformat JSON that is already pretty printed.
+ *
+ * @param json The JSON string to pretty print.
+ * @return The pretty printed JSON string, or NULL if json is NULL.
+ */
+FLECS_API
+char* ecs_json_pretty(
+    const char *json);
+
+/** Pretty print a JSON string to a string buffer.
+ * Same as ecs_json_pretty(), but appends to an ecs_strbuf_t instance.
+ *
+ * @param json The JSON string to pretty print.
+ * @param buf_out The strbuf to append the string to.
+ */
+FLECS_API
+void ecs_json_pretty_buf(
+    const char *json,
+    ecs_strbuf_t *buf_out);
 
 #ifdef __cplusplus
 }

@@ -28260,7 +28260,8 @@ void flecs_json_type_info_accum_fini(
 void flecs_json_assemble_output(
     ecs_strbuf_t *out,
     ecs_strbuf_t *type_info_buf,
-    ecs_strbuf_t *body_buf);
+    ecs_strbuf_t *body_buf,
+    bool pretty);
 
 #endif
 
@@ -28383,6 +28384,7 @@ static void flecs_rest_parse_json_ser_entity_params(
     flecs_rest_bool_param(req, "type_info", &desc->serialize_type_info);
     flecs_rest_bool_param(req, "matches", &desc->serialize_matches);
     flecs_rest_bool_param(req, "alerts", &desc->serialize_alerts);
+    flecs_rest_bool_param(req, "pretty", &desc->pretty);
 
     char *rel = NULL;
     flecs_rest_string_param(req, "refs", &rel);
@@ -28408,6 +28410,7 @@ static void flecs_rest_parse_json_ser_iter_params(
     flecs_rest_bool_param(req, "query_profile", &desc->serialize_query_profile);
     flecs_rest_bool_param(req, "table", &desc->serialize_table);
     flecs_rest_bool_param(req, "fields", &desc->serialize_fields);
+    flecs_rest_bool_param(req, "pretty", &desc->pretty);
 
     bool results = true;
     flecs_rest_bool_param(req, "results", &results);
@@ -28491,6 +28494,7 @@ static void flecs_rest_parse_json_ser_world_params(
 {
     flecs_rest_bool_param(req, "builtin", &desc->serialize_builtin);
     flecs_rest_bool_param(req, "modules", &desc->serialize_modules);
+    flecs_rest_bool_param(req, "pretty", &desc->pretty);
 }
 
 static bool flecs_rest_get_world(
@@ -53301,11 +53305,124 @@ void flecs_json_type_info_accum_fini(
     }
 }
 
+static void flecs_json_pretty_newline(
+    ecs_strbuf_t *buf,
+    int32_t indent)
+{
+    ecs_strbuf_appendch(buf, '\n');
+    int32_t i;
+    for (i = 0; i < indent; i ++) {
+        ecs_strbuf_appendlit(buf, "  ");
+    }
+}
+
+void ecs_json_pretty_buf(
+    const char *json,
+    ecs_strbuf_t *buf)
+{
+    ecs_assert(json != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(buf != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const char *ptr = json;
+    int32_t indent = 0;
+    char ch;
+
+    while ((ch = ptr[0])) {
+        switch(ch) {
+        case '"': {
+            /* Copy strings verbatim, including escape sequences */
+            const char *start = ptr ++;
+            while ((ch = ptr[0]) && ch != '"') {
+                if (ch == '\\' && ptr[1]) {
+                    ptr ++;
+                }
+                ptr ++;
+            }
+
+            if (ch) {
+                ptr ++;
+            }
+
+            ecs_strbuf_appendstrn(buf, start, flecs_ito(int32_t, ptr - start));
+            continue;
+        }
+        case '{':
+        case '[': {
+            char close = (ch == '{') ? '}' : ']';
+            ecs_strbuf_appendch(buf, ch);
+            ptr = flecs_parse_ws_eol(ptr + 1);
+
+            /* Don't spread empty scopes out over multiple lines */
+            if (ptr[0] == close) {
+                ecs_strbuf_appendch(buf, close);
+                ptr ++;
+            } else {
+                indent ++;
+                flecs_json_pretty_newline(buf, indent);
+            }
+            continue;
+        }
+        case '}':
+        case ']':
+            if (indent) {
+                indent --;
+            }
+            flecs_json_pretty_newline(buf, indent);
+            ecs_strbuf_appendch(buf, ch);
+            break;
+        case ',':
+            ecs_strbuf_appendch(buf, ',');
+            flecs_json_pretty_newline(buf, indent);
+            break;
+        case ':':
+            ecs_strbuf_appendlit(buf, ": ");
+            break;
+        default:
+            if (!isspace((unsigned char)ch)) {
+                ecs_strbuf_appendch(buf, ch);
+            }
+            break;
+        }
+
+        ptr ++;
+    }
+}
+
+char* ecs_json_pretty(
+    const char *json)
+{
+    if (!json) {
+        return NULL;
+    }
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_json_pretty_buf(json, &buf);
+    char *result = ecs_strbuf_get(&buf);
+    if (!result) {
+        /* Empty input */
+        result = ecs_os_strdup("");
+    }
+
+    return result;
+}
+
 void flecs_json_assemble_output(
     ecs_strbuf_t *out,
     ecs_strbuf_t *type_info_buf,
-    ecs_strbuf_t *body_buf)
+    ecs_strbuf_t *body_buf,
+    bool pretty)
 {
+    if (pretty) {
+        ecs_strbuf_t compact = ECS_STRBUF_INIT;
+        flecs_json_assemble_output(&compact, type_info_buf, body_buf, false);
+        char *json = ecs_strbuf_get(&compact);
+        if (json) {
+            ecs_json_pretty_buf(json, out);
+            ecs_os_free(json);
+        }
+        return;
+    }
+
     flecs_json_object_push(out);
     if (type_info_buf) {
         flecs_json_memberl(out, "type_info");
@@ -53401,6 +53518,7 @@ int ecs_entity_to_json_buf(
         .serialize_inherited =    desc ? desc->serialize_inherited : false,
         .serialize_type_info =    desc ? desc->serialize_type_info : false,
         .component_filter =       desc ? desc->component_filter : NULL,
+        .pretty =                 desc ? desc->pretty : false,
     };
 
     ecs_strbuf_t type_info_buf = ECS_STRBUF_INIT;
@@ -53421,7 +53539,8 @@ int ecs_entity_to_json_buf(
         return result;
     }
 
-    flecs_json_assemble_output(buf, ser_ctx.type_info_buf, &entity_buf);
+    flecs_json_assemble_output(
+        buf, ser_ctx.type_info_buf, &entity_buf, iter_desc.pretty);
 
     return 0;
 }
@@ -53864,7 +53983,8 @@ int ecs_iter_to_json_buf(
         return -1;
     }
 
-    flecs_json_assemble_output(buf, ser_ctx.type_info_buf, &body_buf);
+    flecs_json_assemble_output(buf, ser_ctx.type_info_buf, &body_buf,
+        desc && desc->pretty);
 
     return 0;
 }
@@ -56031,7 +56151,8 @@ int ecs_world_to_json_buf(
         .serialize_full_paths = true,
         .serialize_entity_ids = true,
         .serialize_values = true,
-        .serialize_parents_before_children = true
+        .serialize_parents_before_children = true,
+        .pretty = desc && desc->pretty
     };
 
     int ret = ecs_iter_to_json_buf(&it, buf_out, &json_desc);
