@@ -43938,6 +43938,15 @@ void ecs_table_unlock(
     }
 }
 
+bool ecs_table_is_locked(
+    const ecs_table_t *table)
+{
+    if (!table) {
+        return false;
+    }
+    return table->_->lock != 0;
+}
+
 const ecs_type_t* ecs_table_get_type(
     const ecs_table_t *table)
 {

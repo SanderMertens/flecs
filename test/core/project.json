@@ -3701,6 +3701,7 @@
                 "lock_table",
                 "recursive_lock_table",
                 "modify_after_lock",
+                "table_is_locked",
                 "get_object_from_stage",
                 "add_to_world_while_readonly",
                 "add_to_world_and_stage_while_readonly",
