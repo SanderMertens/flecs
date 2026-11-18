@@ -636,6 +636,12 @@ void flecs_run_pipeline(
     // Update the pipeline before waking the workers.
     flecs_pipeline_update(world, pq, true);
 
+    int32_t sys_i, sys_count = ecs_vec_count(&pq->systems);
+    ecs_system_t **systems = ecs_vec_first_t(&pq->systems, ecs_system_t*);
+    for (sys_i = 0; sys_i < sys_count; sys_i ++) {
+        flecs_system_reset_time_spent(world, systems[sys_i]);
+    }
+
     // If there are no operations to execute in the pipeline bail early,
     // no need to wake the workers since they have nothing to do.
     while (pq->cur_op != NULL) {
@@ -671,13 +677,13 @@ void flecs_run_pipeline(
         const int32_t i = flecs_run_pipeline_ops(
             world, stage, stage_index, stage_count, delta_time);
 
+        if (op_multi_threaded) {
+            flecs_wait_for_sync(world);
+        }
+
         if (measure_time) {
             /* Don't include merge time in system time */
             world->info.system_time_total += (ecs_ftime_t)ecs_time_measure(&st);
-        }
-
-        if (op_multi_threaded) {
-            flecs_wait_for_sync(world);
         }
 
         if (!immediate) {

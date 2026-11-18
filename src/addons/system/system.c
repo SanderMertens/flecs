@@ -157,7 +157,21 @@ ecs_entity_t flecs_run_system(
     flecs_stage_set_system(stage, old_system);
 
     if (measure_time) {
-        system_data->time_spent += (ecs_ftime_t)ecs_time_measure(&time_start);
+        ecs_ftime_t time_spent = (ecs_ftime_t)ecs_time_measure(&time_start);
+        int32_t stage_id = stage->id;
+        if (stage_id >= 0) {
+            if (stage_id >= ecs_vec_count(&system_data->time_spent) &&
+                !ECS_BIT_IS_SET(world->flags, EcsWorldReadonly))
+            {
+                ecs_vec_set_min_count_zeromem_t(NULL, 
+                    &system_data->time_spent, ecs_ftime_t, stage_id + 1);
+            }
+
+            if (stage_id < ecs_vec_count(&system_data->time_spent)) {
+                ecs_vec_get_t(&system_data->time_spent, ecs_ftime_t, 
+                    stage_id)[0] += time_spent;
+            }
+        }
     }
 
     ecs_os_perf_trace_pop(system_data->name);
@@ -165,6 +179,16 @@ ecs_entity_t flecs_run_system(
     return it->interrupted_by;
 }
 
+
+void flecs_system_reset_time_spent(
+    const ecs_world_t *world,
+    ecs_system_t *system_data)
+{
+    int32_t count = world->stage_count;
+    ecs_vec_set_count_t(NULL, &system_data->time_spent, ecs_ftime_t, count);
+    ecs_os_memset_n(ecs_vec_first(&system_data->time_spent), 0, 
+        ecs_ftime_t, count);
+}
 
 /* -- Public API -- */
 
@@ -229,6 +253,8 @@ static void flecs_system_fini(ecs_system_t *sys) {
 
     /* Safe cast, type owns name */
     ecs_os_free(ECS_CONST_CAST(char*, sys->name));
+
+    ecs_vec_fini_t(NULL, &sys->time_spent, ecs_ftime_t);
 
     flecs_poly_free(sys, ecs_system_t);
 }
@@ -345,6 +371,9 @@ ecs_entity_t ecs_system_init(
     system->immediate = desc->immediate;
 
     system->name = ecs_get_path(world, entity);
+
+    ecs_vec_init_t(NULL, &system->time_spent, ecs_ftime_t, 0);
+    flecs_system_reset_time_spent(world, system);
 
     if (flecs_system_init_timer(world, entity, desc)) {
         ecs_delete(world, entity);

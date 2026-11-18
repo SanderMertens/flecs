@@ -426,7 +426,9 @@ static void flecs_expr_node_to_str(
     case EcsExprComponent:
         flecs_expr_node_to_str(v, ((const ecs_expr_element_t*)node)->left);
         ecs_strbuf_appendlit(v->buf, "[");
-        flecs_expr_node_to_str(v, ((const ecs_expr_element_t*)node)->index);
+        if (((const ecs_expr_element_t*)node)->index) {
+            flecs_expr_node_to_str(v, ((const ecs_expr_element_t*)node)->index);
+        }
         suffix = "]";
         break;
     case EcsExprHas:

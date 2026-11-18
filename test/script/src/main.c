@@ -1000,6 +1000,13 @@ void Collection_array_size_from_const_in_fn(void);
 void Collection_array_size_from_mut(void);
 void Collection_array_size_zero(void);
 void Collection_array_size_not_integer(void);
+void Collection_nested_vector_var_type(void);
+void Collection_vector_of_array_var_type(void);
+void Collection_array_of_vector_var_type_w_const_size(void);
+void Collection_nested_type_fn_param_and_return(void);
+void Collection_nested_type_template_prop(void);
+void Collection_too_many_type_dims(void);
+void Collection_nested_type_to_str(void);
 
 // Testsuite 'Await'
 void Await_setup(void);
@@ -1537,6 +1544,12 @@ void Function_struct_vector_param(void);
 void Function_vector_return(void);
 void Function_array_return(void);
 void Function_vector_param_no_leak(void);
+void Function_type_args_param(void);
+void Function_type_args_param_w_const(void);
+void Function_type_args_param_w_dims(void);
+void Function_type_args_return(void);
+void Function_type_args_invalid_param_type(void);
+void Function_type_args_to_str(void);
 
 // Testsuite 'Template'
 void Template_setup(void);
@@ -1761,6 +1774,7 @@ void Template_template_in_interpolated_entity_scope(void);
 void Template_template_in_if_scope_in_entity_scope(void);
 void Template_template_prop_runtime_enum(void);
 void Template_template_prop_runtime_bitmask(void);
+void Template_read_component_of_nested_instance(void);
 
 // Testsuite 'Mut'
 void Mut_setup(void);
@@ -3983,6 +3997,7 @@ void TemplateInheritance_template_in_entity_scope_w_base(void);
 void TemplateInheritance_template_in_entity_scope_w_base_body(void);
 void TemplateInheritance_template_in_kind_entity_scope_w_base(void);
 void TemplateInheritance_template_in_entity_scope_w_two_bases(void);
+void TemplateInheritance_derived_refers_to_base_child(void);
 
 // Testsuite 'TemplateProp'
 void TemplateProp_setup(void);
@@ -4652,6 +4667,17 @@ void AnonymousType_serialize_type(void);
 void AnonymousType_serialize_type_roundtrip(void);
 void AnonymousType_to_str_type_args(void);
 void AnonymousType_invalid_type_arg(void);
+void AnonymousType_struct_member_collection_shorthand(void);
+void AnonymousType_struct_member_nested_collection_shorthand(void);
+void AnonymousType_struct_member_shorthand_w_member_initializer(void);
+void AnonymousType_struct_member_shorthand_w_local_type(void);
+void AnonymousType_struct_member_shorthand_w_const_count(void);
+void AnonymousType_type_arg_collection_shorthand(void);
+void AnonymousType_named_type_collection_shorthand(void);
+void AnonymousType_const_w_type_arg_collection_shorthand(void);
+void AnonymousType_entity_value_collection_shorthand(void);
+void AnonymousType_invalid_collection_shorthand_count(void);
+void AnonymousType_collection_shorthand_on_non_type(void);
 
 // Testsuite 'Lambda'
 void Lambda_setup(void);
@@ -8840,6 +8866,34 @@ bake_test_case Collection_testcases[] = {
     {
         "array_size_not_integer",
         Collection_array_size_not_integer
+    },
+    {
+        "nested_vector_var_type",
+        Collection_nested_vector_var_type
+    },
+    {
+        "vector_of_array_var_type",
+        Collection_vector_of_array_var_type
+    },
+    {
+        "array_of_vector_var_type_w_const_size",
+        Collection_array_of_vector_var_type_w_const_size
+    },
+    {
+        "nested_type_fn_param_and_return",
+        Collection_nested_type_fn_param_and_return
+    },
+    {
+        "nested_type_template_prop",
+        Collection_nested_type_template_prop
+    },
+    {
+        "too_many_type_dims",
+        Collection_too_many_type_dims
+    },
+    {
+        "nested_type_to_str",
+        Collection_nested_type_to_str
     }
 };
 
@@ -10943,6 +10997,30 @@ bake_test_case Function_testcases[] = {
     {
         "vector_param_no_leak",
         Function_vector_param_no_leak
+    },
+    {
+        "type_args_param",
+        Function_type_args_param
+    },
+    {
+        "type_args_param_w_const",
+        Function_type_args_param_w_const
+    },
+    {
+        "type_args_param_w_dims",
+        Function_type_args_param_w_dims
+    },
+    {
+        "type_args_return",
+        Function_type_args_return
+    },
+    {
+        "type_args_invalid_param_type",
+        Function_type_args_invalid_param_type
+    },
+    {
+        "type_args_to_str",
+        Function_type_args_to_str
     }
 };
 
@@ -11830,6 +11908,10 @@ bake_test_case Template_testcases[] = {
     {
         "template_prop_runtime_bitmask",
         Template_template_prop_runtime_bitmask
+    },
+    {
+        "read_component_of_nested_instance",
+        Template_read_component_of_nested_instance
     }
 };
 
@@ -20564,6 +20646,10 @@ bake_test_case TemplateInheritance_testcases[] = {
     {
         "template_in_entity_scope_w_two_bases",
         TemplateInheritance_template_in_entity_scope_w_two_bases
+    },
+    {
+        "derived_refers_to_base_child",
+        TemplateInheritance_derived_refers_to_base_child
     }
 };
 
@@ -23145,6 +23231,50 @@ bake_test_case AnonymousType_testcases[] = {
     {
         "invalid_type_arg",
         AnonymousType_invalid_type_arg
+    },
+    {
+        "struct_member_collection_shorthand",
+        AnonymousType_struct_member_collection_shorthand
+    },
+    {
+        "struct_member_nested_collection_shorthand",
+        AnonymousType_struct_member_nested_collection_shorthand
+    },
+    {
+        "struct_member_shorthand_w_member_initializer",
+        AnonymousType_struct_member_shorthand_w_member_initializer
+    },
+    {
+        "struct_member_shorthand_w_local_type",
+        AnonymousType_struct_member_shorthand_w_local_type
+    },
+    {
+        "struct_member_shorthand_w_const_count",
+        AnonymousType_struct_member_shorthand_w_const_count
+    },
+    {
+        "type_arg_collection_shorthand",
+        AnonymousType_type_arg_collection_shorthand
+    },
+    {
+        "named_type_collection_shorthand",
+        AnonymousType_named_type_collection_shorthand
+    },
+    {
+        "const_w_type_arg_collection_shorthand",
+        AnonymousType_const_w_type_arg_collection_shorthand
+    },
+    {
+        "entity_value_collection_shorthand",
+        AnonymousType_entity_value_collection_shorthand
+    },
+    {
+        "invalid_collection_shorthand_count",
+        AnonymousType_invalid_collection_shorthand_count
+    },
+    {
+        "collection_shorthand_on_non_type",
+        AnonymousType_collection_shorthand_on_non_type
     }
 };
 
@@ -24300,7 +24430,7 @@ static bake_test_suite suites[] = {
         "Function",
         Function_setup,
         NULL,
-        127,
+        133,
         Function_testcases,
         1,
         Function_params
@@ -24309,7 +24439,7 @@ static bake_test_suite suites[] = {
         "Template",
         Template_setup,
         NULL,
-        221,
+        222,
         Template_testcases,
         1,
         Template_params
@@ -24467,7 +24597,7 @@ static bake_test_suite suites[] = {
         "TemplateInheritance",
         TemplateInheritance_setup,
         NULL,
-        88,
+        89,
         TemplateInheritance_testcases,
         1,
         TemplateInheritance_params
@@ -24558,7 +24688,11 @@ static bake_test_suite suites[] = {
         "AnonymousType",
         AnonymousType_setup,
         NULL,
+<<<<<<< HEAD
         27,
+=======
+        36,
+>>>>>>> 85202ff0a89a5ae8e495b367f260ce7e5a695a44
         AnonymousType_testcases,
         1,
         AnonymousType_params

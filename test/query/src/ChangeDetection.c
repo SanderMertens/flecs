@@ -4033,3 +4033,59 @@ void ChangeDetection_detect_changes_w_order_by(void) {
 
     ecs_fini(world);
 }
+
+void ChangeDetection_mark_dirty_w_optional_up_src_changed_during_iteration(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Mass);
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Mass, {1}));
+    ecs_set(world, parent, Position, {10, 20});
+    ecs_insert(world, ecs_value(Mass, {2}));
+
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_set(world, child, Velocity, {1, 2});
+
+    ecs_query_t *qm = ecs_query(world, {
+        .terms = {{ ecs_id(Mass), .inout = EcsIn }},
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
+    });
+    test_assert(qm != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, qm);
+        while (ecs_query_next(&it)) {
+            ecs_iter_changed(&it);
+        }
+    }
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Velocity), .inout = EcsIn },
+            { ecs_id(Position), .src.id = EcsUp, .oper = EcsOptional, .inout = EcsInOut }
+        },
+        .cache_kind = EcsQueryCacheNone
+    });
+    test_assert(q != NULL);
+
+    int32_t count = 0;
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        while (ecs_query_next(&it)) {
+            test_uint(it.sources[1], parent);
+            ecs_remove(world, parent, Position);
+            count += it.count;
+        }
+    }
+
+    test_int(count, 1);
+    test_assert(!ecs_has(world, parent, Position));
+
+    ecs_query_fini(q);
+    ecs_query_fini(qm);
+
+    ecs_fini(world);
+}

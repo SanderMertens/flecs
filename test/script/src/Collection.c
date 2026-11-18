@@ -4966,6 +4966,7 @@ void Collection_array_size_not_integer(void) {
     ecs_fini(world);
 }
 
+<<<<<<< HEAD
 void Collection_map_string_key_elem(void) {
     ecs_world_t *world = ecs_init();
 
@@ -5019,10 +5020,32 @@ void Collection_map_string_key_elem(void) {
         test_int(p->x, 30);
         test_int(p->y, 60);
     }
+=======
+void Collection_nested_vector_var_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(count: i32, v: f32)"
+    LINE "const x: f32[][] = [[1], [2, 3]]"
+    LINE "e { Result: {x.count(), x[1][1]} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{count: 2, v: 3}");
+    ecs_os_free(str);
+>>>>>>> 85202ff0a89a5ae8e495b367f260ce7e5a695a44
 
     ecs_fini(world);
 }
 
+<<<<<<< HEAD
 void Collection_map_string_key_index_elem(void) {
     ecs_world_t *world = ecs_init();
 
@@ -5065,10 +5088,32 @@ void Collection_map_string_key_index_elem(void) {
     /* Iteration order of map is not defined */
     test_int(p_a->x + p_b->x, 1);
     test_assert(p_a->x != p_b->x);
+=======
+void Collection_vector_of_array_var_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(count: i32, v: f32)"
+    LINE "const x: f32[3][] = [[1, 2, 3], [4, 5, 6]]"
+    LINE "e { Result: {x.count(), x[1][2]} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{count: 2, v: 6}");
+    ecs_os_free(str);
+>>>>>>> 85202ff0a89a5ae8e495b367f260ce7e5a695a44
 
     ecs_fini(world);
 }
 
+<<<<<<< HEAD
 void Collection_map_string_key_string_value(void) {
     ecs_world_t *world = ecs_init();
 
@@ -5088,10 +5133,33 @@ void Collection_map_string_key_string_value(void) {
 
     test_assert(ecs_lookup(world, "a_foo") != 0);
     test_assert(ecs_lookup(world, "b_bar") != 0);
+=======
+void Collection_array_of_vector_var_type_w_const_size(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(count: i32, v: f32)"
+    LINE "const N = 2"
+    LINE "const x: f32[][N] = [[1], [2, 3]]"
+    LINE "e { Result: {x[1].count(), x[1][1]} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{count: 2, v: 3}");
+    ecs_os_free(str);
+>>>>>>> 85202ff0a89a5ae8e495b367f260ce7e5a695a44
 
     ecs_fini(world);
 }
 
+<<<<<<< HEAD
 void Collection_map_string_key_empty(void) {
     ecs_world_t *world = ecs_init();
 
@@ -5112,10 +5180,59 @@ void Collection_map_string_key_empty(void) {
 
     test_assert(ecs_lookup(world, "e") != 0);
     test_assert(ecs_lookup(world, "e_") == 0);
+=======
+void Collection_nested_type_fn_param_and_return(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(v: f32)"
+    LINE "fn total(v: f32[][]) -> f32 { v[0][0] + v[1][1] }"
+    LINE "fn make() -> f32[][] { [[1], [2, 3]] }"
+    LINE "e { Result: {total(make())} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{v: 4}");
+    ecs_os_free(str);
 
     ecs_fini(world);
 }
 
+void Collection_nested_type_template_prop(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(v: f32)"
+    LINE "template T {"
+    LINE "  prop a: f32[][] = [[1], [2, 3]]"
+    LINE "  Result: {a[1][1]}"
+    LINE "}"
+    LINE "T e()";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{v: 3}");
+    ecs_os_free(str);
+>>>>>>> 85202ff0a89a5ae8e495b367f260ce7e5a695a44
+
+    ecs_fini(world);
+}
+
+<<<<<<< HEAD
 void Collection_map_string_init_from_map(void) {
     ecs_world_t *world = ecs_init();
 
@@ -5142,10 +5259,20 @@ void Collection_map_string_init_from_map(void) {
     test_int(ecs_map_count(mb), 2);
     test_assert(script_map_has(world, m, mb, "\"foo\": 10"));
     test_assert(script_map_has(world, m, mb, "\"bar\": 20"));
+=======
+void Collection_too_many_type_dims(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const a: f32[][][][][] = []",
+        &ir_desc, NULL) != 0);
+>>>>>>> 85202ff0a89a5ae8e495b367f260ce7e5a695a44
 
     ecs_fini(world);
 }
 
+<<<<<<< HEAD
 void Collection_map_string_assign_from_map_literal(void) {
     ecs_world_t *world = ecs_init();
 
@@ -5237,4 +5364,31 @@ void Collection_string_key_map_assign_no_leak(void) {
     int64_t balance_after = (ecs_os_api_malloc_count +
         ecs_os_api_calloc_count) - ecs_os_api_free_count;
     test_int(0, balance_after - balance_before);
+=======
+void Collection_nested_type_to_str(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        HEAD "const N = 2"
+        LINE "const x: f32[3][N][] = []"
+        LINE "fn f(a: f32[][2]) -> i32[][] { [] }",
+        NULL, NULL);
+    test_assert(script != NULL);
+
+    char *str = ecs_script_ast_to_str(script, false);
+    test_str(str,
+    HEAD "{"
+    LINE "  const: N = 2"
+    LINE "  const: x : f32[3][@N][] = {}"
+    LINE "  fn: f(a: f32[][2]) -> i32[][] {"
+    LINE "    return: {}"
+    LINE "  }"
+    LINE "  "
+    LINE "}"
+    LINE "");
+    ecs_os_free(str);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+>>>>>>> 85202ff0a89a5ae8e495b367f260ce7e5a695a44
 }

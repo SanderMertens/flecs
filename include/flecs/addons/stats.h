@@ -183,7 +183,7 @@ typedef struct ecs_query_stats_t {
 /** Statistics for a single system (use ecs_system_stats_get()). */
 typedef struct ecs_system_stats_t {
     int64_t first_;                /**< Used for field iteration. Do not set. */
-    ecs_metric_t time_spent;       /**< Time spent processing a system. */
+    ecs_metric_t time_spent;       /**< Time spent processing a system (min/avg/max across threads). */
     int64_t last_;                 /**< Used for field iteration. Do not set. */
 
     bool task;                     /**< Whether the system is a task. */

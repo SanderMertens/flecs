@@ -433,7 +433,28 @@ bool ecs_system_stats_get(
     ecs_query_stats_get(world, ptr->query, &s->query);
     int32_t t = s->query.t;
 
-    ECS_COUNTER_RECORD(&s->time_spent, t, ptr->time_spent);
+    const ecs_ftime_t *time_spent = ecs_vec_first_t(
+        &ptr->time_spent, ecs_ftime_t);
+    int32_t i, count = ecs_vec_count(&ptr->time_spent);
+    if (!ptr->multi_threaded && count > 1) {
+        count = 1;
+    }
+
+    ecs_float_t min = 0, max = 0, sum = 0;
+    for (i = 0; i < count; i ++) {
+        ecs_float_t value = (ecs_float_t)time_spent[i];
+        if (!i || value < min) {
+            min = value;
+        }
+        if (value > max) {
+            max = value;
+        }
+        sum += value;
+    }
+
+    s->time_spent.gauge.avg[t] = count ? sum / (ecs_float_t)count : 0;
+    s->time_spent.gauge.min[t] = min;
+    s->time_spent.gauge.max[t] = max;
 
     s->task = !(ptr->query->flags & EcsQueryMatchThis);
 

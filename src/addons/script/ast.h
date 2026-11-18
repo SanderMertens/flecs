@@ -190,13 +190,24 @@ typedef struct ecs_script_template_node_t {
     int32_t root_symbol;
 } ecs_script_template_node_t;
 
+#define FLECS_SCRIPT_TYPE_DIMS_MAX (4)
+
+typedef struct ecs_script_type_dim_t {
+    int32_t count;
+    ecs_expr_node_t *count_expr;
+} ecs_script_type_dim_t;
+
+typedef struct ecs_script_type_dims_t {
+    ecs_script_type_dim_t dims[FLECS_SCRIPT_TYPE_DIMS_MAX];
+    int32_t count;
+} ecs_script_type_dims_t;
+
 typedef struct ecs_script_var_node_t {
     ecs_script_node_t node;
     const char *name;
     const char *type;
     ecs_expr_node_t *type_args;
-    int32_t type_count;     /* -1 for vector, >0 for array, 0 for neither */
-    ecs_expr_node_t *type_count_expr;
+    ecs_script_type_dims_t type_dims;
     ecs_expr_node_t *expr;
     ecs_entity_t eval_type;
     int32_t sp;
@@ -357,8 +368,8 @@ typedef struct ecs_script_fn_param_t {
     ecs_script_node_t node;
     const char *name;
     const char *type;
-    int32_t type_count;     /* -1 for vector, >0 for array, 0 for neither */
-    ecs_expr_node_t *type_count_expr;
+    ecs_expr_node_t *type_args;
+    ecs_script_type_dims_t type_dims;
     ecs_entity_t eval_type;
     int32_t sp;
 } ecs_script_fn_param_t;
@@ -368,8 +379,8 @@ typedef struct ecs_script_function_node_t {
     ecs_script_node_t return_type_node;
     const char *name;
     const char *return_type;
-    int32_t return_type_count;
-    ecs_expr_node_t *return_type_count_expr;
+    ecs_expr_node_t *return_type_args;
+    ecs_script_type_dims_t return_type_dims;
     ecs_vec_t params;
     ecs_script_scope_t *body;
     ecs_entity_t eval_return_type;

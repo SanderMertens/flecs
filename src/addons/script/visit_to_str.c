@@ -106,20 +106,23 @@ static void flecs_expr_to_str(
     }
 }
 
-static void flecs_script_type_count_to_str(
+static void flecs_script_type_dims_to_str(
     ecs_script_str_visitor_t *v,
-    int32_t type_count,
-    const ecs_expr_node_t *type_count_expr)
+    const ecs_script_type_dims_t *dims)
 {
-    if (type_count_expr) {
-        flecs_scriptbuf_appendstr(v, "[");
-        flecs_expr_to_str_buf(
-            &v->script->pub, type_count_expr, v->buf, v->colors);
-        flecs_scriptbuf_appendstr(v, "]");
-    } else if (type_count == -1) {
-        flecs_scriptbuf_appendstr(v, "[]");
-    } else if (type_count) {
-        flecs_scriptbuf_append(v, "[%d]", type_count);
+    int32_t i;
+    for (i = 0; i < dims->count; i ++) {
+        const ecs_script_type_dim_t *dim = &dims->dims[i];
+        if (dim->count_expr) {
+            flecs_scriptbuf_appendstr(v, "[");
+            flecs_expr_to_str_buf(
+                &v->script->pub, dim->count_expr, v->buf, v->colors);
+            flecs_scriptbuf_appendstr(v, "]");
+        } else if (dim->count == -1) {
+            flecs_scriptbuf_appendstr(v, "[]");
+        } else {
+            flecs_scriptbuf_append(v, "[%d]", dim->count);
+        }
     }
 }
 
@@ -313,8 +316,7 @@ static void flecs_script_stmt_to_str(
             if (stmt->type_args) {
                 flecs_type_args_to_str(v, stmt->type_args);
             }
-            flecs_script_type_count_to_str(
-                v, stmt->type_count, stmt->type_count_expr);
+            flecs_script_type_dims_to_str(v, &stmt->type_dims);
             flecs_scriptbuf_appendstr(v, " = ");
         } else {
             flecs_scriptbuf_append(v, "%s = ",
@@ -501,14 +503,18 @@ static void flecs_script_stmt_to_str(
 
             flecs_scriptbuf_append(v, "%s: %s",
                 params[i].name, params[i].type);
-            flecs_script_type_count_to_str(
-                v, params[i].type_count, params[i].type_count_expr);
+            if (params[i].type_args) {
+                flecs_type_args_to_str(v, params[i].type_args);
+            }
+            flecs_script_type_dims_to_str(v, &params[i].type_dims);
         }
 
         if (fn->return_type) {
             flecs_scriptbuf_append(v, ") -> %s", fn->return_type);
-            flecs_script_type_count_to_str(
-                v, fn->return_type_count, fn->return_type_count_expr);
+            if (fn->return_type_args) {
+                flecs_type_args_to_str(v, fn->return_type_args);
+            }
+            flecs_script_type_dims_to_str(v, &fn->return_type_dims);
             flecs_scriptbuf_appendstr(v, " ");
         } else {
             flecs_scriptbuf_appendstr(v, ") ");

@@ -10655,3 +10655,34 @@ void Template_template_prop_runtime_bitmask(void) {
 
     ecs_fini(world);
 }
+
+void Template_read_component_of_nested_instance(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Result(v: f32)"
+    LINE "template Inner {"
+    LINE "  Position: {10, 20}"
+    LINE "}"
+    LINE "template Outer {"
+    LINE "  Inner inner()"
+    LINE "  const p = inner[Position]"
+    LINE "  Result: {p.x + p.y}"
+    LINE "}"
+    LINE "Outer e()";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{v: 30}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}

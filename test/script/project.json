@@ -1011,7 +1011,14 @@
                 "array_size_from_const_in_fn",
                 "array_size_from_mut",
                 "array_size_zero",
-                "array_size_not_integer"
+                "array_size_not_integer",
+                "nested_vector_var_type",
+                "vector_of_array_var_type",
+                "array_of_vector_var_type_w_const_size",
+                "nested_type_fn_param_and_return",
+                "nested_type_template_prop",
+                "too_many_type_dims",
+                "nested_type_to_str"
             ]
         }, {
             "id": "Await",
@@ -1573,7 +1580,13 @@
                 "struct_vector_param",
                 "vector_return",
                 "array_return",
-                "vector_param_no_leak"
+                "vector_param_no_leak",
+                "type_args_param",
+                "type_args_param_w_const",
+                "type_args_param_w_dims",
+                "type_args_return",
+                "type_args_invalid_param_type",
+                "type_args_to_str"
             ]
         }, {
             "id": "Template",
@@ -1802,7 +1815,8 @@
                 "template_in_interpolated_entity_scope",
                 "template_in_if_scope_in_entity_scope",
                 "template_prop_runtime_enum",
-                "template_prop_runtime_bitmask"
+                "template_prop_runtime_bitmask",
+                "read_component_of_nested_instance"
             ]
         }, {
             "id": "Mut",
@@ -4107,7 +4121,8 @@
                 "template_in_entity_scope_w_base",
                 "template_in_entity_scope_w_base_body",
                 "template_in_kind_entity_scope_w_base",
-                "template_in_entity_scope_w_two_bases"
+                "template_in_entity_scope_w_two_bases",
+                "derived_refers_to_base_child"
             ]
         }, {
             "id": "TemplateProp",
@@ -4819,7 +4834,18 @@
                 "serialize_type",
                 "serialize_type_roundtrip",
                 "to_str_type_args",
-                "invalid_type_arg"
+                "invalid_type_arg",
+                "struct_member_collection_shorthand",
+                "struct_member_nested_collection_shorthand",
+                "struct_member_shorthand_w_member_initializer",
+                "struct_member_shorthand_w_local_type",
+                "struct_member_shorthand_w_const_count",
+                "type_arg_collection_shorthand",
+                "named_type_collection_shorthand",
+                "const_w_type_arg_collection_shorthand",
+                "entity_value_collection_shorthand",
+                "invalid_collection_shorthand_count",
+                "collection_shorthand_on_non_type"
             ]
         }, {
             "id": "Lambda",

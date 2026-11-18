@@ -14451,8 +14451,10 @@ typedef struct ecs_system_t {
     /** Callback to free run ctx. */
     ecs_ctx_free_t run_ctx_free;
 
-    /** Time spent on running the system. */
-    ecs_ftime_t time_spent;
+    /** Time spent on running the system in the last frame, per thread. The
+     * vector contains an ecs_ftime_t element for each stage, where the element
+     * index is the stage id. */
+    ecs_vec_t time_spent;
 
     /** Time passed since the last invocation. */
     ecs_ftime_t time_passed;
@@ -14808,7 +14810,7 @@ typedef struct ecs_query_stats_t {
 /** Statistics for a single system (use ecs_system_stats_get()). */
 typedef struct ecs_system_stats_t {
     int64_t first_;                /**< Used for field iteration. Do not set. */
-    ecs_metric_t time_spent;       /**< Time spent processing a system. */
+    ecs_metric_t time_spent;       /**< Time spent processing a system (min/avg/max across threads). */
     int64_t last_;                 /**< Used for field iteration. Do not set. */
 
     bool task;                     /**< Whether the system is a task. */

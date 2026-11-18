@@ -563,6 +563,20 @@ static const char* flecs_script_parse_rhs(
                 const char *node_pos = parser->pos;
                 ecs_expr_node_t *index = NULL;
                 bool is_slice = false;
+                bool is_empty = false;
+
+                LookAhead_1(']', {
+                    Consume();
+                    is_empty = true;
+                })
+
+                if (is_empty) {
+                    ecs_expr_element_t *result = flecs_expr_element(parser);
+                    result->node.pos = node_pos;
+                    result->left = *out;
+                    *out = (ecs_expr_node_t*)result;
+                    break;
+                }
 
                 LookAhead_1(EcsTokRange, {
                     Consume();

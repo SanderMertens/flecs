@@ -380,7 +380,12 @@
                 "get_entity_count",
                 "get_pipeline_stats_w_task_system",
                 "get_not_alive_entity_count",
-                "progress_stats_systems"
+                "progress_stats_systems",
+                "system_time_spent_w_threads",
+                "system_time_spent_single_threaded_w_threads",
+                "system_time_spent_reset_each_frame",
+                "system_time_spent_change_threads",
+                "progress_stats_w_threads"
             ]
         }, {
             "id": "Memory",

@@ -31,6 +31,7 @@ struct ecs_script_runtime_t {
     ecs_vec_t pending;
     ecs_map_t pending_index;
     int32_t pending_next;
+    int32_t pending_start;
     bool pending_marker;
     bool pending_active;
 

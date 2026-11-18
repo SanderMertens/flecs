@@ -1300,12 +1300,11 @@ static void flecs_script_template_on_set(
     for (i = 0; i < it->count; i ++) {
         const EcsScriptTemplateRoot *root = ecs_get_pair(it->world,
             it->entities[i], EcsScriptTemplateRoot, template_entity);
-        uint64_t input = root && root->state.initialized
-            ? root->changed
-            : UINT64_MAX;
+        bool initialized = root && root->state.initialized;
+        uint64_t input = initialized ? root->changed : UINT64_MAX;
         if (input) {
             flecs_script_ref_enqueue(it->world, it->stage, template_entity,
-                it->entities[i], input);
+                it->entities[i], input, !initialized);
         }
     }
 }
@@ -1863,6 +1862,48 @@ static int flecs_script_template_inherit(
 
     return flecs_script_template_inherit_members(
         v, template, node, base_template, true);
+}
+
+bool flecs_script_template_base_declares(
+    const ecs_world_t *world,
+    const ecs_script_template_t *template,
+    const char *name)
+{
+    if (!template) {
+        return false;
+    }
+
+    const char *sep = strchr(name, '.');
+    ecs_size_t length = sep
+        ? flecs_ito(ecs_size_t, sep - name) : ecs_os_strlen(name);
+
+    ecs_world_t *w = ECS_CONST_CAST(ecs_world_t*, world);
+    const ecs_script_template_t *base = flecs_script_template_get(
+        w, template->base);
+    for (; base; base = flecs_script_template_get(w, base->base)) {
+        ecs_script_scope_t *scope = base->node->scope;
+        ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
+        int32_t i, count = ecs_vec_count(&scope->stmts);
+        for (i = 0; i < count; i ++) {
+            if (stmts[i]->kind != EcsAstEntity) {
+                continue;
+            }
+
+            const ecs_script_entity_t *entity =
+                (const ecs_script_entity_t*)stmts[i];
+            if (!entity->name || entity->name_expr) {
+                continue;
+            }
+
+            if (ecs_os_strlen(entity->name) == length &&
+                !ecs_os_strncmp(entity->name, name, length))
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 bool flecs_script_template_is_mut_type(

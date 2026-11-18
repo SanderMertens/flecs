@@ -779,6 +779,38 @@ static const char* flecs_script_parse_type_count(
 
     ParserEnd;
 }
+
+static const char* flecs_script_parse_type_dims(
+    ecs_parser_t *parser,
+    const char *pos,
+    ecs_script_type_dims_t *dims)
+{
+    do {
+        ecs_script_type_dim_t dim = {0};
+        const char *next = flecs_script_parse_type_count(
+            parser, pos, &dim.count, &dim.count_expr);
+        if (!next) {
+            return NULL;
+        }
+
+        if (!dim.count && !dim.count_expr) {
+            return next;
+        }
+
+        if (dims->count == FLECS_SCRIPT_TYPE_DIMS_MAX) {
+            flecs_expr_visit_free(&parser->script->pub, dim.count_expr);
+            ecs_parser_error(parser->name, parser->code,
+                flecs_parser_errpos(parser, pos),
+                "too many array/vector dimensions for type (max %d)",
+                FLECS_SCRIPT_TYPE_DIMS_MAX);
+            return NULL;
+        }
+
+        dims->dims[dims->count ++] = dim;
+        pos = next;
+    } while (true);
+}
+
 static const char* flecs_script_parse_var(
     ecs_parser_t *parser,
     const char *pos,
@@ -848,8 +880,7 @@ static const char* flecs_script_parse_var(
         )
 
         // const value: i32[], const value: i32[10]
-        pos = flecs_script_parse_type_count(
-            parser, pos, &var->type_count, &var->type_count_expr);
+        pos = flecs_script_parse_type_dims(parser, pos, &var->type_dims);
         if (!pos) {
             goto error;
         }
@@ -939,8 +970,15 @@ static const char* flecs_script_fn_params(
                     p->name = Token(0);
                     p->type = Token(2);
 
-                    pos = flecs_script_parse_type_count(parser, pos,
-                        &p->type_count, &p->type_count_expr);
+                    LookAhead_1('(',
+                        Consume();
+                        Initializer(')',
+                            p->type_args = INITIALIZER;
+                        )
+                    )
+
+                    pos = flecs_script_parse_type_dims(
+                        parser, pos, &p->type_dims);
                     if (!pos) {
                         goto error;
                     }
@@ -1470,8 +1508,16 @@ fn_stmt: {
             Parse_1(EcsTokIdentifier, {
                 fn->return_type = Token(4);
                 fn->return_type_node.pos = parser->pos;
-                pos = flecs_script_parse_type_count(parser, pos,
-                    &fn->return_type_count, &fn->return_type_count_expr);
+
+                LookAhead_1('(',
+                    Consume();
+                    Initializer(')',
+                        fn->return_type_args = INITIALIZER;
+                    )
+                )
+
+                pos = flecs_script_parse_type_dims(
+                    parser, pos, &fn->return_type_dims);
                 if (!pos) {
                     goto error;
                 }

@@ -2094,7 +2094,8 @@
                 "mark_fixed_fields_dirty_w_tag_before",
                 "query_changed_after_wildcard_matched_table_emptied",
                 "detect_w_not_cached_fixed_src_term",
-                "detect_changes_w_order_by"
+                "detect_changes_w_order_by",
+                "mark_dirty_w_optional_up_src_changed_during_iteration"
             ]
         }, {
             "id": "GroupBy",

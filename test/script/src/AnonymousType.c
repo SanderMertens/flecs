@@ -554,6 +554,7 @@ void AnonymousType_invalid_type_arg(void) {
     ecs_fini(world);
 }
 
+<<<<<<< HEAD
 void AnonymousType_const_map_string_key(void) {
     ecs_world_t *world = ecs_init();
 
@@ -571,20 +572,286 @@ void AnonymousType_const_map_string_key(void) {
     char* const *l = ecs_get_id(world, e, label);
     test_assert(l != NULL);
     test_str(*l, "world");
+=======
+void AnonymousType_struct_member_collection_shorthand(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct A(a: f32[], c: f32[3])";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "A.a");
+    ecs_entity_t c = ecs_lookup(world, "A.c");
+    test_assert(a != 0);
+    test_assert(c != 0);
+
+    const EcsMember *ma = ecs_get(world, a, EcsMember);
+    const EcsMember *mc = ecs_get(world, c, EcsMember);
+    test_assert(ma != NULL);
+    test_assert(mc != NULL);
+
+    const EcsVector *va = ecs_get(world, ma->type, EcsVector);
+    test_assert(va != NULL);
+    test_uint(va->type, ecs_id(ecs_f32_t));
+
+    if (mc->count) {
+        test_uint(mc->type, ecs_id(ecs_f32_t));
+        test_int(mc->count, 3);
+    } else {
+        const EcsArray *ac = ecs_get(world, mc->type, EcsArray);
+        test_assert(ac != NULL);
+        test_uint(ac->type, ecs_id(ecs_f32_t));
+        test_int(ac->count, 3);
+    }
+>>>>>>> 85202ff0a89a5ae8e495b367f260ce7e5a695a44
 
     ecs_fini(world);
 }
 
+<<<<<<< HEAD
 void AnonymousType_struct_member_map_string_key(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "struct Inventory(items: map(string, i32))"
     LINE "e { Inventory: {items: [\"apple\": 3, \"pear\": 5]} }";
+=======
+void AnonymousType_struct_member_nested_collection_shorthand(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct A(a: f32[][], b: f32[3][], c: f32[][2])";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "A.a");
+    ecs_entity_t b = ecs_lookup(world, "A.b");
+    ecs_entity_t c = ecs_lookup(world, "A.c");
+    test_assert(a != 0);
+    test_assert(b != 0);
+    test_assert(c != 0);
+
+    const EcsMember *ma = ecs_get(world, a, EcsMember);
+    test_assert(ma != NULL);
+    const EcsVector *va = ecs_get(world, ma->type, EcsVector);
+    test_assert(va != NULL);
+    const EcsVector *va_elem = ecs_get(world, va->type, EcsVector);
+    test_assert(va_elem != NULL);
+    test_uint(va_elem->type, ecs_id(ecs_f32_t));
+
+    const EcsMember *mb = ecs_get(world, b, EcsMember);
+    test_assert(mb != NULL);
+    const EcsVector *vb = ecs_get(world, mb->type, EcsVector);
+    test_assert(vb != NULL);
+    const EcsArray *ab_elem = ecs_get(world, vb->type, EcsArray);
+    test_assert(ab_elem != NULL);
+    test_uint(ab_elem->type, ecs_id(ecs_f32_t));
+    test_int(ab_elem->count, 3);
+
+    const EcsMember *mc = ecs_get(world, c, EcsMember);
+    test_assert(mc != NULL);
+    const EcsArray *ac = ecs_get(world, mc->type, EcsArray);
+    test_assert(ac != NULL);
+    test_int(ac->count, 2);
+    const EcsVector *vc_elem = ecs_get(world, ac->type, EcsVector);
+    test_assert(vc_elem != NULL);
+    test_uint(vc_elem->type, ecs_id(ecs_f32_t));
+
+    ecs_fini(world);
+}
+
+void AnonymousType_struct_member_shorthand_w_member_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct A(a: {type: f32[]})";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "A.a");
+    test_assert(a != 0);
+
+    const EcsMember *ma = ecs_get(world, a, EcsMember);
+    test_assert(ma != NULL);
+    const EcsVector *va = ecs_get(world, ma->type, EcsVector);
+    test_assert(va != NULL);
+    test_uint(va->type, ecs_id(ecs_f32_t));
+
+    ecs_fini(world);
+}
+
+void AnonymousType_struct_member_shorthand_w_local_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct P(x: f32)"
+    LINE "struct A(a: P[], b: P[2])";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t p = ecs_lookup(world, "P");
+    ecs_entity_t a = ecs_lookup(world, "A.a");
+    ecs_entity_t b = ecs_lookup(world, "A.b");
+    test_assert(p != 0);
+    test_assert(a != 0);
+    test_assert(b != 0);
+
+    const EcsMember *ma = ecs_get(world, a, EcsMember);
+    test_assert(ma != NULL);
+    const EcsVector *va = ecs_get(world, ma->type, EcsVector);
+    test_assert(va != NULL);
+    test_uint(va->type, p);
+
+    const EcsMember *mb = ecs_get(world, b, EcsMember);
+    test_assert(mb != NULL);
+    const EcsArray *ab = ecs_get(world, mb->type, EcsArray);
+    test_assert(ab != NULL);
+    test_uint(ab->type, p);
+    test_int(ab->count, 2);
+
+    ecs_fini(world);
+}
+
+void AnonymousType_struct_member_shorthand_w_const_count(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const N = 2"
+    LINE "struct A(a: f32[N], b: f32[N + 1])";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "A.a");
+    ecs_entity_t b = ecs_lookup(world, "A.b");
+    test_assert(a != 0);
+    test_assert(b != 0);
+
+    const EcsMember *ma = ecs_get(world, a, EcsMember);
+    test_assert(ma != NULL);
+    const EcsArray *aa = ecs_get(world, ma->type, EcsArray);
+    test_assert(aa != NULL);
+    test_uint(aa->type, ecs_id(ecs_f32_t));
+    test_int(aa->count, 2);
+
+    const EcsMember *mb = ecs_get(world, b, EcsMember);
+    test_assert(mb != NULL);
+    const EcsArray *ab = ecs_get(world, mb->type, EcsArray);
+    test_assert(ab != NULL);
+    test_uint(ab->type, ecs_id(ecs_f32_t));
+    test_int(ab->count, 3);
+
+    ecs_fini(world);
+}
+
+void AnonymousType_type_arg_collection_shorthand(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct A(a: vector(f32[]), b: array(f32[], 2), c: map(i32, f32[3]))";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "A.a");
+    ecs_entity_t b = ecs_lookup(world, "A.b");
+    ecs_entity_t c = ecs_lookup(world, "A.c");
+    test_assert(a != 0);
+    test_assert(b != 0);
+    test_assert(c != 0);
+
+    const EcsMember *ma = ecs_get(world, a, EcsMember);
+    test_assert(ma != NULL);
+    const EcsVector *va = ecs_get(world, ma->type, EcsVector);
+    test_assert(va != NULL);
+    const EcsVector *va_elem = ecs_get(world, va->type, EcsVector);
+    test_assert(va_elem != NULL);
+    test_uint(va_elem->type, ecs_id(ecs_f32_t));
+
+    const EcsMember *mb = ecs_get(world, b, EcsMember);
+    test_assert(mb != NULL);
+    const EcsArray *ab = ecs_get(world, mb->type, EcsArray);
+    test_assert(ab != NULL);
+    test_int(ab->count, 2);
+    const EcsVector *vb_elem = ecs_get(world, ab->type, EcsVector);
+    test_assert(vb_elem != NULL);
+    test_uint(vb_elem->type, ecs_id(ecs_f32_t));
+
+    const EcsMember *mc = ecs_get(world, c, EcsMember);
+    test_assert(mc != NULL);
+    const EcsMap *mapc = ecs_get(world, mc->type, EcsMap);
+    test_assert(mapc != NULL);
+    test_uint(mapc->key_type, ecs_id(ecs_i32_t));
+    const EcsArray *ac_elem = ecs_get(world, mapc->type, EcsArray);
+    test_assert(ac_elem != NULL);
+    test_uint(ac_elem->type, ecs_id(ecs_f32_t));
+    test_int(ac_elem->count, 3);
+
+    ecs_fini(world);
+}
+
+void AnonymousType_named_type_collection_shorthand(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "vector V(type: f32[])"
+    LINE "array Arr(type: f32[], count: 2)"
+    LINE "map M(key_type: i32, type: f32[3])"
+    LINE "value Val(type: f32[])";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t v = ecs_lookup(world, "V");
+    ecs_entity_t arr = ecs_lookup(world, "Arr");
+    ecs_entity_t m = ecs_lookup(world, "M");
+    ecs_entity_t val = ecs_lookup(world, "Val");
+    test_assert(v != 0);
+    test_assert(arr != 0);
+    test_assert(m != 0);
+    test_assert(val != 0);
+
+    const EcsVector *vv = ecs_get(world, v, EcsVector);
+    test_assert(vv != NULL);
+    const EcsVector *vv_elem = ecs_get(world, vv->type, EcsVector);
+    test_assert(vv_elem != NULL);
+    test_uint(vv_elem->type, ecs_id(ecs_f32_t));
+
+    const EcsArray *aa = ecs_get(world, arr, EcsArray);
+    test_assert(aa != NULL);
+    test_int(aa->count, 2);
+    const EcsVector *aa_elem = ecs_get(world, aa->type, EcsVector);
+    test_assert(aa_elem != NULL);
+    test_uint(aa_elem->type, ecs_id(ecs_f32_t));
+
+    const EcsMap *mm = ecs_get(world, m, EcsMap);
+    test_assert(mm != NULL);
+    test_uint(mm->key_type, ecs_id(ecs_i32_t));
+    const EcsArray *mm_elem = ecs_get(world, mm->type, EcsArray);
+    test_assert(mm_elem != NULL);
+    test_uint(mm_elem->type, ecs_id(ecs_f32_t));
+    test_int(mm_elem->count, 3);
+
+    const EcsValue *vt = ecs_get(world, val, EcsValue);
+    test_assert(vt != NULL);
+    const EcsVector *vt_elem = ecs_get(world, vt->type, EcsVector);
+    test_assert(vt_elem != NULL);
+    test_uint(vt_elem->type, ecs_id(ecs_f32_t));
+
+    ecs_fini(world);
+}
+
+void AnonymousType_const_w_type_arg_collection_shorthand(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(v: f32)"
+    LINE "const x: vector(f32[]) = [[1, 2], [3]]"
+    LINE "e { Result: {x[0][1] + x[1][0]} }";
+>>>>>>> 85202ff0a89a5ae8e495b367f260ce7e5a695a44
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
+<<<<<<< HEAD
     ecs_entity_t inventory = ecs_lookup(world, "Inventory");
     test_assert(e != 0);
     test_assert(inventory != 0);
@@ -602,6 +869,63 @@ void AnonymousType_struct_member_map_string_key(void) {
     test_int(ecs_map_count(ptr), 2);
     test_assert(script_map_has(world, map_type, ptr, "\"apple\": 3"));
     test_assert(script_map_has(world, map_type, ptr, "\"pear\": 5"));
+=======
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const float *r = ecs_get_id(world, e, result);
+    test_assert(r != NULL);
+    test_flt(r[0], 5);
+
+    ecs_fini(world);
+}
+
+void AnonymousType_entity_value_collection_shorthand(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const types: entity[] = [f32[], f32[3]]";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t types = ecs_lookup(world, "types");
+    test_assert(types != 0);
+    ecs_value_t tv = ecs_const_var_get(world, types);
+    test_assert(tv.ptr != NULL);
+    const ecs_vec_t *vec = tv.ptr;
+    test_int(ecs_vec_count(vec), 2);
+
+    const EcsVector *v = ecs_get(world,
+        ecs_vec_get_t(vec, ecs_entity_t, 0)[0], EcsVector);
+    test_assert(v != NULL);
+    test_uint(v->type, ecs_id(ecs_f32_t));
+
+    const EcsArray *a = ecs_get(world,
+        ecs_vec_get_t(vec, ecs_entity_t, 1)[0], EcsArray);
+    test_assert(a != NULL);
+    test_uint(a->type, ecs_id(ecs_f32_t));
+    test_int(a->count, 3);
+
+    ecs_fini(world);
+}
+
+void AnonymousType_invalid_collection_shorthand_count(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "struct A(a: f32[0])", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void AnonymousType_collection_shorthand_on_non_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "struct A(a: flecs.core.ChildOf[])", &ir_desc, NULL) != 0);
+>>>>>>> 85202ff0a89a5ae8e495b367f260ce7e5a695a44
 
     ecs_fini(world);
 }

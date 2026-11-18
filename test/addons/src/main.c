@@ -353,6 +353,11 @@ void Stats_get_entity_count(void);
 void Stats_get_pipeline_stats_w_task_system(void);
 void Stats_get_not_alive_entity_count(void);
 void Stats_progress_stats_systems(void);
+void Stats_system_time_spent_w_threads(void);
+void Stats_system_time_spent_single_threaded_w_threads(void);
+void Stats_system_time_spent_reset_each_frame(void);
+void Stats_system_time_spent_change_threads(void);
+void Stats_progress_stats_w_threads(void);
 
 // Testsuite 'Memory'
 void Memory_query_memory_no_cache(void);
@@ -1955,6 +1960,26 @@ bake_test_case Stats_testcases[] = {
     {
         "progress_stats_systems",
         Stats_progress_stats_systems
+    },
+    {
+        "system_time_spent_w_threads",
+        Stats_system_time_spent_w_threads
+    },
+    {
+        "system_time_spent_single_threaded_w_threads",
+        Stats_system_time_spent_single_threaded_w_threads
+    },
+    {
+        "system_time_spent_reset_each_frame",
+        Stats_system_time_spent_reset_each_frame
+    },
+    {
+        "system_time_spent_change_threads",
+        Stats_system_time_spent_change_threads
+    },
+    {
+        "progress_stats_w_threads",
+        Stats_progress_stats_w_threads
     }
 };
 
@@ -3159,7 +3184,7 @@ static bake_test_suite suites[] = {
         "Stats",
         NULL,
         NULL,
-        12,
+        17,
         Stats_testcases
     },
     {
