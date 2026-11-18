@@ -81171,7 +81171,17 @@ void flecs_query_mark_fields_dirty(
             }
         }
 
-        const ecs_table_record_t *tr = it->trs ? it->trs[i] : NULL;
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+        int32_t *dirty_state = table->dirty_state;
+        if (!dirty_state) {
+            continue;
+        }
+
+        const ecs_table_record_t *tr = NULL;
+        if (!src && it->trs) {
+            tr = it->trs[i];
+        }
+
         if (!tr) {
             tr = flecs_query_get_tr(world, it->ids[i], table);
             if (!tr) {
@@ -81181,13 +81191,6 @@ void flecs_query_mark_fields_dirty(
 
         int32_t type_index = tr->index;
         ecs_assert(type_index >= 0, ECS_INTERNAL_ERROR, NULL);
-
-        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-        int32_t *dirty_state = table->dirty_state;
-        if (!dirty_state) {
-            continue;
-        }
-
         ecs_assert(type_index < table->type.count, ECS_INTERNAL_ERROR, NULL);
         int32_t column = table->column_map[type_index];
         dirty_state[column + 1] ++;
@@ -81231,12 +81234,10 @@ void flecs_query_mark_fixed_fields_dirty(
             continue;
         }
 
-        const ecs_table_record_t *tr = it->trs ? it->trs[i] : NULL;
+        const ecs_table_record_t *tr = flecs_query_get_tr(
+            world, it->ids[i], table);
         if (!tr) {
-            tr = flecs_query_get_tr(world, it->ids[i], table);
-            if (!tr) {
-                continue;
-            }
+            continue;
         }
 
         ecs_assert(tr->column >= 0, ECS_INTERNAL_ERROR, NULL);
