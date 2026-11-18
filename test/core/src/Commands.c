@@ -3437,7 +3437,9 @@ void Commands_defer_2_sets_w_multi_observer(void) {
     ecs_set(stage_1, e, Velocity, {1, 2});
     ecs_merge(stage_1);
 
-    test_int(position_velocity_observer_invoked, 2);
+    /* Both components are added by the same batch, so the observer is invoked
+     * once, same as when setting the components outside of a stage. */
+    test_int(position_velocity_observer_invoked, 1);
 
     const Position *p = ecs_get(world, e, Position);
     test_int(p->x, 10);

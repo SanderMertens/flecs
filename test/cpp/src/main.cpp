@@ -1219,6 +1219,8 @@ void Observer_remove_w_on_remove_removing_other_w_world(void);
 void Observer_remove_w_on_remove_removing_other_w_stage(void);
 void Observer_set_w_on_add_adding_other_w_world(void);
 void Observer_set_w_on_add_adding_other_w_stage(void);
+void Observer_on_set_w_with_create_in_stage(void);
+void Observer_on_set_w_with_existing_in_stage(void);
 void Observer_no_terms_custom_event(void);
 void Observer_no_terms_on_add(void);
 void Observer_each_w_std_bind_entity(void);
@@ -6559,6 +6561,14 @@ bake_test_case Observer_testcases[] = {
         Observer_set_w_on_add_adding_other_w_stage
     },
     {
+        "on_set_w_with_create_in_stage",
+        Observer_on_set_w_with_create_in_stage
+    },
+    {
+        "on_set_w_with_existing_in_stage",
+        Observer_on_set_w_with_existing_in_stage
+    },
+    {
         "no_terms_custom_event",
         Observer_no_terms_custom_event
     },
@@ -8904,7 +8914,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        91,
+        93,
         Observer_testcases
     },
     {

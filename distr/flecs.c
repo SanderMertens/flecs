@@ -6639,6 +6639,77 @@ static bool flecs_cmd_table_has_id(
     return cr && flecs_component_get_table(cr, table) != NULL;
 }
 
+/* Returns whether OnSet for a set command should be emitted together with the
+ * other components that were added by the batch. This is the case for the 
+ * first set command of a component that the entity didn't have yet. */
+static bool flecs_cmd_batch_on_set(
+    ecs_world_t *world,
+    const ecs_type_t *added,
+    ecs_vec_t *set_ids,
+    ecs_id_t id)
+{
+    int32_t i, count = ecs_vec_count(set_ids);
+    ecs_id_t *ids = ecs_vec_first_t(set_ids, ecs_id_t);
+    for (i = 0; i < count; i ++) {
+        if (ids[i] == id) {
+            /* Subsequent set commands for the same component emit OnSet as
+             * a regular modified command. */
+            return false;
+        }
+    }
+
+    for (i = 0; i < added->count; i ++) {
+        if (added->array[i] == id) {
+            ecs_vec_append_t(&world->allocator, set_ids, ecs_id_t)[0] = id;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static void flecs_cmd_batch_emit_on_set(
+    ecs_world_t *world,
+    ecs_record_t *r,
+    ecs_vec_t *set_ids)
+{
+    ecs_table_t *table = r->table;
+    if (!table) {
+        /* Entity was deleted */
+        return;
+    }
+
+    /* Hooks invoked by the batch could have changed the entity, so make sure
+     * it still has the components before emitting OnSet. */
+    int32_t i, count = ecs_vec_count(set_ids);
+    ecs_id_t *ids = ecs_vec_first_t(set_ids, ecs_id_t);
+    int32_t set_count = 0;
+    for (i = 0; i < count; i ++) {
+        ecs_id_t id = ids[i];
+        ecs_component_record_t *cr = flecs_components_get(world, id);
+        if (cr && flecs_cmd_table_has_id(table, id, cr)) {
+            ids[set_count ++] = id;
+        }
+    }
+
+    if (!set_count) {
+        return;
+    }
+
+    ecs_type_t set_type = { .array = ids, .count = set_count };
+    int32_t row = ECS_RECORD_TO_ROW(r->row);
+
+    flecs_commands_begin(world, world->stages[0]);
+    flecs_notify_on_set_ids(world, table, row, 1, &set_type);
+    flecs_commands_end(world, world->stages[0]);
+
+    for (i = 0; i < set_count; i ++) {
+        flecs_table_mark_dirty(world, table, ids[i]);
+    }
+
+    world->info.cmd.modified_count += set_count;
+}
+
 static void flecs_cmd_batch_for_entity(
     ecs_world_t *world,
     ecs_table_diff_builder_t *diff,
@@ -6851,6 +6922,7 @@ static void flecs_cmd_batch_for_entity(
      * yet, as for entities that did have the component already the value will
      * have been assigned directly to the component storage. */
     if (has_set) {
+        ecs_vec_clear(set_ids);
         cur = start;
         do {
             ecs_cmd_t *cmd = &cmds[cur];
@@ -6905,10 +6977,18 @@ static void flecs_cmd_batch_for_entity(
 
                     if (cmd->kind == EcsCmdSet) {
                         /* A set operation is add + copy + modified. We just did
-                         * the add and copy, so the only thing that's left is a 
-                         * modified command, which will call the OnSet 
-                         * observers. */
-                        cmd->kind = EcsCmdModified;
+                         * the add and copy, so the only thing that's left is to
+                         * call the OnSet observers. If the component was added
+                         * by this batch, OnSet is emitted for all such 
+                         * components in a single event below, so that 
+                         * observers with multiple terms are only invoked once.
+                         * Otherwise convert the command to modified. */
+                        if (flecs_cmd_batch_on_set(
+                            world, &added, set_ids, cmd->id)) {
+                            cmd->kind = EcsCmdSkip;
+                        } else {
+                            cmd->kind = EcsCmdModified;
+                        }
                     } else {
                         /* If this was an ensure, nothing's left to be done */
                         cmd->kind = EcsCmdSkip;
@@ -6959,6 +7039,14 @@ static void flecs_cmd_batch_for_entity(
         flecs_actions_move_add(world, r->table, start_table,
             ECS_RECORD_TO_ROW(r->row), 1, &add_diff, 0, false, 0);
         flecs_commands_end(world, world->stages[0]);
+    }
+
+    /* Emit OnSet for components that were added and assigned by this batch. 
+     * Emitting them with a single event ensures that an observer that matches
+     * multiple of these components only gets invoked once, which is consistent
+     * with assigning the components one by one outside of deferred mode. */
+    if (ecs_vec_count(set_ids)) {
+        flecs_cmd_batch_emit_on_set(world, r, set_ids);
     }
 
 done:
@@ -23618,7 +23706,7 @@ static void MonitorAlertInstances(ecs_iter_t *it) {
                 /* Only increase alert duration if the alert was active */
                 value[i].value += (double)it->delta_system_time;
 
-                bool generate_message = alert->message;
+                bool generate_message = alert->message != NULL;
                 if (generate_message) {
                     if (alert_instance[i].message) {
                         /* If a message was already generated, only regenerate if

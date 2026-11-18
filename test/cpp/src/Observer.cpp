@@ -2169,6 +2169,68 @@ void Observer_set_w_on_add_adding_other_w_stage(void) {
     test_int(p.y, 20);
 }
 
+void Observer_on_set_w_with_create_in_stage(void) {
+    flecs::world ecs;
+
+    int32_t count = 0;
+
+    ecs.observer<Position>()
+        .with<Velocity>()
+        .event(flecs::OnSet)
+        .each([&](flecs::entity e, Position& p) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+            count ++;
+        });
+
+    flecs::world stage = ecs.get_stage(0);
+
+    flecs::entity e = stage.entity()
+        .set(Position{10, 20})
+        .set(Velocity{1, 2});
+
+    test_int(count, 0);
+
+    stage.merge();
+
+    test_int(count, 1);
+    test_assert(e.has<Position>());
+    test_assert(e.has<Velocity>());
+}
+
+void Observer_on_set_w_with_existing_in_stage(void) {
+    flecs::world ecs;
+
+    int32_t count = 0;
+
+    ecs.observer<Position>()
+        .with<Velocity>()
+        .event(flecs::OnSet)
+        .each([&](flecs::entity e, Position& p) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+            count ++;
+        });
+
+    flecs::entity e = ecs.entity().set(Velocity{0, 0});
+
+    flecs::world stage = ecs.get_stage(0);
+
+    stage.entity(e)
+        .set(Position{10, 20})
+        .set(Velocity{1, 2});
+
+    test_int(count, 0);
+
+    stage.merge();
+
+    /* Same as outside of a stage: both sets match, since the entity already
+     * had Velocity before Position was set. */
+    test_int(count, 2);
+    test_assert(e.has<Position>());
+    test_assert(e.has<Velocity>());
+}
+
 void Observer_no_terms_custom_event(void) {
     flecs::world ecs;
 

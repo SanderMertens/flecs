@@ -1259,6 +1259,8 @@
                 "remove_w_on_remove_removing_other_w_stage",
                 "set_w_on_add_adding_other_w_world",
                 "set_w_on_add_adding_other_w_stage",
+                "on_set_w_with_create_in_stage",
+                "on_set_w_with_existing_in_stage",
                 "no_terms_custom_event",
                 "no_terms_on_add",
                 "each_w_std_bind_entity"
