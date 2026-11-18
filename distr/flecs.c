@@ -3491,6 +3491,10 @@ void flecs_fini_prefab(
 
 #ifdef FLECS_PREFAB
 
+ecs_entity_t flecs_get_on_instantiate_children(
+    const ecs_world_t *world,
+    const ecs_table_t *table);
+
 void flecs_instantiate_dont_fragment(
     ecs_world_t *world,
     ecs_entity_t base,
@@ -21494,6 +21498,7 @@ const ecs_entity_t EcsTransitive =                  FLECS_HI_COMPONENT_ID + 18;
 const ecs_entity_t EcsReflexive =                   FLECS_HI_COMPONENT_ID + 19;
 const ecs_entity_t EcsInheritable =                 FLECS_HI_COMPONENT_ID + 20;
 const ecs_entity_t EcsOnInstantiate =               FLECS_HI_COMPONENT_ID + 21;
+const ecs_entity_t EcsOnInstantiateChildren =       FLECS_HI_COMPONENT_ID + 125;
 #ifdef FLECS_PREFAB
 const ecs_entity_t EcsCopy =                    FLECS_HI_COMPONENT_ID + 22;
 const ecs_entity_t EcsInherit =                     FLECS_HI_COMPONENT_ID + 23;
@@ -65953,15 +65958,126 @@ void flecs_instantiate_sparse(
     }
 }
 
+ecs_entity_t flecs_get_on_instantiate_children(
+    const ecs_world_t *world,
+    const ecs_table_t *table)
+{
+    ecs_component_record_t *cr = flecs_components_get(
+        world, ecs_pair(EcsOnInstantiateChildren, EcsWildcard));
+    if (!cr) {
+        return 0;
+    }
+
+    const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
+    if (!tr) {
+        return 0;
+    }
+
+    return ECS_PAIR_SECOND(table->type.array[tr->index]);
+}
+
+static void flecs_instantiate_children_inherit(
+    ecs_world_t *world,
+    ecs_entity_t instance,
+    ecs_table_range_t child_range,
+    const ecs_instantiate_ctx_t *ctx,
+    int32_t depth)
+{
+    ecs_table_t *child_table = child_range.table;
+    const ecs_entity_t *children = ecs_table_entities(child_table);
+
+    ecs_record_t *r = flecs_entities_get(world, instance);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_id_t name_id = ecs_pair_t(EcsIdentifier, EcsName);
+    int32_t name_column = ecs_table_get_column_index(
+        world, child_table, name_id);
+
+    ecs_type_t type = {0};
+    flecs_type_add(world, &type, ecs_childof(instance));
+    if (r->table->flags & EcsTableIsPrefab) {
+        flecs_type_add(world, &type, EcsPrefab);
+    }
+    if (name_column != -1) {
+        flecs_type_add(world, &type, name_id);
+    }
+
+    ecs_table_t *parent_table = flecs_table_find_or_create(world, &type);
+    ecs_assert(parent_table != NULL, ECS_INTERNAL_ERROR, NULL);
+    flecs_type_free(world, &type);
+
+    EcsIdentifier *names = NULL;
+    if (name_column != -1) {
+        names = ecs_table_get_column(
+            child_table, name_column, child_range.offset);
+    }
+
+    int32_t j;
+    for (j = 0; j < child_range.count; j ++) {
+        ecs_entity_t child = children[j + child_range.offset];
+        ecs_check(child != instance, ECS_INVALID_PARAMETER, 
+            "cycle detected in IsA relationship");
+
+        ecs_id_t isa = ecs_isa(child);
+        ecs_table_diff_t isa_diff = ECS_TABLE_DIFF_INIT;
+        ecs_table_t *i_table = flecs_table_traverse_add(
+            world, parent_table, &isa, &isa_diff);
+        ecs_assert(i_table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_table_diff_t diff = {
+            .added = i_table->type,
+            .added_flags = (i_table->flags & EcsTableAddEdgeFlags) | 
+                EcsTableHasOnAdd | EcsTableEdgeReparent
+        };
+
+        void **component_data = NULL;
+        if (names) {
+            int32_t type_count = i_table->type.count;
+            component_data = ecs_os_alloca_n(void*, type_count);
+            ecs_os_memset_n(component_data, 0, void*, type_count);
+            int32_t name_index = ecs_table_get_type_index(
+                world, i_table, name_id);
+            ecs_assert(name_index != -1, ECS_INTERNAL_ERROR, NULL);
+            component_data[name_index] = &names[j];
+        }
+
+        ecs_entity_t child_id = flecs_instantiate_alloc_child_id(
+            world, child, ctx->root_prefab, ctx->root_instance);
+
+        int32_t child_row;
+        const ecs_entity_t *i_child = flecs_bulk_new(world, i_table, 
+            &child_id, &diff.added, 1, component_data, false, &child_row, 
+            &diff);
+
+        flecs_instantiate(world, child, i_child[0], ctx, depth + 1);
+    }
+
+error:
+    return;
+}
+
 static void flecs_instantiate_children(
     ecs_world_t *world,
     ecs_entity_t base,
     ecs_entity_t instance,
     ecs_table_range_t child_range,
     const ecs_instantiate_ctx_t *ctx,
+    bool inherit,
     int32_t depth)
 {
     if (!child_range.count) {
+        return;
+    }
+
+    if (inherit) {
+        ecs_instantiate_ctx_t ctx_cur = {base, instance};
+        if (ctx) {
+            ctx_cur = *ctx;
+        }
+
+        flecs_instantiate_children_inherit(
+            world, instance, child_range, &ctx_cur, depth);
         return;
     }
 
@@ -66243,7 +66359,13 @@ void flecs_instantiate(
     ECS_TABLE_LOCK(world, base_table);
 
     ecs_component_record_t *cr = flecs_components_get(world, ecs_childof(base));
+    ecs_entity_t on_instantiate = 0;
     if (cr) {
+        on_instantiate = flecs_get_on_instantiate_children(world, base_table);
+    }
+
+    if (cr && on_instantiate != EcsDontInherit) {
+        bool inherit = on_instantiate == EcsInherit;
         ecs_os_perf_trace_push("flecs.instantiate");
 
         if (cr->flags & EcsIdOrderedChildren) {
@@ -66276,7 +66398,7 @@ void flecs_instantiate(
                 }
 
                 flecs_instantiate_children(
-                    world, base, instance, range, ctx, depth);
+                    world, base, instance, range, ctx, inherit, depth);
             }
         } else {
             ecs_table_cache_iter_t it;
@@ -66290,7 +66412,7 @@ void flecs_instantiate(
                     };
 
                     flecs_instantiate_children(
-                        world, base, instance, range, ctx, depth);
+                        world, base, instance, range, ctx, inherit, depth);
                 }
             }
         }
@@ -66524,7 +66646,10 @@ ecs_entity_t flecs_get_prefab_instance_child(
             flecs_errstr_1(ecs_id_str(world, entity)));
 
     ecs_entity_t tgt = ecs_vec_get_t(v, ecs_entity_t, index)[0];
-    ecs_check(ecs_has_pair(world, tgt, EcsIsA, prefab_child), ECS_INVALID_OPERATION,
+    ecs_check(ecs_has_pair(world, tgt, EcsIsA, prefab_child) ||
+        flecs_get_on_instantiate_children(world, 
+            ecs_get_table(world, ecs_get_parent(world, prefab_child))) == EcsCopy,
+        ECS_INVALID_OPERATION,
         "cannot get target for '%s': children of '%s' have changed since "
         "prefab instantiation",
             flecs_errstr(ecs_id_str(world, prefab_child)),
@@ -66542,8 +66667,10 @@ void flecs_bootstrap_prefab(
     flecs_bootstrap_tag(world, EcsCopy);
     flecs_bootstrap_tag(world, EcsInherit);
     flecs_bootstrap_trait(world, EcsOnInstantiate);
+    flecs_bootstrap_trait(world, EcsOnInstantiateChildren);
 #ifdef FLECS_CONSTRAINT_TRAITS
     ecs_add_id(world, EcsOnInstantiate, EcsRelationship);
+    ecs_add_id(world, EcsOnInstantiateChildren, EcsRelationship);
     ecs_add_id(world, EcsCopy, EcsTarget);
     ecs_add_id(world, EcsInherit, EcsTarget);
 #endif
@@ -66579,6 +66706,11 @@ void flecs_bootstrap_prefab(
 
     /* OnInstantiate */
     ecs_add_id(world, EcsOnInstantiate, EcsExclusive);
+
+    /* OnInstantiateChildren */
+    ecs_add_id(world, EcsOnInstantiateChildren, EcsExclusive);
+    ecs_add_pair(world, EcsOnInstantiateChildren, 
+        EcsOnInstantiate, EcsDontInherit);
 
     /* DontInherit components */
     ecs_add_pair(world, ecs_id(EcsComponent), EcsOnInstantiate, EcsDontInherit);
@@ -66638,7 +66770,8 @@ static ecs_type_t flecs_prefab_spawner_build_type(
     ecs_world_t *world,
     ecs_entity_t child,
     ecs_table_t *table,
-    int32_t depth)
+    int32_t depth,
+    bool copy)
 {
     ecs_type_t dst = {0};
     ecs_type_t *src = &table->type;
@@ -66651,9 +66784,11 @@ static ecs_type_t flecs_prefab_spawner_build_type(
         ecs_table_record_t *tr = &table->_->records[i];
         ecs_component_record_t *cr = tr->hdr.cr;
 
-        if (cr->flags & 
-            (EcsIdOnInstantiateDontInherit|EcsIdOnInstantiateInherit)) 
-        {
+        if (cr->flags & EcsIdOnInstantiateDontInherit) {
+            continue;
+        }
+
+        if (!copy && (cr->flags & EcsIdOnInstantiateInherit)) {
             continue;
         }
 
@@ -66670,7 +66805,7 @@ static ecs_type_t flecs_prefab_spawner_build_type(
         }
 
         ecs_entity_t rel = ECS_PAIR_FIRST(id);
-        if (rel == EcsIsA) {
+        if (!copy && rel == EcsIsA) {
             /* If prefab child has IsA relationships, they will be inherited 
              * through the (IsA, prefab_child) relationship (added below). */
             continue;
@@ -66684,7 +66819,9 @@ static ecs_type_t flecs_prefab_spawner_build_type(
         flecs_type_add(world, &dst, id);
     }
 
-    flecs_type_add(world, &dst, ecs_isa(child));
+    if (!copy) {
+        flecs_type_add(world, &dst, ecs_isa(child));
+    }
 
     return dst;
 }
@@ -66694,7 +66831,8 @@ static void flecs_prefab_spawner_build_from_cr(
     ecs_component_record_t *cr,
     ecs_vec_t *spawner,
     int32_t parent_index,
-    int32_t depth)
+    int32_t depth,
+    bool copy)
 {
     ecs_vec_t *children_vec = &cr->pair->ordered_children;
     int32_t i, count = ecs_vec_count(children_vec);
@@ -66715,9 +66853,10 @@ static void flecs_prefab_spawner_build_from_cr(
         elem->parent_index = parent_index;
         elem->child_name = NULL;
         elem->child = (uint32_t)child;
+        elem->copy = copy;
 
         ecs_type_t type = flecs_prefab_spawner_build_type(
-            world, child, table, depth);
+            world, child, table, depth, copy);
         elem->table = flecs_table_find_or_create(world, &type);
         ecs_assert(elem->table != NULL, ECS_INTERNAL_ERROR, NULL);
         flecs_type_free(world, &type);
@@ -66735,8 +66874,14 @@ static void flecs_prefab_spawner_build_from_cr(
             continue;
         }
 
-        flecs_prefab_spawner_build_from_cr(
-            world, child_cr, spawner, ecs_vec_count(spawner), depth + 1);
+        ecs_entity_t on_instantiate = 
+            flecs_get_on_instantiate_children(world, table);
+        if (on_instantiate == EcsDontInherit) {
+            continue;
+        }
+
+        flecs_prefab_spawner_build_from_cr(world, child_cr, spawner, 
+            ecs_vec_count(spawner), depth + 1, on_instantiate == EcsCopy);
     }
 }
 
@@ -66760,6 +66905,7 @@ static void flecs_spawner_transpose_depth(
         dst_elem->child_name = src_elem->child_name;
         dst_elem->parent_index = src_elem->parent_index;
         dst_elem->child = src_elem->child;
+        dst_elem->copy = src_elem->copy;
         
         /* Get depth for source element at depth 0 */
         int32_t src_depth = flecs_relation_depth(
@@ -66832,9 +66978,14 @@ EcsTreeSpawner* flecs_prefab_spawner_build(
         return NULL;
     }
 
+    ecs_record_t *r = flecs_entities_get_any(world, base);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    bool copy = flecs_get_on_instantiate_children(world, r->table) == EcsCopy;
+
     ecs_vec_t spawner;
     ecs_vec_init_t(NULL, &spawner, ecs_tree_spawner_child_t, 0);
-    flecs_prefab_spawner_build_from_cr(world, cr, &spawner, 0, 1);
+    flecs_prefab_spawner_build_from_cr(world, cr, &spawner, 0, 1, copy);
 
     base = flecs_entities_get_alive(world, base);
     EcsTreeSpawner *ts = ecs_ensure(world, base, EcsTreeSpawner);
@@ -66848,6 +66999,34 @@ EcsTreeSpawner* flecs_prefab_spawner_build(
     }
 
     return ts;
+}
+
+static void flecs_spawner_copy_components(
+    ecs_table_t *dst,
+    int32_t dst_row,
+    ecs_table_t *src,
+    int32_t src_row)
+{
+    int32_t i, count = dst->column_count;
+    for (i = 0; i < count; i ++) {
+        int32_t type_index = dst->column_map[dst->type.count + i];
+        ecs_component_record_t *cr = dst->_->records[type_index].hdr.cr;
+        if (cr->flags & EcsIdOnInstantiateDontInherit) {
+            continue;
+        }
+
+        const ecs_table_record_t *tr = flecs_component_get_table(cr, src);
+        if (!tr || tr->column == -1) {
+            continue;
+        }
+
+        ecs_column_t *column = &dst->data.columns[i];
+        const ecs_type_info_t *ti = column->ti;
+        void *dst_ptr = ECS_ELEM(column->data, ti->size, dst_row);
+        void *src_ptr = ECS_ELEM(
+            src->data.columns[tr->column].data, ti->size, src_row);
+        flecs_type_info_copy(dst_ptr, src_ptr, 1, ti);
+    }
 }
 
 void flecs_spawner_instantiate(
@@ -66937,6 +67116,16 @@ void flecs_spawner_instantiate(
         r->row = (uint32_t)row;
         flecs_table_append(world, table, entity, true, true);
 
+        ecs_entity_t base_child = spawn_child->child;
+        ecs_record_t *spawn_r = flecs_entities_get_any(
+            world, spawn_child->child);
+        ecs_assert(spawn_r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (spawn_child->copy) {
+            flecs_spawner_copy_components(table, row, 
+                spawn_r->table, ECS_RECORD_TO_ROW(spawn_r->row));
+        }
+
         int32_t parent_column = table->component_map[ecs_id(EcsParent)];
         ecs_assert(parent_column != 0, ECS_INTERNAL_ERROR, NULL);
         EcsParent *parent_ptr = table->data.columns[parent_column - 1].data;
@@ -66951,11 +67140,6 @@ void flecs_spawner_instantiate(
         }
 
         flecs_add_non_fragmenting_child_w_records(world, parent, entity, cr, r);
-
-        ecs_entity_t base_child = spawn_child->child;
-        ecs_record_t *spawn_r = flecs_entities_get_any(
-            world, spawn_child->child);
-        ecs_assert(spawn_r != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_table_range_t base_range = {
             .table = spawn_r->table,

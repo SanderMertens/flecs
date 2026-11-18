@@ -6135,6 +6135,7 @@ typedef struct {
     ecs_table_t *table;     /**< Table in which the child will be stored. */
     uint32_t child;         /**< Prefab child entity (without generation). */
     int32_t parent_index;   /**< Index into the children vector. */
+    bool copy;              /**< Copy components instead of inheriting them. */
 } ecs_tree_spawner_child_t;
 
 /** Tree spawner data for a single hierarchy depth. */
@@ -6300,6 +6301,18 @@ FLECS_API extern const ecs_entity_t EcsInheritable;
 
 /** Relationship that specifies component inheritance behavior. */
 FLECS_API extern const ecs_entity_t EcsOnInstantiate;
+
+/** Relationship that specifies how children of a prefab are instantiated.
+ * When added to a prefab, the target specifies what happens with the direct
+ * children of the prefab when it is instantiated:
+ *  - `Copy`: copy children (and their components) to the instance.
+ *  - `Inherit`: create instance children that inherit from (IsA) the prefab
+ *    children.
+ *  - `DontInherit`: don't create children for the instance.
+ *
+ * When the trait is not added to a prefab, children created with `ChildOf` are
+ * copied, and children created with the `Parent` component are inherited. */
+FLECS_API extern const ecs_entity_t EcsOnInstantiateChildren;
 
 /** Never inherit component on instantiate. 
  * This will not copy or share the component from the base entity `(IsA target)`.

@@ -545,3 +545,29 @@ void ComponentTraits_static_inherit_dont_fragment_inherited(void) {
 
     test_assert(inst.try_get_mut<TraitDontFragmentInherit>() == nullptr);
 }
+
+void ComponentTraits_on_instantiate_children_inherit(void) {
+    flecs::world world;
+
+    auto base = world.prefab()
+        .add(flecs::OnInstantiateChildren, flecs::Inherit);
+    auto base_child = world.prefab("child").child_of(base);
+
+    auto inst = world.entity().is_a(base);
+    test_assert(!inst.has(flecs::OnInstantiateChildren, flecs::Wildcard));
+
+    auto inst_child = inst.lookup("child");
+    test_assert(inst_child != 0);
+    test_assert(inst_child.has(flecs::IsA, base_child));
+}
+
+void ComponentTraits_on_instantiate_children_dont_inherit(void) {
+    flecs::world world;
+
+    auto base = world.prefab()
+        .add(flecs::OnInstantiateChildren, flecs::DontInherit);
+    world.prefab("child").child_of(base);
+
+    auto inst = world.entity().is_a(base);
+    test_assert(inst.lookup("child") == 0);
+}

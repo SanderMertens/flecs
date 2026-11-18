@@ -19422,6 +19422,7 @@ const ecs_entity_t EcsTransitive =                  FLECS_HI_COMPONENT_ID + 18;
 const ecs_entity_t EcsReflexive =                   FLECS_HI_COMPONENT_ID + 19;
 const ecs_entity_t EcsInheritable =                 FLECS_HI_COMPONENT_ID + 20;
 const ecs_entity_t EcsOnInstantiate =               FLECS_HI_COMPONENT_ID + 21;
+const ecs_entity_t EcsOnInstantiateChildren =       FLECS_HI_COMPONENT_ID + 125;
 const ecs_entity_t EcsDontInherit =                 FLECS_HI_COMPONENT_ID + 24;
 const ecs_entity_t EcsPairIsTag =                   FLECS_HI_COMPONENT_ID + 25;
 const ecs_entity_t EcsExclusive =                   FLECS_HI_COMPONENT_ID + 26;

@@ -123,7 +123,10 @@ ecs_entity_t flecs_get_prefab_instance_child(
             flecs_errstr_1(ecs_id_str(world, entity)));
 
     ecs_entity_t tgt = ecs_vec_get_t(v, ecs_entity_t, index)[0];
-    ecs_check(ecs_has_pair(world, tgt, EcsIsA, prefab_child), ECS_INVALID_OPERATION,
+    ecs_check(ecs_has_pair(world, tgt, EcsIsA, prefab_child) ||
+        flecs_get_on_instantiate_children(world, 
+            ecs_get_table(world, ecs_get_parent(world, prefab_child))) == EcsCopy,
+        ECS_INVALID_OPERATION,
         "cannot get target for '%s': children of '%s' have changed since "
         "prefab instantiation",
             flecs_errstr(ecs_id_str(world, prefab_child)),
@@ -141,8 +144,10 @@ void flecs_bootstrap_prefab(
     flecs_bootstrap_tag(world, EcsCopy);
     flecs_bootstrap_tag(world, EcsInherit);
     flecs_bootstrap_trait(world, EcsOnInstantiate);
+    flecs_bootstrap_trait(world, EcsOnInstantiateChildren);
 #ifdef FLECS_CONSTRAINT_TRAITS
     ecs_add_id(world, EcsOnInstantiate, EcsRelationship);
+    ecs_add_id(world, EcsOnInstantiateChildren, EcsRelationship);
     ecs_add_id(world, EcsCopy, EcsTarget);
     ecs_add_id(world, EcsInherit, EcsTarget);
 #endif
@@ -178,6 +183,11 @@ void flecs_bootstrap_prefab(
 
     /* OnInstantiate */
     ecs_add_id(world, EcsOnInstantiate, EcsExclusive);
+
+    /* OnInstantiateChildren */
+    ecs_add_id(world, EcsOnInstantiateChildren, EcsExclusive);
+    ecs_add_pair(world, EcsOnInstantiateChildren, 
+        EcsOnInstantiate, EcsDontInherit);
 
     /* DontInherit components */
     ecs_add_pair(world, ecs_id(EcsComponent), EcsOnInstantiate, EcsDontInherit);

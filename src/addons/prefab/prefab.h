@@ -41,6 +41,10 @@ void flecs_fini_prefab(
 
 #ifdef FLECS_PREFAB
 
+ecs_entity_t flecs_get_on_instantiate_children(
+    const ecs_world_t *world,
+    const ecs_table_t *table);
+
 void flecs_instantiate_dont_fragment(
     ecs_world_t *world,
     ecs_entity_t base,
