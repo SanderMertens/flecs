@@ -26,6 +26,10 @@ ecs_entity_t flecs_run_system(
     ecs_ftime_t delta_time,
     void *param);
 
+void flecs_system_reset_time_spent(
+    const ecs_world_t *world,
+    ecs_system_t *system_data);
+
 #endif
 
 #endif

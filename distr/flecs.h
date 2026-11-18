@@ -14451,8 +14451,10 @@ typedef struct ecs_system_t {
     /** Callback to free run ctx. */
     ecs_ctx_free_t run_ctx_free;
 
-    /** Time spent on running the system. */
-    ecs_ftime_t time_spent;
+    /** Time spent on running the system in the last frame, per thread. The
+     * vector contains an ecs_ftime_t element for each stage, where the element
+     * index is the stage id. */
+    ecs_vec_t time_spent;
 
     /** Time passed since the last invocation. */
     ecs_ftime_t time_passed;
@@ -14750,8 +14752,7 @@ typedef struct ecs_world_stats_t {
         ecs_metric_t world_time_raw;       /**< Actual time passed since simulation start (first time progress() is called). */
         ecs_metric_t world_time;           /**< Simulation time passed since simulation start. Takes into account time scaling. */
         ecs_metric_t frame_time;           /**< Time spent processing a frame. Smaller than world_time_total when load is not 100%. */
-        ecs_metric_t system_time;          /**< Wall clock time spent on running systems. */
-        ecs_metric_t system_cpu_time;      /**< Time spent on running systems, summed over all threads. */
+        ecs_metric_t system_time;          /**< Time spent on running systems. */
         ecs_metric_t emit_time;            /**< Time spent on notifying observers. */
         ecs_metric_t merge_time;           /**< Time spent on merging commands. */
         ecs_metric_t rematch_time;         /**< Time spent on rematching. */
@@ -14809,7 +14810,7 @@ typedef struct ecs_query_stats_t {
 /** Statistics for a single system (use ecs_system_stats_get()). */
 typedef struct ecs_system_stats_t {
     int64_t first_;                /**< Used for field iteration. Do not set. */
-    ecs_metric_t time_spent;       /**< Time spent processing a system, summed over all threads. */
+    ecs_metric_t time_spent;       /**< Time spent processing a system (min/avg/max across threads). */
     int64_t last_;                 /**< Used for field iteration. Do not set. */
 
     bool task;                     /**< Whether the system is a task. */
@@ -14847,26 +14848,6 @@ typedef struct ecs_pipeline_stats_t {
     int32_t active_system_count; /**< Number of active systems in pipeline. */
     int32_t rebuild_count;       /**< Number of times pipeline has rebuilt. */
 } ecs_pipeline_stats_t;
-
-/** Statistics for a single thread. */
-typedef struct ecs_thread_stats_t {
-    int64_t first_;                /**< Used for field iteration. Do not set. */
-    ecs_metric_t system_time;      /**< Time spent on running systems on the thread. */
-    ecs_metric_t systems_ran;      /**< Number of systems run on the thread. */
-    int64_t last_;                 /**< Used for field iteration. Do not set. */
-} ecs_thread_stats_t;
-
-/** Statistics for all threads that run systems for the world. */
-typedef struct ecs_worker_stats_t {
-    int8_t canary_;                /**< Allow for initializing struct with {0}. Do not set. */
-
-    /** Vector with thread statistics. The element index is the stage ID of
-     * the thread, where 0 is the main thread. */
-    ecs_vec_t threads;
-
-    /** Current position in ring buffer. */
-    int32_t t;
-} ecs_worker_stats_t;
 
 /** Get world statistics.
  *
@@ -15039,49 +15020,6 @@ void ecs_pipeline_stats_copy_last(
     ecs_pipeline_stats_t *dst,
     const ecs_pipeline_stats_t *src);
 
-/** Get worker statistics.
- * Obtain statistics for each thread that runs systems for the world.
- *
- * @param world The world.
- * @param stats Out parameter for statistics.
- */
-FLECS_API
-void ecs_worker_stats_get(
-    const ecs_world_t *world,
-    ecs_worker_stats_t *stats);
-
-/** Free worker stats.
- *
- * @param stats The stats to free.
- */
-FLECS_API
-void ecs_worker_stats_fini(
-    ecs_worker_stats_t *stats);
-
-/** Reduce source measurement window into single destination measurement. */
-FLECS_API
-void ecs_worker_stats_reduce(
-    ecs_worker_stats_t *dst,
-    const ecs_worker_stats_t *src);
-
-/** Reduce last measurement into previous measurement, restore old value. */
-FLECS_API
-void ecs_worker_stats_reduce_last(
-    ecs_worker_stats_t *stats,
-    const ecs_worker_stats_t *old,
-    int32_t count);
-
-/** Repeat last measurement. */
-FLECS_API
-void ecs_worker_stats_repeat_last(
-    ecs_worker_stats_t *stats);
-
-/** Copy last measurement from source to destination. */
-FLECS_API
-void ecs_worker_stats_copy_last(
-    ecs_worker_stats_t *dst,
-    const ecs_worker_stats_t *src);
-
 /** Reduce all measurements from a window into a single measurement. */
 FLECS_API
 void ecs_metric_reduce(
@@ -15109,7 +15047,6 @@ FLECS_API extern ECS_COMPONENT_DECLARE(EcsWorldStats);     /**< Component ID for
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsWorldSummary);   /**< Component ID for EcsWorldSummary. */
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsSystemStats);    /**< Component ID for EcsSystemStats. */
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsPipelineStats);  /**< Component ID for EcsPipelineStats. */
-FLECS_API extern ECS_COMPONENT_DECLARE(EcsWorkerStats);    /**< Component ID for EcsWorkerStats. */
 
 /* Memory statistics components */
 FLECS_API extern ECS_COMPONENT_DECLARE(ecs_entities_memory_t);    /**< Component ID for ecs_entities_memory_t. */
@@ -15152,12 +15089,6 @@ typedef struct {
     ecs_map_t stats;               /**< Map of pipeline statistics. */
 } EcsPipelineStats;
 
-/** Component that stores worker thread statistics. */
-typedef struct {
-    EcsStatsHeader hdr;            /**< Statistics header. */
-    ecs_worker_stats_t stats;      /**< Worker statistics. */
-} EcsWorkerStats;
-
 /** Component that stores a summary of world statistics. */
 typedef struct {
     /* Time */
@@ -15167,8 +15098,7 @@ typedef struct {
 
     /* Totals */
     double frame_time_total;    /**< Total time spent processing a frame. */
-    double system_time_total;   /**< Total wall clock time spent in systems. */
-    double system_cpu_time_total; /**< Total time spent in systems, summed over all threads. */
+    double system_time_total;   /**< Total time spent in systems. */
     double merge_time_total;    /**< Total time spent in merges. */
 
     int64_t entity_count;       /**< Number of entities. */
@@ -15187,8 +15117,7 @@ typedef struct {
 
     /* Per frame */
     double frame_time_frame;    /**< Time spent processing a frame. */
-    double system_time_frame;   /**< Wall clock time spent in systems. */
-    double system_cpu_time_frame; /**< Time spent in systems, summed over all threads. */
+    double system_time_frame;   /**< Time spent in systems. */
     double merge_time_frame;    /**< Time spent in merges. */
 
     int64_t merge_count_frame;   /**< Number of merges in last frame. */
@@ -15196,8 +15125,6 @@ typedef struct {
     int64_t observers_ran_frame; /**< Number of times observers were invoked in last frame. */
     int64_t queries_ran_frame;   /**< Number of queries run in last frame. */
     int64_t command_count_frame; /**< Number of commands processed in last frame. */
-
-    int32_t thread_count;        /**< Number of threads that run systems. */
 
     double simulation_time;     /**< Time spent in simulation. */
     uint32_t uptime;            /**< Time since world was created. */
@@ -25504,9 +25431,6 @@ using WorldStats = EcsWorldStats;
 
 /** Component that stores system/pipeline statistics. */
 using PipelineStats = EcsPipelineStats;
-
-/** Component that stores worker thread statistics. */
-using WorkerStats = EcsWorkerStats;
 
 /** Component with world summary stats. */
 using WorldSummary = EcsWorldSummary;
@@ -37430,7 +37354,6 @@ inline stats::stats(flecs::world& world) {
     world.component<WorldSummary>();
     world.component<WorldStats>();
     world.component<PipelineStats>();
-    world.component<WorkerStats>();
 }
 
 }
