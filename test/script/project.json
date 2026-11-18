@@ -4793,7 +4793,18 @@
                 "serialize_type",
                 "serialize_type_roundtrip",
                 "to_str_type_args",
-                "invalid_type_arg"
+                "invalid_type_arg",
+                "struct_member_collection_shorthand",
+                "struct_member_nested_collection_shorthand",
+                "struct_member_shorthand_w_member_initializer",
+                "struct_member_shorthand_w_local_type",
+                "struct_member_shorthand_w_const_count",
+                "type_arg_collection_shorthand",
+                "named_type_collection_shorthand",
+                "const_w_type_arg_collection_shorthand",
+                "entity_value_collection_shorthand",
+                "invalid_collection_shorthand_count",
+                "collection_shorthand_on_non_type"
             ]
         }, {
             "id": "Lambda",

@@ -3770,13 +3770,145 @@ error:
     return -1;
 }
 
+static bool flecs_expr_is_const_entity(
+    const ecs_expr_node_t *node)
+{
+    if (node->type != ecs_id(ecs_entity_t)) {
+        return false;
+    }
+
+    if (node->kind == EcsExprIdentifier) {
+        const ecs_expr_identifier_t *ident =
+            (const ecs_expr_identifier_t*)node;
+        if (!ident->expr) {
+            return ident->symbol != -1;
+        }
+
+        node = ident->expr;
+    }
+
+    return node->kind == EcsExprValue;
+}
+
+static int flecs_expr_type_shorthand_visit_type(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_world_t *world = script->world;
+    ecs_expr_element_t *node = (ecs_expr_element_t*)*node_ptr;
+
+    ecs_meta_cursor_t left_cur = {0};
+    if (flecs_expr_visit_type_priv(script, &node->left, &left_cur, desc)) {
+        return -1;
+    }
+
+    if (!flecs_expr_is_const_entity(node->left)) {
+        if (!node->index) {
+            flecs_expr_visit_error(script, node, "missing index for []");
+            return -1;
+        }
+
+        return 1;
+    }
+
+    if (node->index) {
+        if (node->index->kind == EcsExprIdentifier) {
+            flecs_script_symbol_t symbol;
+            if (flecs_script_symbol_lookup(script, desc, 0,
+                ((ecs_expr_identifier_t*)node->index)->value,
+                FlecsScriptLookupVariable, &symbol))
+            {
+                return 1;
+            }
+        }
+
+        ecs_meta_cursor_t index_cur = {0};
+        if (flecs_expr_visit_type_priv(
+            script, &node->index, &index_cur, desc))
+        {
+            return -1;
+        }
+
+        if (!flecs_expr_is_type_integer(node->index->type)) {
+            return 1;
+        }
+    }
+
+    ecs_entity_t elem = 0;
+    ecs_value_t elem_value = { .type = ecs_id(ecs_entity_t), .ptr = &elem };
+    if (flecs_expr_visit_eval(script, node->left, desc, &elem_value)) {
+        return -1;
+    }
+
+    if (!elem || !ecs_is_alive(world, elem) ||
+        !ecs_get_type_info(world, elem))
+    {
+        flecs_expr_visit_error(script, node,
+            "cannot use [] on entity '%s' (expected a type)",
+            flecs_errstr(ecs_get_path(world, elem)));
+        return -1;
+    }
+
+    ecs_entity_t type;
+    if (!node->index) {
+        type = flecs_script_vector_type(world, elem);
+    } else {
+        if (flecs_expr_visit_fold(script, &node->index, desc)) {
+            return -1;
+        }
+
+        if (node->index->kind != EcsExprValue) {
+            flecs_expr_visit_error(script, node,
+                "array size must be a compile time constant");
+            return -1;
+        }
+
+        ecs_expr_value_node_t *count_node =
+            (ecs_expr_value_node_t*)node->index;
+        ecs_meta_cursor_t count_cur = ecs_meta_cursor(
+            world, count_node->node.type, count_node->ptr);
+        int64_t count = ecs_meta_get_int(&count_cur);
+        if (count <= 0 || count > INT32_MAX) {
+            flecs_expr_visit_error(script, node,
+                "invalid array size '%lld'", (long long)count);
+            return -1;
+        }
+
+        type = flecs_script_array_type(world, elem, flecs_ito(int32_t, count));
+    }
+
+    if (!type) {
+        flecs_expr_visit_error(script, node,
+            "failed to create collection type for '%s'",
+            flecs_errstr(ecs_get_path(world, elem)));
+        return -1;
+    }
+
+    ecs_expr_value_node_t *result = flecs_expr_value_from(
+        script, (ecs_expr_node_t*)node, ecs_id(ecs_entity_t));
+    result->storage.entity = type;
+    result->ptr = &result->storage.entity;
+    *node_ptr = (ecs_expr_node_t*)result;
+    flecs_expr_visit_free(script, (ecs_expr_node_t*)node);
+    return 0;
+}
+
 static int flecs_expr_element_visit_type(
     ecs_script_t *script,
-    ecs_expr_element_t *node,
+    ecs_expr_node_t **node_ptr,
     ecs_meta_cursor_t *cur,
     const ecs_expr_eval_desc_t *desc)
 {
     ecs_world_t *world = script->world;
+
+    int shorthand = flecs_expr_type_shorthand_visit_type(
+        script, node_ptr, desc);
+    if (shorthand != 1) {
+        return shorthand;
+    }
+
+    ecs_expr_element_t *node = (ecs_expr_element_t*)*node_ptr;
 
     /* Check if this is a component expression */
     if (node->index->kind == EcsExprIdentifier) {
@@ -4305,8 +4437,7 @@ static int flecs_expr_visit_type_ex(
             script, node_ptr, cur, desc, swizzle_expand_allowed);
         break;
     case EcsExprElement:
-        r = flecs_expr_element_visit_type(
-            script, (ecs_expr_element_t*)node, cur, desc);
+        r = flecs_expr_element_visit_type(script, node_ptr, cur, desc);
         break;
     case EcsExprHas:
         r = flecs_expr_has_visit_type(script, (ecs_expr_has_t*)node, desc);
