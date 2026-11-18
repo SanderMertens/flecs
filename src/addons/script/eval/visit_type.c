@@ -516,6 +516,20 @@ static int flecs_script_type_check_expr(
     return 0;
 }
 
+static ecs_entity_t flecs_script_type_w_count(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    int32_t type_count)
+{
+    if (!type || !type_count) {
+        return type;
+    }
+
+    return type_count == -1
+        ? flecs_script_vector_type(world, type)
+        : flecs_script_array_type(world, type, type_count);
+}
+
 static int flecs_script_type_check_var_expr(
     ecs_script_type_visitor_t *t,
     ecs_expr_node_t **expr_ptr,
@@ -1538,12 +1552,8 @@ static int flecs_script_type_const(
         return -1;
     }
 
-    if (expected_type && node->type_count) {
-        expected_type = node->type_count == -1
-            ? flecs_script_vector_type(t->v->world, expected_type)
-            : flecs_script_array_type(
-                t->v->world, expected_type, node->type_count);
-    }
+    expected_type = flecs_script_type_w_count(
+        t->v->world, expected_type, node->type_count);
 
     ecs_entity_t type = expected_type;
     int32_t prev_unresolved = ecs_vec_count(
@@ -1694,11 +1704,7 @@ static int flecs_script_type_template_var(
         return -1;
     }
 
-    if (type && node->type_count) {
-        type = node->type_count == -1
-            ? flecs_script_vector_type(t->v->world, type)
-            : flecs_script_array_type(t->v->world, type, node->type_count);
-    }
+    type = flecs_script_type_w_count(t->v->world, type, node->type_count);
 
     if (type && t->v->template && type == t->v->template->props.type) {
         flecs_script_eval_error(t->v, node,
@@ -2039,6 +2045,9 @@ static int flecs_script_type_function(
         return 0;
     }
 
+    node->eval_return_type = flecs_script_type_w_count(
+        t->v->world, node->eval_return_type, node->return_type_count);
+
     ecs_entity_t parent;
     if (flecs_script_type_ensure_owner(t, &parent)) {
         return -1;
@@ -2065,6 +2074,9 @@ static int flecs_script_type_function(
             result = 0;
             goto done;
         }
+
+        params[i].eval_type = flecs_script_type_w_count(
+            t->v->world, params[i].eval_type, params[i].type_count);
 
         ecs_script_var_t *var = ecs_script_vars_declare(
             t->v->vars, params[i].name);

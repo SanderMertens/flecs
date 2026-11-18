@@ -49391,6 +49391,7 @@ typedef struct ecs_script_fn_param_t {
     ecs_script_node_t node;
     const char *name;
     const char *type;
+    int32_t type_count;     /* -1 for vector, >0 for array, 0 for neither */
     ecs_entity_t eval_type;
     int32_t sp;
 } ecs_script_fn_param_t;
@@ -49400,6 +49401,7 @@ typedef struct ecs_script_function_node_t {
     ecs_script_node_t return_type_node;
     const char *name;
     const char *return_type;
+    int32_t return_type_count;
     ecs_vec_t params;
     ecs_script_scope_t *body;
     ecs_entity_t eval_return_type;
@@ -71984,6 +71986,36 @@ static const char* flecs_script_parse_assign_target(
     ParserEnd;
 }
 
+static const char* flecs_script_parse_type_count(
+    ecs_parser_t *parser,
+    const char *pos,
+    int32_t *type_count)
+{
+    ParserBegin;
+
+    LookAhead_1('[',
+        Consume();
+        Parse(
+            case ']':
+                *type_count = -1;
+                break;
+            case EcsTokNumber: {
+                int64_t count = atoll(t->value);
+                if (count <= 0 || count > INT32_MAX) {
+                    Error("invalid array size '%s'", t->value);
+                }
+
+                *type_count = flecs_ito(int32_t, count);
+                Parse_1(']', {});
+                break;
+            }
+        )
+    )
+
+    EndOfRule;
+
+    ParserEnd;
+}
 static const char* flecs_script_parse_var(
     ecs_parser_t *parser,
     const char *pos,
@@ -72052,27 +72084,11 @@ static const char* flecs_script_parse_var(
             )
         )
 
-        // const value: i32[
-        LookAhead_1('[',
-            Consume();
-            Parse(
-                // const value: i32[]
-                case ']':
-                    var->type_count = -1;
-                    break;
-                // const value: i32[10]
-                case EcsTokNumber: {
-                    int64_t count = atoll(t->value);
-                    if (count <= 0 || count > INT32_MAX) {
-                        Error("invalid array size '%s'", t->value);
-                    }
-
-                    var->type_count = flecs_ito(int32_t, count);
-                    Parse_1(']', {});
-                    break;
-                }
-            )
-        )
+        // const value: i32[], const value: i32[10]
+        pos = flecs_script_parse_type_count(parser, pos, &var->type_count);
+        if (!pos) {
+            goto error;
+        }
 
         LookAhead(
             case '=': {
@@ -72158,6 +72174,12 @@ static const char* flecs_script_fn_params(
                     p->sp = -1;
                     p->name = Token(0);
                     p->type = Token(2);
+
+                    pos = flecs_script_parse_type_count(
+                        parser, pos, &p->type_count);
+                    if (!pos) {
+                        goto error;
+                    }
 
                     LookAhead_1(EcsTokComma,
                         Consume();
@@ -72684,6 +72706,12 @@ fn_stmt: {
             Parse_1(EcsTokIdentifier, {
                 fn->return_type = Token(4);
                 fn->return_type_node.pos = parser->pos;
+                pos = flecs_script_parse_type_count(
+                    parser, pos, &fn->return_type_count);
+                if (!pos) {
+                    goto error;
+                }
+
                 pos = flecs_parser_skip_newlines(parser, pos);
             })
         )
@@ -75452,6 +75480,17 @@ static void flecs_expr_to_str(
     }
 }
 
+static void flecs_script_type_count_to_str(
+    ecs_script_str_visitor_t *v,
+    int32_t type_count)
+{
+    if (type_count == -1) {
+        flecs_scriptbuf_appendstr(v, "[]");
+    } else if (type_count) {
+        flecs_scriptbuf_append(v, "[%d]", type_count);
+    }
+}
+
 static void flecs_type_args_to_str(
     ecs_script_str_visitor_t *v,
     const ecs_expr_node_t *expr)
@@ -75642,11 +75681,7 @@ static void flecs_script_stmt_to_str(
             if (stmt->type_args) {
                 flecs_type_args_to_str(v, stmt->type_args);
             }
-            if (stmt->type_count == -1) {
-                flecs_scriptbuf_appendstr(v, "[]");
-            } else if (stmt->type_count) {
-                flecs_scriptbuf_append(v, "[%d]", stmt->type_count);
-            }
+            flecs_script_type_count_to_str(v, stmt->type_count);
             flecs_scriptbuf_appendstr(v, " = ");
         } else {
             flecs_scriptbuf_append(v, "%s = ",
@@ -75833,10 +75868,13 @@ static void flecs_script_stmt_to_str(
 
             flecs_scriptbuf_append(v, "%s: %s",
                 params[i].name, params[i].type);
+            flecs_script_type_count_to_str(v, params[i].type_count);
         }
 
         if (fn->return_type) {
-            flecs_scriptbuf_append(v, ") -> %s ", fn->return_type);
+            flecs_scriptbuf_append(v, ") -> %s", fn->return_type);
+            flecs_script_type_count_to_str(v, fn->return_type_count);
+            flecs_scriptbuf_appendstr(v, " ");
         } else {
             flecs_scriptbuf_appendstr(v, ") ");
         }
@@ -103628,6 +103666,20 @@ static int flecs_script_type_check_expr(
     return 0;
 }
 
+static ecs_entity_t flecs_script_type_w_count(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    int32_t type_count)
+{
+    if (!type || !type_count) {
+        return type;
+    }
+
+    return type_count == -1
+        ? flecs_script_vector_type(world, type)
+        : flecs_script_array_type(world, type, type_count);
+}
+
 static int flecs_script_type_check_var_expr(
     ecs_script_type_visitor_t *t,
     ecs_expr_node_t **expr_ptr,
@@ -104650,12 +104702,8 @@ static int flecs_script_type_const(
         return -1;
     }
 
-    if (expected_type && node->type_count) {
-        expected_type = node->type_count == -1
-            ? flecs_script_vector_type(t->v->world, expected_type)
-            : flecs_script_array_type(
-                t->v->world, expected_type, node->type_count);
-    }
+    expected_type = flecs_script_type_w_count(
+        t->v->world, expected_type, node->type_count);
 
     ecs_entity_t type = expected_type;
     int32_t prev_unresolved = ecs_vec_count(
@@ -104806,11 +104854,7 @@ static int flecs_script_type_template_var(
         return -1;
     }
 
-    if (type && node->type_count) {
-        type = node->type_count == -1
-            ? flecs_script_vector_type(t->v->world, type)
-            : flecs_script_array_type(t->v->world, type, node->type_count);
-    }
+    type = flecs_script_type_w_count(t->v->world, type, node->type_count);
 
     if (type && t->v->template && type == t->v->template->props.type) {
         flecs_script_eval_error(t->v, node,
@@ -105151,6 +105195,9 @@ static int flecs_script_type_function(
         return 0;
     }
 
+    node->eval_return_type = flecs_script_type_w_count(
+        t->v->world, node->eval_return_type, node->return_type_count);
+
     ecs_entity_t parent;
     if (flecs_script_type_ensure_owner(t, &parent)) {
         return -1;
@@ -105177,6 +105224,9 @@ static int flecs_script_type_function(
             result = 0;
             goto done;
         }
+
+        params[i].eval_type = flecs_script_type_w_count(
+            t->v->world, params[i].eval_type, params[i].type_count);
 
         ecs_script_var_t *var = ecs_script_vars_declare(
             t->v->vars, params[i].name);
