@@ -143,6 +143,11 @@ bool flecs_script_template_interface_accepts(
     ecs_entity_t value,
     ecs_entity_t interface);
 
+bool flecs_script_template_base_declares(
+    const ecs_world_t *world,
+    const ecs_script_template_t *template,
+    const char *name);
+
 bool flecs_script_template_is_mut_type(
     const ecs_world_t *world,
     ecs_id_t component);

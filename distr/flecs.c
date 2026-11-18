@@ -51711,6 +51711,11 @@ bool flecs_script_template_interface_accepts(
     ecs_entity_t value,
     ecs_entity_t interface);
 
+bool flecs_script_template_base_declares(
+    const ecs_world_t *world,
+    const ecs_script_template_t *template,
+    const char *name);
+
 bool flecs_script_template_is_mut_type(
     const ecs_world_t *world,
     ecs_id_t component);
@@ -115796,8 +115801,12 @@ static int flecs_expr_identifier_visit_type(
         return var_member_result;
     }
 
+    const ecs_script_eval_visitor_t *v = desc->script_visitor;
+    bool base_child = v && flecs_script_template_base_declares(
+        world, v->template, node->value);
+
     /* If unresolved identifiers aren't allowed here, throw error */
-    if (!desc->allow_unresolved_identifiers ||
+    if ((!desc->allow_unresolved_identifiers && !base_child) ||
         flecs_expr_is_skipped_var(script, desc, node->value))
     {
         if (!flecs_expr_unresolved_ref(script, desc,
@@ -134501,6 +134510,48 @@ static int flecs_script_template_inherit(
 
     return flecs_script_template_inherit_members(
         v, template, node, base_template, true);
+}
+
+bool flecs_script_template_base_declares(
+    const ecs_world_t *world,
+    const ecs_script_template_t *template,
+    const char *name)
+{
+    if (!template) {
+        return false;
+    }
+
+    const char *sep = strchr(name, '.');
+    ecs_size_t length = sep
+        ? flecs_ito(ecs_size_t, sep - name) : ecs_os_strlen(name);
+
+    ecs_world_t *w = ECS_CONST_CAST(ecs_world_t*, world);
+    const ecs_script_template_t *base = flecs_script_template_get(
+        w, template->base);
+    for (; base; base = flecs_script_template_get(w, base->base)) {
+        ecs_script_scope_t *scope = base->node->scope;
+        ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
+        int32_t i, count = ecs_vec_count(&scope->stmts);
+        for (i = 0; i < count; i ++) {
+            if (stmts[i]->kind != EcsAstEntity) {
+                continue;
+            }
+
+            const ecs_script_entity_t *entity =
+                (const ecs_script_entity_t*)stmts[i];
+            if (!entity->name || entity->name_expr) {
+                continue;
+            }
+
+            if (ecs_os_strlen(entity->name) == length &&
+                !ecs_os_strncmp(entity->name, name, length))
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 bool flecs_script_template_is_mut_type(

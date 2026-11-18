@@ -3704,3 +3704,32 @@ void TemplateInheritance_template_in_entity_scope_w_two_bases(void) {
 
     ecs_fini(world);
 }
+
+void TemplateInheritance_derived_refers_to_base_child(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Ref(target: entity)"
+    LINE "template Base {"
+    LINE "  body {}"
+    LINE "}"
+    LINE "template Derived : Base {"
+    LINE "  x { Ref: {body} }"
+    LINE "}"
+    LINE "Derived e()";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t ref = ecs_lookup(world, "Ref");
+    ecs_entity_t body = ecs_lookup(world, "e.body");
+    ecs_entity_t x = ecs_lookup(world, "e.x");
+    test_assert(ref != 0);
+    test_assert(body != 0);
+    test_assert(x != 0);
+
+    const ecs_entity_t *target = ecs_get_id(world, x, ref);
+    test_assert(target != NULL);
+    test_uint(*target, body);
+
+    ecs_fini(world);
+}
