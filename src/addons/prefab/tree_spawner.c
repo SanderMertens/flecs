@@ -11,7 +11,8 @@ static ecs_type_t flecs_prefab_spawner_build_type(
     ecs_world_t *world,
     ecs_entity_t child,
     ecs_table_t *table,
-    int32_t depth)
+    int32_t depth,
+    bool copy)
 {
     ecs_type_t dst = {0};
     ecs_type_t *src = &table->type;
@@ -24,9 +25,11 @@ static ecs_type_t flecs_prefab_spawner_build_type(
         ecs_table_record_t *tr = &table->_->records[i];
         ecs_component_record_t *cr = tr->hdr.cr;
 
-        if (cr->flags & 
-            (EcsIdOnInstantiateDontInherit|EcsIdOnInstantiateInherit)) 
-        {
+        if (cr->flags & EcsIdOnInstantiateDontInherit) {
+            continue;
+        }
+
+        if (!copy && (cr->flags & EcsIdOnInstantiateInherit)) {
             continue;
         }
 
@@ -43,7 +46,7 @@ static ecs_type_t flecs_prefab_spawner_build_type(
         }
 
         ecs_entity_t rel = ECS_PAIR_FIRST(id);
-        if (rel == EcsIsA) {
+        if (!copy && rel == EcsIsA) {
             /* If prefab child has IsA relationships, they will be inherited 
              * through the (IsA, prefab_child) relationship (added below). */
             continue;
@@ -57,7 +60,9 @@ static ecs_type_t flecs_prefab_spawner_build_type(
         flecs_type_add(world, &dst, id);
     }
 
-    flecs_type_add(world, &dst, ecs_isa(child));
+    if (!copy) {
+        flecs_type_add(world, &dst, ecs_isa(child));
+    }
 
     return dst;
 }
@@ -67,7 +72,8 @@ static void flecs_prefab_spawner_build_from_cr(
     ecs_component_record_t *cr,
     ecs_vec_t *spawner,
     int32_t parent_index,
-    int32_t depth)
+    int32_t depth,
+    bool copy)
 {
     ecs_vec_t *children_vec = &cr->pair->ordered_children;
     int32_t i, count = ecs_vec_count(children_vec);
@@ -88,9 +94,10 @@ static void flecs_prefab_spawner_build_from_cr(
         elem->parent_index = parent_index;
         elem->child_name = NULL;
         elem->child = (uint32_t)child;
+        elem->copy = copy;
 
         ecs_type_t type = flecs_prefab_spawner_build_type(
-            world, child, table, depth);
+            world, child, table, depth, copy);
         elem->table = flecs_table_find_or_create(world, &type);
         ecs_assert(elem->table != NULL, ECS_INTERNAL_ERROR, NULL);
         flecs_type_free(world, &type);
@@ -108,8 +115,14 @@ static void flecs_prefab_spawner_build_from_cr(
             continue;
         }
 
-        flecs_prefab_spawner_build_from_cr(
-            world, child_cr, spawner, ecs_vec_count(spawner), depth + 1);
+        ecs_entity_t on_instantiate = 
+            flecs_get_on_instantiate_children(world, table);
+        if (on_instantiate == EcsDontInherit) {
+            continue;
+        }
+
+        flecs_prefab_spawner_build_from_cr(world, child_cr, spawner, 
+            ecs_vec_count(spawner), depth + 1, on_instantiate == EcsCopy);
     }
 }
 
@@ -133,6 +146,7 @@ static void flecs_spawner_transpose_depth(
         dst_elem->child_name = src_elem->child_name;
         dst_elem->parent_index = src_elem->parent_index;
         dst_elem->child = src_elem->child;
+        dst_elem->copy = src_elem->copy;
         
         /* Get depth for source element at depth 0 */
         int32_t src_depth = flecs_relation_depth(
@@ -205,9 +219,14 @@ EcsTreeSpawner* flecs_prefab_spawner_build(
         return NULL;
     }
 
+    ecs_record_t *r = flecs_entities_get_any(world, base);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    bool copy = flecs_get_on_instantiate_children(world, r->table) == EcsCopy;
+
     ecs_vec_t spawner;
     ecs_vec_init_t(NULL, &spawner, ecs_tree_spawner_child_t, 0);
-    flecs_prefab_spawner_build_from_cr(world, cr, &spawner, 0, 1);
+    flecs_prefab_spawner_build_from_cr(world, cr, &spawner, 0, 1, copy);
 
     base = flecs_entities_get_alive(world, base);
     EcsTreeSpawner *ts = ecs_ensure(world, base, EcsTreeSpawner);
@@ -221,6 +240,34 @@ EcsTreeSpawner* flecs_prefab_spawner_build(
     }
 
     return ts;
+}
+
+static void flecs_spawner_copy_components(
+    ecs_table_t *dst,
+    int32_t dst_row,
+    ecs_table_t *src,
+    int32_t src_row)
+{
+    int32_t i, count = dst->column_count;
+    for (i = 0; i < count; i ++) {
+        int32_t type_index = dst->column_map[dst->type.count + i];
+        ecs_component_record_t *cr = dst->_->records[type_index].hdr.cr;
+        if (cr->flags & EcsIdOnInstantiateDontInherit) {
+            continue;
+        }
+
+        const ecs_table_record_t *tr = flecs_component_get_table(cr, src);
+        if (!tr || tr->column == -1) {
+            continue;
+        }
+
+        ecs_column_t *column = &dst->data.columns[i];
+        const ecs_type_info_t *ti = column->ti;
+        void *dst_ptr = ECS_ELEM(column->data, ti->size, dst_row);
+        void *src_ptr = ECS_ELEM(
+            src->data.columns[tr->column].data, ti->size, src_row);
+        flecs_type_info_copy(dst_ptr, src_ptr, 1, ti);
+    }
 }
 
 void flecs_spawner_instantiate(
@@ -310,6 +357,16 @@ void flecs_spawner_instantiate(
         r->row = (uint32_t)row;
         flecs_table_append(world, table, entity, true, true);
 
+        ecs_entity_t base_child = spawn_child->child;
+        ecs_record_t *spawn_r = flecs_entities_get_any(
+            world, spawn_child->child);
+        ecs_assert(spawn_r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (spawn_child->copy) {
+            flecs_spawner_copy_components(table, row, 
+                spawn_r->table, ECS_RECORD_TO_ROW(spawn_r->row));
+        }
+
         int32_t parent_column = table->component_map[ecs_id(EcsParent)];
         ecs_assert(parent_column != 0, ECS_INTERNAL_ERROR, NULL);
         EcsParent *parent_ptr = table->data.columns[parent_column - 1].data;
@@ -324,11 +381,6 @@ void flecs_spawner_instantiate(
         }
 
         flecs_add_non_fragmenting_child_w_records(world, parent, entity, cr, r);
-
-        ecs_entity_t base_child = spawn_child->child;
-        ecs_record_t *spawn_r = flecs_entities_get_any(
-            world, spawn_child->child);
-        ecs_assert(spawn_r != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_table_range_t base_range = {
             .table = spawn_r->table,

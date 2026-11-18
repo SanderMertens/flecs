@@ -1144,7 +1144,18 @@
                 "delete_parent_used_as_target_w_observer_reparenting_sibling",
                 "delete_mixed_hierarchy_w_on_remove_up_observer",
                 "delete_root_w_parent_table_cleared_before_children",
-                "delete_root_w_ordered_parent_table_cleared_before_children"
+                "delete_root_w_ordered_parent_table_cleared_before_children",
+                "instantiate_children_copy",
+                "instantiate_children_copy_w_inherited_component",
+                "instantiate_children_copy_w_sparse",
+                "instantiate_children_copy_w_isa",
+                "instantiate_children_copy_w_on_set",
+                "instantiate_children_copy_nested",
+                "instantiate_children_copy_nested_inherit",
+                "instantiate_children_copy_prefab_variant",
+                "instantiate_children_inherit",
+                "instantiate_children_dont_inherit",
+                "instantiate_children_dont_inherit_nested"
             ]
         }, {
             "id": "Hierarchies",
@@ -3057,7 +3068,21 @@
                 "add_inherit_w_override_with_to_prefab_after_instantiate",
                 "add_component_to_prefab_during_instantiate",
                 "add_component_to_prefab_during_instantiate_w_parent",
-                "dont_inherit_dont_fragment_component"
+                "dont_inherit_dont_fragment_component",
+                "instantiate_children_copy",
+                "instantiate_children_inherit",
+                "instantiate_children_inherit_w_inherited_component",
+                "instantiate_children_inherit_w_auto_override",
+                "instantiate_children_inherit_w_on_set",
+                "instantiate_children_inherit_nested",
+                "instantiate_children_inherit_nested_inherit",
+                "instantiate_children_inherit_ordered_children",
+                "instantiate_children_inherit_unnamed",
+                "instantiate_children_inherit_prefab_variant",
+                "instantiate_children_dont_inherit",
+                "instantiate_children_dont_inherit_nested",
+                "instantiate_children_dont_inherit_prefab_variant",
+                "instantiate_children_change_policy"
             ]
         }, {
             "id": "World",

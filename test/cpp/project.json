@@ -1844,7 +1844,9 @@
                 "static_inherit_sparse_owned",
                 "static_inherit_sparse_inherited",
                 "static_inherit_dont_fragment_owned",
-                "static_inherit_dont_fragment_inherited"
+                "static_inherit_dont_fragment_inherited",
+                "on_instantiate_children_inherit",
+                "on_instantiate_children_dont_inherit"
             ]
         }]
     }

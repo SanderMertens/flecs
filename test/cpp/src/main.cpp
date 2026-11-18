@@ -1785,6 +1785,8 @@ void ComponentTraits_static_inherit_sparse_owned(void);
 void ComponentTraits_static_inherit_sparse_inherited(void);
 void ComponentTraits_static_inherit_dont_fragment_owned(void);
 void ComponentTraits_static_inherit_dont_fragment_inherited(void);
+void ComponentTraits_on_instantiate_children_inherit(void);
+void ComponentTraits_on_instantiate_children_dont_inherit(void);
 
 bake_test_case Script_testcases[] = {
     {
@@ -8766,6 +8768,14 @@ bake_test_case ComponentTraits_testcases[] = {
     {
         "static_inherit_dont_fragment_inherited",
         ComponentTraits_static_inherit_dont_fragment_inherited
+    },
+    {
+        "on_instantiate_children_inherit",
+        ComponentTraits_on_instantiate_children_inherit
+    },
+    {
+        "on_instantiate_children_dont_inherit",
+        ComponentTraits_on_instantiate_children_dont_inherit
     }
 };
 
@@ -8949,7 +8959,7 @@ static bake_test_suite suites[] = {
         "ComponentTraits",
         NULL,
         NULL,
-        37,
+        39,
         ComponentTraits_testcases
     }
 };
