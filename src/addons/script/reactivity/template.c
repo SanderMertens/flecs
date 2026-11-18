@@ -1300,12 +1300,11 @@ static void flecs_script_template_on_set(
     for (i = 0; i < it->count; i ++) {
         const EcsScriptTemplateRoot *root = ecs_get_pair(it->world,
             it->entities[i], EcsScriptTemplateRoot, template_entity);
-        uint64_t input = root && root->state.initialized
-            ? root->changed
-            : UINT64_MAX;
+        bool initialized = root && root->state.initialized;
+        uint64_t input = initialized ? root->changed : UINT64_MAX;
         if (input) {
             flecs_script_ref_enqueue(it->world, it->stage, template_entity,
-                it->entities[i], input);
+                it->entities[i], input, !initialized);
         }
     }
 }

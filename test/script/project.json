@@ -1788,7 +1788,8 @@
                 "template_in_interpolated_entity_scope",
                 "template_in_if_scope_in_entity_scope",
                 "template_prop_runtime_enum",
-                "template_prop_runtime_bitmask"
+                "template_prop_runtime_bitmask",
+                "read_component_of_nested_instance"
             ]
         }, {
             "id": "Mut",
