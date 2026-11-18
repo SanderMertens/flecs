@@ -176,6 +176,23 @@ static ecs_size_t flecs_doc_string_memory_get(
     }
     return result;
 }
+
+static ecs_size_t flecs_doc_source_location_memory_get(
+    const ecs_world_t *world)
+{
+    ecs_size_t result = 0;
+    ecs_iter_t it = ecs_each(world, EcsDocSourceLocation);
+    while (ecs_each_next(&it)) {
+        EcsDocSourceLocation *ptr = ecs_field(&it, EcsDocSourceLocation, 0);
+        int32_t i, count = it.count;
+        for (i = 0; i < count; i ++) {
+            if (ptr[i].file) {
+                result += ecs_os_strlen(ptr[i].file) + 1;
+            }
+        }
+    }
+    return result;
+}
 #endif
 
 ecs_entities_memory_t ecs_entity_memory_get(
@@ -233,6 +250,7 @@ ecs_entities_memory_t ecs_entity_memory_get(
     result.bytes_doc_strings += flecs_doc_string_memory_get(world, EcsDocUuid);
     result.bytes_doc_strings += flecs_doc_string_memory_get(world, EcsDocLink);
     result.bytes_doc_strings += flecs_doc_string_memory_get(world, EcsDocColor);
+    result.bytes_doc_strings += flecs_doc_source_location_memory_get(world);
 #endif
 
 error:

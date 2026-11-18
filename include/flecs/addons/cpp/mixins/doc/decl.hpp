@@ -19,6 +19,9 @@ namespace doc {
 /** flecs.doc.Description component. */
 using Description = EcsDocDescription;
 
+/** flecs.doc.SourceLocation component. */
+using SourceLocation = EcsDocSourceLocation;
+
 /** flecs.doc.Uuid component. */
 static const flecs::entity_t Uuid = EcsDocUuid;
 

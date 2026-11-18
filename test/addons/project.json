@@ -24,7 +24,15 @@
                 "set_detail_nullptr",
                 "set_link_nullptr",
                 "set_color_nullptr",
-                "set_uuid_nullptr"
+                "set_uuid_nullptr",
+                "get_set_source_location",
+                "set_source_location_copies_file",
+                "set_source_location_nullptr",
+                "set_source_location_here",
+                "set_source_location_system",
+                "set_source_location_observer",
+                "source_location_not_inherited",
+                "source_location_reflection"
             ]
         }, {
             "id": "Pipeline",
