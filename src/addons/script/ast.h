@@ -356,6 +356,7 @@ typedef struct ecs_script_fn_param_t {
     ecs_script_node_t node;
     const char *name;
     const char *type;
+    int32_t type_count;     /* -1 for vector, >0 for array, 0 for neither */
     ecs_entity_t eval_type;
     int32_t sp;
 } ecs_script_fn_param_t;
@@ -365,6 +366,7 @@ typedef struct ecs_script_function_node_t {
     ecs_script_node_t return_type_node;
     const char *name;
     const char *return_type;
+    int32_t return_type_count;
     ecs_vec_t params;
     ecs_script_scope_t *body;
     ecs_entity_t eval_return_type;

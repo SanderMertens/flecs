@@ -3363,3 +3363,165 @@ void Function_match_case_w_multiline_binary_expr(void) {
 
     ecs_fini(world);
 }
+
+void Function_vector_param(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(v: f32)"
+    LINE "fn total(v: f32[]) -> f32 { v.sum() }"
+    LINE "e { Result: {total([1, 2, 3])} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{v: 6}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void Function_array_param(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(v: i32)"
+    LINE "fn second(v: i32[3]) -> i32 { v[1] }"
+    LINE "const a: i32[3] = [10, 20, 30]"
+    LINE "e { Result: {second(a)} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{v: 20}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void Function_struct_vector_param(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Point(x: f32, y: f32)"
+    LINE "struct Result(v: f32)"
+    LINE "fn sum_x(v: Point[]) -> f32 { v.sum((el) -> { el.x }) }"
+    LINE "const points: Point[] = [{1, 2}, {3, 4}]"
+    LINE "e { Result: {sum_x(points)} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{v: 4}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void Function_vector_return(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(v: vector(i32))"
+    LINE "fn twice(v: i32[]) -> i32[] { v.map((el) -> { el * 2 }) }"
+    LINE "e { Result: {twice([1, 2, 3])} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{v: [2, 4, 6]}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void Function_array_return(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(count: i32, v: f32)"
+    LINE "fn three() -> f32[3] { [1, 2, 3] }"
+    LINE "const r = three()"
+    LINE "e { Result: {r.count(), r[1] / 4} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{count: 3, v: 0.5}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void Function_vector_param_no_leak(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "fn total(v: i32[]) -> i32 { v.sum() }"
+    LINE "export const values: i32[] = [1, 2, 3]";
+
+    test_int(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL), 0);
+
+    ecs_entity_t function = ecs_lookup(world, "total");
+    test_assert(function != 0);
+
+    ecs_value_t values = ecs_const_var_get(world, ecs_lookup(world, "values"));
+    test_assert(values.ptr != NULL);
+    ecs_value_t argv[1] = {values};
+
+    {
+        ecs_value_t result = {0};
+        test_int(ecs_function_call(world, function, 1, argv, &result), 0);
+        test_assert(result.ptr != NULL);
+        test_int(*(int32_t*)result.ptr, 6);
+        ecs_value_fini(world, &result);
+    }
+
+    int64_t balance_before = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    int32_t i;
+    for (i = 0; i < 100; i ++) {
+        ecs_value_t result = {0};
+        test_int(ecs_function_call(world, function, 1, argv, &result), 0);
+        test_assert(result.ptr != NULL);
+        test_int(*(int32_t*)result.ptr, 6);
+        ecs_value_fini(world, &result);
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(balance_after, balance_before);
+
+    ecs_fini(world);
+}

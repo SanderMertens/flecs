@@ -1546,7 +1546,13 @@
                 "same_fn_name_in_different_scopes",
                 "update_script_w_fn",
                 "update_script_w_fn_twice",
-                "match_case_w_multiline_binary_expr"
+                "match_case_w_multiline_binary_expr",
+                "vector_param",
+                "array_param",
+                "struct_vector_param",
+                "vector_return",
+                "array_return",
+                "vector_param_no_leak"
             ]
         }, {
             "id": "Template",

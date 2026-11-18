@@ -1510,6 +1510,12 @@ void Function_same_fn_name_in_different_scopes(void);
 void Function_update_script_w_fn(void);
 void Function_update_script_w_fn_twice(void);
 void Function_match_case_w_multiline_binary_expr(void);
+void Function_vector_param(void);
+void Function_array_param(void);
+void Function_struct_vector_param(void);
+void Function_vector_return(void);
+void Function_array_return(void);
+void Function_vector_param_no_leak(void);
 
 // Testsuite 'Template'
 void Template_setup(void);
@@ -10786,6 +10792,30 @@ bake_test_case Function_testcases[] = {
     {
         "match_case_w_multiline_binary_expr",
         Function_match_case_w_multiline_binary_expr
+    },
+    {
+        "vector_param",
+        Function_vector_param
+    },
+    {
+        "array_param",
+        Function_array_param
+    },
+    {
+        "struct_vector_param",
+        Function_struct_vector_param
+    },
+    {
+        "vector_return",
+        Function_vector_return
+    },
+    {
+        "array_return",
+        Function_array_return
+    },
+    {
+        "vector_param_no_leak",
+        Function_vector_param_no_leak
     }
 };
 
@@ -24055,7 +24085,7 @@ static bake_test_suite suites[] = {
         "Function",
         Function_setup,
         NULL,
-        121,
+        127,
         Function_testcases,
         1,
         Function_params

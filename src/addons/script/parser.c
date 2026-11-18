@@ -732,6 +732,37 @@ static const char* flecs_script_parse_assign_target(
     ParserEnd;
 }
 
+
+static const char* flecs_script_parse_type_count(
+    ecs_parser_t *parser,
+    const char *pos,
+    int32_t *type_count)
+{
+    ParserBegin;
+
+    LookAhead_1('[',
+        Consume();
+        Parse(
+            case ']':
+                *type_count = -1;
+                break;
+            case EcsTokNumber: {
+                int64_t count = atoll(t->value);
+                if (count <= 0 || count > INT32_MAX) {
+                    Error("invalid array size '%s'", t->value);
+                }
+
+                *type_count = flecs_ito(int32_t, count);
+                Parse_1(']', {});
+                break;
+            }
+        )
+    )
+
+    EndOfRule;
+
+    ParserEnd;
+}
 static const char* flecs_script_parse_var(
     ecs_parser_t *parser,
     const char *pos,
@@ -800,27 +831,11 @@ static const char* flecs_script_parse_var(
             )
         )
 
-        // const value: i32[
-        LookAhead_1('[',
-            Consume();
-            Parse(
-                // const value: i32[]
-                case ']':
-                    var->type_count = -1;
-                    break;
-                // const value: i32[10]
-                case EcsTokNumber: {
-                    int64_t count = atoll(t->value);
-                    if (count <= 0 || count > INT32_MAX) {
-                        Error("invalid array size '%s'", t->value);
-                    }
-
-                    var->type_count = flecs_ito(int32_t, count);
-                    Parse_1(']', {});
-                    break;
-                }
-            )
-        )
+        // const value: i32[], const value: i32[10]
+        pos = flecs_script_parse_type_count(parser, pos, &var->type_count);
+        if (!pos) {
+            goto error;
+        }
 
         LookAhead(
             case '=': {
@@ -906,6 +921,12 @@ static const char* flecs_script_fn_params(
                     p->sp = -1;
                     p->name = Token(0);
                     p->type = Token(2);
+
+                    pos = flecs_script_parse_type_count(
+                        parser, pos, &p->type_count);
+                    if (!pos) {
+                        goto error;
+                    }
 
                     LookAhead_1(EcsTokComma,
                         Consume();
@@ -1432,6 +1453,12 @@ fn_stmt: {
             Parse_1(EcsTokIdentifier, {
                 fn->return_type = Token(4);
                 fn->return_type_node.pos = parser->pos;
+                pos = flecs_script_parse_type_count(
+                    parser, pos, &fn->return_type_count);
+                if (!pos) {
+                    goto error;
+                }
+
                 pos = flecs_parser_skip_newlines(parser, pos);
             })
         )
