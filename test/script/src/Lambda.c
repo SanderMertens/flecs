@@ -2442,3 +2442,61 @@ void Lambda_to_str(void) {
     ecs_script_free(script);
     ecs_fini(world);
 }
+
+void Lambda_map_to_typed_vector_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const a = [1, 2, 3]"
+    LINE "export const b: f32[] = a.map((el) -> { el * 2 })";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t var = ecs_lookup(world, "b");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_f32_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 3);
+    float *elems = ecs_vec_first(value.ptr);
+    test_flt(elems[0], 2);
+    test_flt(elems[1], 4);
+    test_flt(elems[2], 6);
+
+    ecs_fini(world);
+}
+
+void Lambda_map_to_typed_mut_vector_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const a = [1, 2, 3]"
+    LINE "export mut b: f32[] = a.map((el) -> { 0 })";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t var = ecs_lookup(world, "b");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_mut_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_f32_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 3);
+    float *elems = ecs_vec_first(value.ptr);
+    test_flt(elems[0], 0);
+    test_flt(elems[1], 0);
+    test_flt(elems[2], 0);
+
+    ecs_fini(world);
+}

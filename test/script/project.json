@@ -4900,7 +4900,9 @@
                 "invalid_collection",
                 "contains_not_comparable",
                 "sort_by_not_comparable",
-                "to_str"
+                "to_str",
+                "map_to_typed_vector_var",
+                "map_to_typed_mut_vector_var"
             ]
         }, {
             "id": "CollectionOps",

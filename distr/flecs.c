@@ -103628,6 +103628,28 @@ static int flecs_script_type_check_expr(
     return 0;
 }
 
+static int flecs_script_type_check_var_expr(
+    ecs_script_type_visitor_t *t,
+    ecs_expr_node_t **expr_ptr,
+    ecs_entity_t *type)
+{
+    ecs_entity_t declared = type[0];
+    int result = flecs_script_type_check_expr(t, expr_ptr, type);
+    if (result || !declared || !type[0] || type[0] == declared) {
+        return result;
+    }
+
+    ecs_expr_cast_t *cast = flecs_expr_cast(
+        &t->v->base.script->pub, expr_ptr[0], declared);
+    if (!cast) {
+        return -1;
+    }
+
+    expr_ptr[0] = (ecs_expr_node_t*)cast;
+    type[0] = declared;
+    return 0;
+}
+
 static void flecs_script_skip_unknown_drop_expr(
     ecs_script_type_visitor_t *t,
     ecs_expr_node_t **expr)
@@ -104638,7 +104660,7 @@ static int flecs_script_type_const(
     ecs_entity_t type = expected_type;
     int32_t prev_unresolved = ecs_vec_count(
         &t->v->base.script->unresolved_refs);
-    int expr_result = flecs_script_type_check_expr(t, &node->expr, &type);
+    int expr_result = flecs_script_type_check_var_expr(t, &node->expr, &type);
     if (expr_result) {
         if (expr_result == 1) {
             flecs_script_type_skip_var(t, node->name);
@@ -104804,7 +104826,7 @@ static int flecs_script_type_template_var(
     }
 
     if (node->expr) {
-        int result = flecs_script_type_check_expr(t, &node->expr, &type);
+        int result = flecs_script_type_check_var_expr(t, &node->expr, &type);
         if (result) {
             if (result == 1) {
                 flecs_script_type_skip_var(t, node->name);
