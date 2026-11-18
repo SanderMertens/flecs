@@ -71837,6 +71837,7 @@ static const char* flecs_script_parse_var(
         LookAhead(
             case '=': {
                 Consume();
+                pos = flecs_parser_skip_newlines(parser, pos);
 
                 LookAhead_1(EcsTokKeywordAwait,
                     Error("'%s %s: %s = await ...' is invalid, "
@@ -108191,6 +108192,7 @@ static const char* flecs_script_parse_rhs(
                 elems[0].compare = (ecs_expr_node_t*)flecs_expr_bool(parser, true);
                 elems[1].compare = (ecs_expr_node_t*)flecs_expr_identifier(parser, "_");
 
+                pos = flecs_parser_skip_newlines(parser, pos);
                 pos = flecs_script_parse_expr(parser, pos, 0, &elems[0].expr);
                 if (!pos) {
                     goto error;
@@ -108198,6 +108200,7 @@ static const char* flecs_script_parse_rhs(
 
                 Parse_1(':', {});
 
+                pos = flecs_parser_skip_newlines(parser, pos);
                 pos = flecs_script_parse_expr(parser, pos, 0, &elems[1].expr);
                 if (!pos) {
                     goto error;
@@ -108213,6 +108216,7 @@ static const char* flecs_script_parse_rhs(
 
                 *out = (ecs_expr_node_t*)result;
 
+                pos = flecs_parser_skip_newlines(parser, pos);
                 pos = flecs_script_parse_lhs(parser, pos, tokenizer,
                     result->operator, &result->right);
                 if (!pos) {
