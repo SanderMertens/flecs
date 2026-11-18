@@ -2822,6 +2822,163 @@ void Pairs_nested_with_relation(void) {
     ecs_fini(world);
 }
 
+void Pairs_cyclic_with(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ecs_add_pair(world, TagA, EcsWith, TagB);
+    ecs_add_pair(world, TagB, EcsWith, TagA);
+
+    ecs_entity_t e1 = ecs_new_w(world, TagA);
+    test_assert( ecs_has(world, e1, TagA));
+    test_assert( ecs_has(world, e1, TagB));
+
+    ecs_entity_t e2 = ecs_new_w(world, TagB);
+    test_assert( ecs_has(world, e2, TagA));
+    test_assert( ecs_has(world, e2, TagB));
+
+    test_assert(ecs_get_table(world, e1) == ecs_get_table(world, e2));
+
+    ecs_fini(world);
+}
+
+void Pairs_cyclic_with_self(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ecs_add_pair(world, TagA, EcsWith, TagA);
+
+    ecs_entity_t e = ecs_new_w(world, TagA);
+    test_assert( ecs_has(world, e, TagA));
+    test_int(ecs_get_type(world, e)->count, 1);
+
+    ecs_fini(world);
+}
+
+void Pairs_cyclic_with_3(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ecs_add_pair(world, TagA, EcsWith, TagB);
+    ecs_add_pair(world, TagB, EcsWith, TagC);
+    ecs_add_pair(world, TagC, EcsWith, TagA);
+
+    ecs_entity_t e1 = ecs_new_w(world, TagA);
+    test_assert( ecs_has(world, e1, TagA));
+    test_assert( ecs_has(world, e1, TagB));
+    test_assert( ecs_has(world, e1, TagC));
+
+    ecs_entity_t e2 = ecs_new_w(world, TagB);
+    test_assert( ecs_has(world, e2, TagA));
+    test_assert( ecs_has(world, e2, TagB));
+    test_assert( ecs_has(world, e2, TagC));
+
+    ecs_entity_t e3 = ecs_new_w(world, TagC);
+    test_assert( ecs_has(world, e3, TagA));
+    test_assert( ecs_has(world, e3, TagB));
+    test_assert( ecs_has(world, e3, TagC));
+
+    ecs_fini(world);
+}
+
+void Pairs_cyclic_with_relation(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Obj);
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ecs_add_pair(world, RelA, EcsWith, RelB);
+    ecs_add_pair(world, RelB, EcsWith, RelA);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, RelA, Obj);
+    test_assert( ecs_has_pair(world, e1, RelA, Obj));
+    test_assert( ecs_has_pair(world, e1, RelB, Obj));
+
+    ecs_entity_t e2 = ecs_new_w_pair(world, RelB, Obj);
+    test_assert( ecs_has_pair(world, e2, RelA, Obj));
+    test_assert( ecs_has_pair(world, e2, RelB, Obj));
+
+    ecs_fini(world);
+}
+
+void Pairs_cyclic_with_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Position), EcsWith, ecs_id(Velocity));
+    ecs_add_pair(world, ecs_id(Velocity), EcsWith, ecs_id(Position));
+
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    test_assert( ecs_has(world, e1, Position));
+    test_assert( ecs_has(world, e1, Velocity));
+    const Position *p = ecs_get(world, e1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Velocity, {1, 2}));
+    test_assert( ecs_has(world, e2, Position));
+    test_assert( ecs_has(world, e2, Velocity));
+    const Velocity *v = ecs_get(world, e2, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    ecs_fini(world);
+}
+
+void Pairs_cyclic_with_deferred(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ecs_add_pair(world, TagA, EcsWith, TagB);
+    ecs_add_pair(world, TagB, EcsWith, TagA);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_frame_begin(world, 1);
+    ecs_world_t *stage = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
+    ecs_add(stage, e, TagA);
+    test_assert( !ecs_has(world, e, TagA));
+    test_assert( !ecs_has(world, e, TagB));
+    ecs_merge(stage);
+    ecs_frame_end(world);
+
+    test_assert( ecs_has(world, e, TagA));
+    test_assert( ecs_has(world, e, TagB));
+
+    ecs_fini(world);
+}
+
+void Pairs_cyclic_with_w_dont_fragment(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ecs_entity_t tag_c = ecs_new(world);
+    ecs_add_id(world, tag_c, EcsDontFragment);
+    ecs_add_pair(world, TagA, EcsWith, TagB);
+    ecs_add_pair(world, TagB, EcsWith, TagA);
+    ecs_add_pair(world, TagB, EcsWith, tag_c);
+
+    ecs_entity_t e1 = ecs_new_w(world, TagA);
+    test_assert( ecs_has(world, e1, TagA));
+    test_assert( ecs_has(world, e1, TagB));
+    test_assert( ecs_has_id(world, e1, tag_c));
+
+    ecs_entity_t e2 = ecs_new_w(world, TagB);
+    test_assert( ecs_has(world, e2, TagA));
+    test_assert( ecs_has(world, e2, TagB));
+    test_assert( ecs_has_id(world, e2, tag_c));
+
+    ecs_fini(world);
+}
+
 void Pairs_with_for_existing(void) {
     install_test_abort();
     ecs_world_t *world = ecs_mini();
