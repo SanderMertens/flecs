@@ -4965,3 +4965,276 @@ void Collection_array_size_not_integer(void) {
 
     ecs_fini(world);
 }
+
+void Collection_map_string_key_elem(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const m: Map = [\"a\": 10, \"b\": 20, \"c\": 30]"
+    LINE "for (key, elem) in m {"
+    LINE "  \"e_{key}\" {"
+    LINE "    Position: {elem, elem * 2}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e_a = ecs_lookup(world, "e_a");
+    ecs_entity_t e_b = ecs_lookup(world, "e_b");
+    ecs_entity_t e_c = ecs_lookup(world, "e_c");
+
+    test_assert(e_a != 0);
+    test_assert(e_b != 0);
+    test_assert(e_c != 0);
+
+    {
+        const Position *p = ecs_get(world, e_a, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        const Position *p = ecs_get(world, e_b, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+        test_int(p->y, 40);
+    }
+    {
+        const Position *p = ecs_get(world, e_c, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+        test_int(p->y, 60);
+    }
+
+    ecs_fini(world);
+}
+
+void Collection_map_string_key_index_elem(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const m: Map = [\"a\": 10, \"b\": 20]"
+    LINE "for (key, i, elem) in m {"
+    LINE "  \"e_{key}\" {"
+    LINE "    Position: {i, elem}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e_a = ecs_lookup(world, "e_a");
+    ecs_entity_t e_b = ecs_lookup(world, "e_b");
+    test_assert(e_a != 0);
+    test_assert(e_b != 0);
+
+    const Position *p_a = ecs_get(world, e_a, Position);
+    const Position *p_b = ecs_get(world, e_b, Position);
+    test_assert(p_a != NULL);
+    test_assert(p_b != NULL);
+    test_int(p_a->y, 10);
+    test_int(p_b->y, 20);
+
+    /* Iteration order of map is not defined */
+    test_int(p_a->x + p_b->x, 1);
+    test_assert(p_a->x != p_b->x);
+
+    ecs_fini(world);
+}
+
+void Collection_map_string_key_string_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_string_t)
+    });
+
+    const char *expr =
+    HEAD "const m: Map = [\"a\": \"foo\", \"b\": \"bar\"]"
+    LINE "for (key, elem) in m {"
+    LINE "  \"{key}_{elem}\" { }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "a_foo") != 0);
+    test_assert(ecs_lookup(world, "b_bar") != 0);
+
+    ecs_fini(world);
+}
+
+void Collection_map_string_key_empty(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    const char *expr =
+    HEAD "const m: Map = []"
+    LINE "for (key, elem) in m {"
+    LINE "  \"e_{key}\" { }"
+    LINE "}"
+    LINE "e { }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "e") != 0);
+    test_assert(ecs_lookup(world, "e_") == 0);
+
+    ecs_fini(world);
+}
+
+void Collection_map_string_init_from_map(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut a: Map = [\"foo\": 10, \"bar\": 20]"
+            LINE "export mut b: Map = a",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_map_t *ma = ecs_mut_var_get(world, ecs_lookup(world, "a")).ptr;
+    ecs_map_t *mb = ecs_mut_var_get(world, ecs_lookup(world, "b")).ptr;
+    test_assert(ma != mb);
+    test_int(ecs_map_count(ma), 2);
+    test_int(ecs_map_count(mb), 2);
+    test_assert(script_map_has(world, m, mb, "\"foo\": 10"));
+    test_assert(script_map_has(world, m, mb, "\"bar\": 20"));
+
+    ecs_fini(world);
+}
+
+void Collection_map_string_assign_from_map_literal(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut a: Map = [\"foo\": 10]"
+            LINE "async {"
+            LINE "  a = [\"bar\": 20, \"hello\": 30]"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    ecs_map_t *ma = ecs_mut_var_get(world, ecs_lookup(world, "a")).ptr;
+    test_int(ecs_map_count(ma), 2);
+    test_assert(!script_map_has(world, m, ma, "\"foo\": 10"));
+    test_assert(script_map_has(world, m, ma, "\"bar\": 20"));
+    test_assert(script_map_has(world, m, ma, "\"hello\": 30"));
+
+    ecs_fini(world);
+}
+
+void Collection_string_key_map_assign_no_leak(void) {
+    const char *expr =
+    HEAD "export mut a: Map = [\"a\": \"foo\", \"b\": \"bar\"]"
+    LINE "export mut b: Map = a"
+    LINE "export mut c: Map = []"
+    LINE "async {"
+    LINE "  c = a"
+    LINE "  a = [\"c\": \"hello\"]"
+    LINE "  for (k, v) in c {"
+    LINE "    a = a + [k: v]"
+    LINE "  }"
+    LINE "}";
+
+    int64_t balance_before = 0;
+    int32_t i;
+    for (i = 0; i < 2; i ++) {
+        if (i == 1) {
+            balance_before = (ecs_os_api_malloc_count +
+                ecs_os_api_calloc_count) - ecs_os_api_free_count;
+        }
+
+        ecs_world_t *world = ecs_init();
+
+        ecs_entity_t m = ecs_map_type(world, {
+            .entity = ecs_entity(world, { .name = "Map" }),
+            .key_type = ecs_id(ecs_string_t),
+            .type = ecs_id(ecs_string_t)
+        });
+
+        ecs_entity_t s = ecs_script(world, { .code = expr, .ir = ir_enabled });
+        test_assert(s != 0);
+        const EcsScript *comp = ecs_get(world, s, EcsScript);
+        test_assert(comp != NULL);
+        test_assert(comp->error == NULL);
+
+        ecs_script_tasks_progress(world);
+
+        ecs_map_t *ma = ecs_mut_var_get(world, ecs_lookup(world, "a")).ptr;
+        test_int(ecs_map_count(ma), 3);
+        test_assert(script_map_has(world, m, ma, "\"a\": \"foo\""));
+        test_assert(script_map_has(world, m, ma, "\"b\": \"bar\""));
+        test_assert(script_map_has(world, m, ma, "\"c\": \"hello\""));
+
+        ecs_map_t *mb = ecs_mut_var_get(world, ecs_lookup(world, "b")).ptr;
+        test_int(ecs_map_count(mb), 2);
+        test_assert(script_map_has(world, m, mb, "\"a\": \"foo\""));
+        test_assert(script_map_has(world, m, mb, "\"b\": \"bar\""));
+
+        ecs_map_t *mc = ecs_mut_var_get(world, ecs_lookup(world, "c")).ptr;
+        test_int(ecs_map_count(mc), 2);
+        test_assert(script_map_has(world, m, mc, "\"a\": \"foo\""));
+        test_assert(script_map_has(world, m, mc, "\"b\": \"bar\""));
+
+        ecs_fini(world);
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+}

@@ -2500,3 +2500,108 @@ void Lambda_map_to_typed_mut_vector_var(void) {
 
     ecs_fini(world);
 }
+
+void Lambda_map_map_string_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(v: i32)"
+    LINE "const m: map(string, i32) = [\"a\": 10, \"bb\": 20, \"ccc\": 30]"
+    LINE "const v = m.map((k, v) -> { k == \"bb\" ? v * 2 : v })"
+    LINE "e { Result: {v.count() * 1000 + v.sum()} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{v: 3080}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void Lambda_map_values_string_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(v: map(string, string))"
+    LINE "const m: map(string, i32) = [\"a\": 10, \"b\": 20]"
+    LINE "e { Result: {m.map_values((k, v) -> { \"{k}={v}\" })} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const ecs_map_t *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+
+    const EcsStruct *st = ecs_get(world, result, EcsStruct);
+    test_assert(st != NULL);
+    ecs_entity_t map_type = ecs_vec_first_t(&st->members, ecs_member_t)->type;
+    test_assert(ecs_has(world, map_type, EcsMap));
+
+    test_int(ecs_map_count(ptr), 2);
+    test_assert(script_map_has(world, map_type, ptr, "\"a\": \"a=10\""));
+    test_assert(script_map_has(world, map_type, ptr, "\"b\": \"b=20\""));
+
+    ecs_fini(world);
+}
+
+void Lambda_filter_map_string_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(v: map(string, i32))"
+    LINE "const m: map(string, i32) = [\"a\": 10, \"b\": 20, \"c\": 30]"
+    LINE "e { Result: {m.filter((k, v) -> { k != \"b\" })} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const ecs_map_t *map = ecs_get_id(world, e, result);
+    test_assert(map != NULL);
+
+    const EcsStruct *st = ecs_get(world, result, EcsStruct);
+    test_assert(st != NULL);
+    ecs_entity_t map_type = ecs_vec_first_t(&st->members, ecs_member_t)->type;
+
+    test_int(ecs_map_count(map), 2);
+    test_assert(script_map_has(world, map_type, map, "\"a\": 10"));
+    test_assert(!script_map_has(world, map_type, map, "\"b\": 20"));
+    test_assert(script_map_has(world, map_type, map, "\"c\": 30"));
+
+    ecs_fini(world);
+}
+
+void Lambda_reduce_map_string_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(v: i32)"
+    LINE "const m: map(string, i32) = [\"a\": 10, \"bb\": 20, \"ccc\": 30]"
+    LINE "e { Result: {m.reduce((r, k, v) -> { k == \"bb\" ? r : r + v })} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{v: 40}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}

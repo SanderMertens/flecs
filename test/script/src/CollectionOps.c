@@ -2221,3 +2221,110 @@ void CollectionOps_copy_collection_elem_error(void) {
 
     ecs_fini(world);
 }
+
+void CollectionOps_map_string_remove_clear(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut a: map(string, string) = [\"x\": \"a\", \"y\": \"b\"]"
+            LINE "export mut b: map(string, string) = [\"x\": \"a\", \"y\": \"b\"]"
+            LINE "export mut out: i32 = 0"
+            LINE "async {"
+            LINE "  a.remove(\"x\")"
+            LINE "  a.remove(\"z\")"
+            LINE "  b.clear()"
+            LINE "  out = a.count() * 10 + b.count()"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "out")).ptr, 10);
+    ecs_value_t v = ecs_mut_var_get(world, ecs_lookup(world, "a"));
+    char *str = ecs_ptr_to_expr(world, v.type, v.ptr);
+    test_str(str, "[\"y\": \"b\"]");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_map_string_remove_many(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut a: map(string, i32) = []"
+            LINE "export mut out: i32 = 0"
+            LINE "export mut sum: i32 = 0"
+            LINE "async {"
+            LINE "  for i in 0..100 {"
+            LINE "    a = a + [\"key_{i}\": i]"
+            LINE "  }"
+            LINE "  for i in 0..50 {"
+            LINE "    a.remove(\"key_{i * 2}\")"
+            LINE "  }"
+            LINE "  out = a.count()"
+            LINE "  sum = a.sum()"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_script_tasks_progress(world);
+
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "out")).ptr, 50);
+    /* Sum of odd numbers 1..99 */
+    test_int(*(int32_t*)ecs_mut_var_get(world, ecs_lookup(world, "sum")).ptr, 2500);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_concat_string_maps(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(v: i32)"
+    LINE "const a: map(string, i32) = [\"a\": 10, \"b\": 20]"
+    LINE "const b = a + [\"b\": 200, \"c\": 300]"
+    LINE "e { Result: {b.count() * 10000 + b[\"a\"] + b[\"b\"] + b[\"c\"]} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const int32_t *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 30510);
+
+    ecs_fini(world);
+}
+
+void CollectionOps_contains_map_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(a: bool, b: bool, c: bool)"
+    LINE "const m: map(string, i32) = [\"foo\": 10, \"bar\": 20]"
+    LINE "e { Result: {m.contains(\"foo\"), m.contains(\"baz\"), m.contains(\"ba\" + \"r\")} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{a: true, b: false, c: true}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}

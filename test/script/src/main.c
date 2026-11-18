@@ -622,6 +622,13 @@ void Eval_map_i64_i32_component_w_expr_key(void);
 void Eval_map_i64_i32_component_w_var_key(void);
 void Eval_map_component_element(void);
 void Eval_map_export_var_element(void);
+void Eval_map_string_i32_component(void);
+void Eval_map_string_string_component(void);
+void Eval_map_string_struct_component(void);
+void Eval_map_string_i32_component_w_expr_key(void);
+void Eval_map_string_i32_component_w_var_key(void);
+void Eval_map_string_component_element(void);
+void Eval_map_string_type_decl_in_script(void);
 void Eval_struct_export_var_member(void);
 void Eval_array_export_var_element(void);
 void Eval_vector_export_var_element(void);
@@ -885,6 +892,13 @@ void Collection_map_struct_value(void);
 void Collection_map_string_value(void);
 void Collection_map_empty(void);
 void Collection_map_too_many_vars(void);
+void Collection_map_string_key_elem(void);
+void Collection_map_string_key_index_elem(void);
+void Collection_map_string_key_string_value(void);
+void Collection_map_string_key_empty(void);
+void Collection_map_string_init_from_map(void);
+void Collection_map_string_assign_from_map_literal(void);
+void Collection_string_key_map_assign_no_leak(void);
 void Collection_nested_struct_arrays(void);
 void Collection_template_w_for_array(void);
 void Collection_template_w_for_vector(void);
@@ -2348,6 +2362,10 @@ void Expr_var_element_map_expr_key(void);
 void Expr_var_element_map_struct(void);
 void Expr_var_element_map_struct_member(void);
 void Expr_var_element_map_missing_key(void);
+void Expr_var_element_map_string_i32(void);
+void Expr_var_element_map_string_struct_member(void);
+void Expr_var_element_map_string_missing_key(void);
+void Expr_count_map_string(void);
 void Expr_bool_cond_and_bool(void);
 void Expr_bool_cond_or_bool(void);
 void Expr_int_cond_and_int(void);
@@ -2833,6 +2851,9 @@ void Serialize_map_i32_i32_negative_key(void);
 void Serialize_map_u64_i32(void);
 void Serialize_map_enum_i32(void);
 void Serialize_map_bitmask_i32(void);
+void Serialize_map_string_i32(void);
+void Serialize_map_string_string(void);
+void Serialize_map_string_escape_key(void);
 void Serialize_value_i64(void);
 void Serialize_value_u16(void);
 void Serialize_value_f64(void);
@@ -2986,6 +3007,10 @@ void Deserialize_map_bitmask_i32_2(void);
 void Deserialize_map_bitmask_i32_multi_flag_key(void);
 void Deserialize_map_i64_i32_expr_key(void);
 void Deserialize_map_i64_i32_var_key(void);
+void Deserialize_map_string_i32_2(void);
+void Deserialize_map_string_string_2(void);
+void Deserialize_map_string_i32_into_2(void);
+void Deserialize_map_string_i32_var_key(void);
 void Deserialize_vector_i32_w_key(void);
 void Deserialize_value_i64(void);
 void Deserialize_value_negative_i64(void);
@@ -4549,6 +4574,7 @@ void SerializeType_bitmask(void);
 void SerializeType_vector(void);
 void SerializeType_array(void);
 void SerializeType_map(void);
+void SerializeType_map_string_key(void);
 void SerializeType_scoped(void);
 void SerializeType_shared_dep(void);
 void SerializeType_builtin_dep(void);
@@ -4617,6 +4643,8 @@ void AnonymousType_same_args_same_type(void);
 void AnonymousType_invalid_vector_args(void);
 void AnonymousType_invalid_array_count(void);
 void AnonymousType_invalid_map_key(void);
+void AnonymousType_const_map_string_key(void);
+void AnonymousType_struct_member_map_string_key(void);
 void AnonymousType_invalid_value_of_value(void);
 void AnonymousType_args_on_non_kind(void);
 void AnonymousType_value_component(void);
@@ -4644,6 +4672,10 @@ void Lambda_map_empty_map(void);
 void Lambda_map_values(void);
 void Lambda_map_values_w_key(void);
 void Lambda_map_values_empty(void);
+void Lambda_map_map_string_key(void);
+void Lambda_map_values_string_key(void);
+void Lambda_filter_map_string_key(void);
+void Lambda_reduce_map_string_key(void);
 void Lambda_filter_vector(void);
 void Lambda_filter_vector_w_index(void);
 void Lambda_filter_vector_none(void);
@@ -4803,6 +4835,10 @@ void CollectionOps_remove(void);
 void CollectionOps_remove_out_of_range(void);
 void CollectionOps_clear(void);
 void CollectionOps_map_remove_clear(void);
+void CollectionOps_map_string_remove_clear(void);
+void CollectionOps_map_string_remove_many(void);
+void CollectionOps_concat_string_maps(void);
+void CollectionOps_contains_map_string(void);
 void CollectionOps_push_const(void);
 void CollectionOps_push_array(void);
 void CollectionOps_push_map(void);
@@ -7303,6 +7339,34 @@ bake_test_case Eval_testcases[] = {
         Eval_map_export_var_element
     },
     {
+        "map_string_i32_component",
+        Eval_map_string_i32_component
+    },
+    {
+        "map_string_string_component",
+        Eval_map_string_string_component
+    },
+    {
+        "map_string_struct_component",
+        Eval_map_string_struct_component
+    },
+    {
+        "map_string_i32_component_w_expr_key",
+        Eval_map_string_i32_component_w_expr_key
+    },
+    {
+        "map_string_i32_component_w_var_key",
+        Eval_map_string_i32_component_w_var_key
+    },
+    {
+        "map_string_component_element",
+        Eval_map_string_component_element
+    },
+    {
+        "map_string_type_decl_in_script",
+        Eval_map_string_type_decl_in_script
+    },
+    {
         "struct_export_var_member",
         Eval_struct_export_var_member
     },
@@ -8344,6 +8408,34 @@ bake_test_case Collection_testcases[] = {
     {
         "map_too_many_vars",
         Collection_map_too_many_vars
+    },
+    {
+        "map_string_key_elem",
+        Collection_map_string_key_elem
+    },
+    {
+        "map_string_key_index_elem",
+        Collection_map_string_key_index_elem
+    },
+    {
+        "map_string_key_string_value",
+        Collection_map_string_key_string_value
+    },
+    {
+        "map_string_key_empty",
+        Collection_map_string_key_empty
+    },
+    {
+        "map_string_init_from_map",
+        Collection_map_string_init_from_map
+    },
+    {
+        "map_string_assign_from_map_literal",
+        Collection_map_string_assign_from_map_literal
+    },
+    {
+        "string_key_map_assign_no_leak",
+        Collection_string_key_map_assign_no_leak
     },
     {
         "nested_struct_arrays",
@@ -14108,6 +14200,22 @@ bake_test_case Expr_testcases[] = {
         Expr_var_element_map_missing_key
     },
     {
+        "var_element_map_string_i32",
+        Expr_var_element_map_string_i32
+    },
+    {
+        "var_element_map_string_struct_member",
+        Expr_var_element_map_string_struct_member
+    },
+    {
+        "var_element_map_string_missing_key",
+        Expr_var_element_map_string_missing_key
+    },
+    {
+        "count_map_string",
+        Expr_count_map_string
+    },
+    {
         "bool_cond_and_bool",
         Expr_bool_cond_and_bool
     },
@@ -16029,6 +16137,18 @@ bake_test_case Serialize_testcases[] = {
         Serialize_map_bitmask_i32
     },
     {
+        "map_string_i32",
+        Serialize_map_string_i32
+    },
+    {
+        "map_string_string",
+        Serialize_map_string_string
+    },
+    {
+        "map_string_escape_key",
+        Serialize_map_string_escape_key
+    },
+    {
         "value_i64",
         Serialize_value_i64
     },
@@ -16630,6 +16750,22 @@ bake_test_case Deserialize_testcases[] = {
     {
         "map_i64_i32_var_key",
         Deserialize_map_i64_i32_var_key
+    },
+    {
+        "map_string_i32_2",
+        Deserialize_map_string_i32_2
+    },
+    {
+        "map_string_string_2",
+        Deserialize_map_string_string_2
+    },
+    {
+        "map_string_i32_into_2",
+        Deserialize_map_string_i32_into_2
+    },
+    {
+        "map_string_i32_var_key",
+        Deserialize_map_string_i32_var_key
     },
     {
         "vector_i32_w_key",
@@ -22717,6 +22853,10 @@ bake_test_case SerializeType_testcases[] = {
         SerializeType_map
     },
     {
+        "map_string_key",
+        SerializeType_map_string_key
+    },
+    {
         "scoped",
         SerializeType_scoped
     },
@@ -22971,6 +23111,14 @@ bake_test_case AnonymousType_testcases[] = {
         AnonymousType_invalid_map_key
     },
     {
+        "const_map_string_key",
+        AnonymousType_const_map_string_key
+    },
+    {
+        "struct_member_map_string_key",
+        AnonymousType_struct_member_map_string_key
+    },
+    {
         "invalid_value_of_value",
         AnonymousType_invalid_value_of_value
     },
@@ -23068,6 +23216,22 @@ bake_test_case Lambda_testcases[] = {
     {
         "map_values_empty",
         Lambda_map_values_empty
+    },
+    {
+        "map_map_string_key",
+        Lambda_map_map_string_key
+    },
+    {
+        "map_values_string_key",
+        Lambda_map_values_string_key
+    },
+    {
+        "filter_map_string_key",
+        Lambda_filter_map_string_key
+    },
+    {
+        "reduce_map_string_key",
+        Lambda_reduce_map_string_key
     },
     {
         "filter_vector",
@@ -23697,6 +23861,22 @@ bake_test_case CollectionOps_testcases[] = {
         CollectionOps_map_remove_clear
     },
     {
+        "map_string_remove_clear",
+        CollectionOps_map_string_remove_clear
+    },
+    {
+        "map_string_remove_many",
+        CollectionOps_map_string_remove_many
+    },
+    {
+        "concat_string_maps",
+        CollectionOps_concat_string_maps
+    },
+    {
+        "contains_map_string",
+        CollectionOps_contains_map_string
+    },
+    {
         "push_const",
         CollectionOps_push_const
     },
@@ -24066,7 +24246,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        826,
+        833,
         Eval_testcases,
         1,
         Eval_params
@@ -24075,7 +24255,7 @@ static bake_test_suite suites[] = {
         "Collection",
         Collection_setup,
         NULL,
-        147,
+        154,
         Collection_testcases,
         1,
         Collection_params
@@ -24165,7 +24345,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        474,
+        478,
         Expr_testcases,
         2,
         Expr_params
@@ -24190,14 +24370,14 @@ static bake_test_suite suites[] = {
         "Serialize",
         NULL,
         NULL,
-        93,
+        96,
         Serialize_testcases
     },
     {
         "Deserialize",
         Deserialize_setup,
         NULL,
-        159,
+        163,
         Deserialize_testcases,
         1,
         Deserialize_params
@@ -24362,7 +24542,7 @@ static bake_test_suite suites[] = {
         "SerializeType",
         NULL,
         NULL,
-        19,
+        20,
         SerializeType_testcases
     },
     {
@@ -24378,7 +24558,7 @@ static bake_test_suite suites[] = {
         "AnonymousType",
         AnonymousType_setup,
         NULL,
-        25,
+        27,
         AnonymousType_testcases,
         1,
         AnonymousType_params
@@ -24387,7 +24567,7 @@ static bake_test_suite suites[] = {
         "Lambda",
         Lambda_setup,
         NULL,
-        116,
+        120,
         Lambda_testcases,
         1,
         Lambda_params
@@ -24396,7 +24576,7 @@ static bake_test_suite suites[] = {
         "CollectionOps",
         CollectionOps_setup,
         NULL,
-        106,
+        110,
         CollectionOps_testcases,
         1,
         CollectionOps_params

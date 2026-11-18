@@ -209,42 +209,44 @@ static int flecs_value_copy_map(
         return -1;
     }
 
-    const ecs_type_info_t *ti = ecs_get_type_info(world, src_type->type);
-    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-    bool is_alloc = ti->size > ECS_SIZEOF(ecs_map_val_t);
+    ecs_meta_map_info_t info;
+    if (flecs_meta_map_info_from_type(world, src->type, &info)) {
+        return -1;
+    }
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, dst->type, dst->ptr);
     if (ecs_meta_push(&cur)) {
         return -1;
     }
 
-    const ecs_map_t *map = src->ptr;
-    if (ecs_map_is_init(map)) {
-        int32_t i = 0;
-        ecs_map_iter_t it = ecs_map_iter(map);
-        while (ecs_map_next(&it)) {
-            if (i ++ && ecs_meta_next(&cur)) {
-                return -1;
-            }
+    int32_t i = 0;
+    ecs_meta_map_iter_t it = flecs_meta_map_iter(&info, src->ptr);
+    while (flecs_meta_map_next(&it)) {
+        if (i ++ && ecs_meta_next(&cur)) {
+            return -1;
+        }
 
-            ecs_map_key_t src_key = ecs_map_key(&it), key = src_key;
-            if (src_type->key_type != dst_type->key_type) {
-                key = 0;
-                flecs_expr_cast_handler(src_type->key_type,
-                    dst_type->key_type)(&key, &src_key);
-            }
+        ecs_map_key_t key = 0;
+        ecs_value_t key_value = { 
+            .type = dst_type->key_type, 
+            .ptr = flecs_meta_map_iter_key(&it)
+        };
 
-            ecs_value_t key_value = { .type = dst_type->key_type, .ptr = &key };
-            if (ecs_meta_key(&cur, &key_value)) {
-                return -1;
-            }
+        if (src_type->key_type != dst_type->key_type) {
+            /* Only integer keys can be converted to another key type */
+            flecs_expr_cast_handler(src_type->key_type,
+                dst_type->key_type)(&key, key_value.ptr);
+            key_value.ptr = &key;
+        }
 
-            const void *value = is_alloc ? ecs_map_ptr(&it) : &it.res[1];
-            if (flecs_value_copy_elem(
-                world, &cur, src_type->type, ti, value))
-            {
-                return -1;
-            }
+        if (ecs_meta_key(&cur, &key_value)) {
+            return -1;
+        }
+
+        if (flecs_value_copy_elem(world, &cur, src_type->type, info.value_ti,
+            flecs_meta_map_iter_value(&it)))
+        {
+            return -1;
         }
     }
 
@@ -699,18 +701,20 @@ int flecs_expr_element_get(
     void **out)
 {
     if (kind == EcsMapType) {
-        ecs_map_key_t key = 0;
-        if (flecs_value_blit_u64(script->world, index, &key)) {
+        ecs_meta_map_info_t info;
+        if (flecs_meta_map_info_from_type(script->world, expr->type, &info)) {
             return -1;
         }
 
-        const ecs_map_t *map = expr->ptr;
-        ecs_map_val_t *val = NULL;
-        if (ecs_map_is_init(map)) {
-            val = ecs_map_get(map, key);
+        ecs_map_key_t key_storage;
+        const void *key = flecs_value_map_key(
+            script->world, &info, index, &key_storage);
+        if (!key) {
+            return -1;
         }
 
-        if (!val) {
+        void *ptr = flecs_meta_map_get(&info, expr->ptr, key);
+        if (!ptr) {
             char *key_str = ecs_ptr_to_str(
                 script->world, index->type, index->ptr);
             flecs_expr_visit_error(script, node,
@@ -719,9 +723,7 @@ int flecs_expr_element_get(
             return -1;
         }
 
-        *out = node->elem_size > ECS_SIZEOF(ecs_map_val_t)
-            ? (void*)(uintptr_t)val[0]
-            : (void*)val;
+        *out = ptr;
         return 0;
     }
 
@@ -967,62 +969,23 @@ void flecs_value_vec_splice(
     ecs_vec_fini(NULL, &tmp, size);
 }
 
-static void* flecs_value_map_value_ptr(
-    const ecs_type_info_t *elem_ti,
-    ecs_map_val_t *val)
+const void* flecs_value_map_key(
+    const ecs_world_t *world,
+    const ecs_meta_map_info_t *info,
+    const ecs_value_t *key,
+    ecs_map_key_t *key_storage)
 {
-    if (elem_ti->size > ECS_SIZEOF(ecs_map_val_t)) {
-        return (void*)(uintptr_t)val[0];
+    if (info->hash) {
+        ecs_assert(key->type == info->key_ti->component,
+            ECS_INTERNAL_ERROR, NULL);
+        return key->ptr;
     }
 
-    return val;
-}
-
-void flecs_value_map_insert(
-    const ecs_type_info_t *elem_ti,
-    ecs_map_t *map,
-    ecs_map_key_t key,
-    const void *value)
-{
-    ecs_map_init_if(map, NULL);
-    int32_t count = ecs_map_count(map);
-    ecs_map_val_t *val = ecs_map_ensure(map, key);
-    if (count != ecs_map_count(map)) {
-        if (elem_ti->size > ECS_SIZEOF(ecs_map_val_t)) {
-            val[0] = (ecs_map_val_t)(uintptr_t)ecs_os_calloc(elem_ti->size);
-        } else {
-            val[0] = 0;
-        }
-
-        flecs_type_info_ctor(flecs_value_map_value_ptr(elem_ti, val), 1, elem_ti);
+    if (flecs_value_blit_u64(world, key, key_storage)) {
+        return NULL;
     }
 
-    flecs_type_info_copy(flecs_value_map_value_ptr(elem_ti, val), value, 1,
-        elem_ti);
-}
-
-bool flecs_value_map_remove(
-    const ecs_type_info_t *elem_ti,
-    ecs_map_t *map,
-    ecs_map_key_t key)
-{
-    if (!ecs_map_is_init(map)) {
-        return false;
-    }
-
-    ecs_map_val_t *val = ecs_map_get(map, key);
-    if (!val) {
-        return false;
-    }
-
-    void *ptr = flecs_value_map_value_ptr(elem_ti, val);
-    flecs_type_info_dtor(ptr, 1, elem_ti);
-    if (elem_ti->size > ECS_SIZEOF(ecs_map_val_t)) {
-        ecs_os_free(ptr);
-    }
-
-    ecs_map_remove(map, key);
-    return true;
+    return key_storage;
 }
 
 static int flecs_value_concat_string(
@@ -1054,27 +1017,26 @@ static int flecs_value_concat_map(
     const ecs_value_t *right,
     ecs_value_t *out)
 {
-    const EcsMap *map_type = ecs_get(world, out->type, EcsMap);
-    ecs_assert(map_type != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(left->type == out->type, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(right->type == out->type, ECS_INTERNAL_ERROR, NULL);
 
     const ecs_type_info_t *ti = ecs_get_type_info(world, out->type);
-    const ecs_type_info_t *elem_ti = ecs_get_type_info(world, map_type->type);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(elem_ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_meta_map_info_t info;
+    if (flecs_meta_map_info_from_type(world, out->type, &info)) {
+        return -1;
+    }
 
     void *result = ecs_ptr_new_w_type_info(world, ti);
     flecs_type_info_copy(result, left->ptr, 1, ti);
 
-    const ecs_map_t *src = right->ptr;
-    if (ecs_map_is_init(src)) {
-        bool is_alloc = elem_ti->size > ECS_SIZEOF(ecs_map_val_t);
-        ecs_map_iter_t it = ecs_map_iter(src);
-        while (ecs_map_next(&it)) {
-            const void *value = is_alloc ? ecs_map_ptr(&it) : &it.res[1];
-            flecs_value_map_insert(elem_ti, result, ecs_map_key(&it), value);
-        }
+    ecs_meta_map_iter_t it = flecs_meta_map_iter(&info, right->ptr);
+    while (flecs_meta_map_next(&it)) {
+        void *value = flecs_meta_map_ensure(
+            &info, result, flecs_meta_map_iter_key(&it), NULL);
+        flecs_type_info_copy(value, flecs_meta_map_iter_value(&it), 1, 
+            info.value_ti);
     }
 
     flecs_type_info_move(out->ptr, result, 1, ti);

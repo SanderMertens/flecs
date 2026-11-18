@@ -28,6 +28,14 @@ void _meta_test_member(
     int32_t count,
     ecs_size_t offset);
 
+/* Test whether the JSON serialization of a map value contains element. Use for
+ * maps with keys for which the iteration order is not defined. */
+bool meta_map_has(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    const void *ptr,
+    const char *json_elem);
+
 #define test_ok(expr)\
     test_int((expr), 0)
 

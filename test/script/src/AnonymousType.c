@@ -553,3 +553,55 @@ void AnonymousType_invalid_type_arg(void) {
 
     ecs_fini(world);
 }
+
+void AnonymousType_const_map_string_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Label(value: string)"
+    LINE "const x: map(string, string) = [\"foo\": \"hello\", \"bar\": \"world\"]"
+    LINE "e { Label: {x[\"bar\"]} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t label = ecs_lookup(world, "Label");
+    test_assert(e != 0);
+    test_assert(label != 0);
+    char* const *l = ecs_get_id(world, e, label);
+    test_assert(l != NULL);
+    test_str(*l, "world");
+
+    ecs_fini(world);
+}
+
+void AnonymousType_struct_member_map_string_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Inventory(items: map(string, i32))"
+    LINE "e { Inventory: {items: [\"apple\": 3, \"pear\": 5]} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t inventory = ecs_lookup(world, "Inventory");
+    test_assert(e != 0);
+    test_assert(inventory != 0);
+
+    const EcsStruct *st = ecs_get(world, inventory, EcsStruct);
+    test_assert(st != NULL);
+    ecs_entity_t map_type = ecs_vec_first_t(&st->members, ecs_member_t)->type;
+    const EcsMap *m = ecs_get(world, map_type, EcsMap);
+    test_assert(m != NULL);
+    test_uint(m->key_type, ecs_id(ecs_string_t));
+    test_uint(m->type, ecs_id(ecs_i32_t));
+
+    const ecs_map_t *ptr = ecs_get_id(world, e, inventory);
+    test_assert(ptr != NULL);
+    test_int(ecs_map_count(ptr), 2);
+    test_assert(script_map_has(world, map_type, ptr, "\"apple\": 3"));
+    test_assert(script_map_has(world, map_type, ptr, "\"pear\": 5"));
+
+    ecs_fini(world);
+}

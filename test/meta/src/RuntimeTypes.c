@@ -3785,3 +3785,149 @@ void RuntimeTypes_existing_struct_w_vector_member_not_freed(void) {
 
     ecs_vec_fini_t(NULL, &owned, ecs_i32_t);
 }
+
+void RuntimeTypes_map_string_key_lifecycle(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_map_desc_t desc = {
+        .entity = 0, 
+        .key_type = ecs_id(ecs_string_t), 
+        .type = ecs_id(ecs_string_t)
+    };
+    ecs_entity_t map_of_strings = ecs_map_type_init(world, &desc);
+
+    const ecs_type_hooks_t *hooks =
+        &ecs_get_type_info(world, map_of_strings)->hooks;
+
+    test_assert(hooks->ctor != NULL);
+    test_assert(hooks->dtor != NULL);
+    test_assert(hooks->move != NULL);
+    test_assert(hooks->copy != NULL);
+
+    ecs_entity_t prefab = ecs_new(world);
+    ecs_add_id(world, prefab, EcsPrefab);
+    ecs_map_t *m = test_ecs_ensure(world, prefab, map_of_strings);
+    test_assert(m != NULL);
+    test_int(ecs_map_count(m), 0);
+
+    test_assert(NULL != ecs_ptr_from_json(world, map_of_strings, m,
+        "{\"foo\": \"Hello\", \"bar\": \"World\"}", NULL));
+    test_int(ecs_map_count(m), 2);
+
+    /* test map copy assign by instantiating the prefab */
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, prefab);
+
+    const ecs_map_t *mcopy = ecs_get_id(world, e, map_of_strings);
+    test_assert(mcopy != NULL);
+    test_assert(mcopy != m);
+    test_int(ecs_map_count(mcopy), 2);
+    test_assert(meta_map_has(world, map_of_strings, mcopy, "\"foo\":\"Hello\""));
+    test_assert(meta_map_has(world, map_of_strings, mcopy, "\"bar\":\"World\""));
+
+    /* test map move assign by forcing a move via archetype change: */
+    ecs_add_id(world, e, ecs_new(world));
+    const ecs_map_t *mcopy_moved = ecs_get_id(world, e, map_of_strings);
+    test_assert(mcopy_moved != NULL);
+    test_int(ecs_map_count(mcopy_moved), 2);
+    test_assert(meta_map_has(world, map_of_strings, mcopy_moved, 
+        "\"foo\":\"Hello\""));
+    test_assert(meta_map_has(world, map_of_strings, mcopy_moved, 
+        "\"bar\":\"World\""));
+
+    /* original is not modified */
+    test_assert(meta_map_has(world, map_of_strings, m, "\"foo\":\"Hello\""));
+    test_assert(meta_map_has(world, map_of_strings, m, "\"bar\":\"World\""));
+
+    ecs_delete(world, e);
+    ecs_delete(world, prefab);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_map_string_key_lifecycle_alloc_values(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t n = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "N"}),
+        .members = {
+            {"a", ecs_id(ecs_string_t)},
+            {"b", ecs_id(ecs_string_t)},
+            {"c", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_map_desc_t desc = {
+        .entity = 0, 
+        .key_type = ecs_id(ecs_string_t), 
+        .type = n
+    };
+    ecs_entity_t map_of_structs = ecs_map_type_init(world, &desc);
+
+    ecs_entity_t prefab = ecs_new(world);
+    ecs_add_id(world, prefab, EcsPrefab);
+    ecs_map_t *m = test_ecs_ensure(world, prefab, map_of_structs);
+    test_assert(m != NULL);
+
+    test_assert(NULL != ecs_ptr_from_json(world, map_of_structs, m,
+        "{\"foo\": {\"a\": \"Hello\", \"b\": \"World\", \"c\": \"!\"}}", 
+        NULL));
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, prefab);
+
+    const ecs_map_t *mcopy = ecs_get_id(world, e, map_of_structs);
+    test_assert(mcopy != m);
+    test_int(ecs_map_count(mcopy), 1);
+    char *json = ecs_ptr_to_json(world, map_of_structs, mcopy);
+    test_str(json, 
+        "{\"foo\":{\"a\":\"Hello\", \"b\":\"World\", \"c\":\"!\"}}");
+    ecs_os_free(json);
+
+    ecs_add_id(world, e, ecs_new(world));
+    const ecs_map_t *mcopy_moved = ecs_get_id(world, e, map_of_structs);
+    test_int(ecs_map_count(mcopy_moved), 1);
+    json = ecs_ptr_to_json(world, map_of_structs, mcopy_moved);
+    test_str(json, 
+        "{\"foo\":{\"a\":\"Hello\", \"b\":\"World\", \"c\":\"!\"}}");
+    ecs_os_free(json);
+
+    ecs_delete(world, e);
+    ecs_delete(world, prefab);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_map_string_key_value_copy(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .key_type = ecs_id(ecs_string_t), 
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t src = {0}, dst = {0};
+    test_assert(NULL != ecs_ptr_from_json(world, t, &src,
+        "{\"foo\": 10, \"bar\": 20}", NULL));
+    test_assert(NULL != ecs_ptr_from_json(world, t, &dst,
+        "{\"hello\": 30}", NULL));
+
+    test_int(0, ecs_ptr_copy(world, t, &dst, &src));
+    test_int(ecs_map_count(&dst), 2);
+    test_assert(meta_map_has(world, t, &dst, "\"foo\":10"));
+    test_assert(meta_map_has(world, t, &dst, "\"bar\":20"));
+    test_assert(!meta_map_has(world, t, &dst, "\"hello\":30"));
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, t);
+    test_assert(ti->hooks.equals(&src, &dst, ti));
+
+    ecs_map_t moved = {0};
+    test_int(0, ecs_ptr_move_ctor(world, t, &moved, &dst));
+    test_int(ecs_map_count(&moved), 2);
+    test_assert(meta_map_has(world, t, &moved, "\"foo\":10"));
+    test_assert(meta_map_has(world, t, &moved, "\"bar\":20"));
+
+    ecs_ptr_fini(world, t, &src);
+    ecs_ptr_fini(world, t, &dst);
+    ecs_ptr_fini(world, t, &moved);
+
+    ecs_fini(world);
+}

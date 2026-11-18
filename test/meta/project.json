@@ -177,6 +177,9 @@
                 "map_lifecycle_trivial_type",
                 "map_lifecycle_alloc_values",
                 "map_cmp_illegal",
+                "map_string_key_lifecycle",
+                "map_string_key_lifecycle_alloc_values",
+                "map_string_key_value_copy",
                 "existing_struct_w_vector_member_no_hooks",
                 "existing_struct_w_vector_member_shallow_copy",
                 "existing_struct_w_vector_member_not_freed"
@@ -299,12 +302,13 @@
                 "map_w_short_notation",
                 "map_no_key_type",
                 "map_no_value_type",
-                "map_invalid_key_type_string",
+                "map_string_i32",
                 "map_invalid_key_type_f32",
                 "map_invalid_key_type_f64",
                 "map_invalid_key_type_struct",
                 "map_enum_i32",
-                "map_bitmask_i32"
+                "map_bitmask_i32",
+                "map_string_struct"
             ]
         },  {
             "id": "Units",
@@ -634,6 +638,16 @@
                 "map_key_i64_array_i32",
                 "map_key_i64_vector_i32",
                 "map_key_i64_map_i32",
+                "map_string_i32",
+                "map_string_string",
+                "map_string_struct",
+                "map_string_i32_replace",
+                "map_string_i32_into_populated",
+                "map_string_i32_empty_key",
+                "map_string_i32_many",
+                "map_key_string_i32",
+                "map_key_string_invalid_key_type",
+                "struct_w_map_string_i32",
                 "value_bool",
                 "value_char",
                 "value_u8",
@@ -883,6 +897,12 @@
                 "map_i64_enum_underlying_i8",
                 "map_i64_enum_underlying_i16",
                 "map_i64_enum_underlying_i32",
+                "map_string_i32",
+                "map_string_string",
+                "map_string_struct",
+                "map_string_i32_into_populated",
+                "map_string_i32_escaped_key",
+                "map_string_i32_roundtrip",
                 "value_bool",
                 "value_u16",
                 "value_i64",
@@ -1001,6 +1021,12 @@
                 "map_i64_enum_underlying_i8",
                 "map_i64_enum_underlying_i16",
                 "map_i64_enum_underlying_i32",
+                "map_string_i32",
+                "map_string_i32_3",
+                "map_string_string",
+                "map_string_i32_escape_key",
+                "map_string_i32_empty",
+                "struct_w_map_string_i32",
                 "value_bool",
                 "value_u16",
                 "value_i64",
@@ -1326,6 +1352,7 @@
                 "struct_map_type",
                 "map_enum_key_type",
                 "map_bitmask_key_type",
+                "map_string_key_type",
                 "struct_value"
             ]
         }, {
@@ -1590,7 +1617,9 @@
                 "map_of_ints",
                 "map_key_order_precedes_values",
                 "map_of_strings",
-                "map_of_struct_with_strings"
+                "map_of_struct_with_strings",
+                "map_w_string_keys",
+                "map_w_string_keys_key_order"
             ]
         },{
             "id": "SetRttHooks",

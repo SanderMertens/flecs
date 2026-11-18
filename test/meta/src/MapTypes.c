@@ -129,10 +129,8 @@ void MapTypes_map_no_value_type(void) {
     ecs_fini(world);
 }
 
-void MapTypes_map_invalid_key_type_string(void) {
+void MapTypes_map_string_i32(void) {
     ecs_world_t *world = ecs_init();
-
-    ecs_log_set_level(-4);
 
     ecs_entity_t m = ecs_map_type_init(world, &(ecs_map_desc_t){
         .entity = ecs_entity(world, {.name = "M"}),
@@ -141,7 +139,9 @@ void MapTypes_map_invalid_key_type_string(void) {
     });
 
     test_assert(m != 0);
-    test_assert(ecs_get(world, m, EcsType) == NULL);
+    test_str(ecs_get_name(world, m), "M");
+
+    meta_test_map(world, m, ecs_id(ecs_string_t), ecs_id(ecs_i32_t));
 
     ecs_fini(world);
 }
@@ -254,6 +254,33 @@ void MapTypes_map_bitmask_i32(void) {
     test_str(ecs_get_name(world, m), "M");
 
     meta_test_map(world, m, b, ecs_id(ecs_i32_t));
+
+    ecs_fini(world);
+}
+
+void MapTypes_map_string_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_string_t)}
+        }
+    });
+
+    test_assert(t != 0);
+
+    ecs_entity_t m = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "M"}),
+        .key_type = ecs_id(ecs_string_t),
+        .type = t
+    });
+
+    test_assert(m != 0);
+    test_str(ecs_get_name(world, m), "M");
+
+    meta_test_map(world, m, ecs_id(ecs_string_t), t);
 
     ecs_fini(world);
 }

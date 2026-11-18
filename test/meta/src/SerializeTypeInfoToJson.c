@@ -786,3 +786,19 @@ void SerializeTypeInfoToJson_struct_value(void) {
 
     ecs_fini(world);
 }
+
+void SerializeTypeInfoToJson_map_string_key_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mt = ecs_map_type(world, {
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    char *str = ecs_type_info_to_json(world, mt);
+    test_assert(str != NULL);
+    test_str(str, "[\"map\", [\"text\"], [\"int\"]]");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}

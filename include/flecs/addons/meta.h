@@ -334,9 +334,19 @@ typedef struct EcsVector {
     ecs_entity_t type; /**< Element type. */
 } EcsVector;
 
-/** Component added to map type entities. */
+/** Component added to map type entities.
+ * Values of map types are stored in an ecs_map_t. Keys of integer types (bool,
+ * char, byte, integers, entities, ids, enums and bitmasks) are stored as map
+ * key, and the map value stores the element (or a pointer to the element if it
+ * does not fit in an ecs_map_val_t).
+ * 
+ * Keys of other types (strings) are stored together with the element in an
+ * entry that is owned by the map. The layout of these maps is not part of the
+ * API. Their values should be created with the cursor API (ecs_meta_key()),
+ * the deserializers or scripts, and read with the serializers or scripts.
+ */
 typedef struct EcsMap {
-    ecs_entity_t key_type; /**< Key type. Must be a primitive (other than string, f32 or f64), enum or bitmask type. */
+    ecs_entity_t key_type; /**< Key type. Must be a primitive (other than f32 or f64), enum or bitmask type. */
     ecs_entity_t type;     /**< Value type. */
 } EcsMap;
 
@@ -1582,7 +1592,7 @@ ecs_entity_t ecs_vector_init(
 /** Used with ecs_map_type_init(). */
 typedef struct ecs_map_desc_t {
     ecs_entity_t entity;   /**< Existing entity to use for type (optional). */
-    ecs_entity_t key_type; /**< Key type. Must be a primitive (other than string, f32 or f64), enum or bitmask type. */
+    ecs_entity_t key_type; /**< Key type. Must be a primitive (other than f32 or f64), enum or bitmask type. */
     ecs_entity_t type;     /**< Value type. */
 } ecs_map_desc_t;
 

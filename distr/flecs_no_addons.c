@@ -33517,17 +33517,17 @@ ecs_table_t* ecs_table_find(
 #ifndef FLECS_SCRIPT_PRIVATE_H
 #define FLECS_SCRIPT_PRIVATE_H
 
+#ifndef FLECS_META_PRIVATE_H
+#define FLECS_META_PRIVATE_H
+
+#endif
+
 #ifndef FLECS_PARSER_H
 #define FLECS_PARSER_H
 
 #endif
 
 #endif // FLECS_SCRIPT_PRIVATE_H
-
-#ifndef FLECS_META_PRIVATE_H
-#define FLECS_META_PRIVATE_H
-
-#endif
 
 #include <ctype.h>
 

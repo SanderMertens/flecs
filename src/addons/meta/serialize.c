@@ -130,39 +130,49 @@ static int flecs_meta_write_map(
 {
     const ecs_map_t *map = base;
 
+    ecs_meta_map_info_t info;
+    if (flecs_meta_map_info_from_type(world, ops->type, &info)) {
+        ecs_err("invalid map type '%s'", 
+            flecs_errstr(ecs_get_path(world, ops->type)));
+        return -1;
+    }
+
     bool json = format == EcsMetaJson;
     ecs_strbuf_list_push(str, json ? "{" : "[", ", ");
 
-    ecs_map_iter_t it = ecs_map_iter(map);
-    while (ecs_map_next(&it)) {
-        ecs_strbuf_t key_buf = ECS_STRBUF_INIT;
+    ecs_meta_map_iter_t it = flecs_meta_map_iter(&info, map);
+    while (flecs_meta_map_next(&it)) {
+        const void *key = flecs_meta_map_iter_key(&it);
         if (!json) {
             ecs_strbuf_list_next(str);
-        }
+            if (flecs_meta_ser_map_key(world, ops, key, str)) {
+                return -1;
+            }
 
-        if (flecs_meta_ser_map_key(
-            world, ops, ecs_map_key(&it), json ? &key_buf : str))
-        {
-            ecs_strbuf_reset(&key_buf);
-            return -1;
-        }
-
-        if (json) {
-            char *key = ecs_strbuf_get(&key_buf);
-            flecs_meta_write_member(str, key, format);
-            ecs_os_free(key);
-        } else {
             ecs_strbuf_appendlit(str, ": ");
-        }
-
-        const void *ptr;
-        if (ops->elem_size > ECS_SIZEOF(ecs_map_val_t)) {
-            ptr = ecs_map_ptr(&it);
+        } else if (ops->underlying_kind == EcsOpString) {
+#ifdef FLECS_JSON
+            /* String keys may contain characters that must be escaped */
+            const char *key_str = *(const char* const*)key;
+            ecs_strbuf_list_next(str);
+            flecs_json_string_escape_ctrl(str, key_str ? key_str : "");
+            ecs_strbuf_appendch(str, ':');
+#endif
         } else {
-            ptr = &it.res[1];
+            ecs_strbuf_t key_buf = ECS_STRBUF_INIT;
+            if (flecs_meta_ser_map_key(world, ops, key, &key_buf)) {
+                ecs_strbuf_reset(&key_buf);
+                return -1;
+            }
+
+            char *key_str = ecs_strbuf_get(&key_buf);
+            flecs_meta_write_member(str, key_str, format);
+            ecs_os_free(key_str);
         }
 
-        if (flecs_meta_write_scope(world, ops, ptr, str, format)) {
+        if (flecs_meta_write_scope(world, ops, 
+            flecs_meta_map_iter_value(&it), str, format)) 
+        {
             goto error;
         }
     }

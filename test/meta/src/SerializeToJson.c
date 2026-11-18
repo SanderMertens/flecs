@@ -2785,3 +2785,148 @@ void SerializeToJson_ecs_struct_3_members(void) {
 
     ecs_fini(world);
 }
+
+void SerializeToJson_map_string_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t m = {0};
+    test_assert(ecs_ptr_from_json(world, t, &m, "{\"foo\": 100}", NULL) != NULL);
+
+    char *expr = ecs_ptr_to_json(world, t, &m);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"foo\":100}");
+    ecs_os_free(expr);
+
+    ecs_ptr_fini(world, t, &m);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_map_string_i32_3(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t m = {0};
+    test_assert(ecs_ptr_from_json(world, t, &m, 
+        "{\"foo\": 100, \"bar\": 200, \"hello\": 300}", NULL) != NULL);
+    test_int(ecs_map_count(&m), 3);
+
+    char *expr = ecs_ptr_to_json(world, t, &m);
+    test_assert(expr != NULL);
+    test_assert(strstr(expr, "\"foo\":100") != NULL);
+    test_assert(strstr(expr, "\"bar\":200") != NULL);
+    test_assert(strstr(expr, "\"hello\":300") != NULL);
+    test_int(ecs_os_strlen(expr), 
+        ecs_os_strlen("{\"foo\":100, \"bar\":200, \"hello\":300}"));
+    ecs_os_free(expr);
+
+    ecs_ptr_fini(world, t, &m);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_map_string_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_string_t)
+    });
+
+    ecs_map_t m = {0};
+    test_assert(ecs_ptr_from_json(world, t, &m, 
+        "{\"foo\": \"Hello\"}", NULL) != NULL);
+
+    char *expr = ecs_ptr_to_json(world, t, &m);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"foo\":\"Hello\"}");
+    ecs_os_free(expr);
+
+    ecs_ptr_fini(world, t, &m);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_map_string_i32_escape_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t m = {0};
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &m);
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "foo\"bar"));
+    test_int(0, ecs_meta_set_int(&cur, 100));
+    test_int(0, ecs_meta_pop(&cur));
+
+    char *expr = ecs_ptr_to_json(world, t, &m);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"foo\\\"bar\":100}");
+    ecs_os_free(expr);
+
+    ecs_ptr_fini(world, t, &m);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_map_string_i32_empty(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t m = {0};
+
+    char *expr = ecs_ptr_to_json(world, t, &m);
+    test_assert(expr != NULL);
+    test_str(expr, "{}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_w_map_string_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mt = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_entity_t t = ecs_struct(world, {
+        .members = {
+            {"m", mt}
+        }
+    });
+
+    typedef struct {
+        ecs_map_t m;
+    } T;
+
+    T value = {0};
+    test_assert(ecs_ptr_from_json(world, t, &value, 
+        "{\"m\": {\"foo\": 100}}", NULL) != NULL);
+
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"m\":{\"foo\":100}}");
+    ecs_os_free(expr);
+
+    ecs_ptr_fini(world, t, &value);
+
+    ecs_fini(world);
+}

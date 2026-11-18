@@ -72,6 +72,14 @@ typedef struct {
 
 void install_test_abort(void);
 
+/* Test whether the expression serialization of a map value contains element.
+ * Use for maps with keys for which the iteration order is not defined. */
+bool script_map_has(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    const void *ptr,
+    const char *expr_elem);
+
 #ifdef __cplusplus
 }
 #endif

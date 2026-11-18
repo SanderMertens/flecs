@@ -16,3 +16,31 @@ void _test_json(const char* str1, const char *str2, const char* vstr1, const cha
     }
     _test_str(str1, str2, vstr1, vstr2, file, line);
 }
+
+bool meta_map_has(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    const void *ptr,
+    const char *json_elem)
+{
+    char *json = ecs_ptr_to_json(world, type, ptr);
+    if (!json) {
+        return false;
+    }
+
+    bool result = false;
+    ecs_size_t len = ecs_os_strlen(json_elem);
+    const char *cur = json;
+    while ((cur = strstr(cur, json_elem))) {
+        char before = cur == json ? '\0' : cur[-1];
+        char after = cur[len];
+        if ((before == '{' || before == ' ') && (after == ',' || after == '}')) {
+            result = true;
+            break;
+        }
+        cur ++;
+    }
+
+    ecs_os_free(json);
+    return result;
+}
