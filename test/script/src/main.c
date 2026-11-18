@@ -24385,7 +24385,7 @@ static bake_test_suite suites[] = {
         "Collection",
         Collection_setup,
         NULL,
-        154,
+        161,
         Collection_testcases,
         1,
         Collection_params
@@ -24688,11 +24688,7 @@ static bake_test_suite suites[] = {
         "AnonymousType",
         AnonymousType_setup,
         NULL,
-<<<<<<< HEAD
-        27,
-=======
-        36,
->>>>>>> 85202ff0a89a5ae8e495b367f260ce7e5a695a44
+        38,
         AnonymousType_testcases,
         1,
         AnonymousType_params
