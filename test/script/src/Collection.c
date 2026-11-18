@@ -4839,3 +4839,129 @@ void Collection_untyped_vector_to_array_in_fn(void) {
 
     ecs_fini(world);
 }
+
+void Collection_array_size_from_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(count: i32, v: f32)"
+    LINE "const N: i32 = 3"
+    LINE "const a: f32[N] = [1, 2, 3]"
+    LINE "e { Result: {a.count(), a[2]} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{count: 3, v: 3}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void Collection_array_size_from_export_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "export const N = 3"
+        LINE "export const a: f32[N] = [1, 2, 3]",
+        &ir_desc, NULL) == 0);
+
+    ecs_value_t a = ecs_const_var_get(world, ecs_lookup(world, "a"));
+    const EcsArray *type = ecs_get(world, a.type, EcsArray);
+    test_assert(type != NULL);
+    test_uint(type->type, ecs_id(ecs_f32_t));
+    test_int(type->count, 3);
+
+    float *v = a.ptr;
+    test_flt(v[0], 1);
+    test_flt(v[1], 2);
+    test_flt(v[2], 3);
+
+    ecs_fini(world);
+}
+
+void Collection_array_size_from_const_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const W = 2"
+        LINE "const H = 3"
+        LINE "export mut grid: bool[W * H] = {}",
+        &ir_desc, NULL) == 0);
+
+    ecs_value_t grid = ecs_mut_var_get(world, ecs_lookup(world, "grid"));
+    const EcsArray *type = ecs_get(world, grid.type, EcsArray);
+    test_assert(type != NULL);
+    test_uint(type->type, ecs_id(ecs_bool_t));
+    test_int(type->count, 6);
+
+    ecs_fini(world);
+}
+
+void Collection_array_size_from_const_in_fn(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Result(count: i32, v: i32)"
+    LINE "export const N = 3"
+    LINE "fn second(v: i32[N]) -> i32 { v[1] }"
+    LINE "fn three() -> i32[N] { [10, 20, 30] }"
+    LINE "const a = three()"
+    LINE "e { Result: {a.count(), second(a)} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t result = ecs_lookup(world, "Result");
+    test_assert(e != 0);
+    test_assert(result != 0);
+    const void *ptr = ecs_get_id(world, e, result);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, result, ptr);
+    test_str(str, "{count: 3, v: 20}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void Collection_array_size_from_mut(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "export mut N: i32 = 3"
+        LINE "const a: f32[N] = [1, 2, 3]",
+        &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Collection_array_size_zero(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const N = 0"
+        LINE "const a: f32[N] = {}",
+        &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Collection_array_size_not_integer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "const N = 1.5"
+        LINE "const a: f32[N] = {}",
+        &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}

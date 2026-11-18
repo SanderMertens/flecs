@@ -979,6 +979,13 @@ void Collection_untyped_const_vector_to_component_vector_member(void);
 void Collection_const_vector_to_c_component_vector_member(void);
 void Collection_untyped_const_vector_to_c_component_vector_member(void);
 void Collection_untyped_vector_to_array_in_fn(void);
+void Collection_array_size_from_const(void);
+void Collection_array_size_from_export_const(void);
+void Collection_array_size_from_const_expr(void);
+void Collection_array_size_from_const_in_fn(void);
+void Collection_array_size_from_mut(void);
+void Collection_array_size_zero(void);
+void Collection_array_size_not_integer(void);
 
 // Testsuite 'Await'
 void Await_setup(void);
@@ -8713,6 +8720,34 @@ bake_test_case Collection_testcases[] = {
     {
         "untyped_vector_to_array_in_fn",
         Collection_untyped_vector_to_array_in_fn
+    },
+    {
+        "array_size_from_const",
+        Collection_array_size_from_const
+    },
+    {
+        "array_size_from_export_const",
+        Collection_array_size_from_export_const
+    },
+    {
+        "array_size_from_const_expr",
+        Collection_array_size_from_const_expr
+    },
+    {
+        "array_size_from_const_in_fn",
+        Collection_array_size_from_const_in_fn
+    },
+    {
+        "array_size_from_mut",
+        Collection_array_size_from_mut
+    },
+    {
+        "array_size_zero",
+        Collection_array_size_zero
+    },
+    {
+        "array_size_not_integer",
+        Collection_array_size_not_integer
     }
 };
 
@@ -24040,7 +24075,7 @@ static bake_test_suite suites[] = {
         "Collection",
         Collection_setup,
         NULL,
-        140,
+        147,
         Collection_testcases,
         1,
         Collection_params

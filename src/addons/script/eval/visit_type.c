@@ -530,6 +530,49 @@ static ecs_entity_t flecs_script_type_w_count(
         : flecs_script_array_type(world, type, type_count);
 }
 
+static int flecs_script_type_eval_count(
+    ecs_script_type_visitor_t *t,
+    void *node,
+    ecs_expr_node_t **expr,
+    int32_t *type_count)
+{
+    if (!*expr) {
+        return 0;
+    }
+
+    ecs_entity_t type = 0;
+    int result = flecs_script_type_check_expr(t, expr, &type);
+    if (result) {
+        return result;
+    }
+
+    if ((*expr)->kind != EcsExprValue) {
+        flecs_script_eval_error(t->v, node,
+            "array size must be a compile time constant");
+        return -1;
+    }
+
+    if (!flecs_expr_is_type_integer((*expr)->type)) {
+        flecs_script_eval_error(t->v, node,
+            "array size must be an integer, got '%s'",
+            flecs_errstr(ecs_get_path(t->v->world, (*expr)->type)));
+        return -1;
+    }
+
+    ecs_expr_value_node_t *value = (ecs_expr_value_node_t*)*expr;
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        t->v->world, value->node.type, value->ptr);
+    int64_t count = ecs_meta_get_int(&cur);
+    if (count <= 0 || count > INT32_MAX) {
+        flecs_script_eval_error(t->v, node,
+            "invalid array size '%lld'", (long long)count);
+        return -1;
+    }
+
+    *type_count = flecs_ito(int32_t, count);
+    return 0;
+}
+
 static int flecs_script_type_check_var_expr(
     ecs_script_type_visitor_t *t,
     ecs_expr_node_t **expr_ptr,
@@ -1552,6 +1595,17 @@ static int flecs_script_type_const(
         return -1;
     }
 
+    int count_result = flecs_script_type_eval_count(
+        t, node, &node->type_count_expr, &node->type_count);
+    if (count_result) {
+        if (count_result == 1) {
+            flecs_script_type_skip_var(t, node->name);
+            return 0;
+        }
+
+        return -1;
+    }
+
     expected_type = flecs_script_type_w_count(
         t->v->world, expected_type, node->type_count);
 
@@ -1701,6 +1755,17 @@ static int flecs_script_type_template_var(
     }
 
     if (flecs_script_type_var_args(t, node, &type)) {
+        return -1;
+    }
+
+    int count_result = flecs_script_type_eval_count(
+        t, node, &node->type_count_expr, &node->type_count);
+    if (count_result) {
+        if (count_result == 1) {
+            flecs_script_type_skip_var(t, node->name);
+            return 0;
+        }
+
         return -1;
     }
 
@@ -2045,6 +2110,19 @@ static int flecs_script_type_function(
         return 0;
     }
 
+    ecs_script_fn_param_t *params = ecs_vec_first(&node->params);
+    int32_t i, param_count = ecs_vec_count(&node->params);
+    int count_result = flecs_script_type_eval_count(t, node,
+        &node->return_type_count_expr, &node->return_type_count);
+    for (i = 0; !count_result && i < param_count; i ++) {
+        count_result = flecs_script_type_eval_count(t, &params[i].node,
+            &params[i].type_count_expr, &params[i].type_count);
+    }
+
+    if (count_result) {
+        return count_result == 1 ? 0 : -1;
+    }
+
     node->eval_return_type = flecs_script_type_w_count(
         t->v->world, node->eval_return_type, node->return_type_count);
 
@@ -2059,8 +2137,6 @@ static int flecs_script_type_function(
     ecs_script_vars_t *outer_vars = t->v->vars;
     t->v->vars = flecs_script_vars_push(
         NULL, &t->v->r->stack, t->v->r->allocator);
-    int32_t i, param_count = ecs_vec_count(&node->params);
-    ecs_script_fn_param_t *params = ecs_vec_first(&node->params);
     for (i = 0; i < param_count; i ++) {
         if (flecs_script_type_resolve_type(
             t, params[i].type, &params[i].eval_type))
