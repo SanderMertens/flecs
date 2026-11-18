@@ -1747,6 +1747,7 @@ void Template_template_in_interpolated_entity_scope(void);
 void Template_template_in_if_scope_in_entity_scope(void);
 void Template_template_prop_runtime_enum(void);
 void Template_template_prop_runtime_bitmask(void);
+void Template_read_component_of_nested_instance(void);
 
 // Testsuite 'Mut'
 void Mut_setup(void);
@@ -11739,6 +11740,10 @@ bake_test_case Template_testcases[] = {
     {
         "template_prop_runtime_bitmask",
         Template_template_prop_runtime_bitmask
+    },
+    {
+        "read_component_of_nested_instance",
+        Template_read_component_of_nested_instance
     }
 };
 
@@ -24134,7 +24139,7 @@ static bake_test_suite suites[] = {
         "Template",
         Template_setup,
         NULL,
-        221,
+        222,
         Template_testcases,
         1,
         Template_params

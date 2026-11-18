@@ -28,6 +28,7 @@ typedef struct ecs_script_pending_t {
     ecs_entity_t instance;
     uint64_t input;
     int32_t depth;
+    bool instantiate;
 } ecs_script_pending_t;
 
 ecs_script_ref_t* flecs_script_ref_ensure(
@@ -84,7 +85,8 @@ void flecs_script_ref_enqueue(
     ecs_world_t *stage,
     ecs_entity_t script,
     ecs_entity_t instance,
-    uint64_t input);
+    uint64_t input,
+    bool instantiate);
 
 void flecs_script_run_pending_resolves(
     ecs_world_t *world);
