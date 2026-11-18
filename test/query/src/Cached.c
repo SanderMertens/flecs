@@ -8852,3 +8852,46 @@ void Cached_delete_table_w_on_table_delete_observer_creating_tables(void) {
 
     ecs_fini(world);
 }
+
+void Cached_create_cached_query_while_readonly(void) {
+    install_test_abort();
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_readonly_begin(world, false);
+
+    test_expect_abort();
+    ecs_query(world, {
+        .terms = {{ Foo }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+}
+
+void Cached_create_uncached_query_while_readonly(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e = ecs_new_w(world, Foo);
+
+    ecs_readonly_begin(world, false);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo }},
+        .cache_kind = EcsQueryCacheNone
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_readonly_end(world);
+
+    ecs_fini(world);
+}

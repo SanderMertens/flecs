@@ -2012,7 +2012,9 @@
                 "on_add_childof_observer_w_parent_component_and_up_query",
                 "fini_w_optional_cascade_query_and_nested_parent",
                 "delete_disabled_child_table_after_rematch",
-                "delete_table_w_on_table_delete_observer_creating_tables"
+                "delete_table_w_on_table_delete_observer_creating_tables",
+                "create_cached_query_while_readonly",
+                "create_uncached_query_while_readonly"
             ]
         }, {
             "id": "ChangeDetection",

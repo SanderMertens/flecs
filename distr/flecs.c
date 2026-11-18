@@ -23618,7 +23618,7 @@ static void MonitorAlertInstances(ecs_iter_t *it) {
                 /* Only increase alert duration if the alert was active */
                 value[i].value += (double)it->delta_system_time;
 
-                bool generate_message = alert->message;
+                bool generate_message = alert->message != NULL;
                 if (generate_message) {
                     if (alert_instance[i].message) {
                         /* If a message was already generated, only regenerate if
@@ -35709,6 +35709,9 @@ static ecs_query_t* flecs_query_init(
 
     if (result->pub.cache_kind != EcsQueryCacheNone) {
         flecs_check_exclusive_world_access_write(result->pub.world);
+        ecs_check(!(world->flags & EcsWorldReadonly),
+            ECS_INVALID_WHILE_READONLY,
+            "cannot create cached query in readonly mode");
         if (stage != world->stages[0]) {
             flecs_commands_begin(world, world->stages[0]);
             main_scope = true;
