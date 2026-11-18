@@ -736,26 +736,42 @@ static const char* flecs_script_parse_assign_target(
 static const char* flecs_script_parse_type_count(
     ecs_parser_t *parser,
     const char *pos,
-    int32_t *type_count)
+    int32_t *type_count,
+    ecs_expr_node_t **type_count_expr)
 {
     ParserBegin;
 
     LookAhead_1('[',
         Consume();
-        Parse(
-            case ']':
-                *type_count = -1;
-                break;
-            case EcsTokNumber: {
+
+        // i32[]
+        LookAhead_1(']',
+            Consume();
+            *type_count = -1;
+            EndOfRule;
+        )
+
+        // i32[10]
+        LookAhead_2(EcsTokNumber, ']',
+            Parse_1(EcsTokNumber, {
                 int64_t count = atoll(t->value);
                 if (count <= 0 || count > INT32_MAX) {
                     Error("invalid array size '%s'", t->value);
                 }
 
                 *type_count = flecs_ito(int32_t, count);
-                Parse_1(']', {});
-                break;
-            }
+                Parse_1(']', {
+                    EndOfRule;
+                })
+            })
+        )
+
+        // i32[N]
+        Expr(
+            *type_count_expr = EXPR;
+            Parse_1(']', {
+                EndOfRule;
+            })
         )
     )
 
@@ -832,7 +848,8 @@ static const char* flecs_script_parse_var(
         )
 
         // const value: i32[], const value: i32[10]
-        pos = flecs_script_parse_type_count(parser, pos, &var->type_count);
+        pos = flecs_script_parse_type_count(
+            parser, pos, &var->type_count, &var->type_count_expr);
         if (!pos) {
             goto error;
         }
@@ -922,8 +939,8 @@ static const char* flecs_script_fn_params(
                     p->name = Token(0);
                     p->type = Token(2);
 
-                    pos = flecs_script_parse_type_count(
-                        parser, pos, &p->type_count);
+                    pos = flecs_script_parse_type_count(parser, pos,
+                        &p->type_count, &p->type_count_expr);
                     if (!pos) {
                         goto error;
                     }
@@ -1453,8 +1470,8 @@ fn_stmt: {
             Parse_1(EcsTokIdentifier, {
                 fn->return_type = Token(4);
                 fn->return_type_node.pos = parser->pos;
-                pos = flecs_script_parse_type_count(
-                    parser, pos, &fn->return_type_count);
+                pos = flecs_script_parse_type_count(parser, pos,
+                    &fn->return_type_count, &fn->return_type_count_expr);
                 if (!pos) {
                     goto error;
                 }

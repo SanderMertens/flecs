@@ -990,7 +990,14 @@
                 "untyped_const_vector_to_component_vector_member",
                 "const_vector_to_c_component_vector_member",
                 "untyped_const_vector_to_c_component_vector_member",
-                "untyped_vector_to_array_in_fn"
+                "untyped_vector_to_array_in_fn",
+                "array_size_from_const",
+                "array_size_from_export_const",
+                "array_size_from_const_expr",
+                "array_size_from_const_in_fn",
+                "array_size_from_mut",
+                "array_size_zero",
+                "array_size_not_integer"
             ]
         }, {
             "id": "Await",
