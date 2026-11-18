@@ -516,18 +516,20 @@ static int flecs_script_type_check_expr(
     return 0;
 }
 
-static ecs_entity_t flecs_script_type_w_count(
+static ecs_entity_t flecs_script_type_w_dims(
     ecs_world_t *world,
     ecs_entity_t type,
-    int32_t type_count)
+    const ecs_script_type_dims_t *dims)
 {
-    if (!type || !type_count) {
-        return type;
+    int32_t i;
+    for (i = 0; type && i < dims->count; i ++) {
+        int32_t count = dims->dims[i].count;
+        type = count == -1
+            ? flecs_script_vector_type(world, type)
+            : flecs_script_array_type(world, type, count);
     }
 
-    return type_count == -1
-        ? flecs_script_vector_type(world, type)
-        : flecs_script_array_type(world, type, type_count);
+    return type;
 }
 
 static int flecs_script_type_eval_count(
@@ -570,6 +572,23 @@ static int flecs_script_type_eval_count(
     }
 
     *type_count = flecs_ito(int32_t, count);
+    return 0;
+}
+
+static int flecs_script_type_eval_dims(
+    ecs_script_type_visitor_t *t,
+    void *node,
+    ecs_script_type_dims_t *dims)
+{
+    int32_t i;
+    for (i = 0; i < dims->count; i ++) {
+        int result = flecs_script_type_eval_count(t, node,
+            &dims->dims[i].count_expr, &dims->dims[i].count);
+        if (result) {
+            return result;
+        }
+    }
+
     return 0;
 }
 
@@ -1595,8 +1614,7 @@ static int flecs_script_type_const(
         return -1;
     }
 
-    int count_result = flecs_script_type_eval_count(
-        t, node, &node->type_count_expr, &node->type_count);
+    int count_result = flecs_script_type_eval_dims(t, node, &node->type_dims);
     if (count_result) {
         if (count_result == 1) {
             flecs_script_type_skip_var(t, node->name);
@@ -1606,8 +1624,8 @@ static int flecs_script_type_const(
         return -1;
     }
 
-    expected_type = flecs_script_type_w_count(
-        t->v->world, expected_type, node->type_count);
+    expected_type = flecs_script_type_w_dims(
+        t->v->world, expected_type, &node->type_dims);
 
     ecs_entity_t type = expected_type;
     int32_t prev_unresolved = ecs_vec_count(
@@ -1758,8 +1776,7 @@ static int flecs_script_type_template_var(
         return -1;
     }
 
-    int count_result = flecs_script_type_eval_count(
-        t, node, &node->type_count_expr, &node->type_count);
+    int count_result = flecs_script_type_eval_dims(t, node, &node->type_dims);
     if (count_result) {
         if (count_result == 1) {
             flecs_script_type_skip_var(t, node->name);
@@ -1769,7 +1786,7 @@ static int flecs_script_type_template_var(
         return -1;
     }
 
-    type = flecs_script_type_w_count(t->v->world, type, node->type_count);
+    type = flecs_script_type_w_dims(t->v->world, type, &node->type_dims);
 
     if (type && t->v->template && type == t->v->template->props.type) {
         flecs_script_eval_error(t->v, node,
@@ -2112,19 +2129,19 @@ static int flecs_script_type_function(
 
     ecs_script_fn_param_t *params = ecs_vec_first(&node->params);
     int32_t i, param_count = ecs_vec_count(&node->params);
-    int count_result = flecs_script_type_eval_count(t, node,
-        &node->return_type_count_expr, &node->return_type_count);
+    int count_result = flecs_script_type_eval_dims(
+        t, node, &node->return_type_dims);
     for (i = 0; !count_result && i < param_count; i ++) {
-        count_result = flecs_script_type_eval_count(t, &params[i].node,
-            &params[i].type_count_expr, &params[i].type_count);
+        count_result = flecs_script_type_eval_dims(
+            t, &params[i].node, &params[i].type_dims);
     }
 
     if (count_result) {
         return count_result == 1 ? 0 : -1;
     }
 
-    node->eval_return_type = flecs_script_type_w_count(
-        t->v->world, node->eval_return_type, node->return_type_count);
+    node->eval_return_type = flecs_script_type_w_dims(
+        t->v->world, node->eval_return_type, &node->return_type_dims);
 
     ecs_entity_t parent;
     if (flecs_script_type_ensure_owner(t, &parent)) {
@@ -2151,8 +2168,8 @@ static int flecs_script_type_function(
             goto done;
         }
 
-        params[i].eval_type = flecs_script_type_w_count(
-            t->v->world, params[i].eval_type, params[i].type_count);
+        params[i].eval_type = flecs_script_type_w_dims(
+            t->v->world, params[i].eval_type, &params[i].type_dims);
 
         ecs_script_var_t *var = ecs_script_vars_declare(
             t->v->vars, params[i].name);
