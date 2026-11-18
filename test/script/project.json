@@ -997,7 +997,14 @@
                 "array_size_from_const_in_fn",
                 "array_size_from_mut",
                 "array_size_zero",
-                "array_size_not_integer"
+                "array_size_not_integer",
+                "nested_vector_var_type",
+                "vector_of_array_var_type",
+                "array_of_vector_var_type_w_const_size",
+                "nested_type_fn_param_and_return",
+                "nested_type_template_prop",
+                "too_many_type_dims",
+                "nested_type_to_str"
             ]
         }, {
             "id": "Await",

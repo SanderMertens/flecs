@@ -15,6 +15,16 @@ static int flecs_script_scope_free(
     return flecs_script_visit_free_node(ctx, (ecs_script_node_t*)scope);
 }
 
+static void flecs_script_type_dims_free(
+    ecs_script_t *script,
+    ecs_script_type_dims_t *dims)
+{
+    int32_t i;
+    for (i = 0; i < dims->count; i ++) {
+        flecs_expr_visit_free(script, dims->dims[i].count_expr);
+    }
+}
+
 static void flecs_script_id_free(
     ecs_script_t *script,
     ecs_script_id_t *id)
@@ -83,8 +93,8 @@ int flecs_script_visit_free_node(
         flecs_expr_visit_free(script, ((ecs_script_var_node_t*)node)->expr);
         flecs_expr_visit_free(
             script, ((ecs_script_var_node_t*)node)->type_args);
-        flecs_expr_visit_free(
-            script, ((ecs_script_var_node_t*)node)->type_count_expr);
+        flecs_script_type_dims_free(
+            script, &((ecs_script_var_node_t*)node)->type_dims);
         break;
     case EcsAstAwait:
         flecs_expr_visit_free(script, ((ecs_script_await_t*)node)->expr);
@@ -135,9 +145,9 @@ int flecs_script_visit_free_node(
         ecs_script_fn_param_t *params = ecs_vec_first(&fn->params);
         int32_t i, count = ecs_vec_count(&fn->params);
         for (i = 0; i < count; i ++) {
-            flecs_expr_visit_free(script, params[i].type_count_expr);
+            flecs_script_type_dims_free(script, &params[i].type_dims);
         }
-        flecs_expr_visit_free(script, fn->return_type_count_expr);
+        flecs_script_type_dims_free(script, &fn->return_type_dims);
         ecs_vec_fini_t(a, &fn->params, ecs_script_fn_param_t);
         break;
     }

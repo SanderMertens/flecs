@@ -986,6 +986,13 @@ void Collection_array_size_from_const_in_fn(void);
 void Collection_array_size_from_mut(void);
 void Collection_array_size_zero(void);
 void Collection_array_size_not_integer(void);
+void Collection_nested_vector_var_type(void);
+void Collection_vector_of_array_var_type(void);
+void Collection_array_of_vector_var_type_w_const_size(void);
+void Collection_nested_type_fn_param_and_return(void);
+void Collection_nested_type_template_prop(void);
+void Collection_too_many_type_dims(void);
+void Collection_nested_type_to_str(void);
 
 // Testsuite 'Await'
 void Await_setup(void);
@@ -8761,6 +8768,34 @@ bake_test_case Collection_testcases[] = {
     {
         "array_size_not_integer",
         Collection_array_size_not_integer
+    },
+    {
+        "nested_vector_var_type",
+        Collection_nested_vector_var_type
+    },
+    {
+        "vector_of_array_var_type",
+        Collection_vector_of_array_var_type
+    },
+    {
+        "array_of_vector_var_type_w_const_size",
+        Collection_array_of_vector_var_type_w_const_size
+    },
+    {
+        "nested_type_fn_param_and_return",
+        Collection_nested_type_fn_param_and_return
+    },
+    {
+        "nested_type_template_prop",
+        Collection_nested_type_template_prop
+    },
+    {
+        "too_many_type_dims",
+        Collection_too_many_type_dims
+    },
+    {
+        "nested_type_to_str",
+        Collection_nested_type_to_str
     }
 };
 
@@ -24140,7 +24175,7 @@ static bake_test_suite suites[] = {
         "Collection",
         Collection_setup,
         NULL,
-        147,
+        154,
         Collection_testcases,
         1,
         Collection_params
