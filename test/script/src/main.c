@@ -4728,6 +4728,8 @@ void Lambda_invalid_collection(void);
 void Lambda_contains_not_comparable(void);
 void Lambda_sort_by_not_comparable(void);
 void Lambda_to_str(void);
+void Lambda_map_to_typed_vector_var(void);
+void Lambda_map_to_typed_mut_vector_var(void);
 
 // Testsuite 'CollectionOps'
 void CollectionOps_setup(void);
@@ -23389,6 +23391,14 @@ bake_test_case Lambda_testcases[] = {
     {
         "to_str",
         Lambda_to_str
+    },
+    {
+        "map_to_typed_vector_var",
+        Lambda_map_to_typed_vector_var
+    },
+    {
+        "map_to_typed_mut_vector_var",
+        Lambda_map_to_typed_mut_vector_var
     }
 };
 
@@ -24312,7 +24322,7 @@ static bake_test_suite suites[] = {
         "Lambda",
         Lambda_setup,
         NULL,
-        114,
+        116,
         Lambda_testcases,
         1,
         Lambda_params
