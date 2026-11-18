@@ -23618,7 +23618,7 @@ static void MonitorAlertInstances(ecs_iter_t *it) {
                 /* Only increase alert duration if the alert was active */
                 value[i].value += (double)it->delta_system_time;
 
-                bool generate_message = alert->message;
+                bool generate_message = alert->message != NULL;
                 if (generate_message) {
                     if (alert_instance[i].message) {
                         /* If a message was already generated, only regenerate if
