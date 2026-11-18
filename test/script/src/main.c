@@ -4626,6 +4626,17 @@ void AnonymousType_serialize_type(void);
 void AnonymousType_serialize_type_roundtrip(void);
 void AnonymousType_to_str_type_args(void);
 void AnonymousType_invalid_type_arg(void);
+void AnonymousType_struct_member_collection_shorthand(void);
+void AnonymousType_struct_member_nested_collection_shorthand(void);
+void AnonymousType_struct_member_shorthand_w_member_initializer(void);
+void AnonymousType_struct_member_shorthand_w_local_type(void);
+void AnonymousType_struct_member_shorthand_w_const_count(void);
+void AnonymousType_type_arg_collection_shorthand(void);
+void AnonymousType_named_type_collection_shorthand(void);
+void AnonymousType_const_w_type_arg_collection_shorthand(void);
+void AnonymousType_entity_value_collection_shorthand(void);
+void AnonymousType_invalid_collection_shorthand_count(void);
+void AnonymousType_collection_shorthand_on_non_type(void);
 
 // Testsuite 'Lambda'
 void Lambda_setup(void);
@@ -23007,6 +23018,50 @@ bake_test_case AnonymousType_testcases[] = {
     {
         "invalid_type_arg",
         AnonymousType_invalid_type_arg
+    },
+    {
+        "struct_member_collection_shorthand",
+        AnonymousType_struct_member_collection_shorthand
+    },
+    {
+        "struct_member_nested_collection_shorthand",
+        AnonymousType_struct_member_nested_collection_shorthand
+    },
+    {
+        "struct_member_shorthand_w_member_initializer",
+        AnonymousType_struct_member_shorthand_w_member_initializer
+    },
+    {
+        "struct_member_shorthand_w_local_type",
+        AnonymousType_struct_member_shorthand_w_local_type
+    },
+    {
+        "struct_member_shorthand_w_const_count",
+        AnonymousType_struct_member_shorthand_w_const_count
+    },
+    {
+        "type_arg_collection_shorthand",
+        AnonymousType_type_arg_collection_shorthand
+    },
+    {
+        "named_type_collection_shorthand",
+        AnonymousType_named_type_collection_shorthand
+    },
+    {
+        "const_w_type_arg_collection_shorthand",
+        AnonymousType_const_w_type_arg_collection_shorthand
+    },
+    {
+        "entity_value_collection_shorthand",
+        AnonymousType_entity_value_collection_shorthand
+    },
+    {
+        "invalid_collection_shorthand_count",
+        AnonymousType_invalid_collection_shorthand_count
+    },
+    {
+        "collection_shorthand_on_non_type",
+        AnonymousType_collection_shorthand_on_non_type
     }
 };
 
@@ -24388,7 +24443,7 @@ static bake_test_suite suites[] = {
         "AnonymousType",
         AnonymousType_setup,
         NULL,
-        25,
+        36,
         AnonymousType_testcases,
         1,
         AnonymousType_params
