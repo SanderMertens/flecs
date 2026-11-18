@@ -1303,7 +1303,8 @@ static void flecs_world_stats_to_json(
 
     ECS_GAUGE_APPEND(reply, stats, performance.fps, "Frames per second");
     ECS_COUNTER_APPEND(reply, stats, performance.frame_time, "Time spent in frame");
-    ECS_COUNTER_APPEND(reply, stats, performance.system_time, "Time spent on running systems in frame");
+    ECS_COUNTER_APPEND(reply, stats, performance.system_time, "Wall clock time spent on running systems in frame");
+    ECS_COUNTER_APPEND(reply, stats, performance.system_cpu_time, "Time spent on running systems in frame, summed over all threads");
     ECS_COUNTER_APPEND(reply, stats, performance.emit_time, "Time spent on notifying observers in frame");
     ECS_COUNTER_APPEND(reply, stats, performance.merge_time, "Time spent on merging commands in frame");
     ECS_COUNTER_APPEND(reply, stats, performance.rematch_time, "Time spent on revalidating query caches in frame");
@@ -1365,6 +1366,34 @@ static void flecs_world_stats_to_json(
     ECS_COUNTER_APPEND(reply, stats, http.busy_count, "Dropped requests due to full send queue (503)");
 
     ecs_strbuf_list_pop(reply, "}");
+}
+
+static void flecs_worker_stats_to_json(
+    ecs_strbuf_t *reply,
+    const EcsWorkerStats *monitor_stats)
+{
+    ecs_strbuf_list_push(reply, "[", ",");
+
+    if (monitor_stats) {
+        const ecs_worker_stats_t *stats = &monitor_stats->stats;
+        int32_t i, count = ecs_vec_count(&stats->threads);
+        const ecs_thread_stats_t *threads = ecs_vec_first_t(
+            &stats->threads, ecs_thread_stats_t);
+        for (i = 0; i < count; i ++) {
+            const ecs_thread_stats_t *thread = &threads[i];
+            ecs_strbuf_list_next(reply);
+            ecs_strbuf_list_push(reply, "{", ",");
+            ecs_strbuf_list_appendlit(reply, "\"id\":");
+            ecs_strbuf_appendint(reply, i);
+            ECS_COUNTER_APPEND_T(reply, thread, system_time, stats->t, 
+                "Time spent on running systems on thread");
+            ECS_COUNTER_APPEND_T(reply, thread, systems_ran, stats->t, 
+                "Systems ran on thread");
+            ecs_strbuf_list_pop(reply, "}");
+        }
+    }
+
+    ecs_strbuf_list_pop(reply, "]");
 }
 
 static void flecs_system_stats_to_json(
@@ -1545,6 +1574,12 @@ static bool flecs_rest_get_stats(
 
     } else if (!ecs_os_strcmp(category, "pipeline")) {
         flecs_pipeline_stats_to_json(world, req, reply, period);
+        return true;
+
+    } else if (!ecs_os_strcmp(category, "workers")) {
+        const EcsWorkerStats *stats = ecs_get_pair(world, EcsWorld, 
+            EcsWorkerStats, period);
+        flecs_worker_stats_to_json(&reply->body, stats);
         return true;
 
     } else {

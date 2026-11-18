@@ -283,6 +283,7 @@ void FlecsStatsImport(
     FlecsWorldMonitorImport(world);
     FlecsSystemMonitorImport(world);
     FlecsPipelineMonitorImport(world);
+    FlecsWorkerMonitorImport(world);
     
     flecs_stats_memory_register_reflection(world);
 

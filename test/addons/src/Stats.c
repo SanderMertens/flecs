@@ -275,3 +275,171 @@ void Stats_progress_stats_systems(void) {
 
     ecs_fini(world);
 }
+
+void Stats_get_worker_stats(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_SYSTEM(world, FooSys, EcsOnUpdate, 0);
+
+    ecs_progress(world, 0);
+
+    ecs_worker_stats_t stats = {0};
+    ecs_worker_stats_get(world, &stats);
+
+    test_int(stats.t, 1);
+    test_int(ecs_vec_count(&stats.threads), 1);
+
+    ecs_thread_stats_t *thread = ecs_vec_get_t(
+        &stats.threads, ecs_thread_stats_t, 0);
+    test_int(thread->systems_ran.counter.value[stats.t], 
+        ecs_get_world_info(world)->systems_ran_total);
+    test_assert(thread->systems_ran.counter.value[stats.t] > 0);
+
+    ecs_worker_stats_fini(&stats);
+
+    ecs_fini(world);
+}
+
+static void MtSys(ecs_iter_t *it) { }
+
+void Stats_get_worker_stats_w_threads(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .name = "MtSys" }),
+        .phase = EcsOnUpdate,
+        .query.terms = {{ ecs_id(Position) }},
+        .callback = MtSys,
+        .multi_threaded = true
+    });
+
+    for (int i = 0; i < 100; i ++) {
+        ecs_insert(world, ecs_value(Position, {10, 20}));
+    }
+
+    ecs_set_threads(world, 4);
+
+    ecs_progress(world, 0);
+
+    ecs_worker_stats_t stats = {0};
+    ecs_worker_stats_get(world, &stats);
+    test_int(ecs_vec_count(&stats.threads), 4);
+
+    double total = 0;
+    for (int i = 0; i < 4; i ++) {
+        ecs_thread_stats_t *thread = ecs_vec_get_t(
+            &stats.threads, ecs_thread_stats_t, i);
+        test_assert(thread->systems_ran.counter.value[stats.t] >= 1);
+        total += thread->systems_ran.counter.value[stats.t];
+    }
+
+    test_int(total, ecs_get_world_info(world)->systems_ran_total);
+
+    ecs_set_threads(world, 2);
+
+    ecs_progress(world, 0);
+
+    ecs_worker_stats_get(world, &stats);
+    test_int(ecs_vec_count(&stats.threads), 2);
+
+    ecs_worker_stats_fini(&stats);
+
+    ecs_fini(world);
+}
+
+static void SleepSys(ecs_iter_t *it) {
+    /* Sleep may return early relative to the clock used to measure system
+     * time (e.g. on Windows), so wait until at least 10ms has elapsed. */
+    ecs_time_t start = {0};
+    ecs_time_measure(&start);
+    double elapsed = 0;
+    do {
+        ecs_os_sleep(0, 1000 * 1000);
+        ecs_time_t t = start;
+        elapsed = ecs_time_measure(&t);
+    } while (elapsed < 0.0101);
+}
+
+void Stats_system_time_w_threads(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t sys = ecs_system(world, {
+        .entity = ecs_entity(world, { .name = "SleepSys" }),
+        .phase = EcsOnUpdate,
+        .query.terms = {{ ecs_id(Position) }},
+        .callback = SleepSys,
+        .multi_threaded = true
+    });
+
+    for (int i = 0; i < 100; i ++) {
+        ecs_insert(world, ecs_value(Position, {10, 20}));
+    }
+
+    ecs_set_threads(world, 4);
+    ecs_measure_system_time(world, true);
+
+    ecs_world_stats_t world_stats = {0};
+    ecs_world_stats_get(world, &world_stats);
+
+    ecs_progress(world, 0);
+
+    const ecs_system_t *sys_data = ecs_system_get(world, sys);
+    test_assert(sys_data != NULL);
+    test_assert(sys_data->time_spent >= 0.039);
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    test_assert(info->system_time_total >= 0.0099);
+    test_assert(info->system_time_total < sys_data->time_spent);
+
+    ecs_world_stats_get(world, &world_stats);
+    int32_t t = world_stats.t;
+    test_assert(world_stats.performance.system_cpu_time.counter.value[t] >= 
+        sys_data->time_spent);
+    test_assert(world_stats.performance.system_time.counter.value[t] < 
+        world_stats.performance.system_cpu_time.counter.value[t]);
+
+    ecs_worker_stats_t stats = {0};
+    ecs_worker_stats_get(world, &stats);
+    test_int(ecs_vec_count(&stats.threads), 4);
+    for (int i = 0; i < 4; i ++) {
+        ecs_thread_stats_t *thread = ecs_vec_get_t(
+            &stats.threads, ecs_thread_stats_t, i);
+        test_assert(thread->system_time.counter.value[stats.t] >= 0.0099);
+    }
+
+    ecs_worker_stats_fini(&stats);
+
+    ecs_fini(world);
+}
+
+void Stats_progress_stats_w_threads(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_IMPORT(world, FlecsStats);
+
+    ecs_set_threads(world, 2);
+
+    for (int i = 0; i < 60 * 2; i ++) {
+        ecs_progress(world, 0.016);
+    }
+
+    const EcsWorkerStats *ws = ecs_get_pair(
+        world, EcsWorld, EcsWorkerStats, EcsPeriod1s);
+    test_assert(ws != NULL);
+    test_int(ecs_vec_count(&ws->stats.threads), 2);
+
+    ws = ecs_get_pair(world, EcsWorld, EcsWorkerStats, EcsPeriod1m);
+    test_assert(ws != NULL);
+    test_int(ecs_vec_count(&ws->stats.threads), 2);
+
+    const EcsWorldSummary *summary = ecs_get(world, EcsWorld, EcsWorldSummary);
+    test_assert(summary != NULL);
+    test_int(summary->thread_count, 2);
+    test_assert(summary->system_cpu_time_total > 0);
+
+    ecs_fini(world);
+}

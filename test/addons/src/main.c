@@ -353,6 +353,10 @@ void Stats_get_entity_count(void);
 void Stats_get_pipeline_stats_w_task_system(void);
 void Stats_get_not_alive_entity_count(void);
 void Stats_progress_stats_systems(void);
+void Stats_get_worker_stats(void);
+void Stats_get_worker_stats_w_threads(void);
+void Stats_system_time_w_threads(void);
+void Stats_progress_stats_w_threads(void);
 
 // Testsuite 'Memory'
 void Memory_query_memory_no_cache(void);
@@ -532,6 +536,7 @@ void Rest_script_update_w_body(void);
 void Rest_script_update_new_script(void);
 void Rest_import_rest_after_mini(void);
 void Rest_get_pipeline_stats_after_delete_system(void);
+void Rest_get_worker_stats(void);
 void Rest_request_world_summary_before_monitor_sys_run(void);
 void Rest_escape_backslash(void);
 void Rest_entity_name_w_spaces(void);
@@ -1955,6 +1960,22 @@ bake_test_case Stats_testcases[] = {
     {
         "progress_stats_systems",
         Stats_progress_stats_systems
+    },
+    {
+        "get_worker_stats",
+        Stats_get_worker_stats
+    },
+    {
+        "get_worker_stats_w_threads",
+        Stats_get_worker_stats_w_threads
+    },
+    {
+        "system_time_w_threads",
+        Stats_system_time_w_threads
+    },
+    {
+        "progress_stats_w_threads",
+        Stats_progress_stats_w_threads
     }
 };
 
@@ -2613,6 +2634,10 @@ bake_test_case Rest_testcases[] = {
         Rest_get_pipeline_stats_after_delete_system
     },
     {
+        "get_worker_stats",
+        Rest_get_worker_stats
+    },
+    {
         "request_world_summary_before_monitor_sys_run",
         Rest_request_world_summary_before_monitor_sys_run
     },
@@ -3159,7 +3184,7 @@ static bake_test_suite suites[] = {
         "Stats",
         NULL,
         NULL,
-        12,
+        16,
         Stats_testcases
     },
     {
@@ -3219,7 +3244,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        71,
+        72,
         Rest_testcases
     },
     {

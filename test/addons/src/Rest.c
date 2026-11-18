@@ -2457,3 +2457,35 @@ void Rest_get_stats_wo_stats_import(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_get_worker_stats(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsStats);
+
+    ecs_set_threads(world, 2);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_progress(world, 1.0);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/stats/workers", NULL, &reply));
+    test_int(reply.code, 200);
+
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+    test_assert(reply_str[0] == '[');
+    test_assert(strstr(reply_str, "\"id\":0") != NULL);
+    test_assert(strstr(reply_str, "\"id\":1") != NULL);
+    test_assert(strstr(reply_str, "\"id\":2") == NULL);
+    test_assert(strstr(reply_str, "\"system_time\":") != NULL);
+    test_assert(strstr(reply_str, "\"systems_ran\":") != NULL);
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}

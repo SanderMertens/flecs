@@ -16,6 +16,11 @@ typedef struct ecs_stage_allocators_t {
 #endif
 } ecs_stage_allocators_t;
 
+typedef struct ecs_stage_system_time_t {
+    ecs_ftime_t *dst;
+    ecs_ftime_t time;
+} ecs_stage_system_time_t;
+
 typedef struct ecs_stage_ensure_t {
     ecs_entity_t entity;
     ecs_type_t ids;
@@ -69,6 +74,11 @@ struct ecs_stage_t {
     /* Thread-specific runtime for script execution */
     ecs_script_runtime_t *runtime;
 #endif
+
+    /* Statistics */
+    ecs_ftime_t system_time_total;   /* Time spent running systems on stage */
+    int64_t systems_ran_total;       /* Number of systems run on stage */
+    ecs_vec_t system_time_pending;   /* System time not yet added to systems */
 };
 
 #ifdef FLECS_SCRIPT
@@ -98,6 +108,10 @@ void flecs_stage_merge_post_frame(
 ecs_entity_t flecs_stage_set_system(
     ecs_stage_t *stage,
     ecs_entity_t system);
+
+/* Add time measured on stage to systems. */
+void flecs_stage_flush_system_time(
+    ecs_stage_t *stage);
 
 /* Get allocator from stage/world. */
 ecs_allocator_t* flecs_stage_get_allocator(

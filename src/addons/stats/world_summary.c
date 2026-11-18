@@ -24,6 +24,8 @@ static void flecs_copy_world_summary(
 
     dst->frame_time_frame = (double)info->frame_time_total - dst->frame_time_total;
     dst->system_time_frame = (double)info->system_time_total - dst->system_time_total;
+    double system_cpu_time_total = flecs_stats_system_cpu_time(world);
+    dst->system_cpu_time_frame = system_cpu_time_total - dst->system_cpu_time_total;
     dst->merge_time_frame = (double)info->merge_time_total - dst->merge_time_total;
 
     dst->merge_count_frame = info->merge_count_total - dst->merge_count;
@@ -47,6 +49,7 @@ static void flecs_copy_world_summary(
 
     dst->frame_time_total = (double)info->frame_time_total;
     dst->system_time_total = (double)info->system_time_total;
+    dst->system_cpu_time_total = system_cpu_time_total;
     dst->merge_time_total = (double)info->merge_time_total;
 
     dst->entity_count = flecs_entities_count(world);
@@ -60,6 +63,7 @@ static void flecs_copy_world_summary(
     dst->tag_count = info->tag_id_count;
     dst->component_count = info->component_id_count;
     dst->pair_count = info->pair_id_count;
+    dst->thread_count = world->stage_count;
 
     dst->simulation_time += (double)info->delta_time;
 
@@ -107,6 +111,7 @@ void FlecsWorldSummaryImport(
             /* Totals */
             { .name = "frame_time_total", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds },
             { .name = "system_time_total", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
+            { .name = "system_cpu_time_total", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
             { .name = "merge_time_total", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
 
             { .name = "entity_count", .type = ecs_id(ecs_i64_t) },
@@ -125,6 +130,7 @@ void FlecsWorldSummaryImport(
             /* Per frame */
             { .name = "frame_time_frame", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
             { .name = "system_time_frame", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
+            { .name = "system_cpu_time_frame", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
             { .name = "merge_time_frame", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
 
             { .name = "merge_count_frame", .type = ecs_id(ecs_i64_t) },
@@ -132,6 +138,8 @@ void FlecsWorldSummaryImport(
             { .name = "observers_ran_frame", .type = ecs_id(ecs_i64_t) },
             { .name = "queries_ran_frame", .type = ecs_id(ecs_i64_t) },
             { .name = "command_count_frame", .type = ecs_id(ecs_i64_t) },
+
+            { .name = "thread_count", .type = ecs_id(ecs_i32_t) },
 
             { .name = "simulation_time", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds },
             { .name = "uptime", .type = ecs_id(ecs_u32_t), .unit = EcsSeconds },

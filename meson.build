@@ -47,6 +47,7 @@ flecs_src = files(
     'src/addons/stats/pipeline_monitor.c',
     'src/addons/stats/stats.c',
     'src/addons/stats/system_monitor.c',
+    'src/addons/stats/worker_monitor.c',
     'src/addons/stats/world_monitor.c',
     'src/addons/stats/world_summary.c',
     'src/addons/log.c',
