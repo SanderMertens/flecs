@@ -5620,3 +5620,89 @@ void QueryBuilder_term_ref_flags_preserve_id(void) {
     e.add<Tag>();
     test_true(q.is_true());
 }
+
+void QueryBuilder_build_w_func(void) {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder<Position>()
+        .build([](flecs::query_builder<Position>& b) {
+            b.cache_kind(cache_kind);
+            b.with<Velocity>();
+        });
+
+    test_int(q.field_count(), 2);
+
+    auto e1 = ecs.entity().add<Position>().add<Velocity>();
+    ecs.entity().add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Position& p) {
+        count ++;
+        test_assert(e == e1);
+    });
+
+    test_int(count, 1);
+}
+
+void QueryBuilder_build_w_func_auto_param(void) {
+    flecs::world ecs;
+
+    flecs::query<Position> q = ecs.query_builder<Position>()
+        .build([](auto& b) {
+            b.cache_kind(cache_kind);
+            b.template with<Velocity>().optional();
+            b.template with<Mass>().optional();
+        });
+
+    test_int(q.field_count(), 3);
+
+    auto e1 = ecs.entity().add<Position>().add<Velocity>();
+    auto e2 = ecs.entity().add<Position>().add<Mass>();
+    auto e3 = ecs.entity().add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::iter& it, size_t i, Position& p) {
+        flecs::entity e = it.entity(i);
+        if (e == e1) {
+            test_bool(it.is_set(1), true);
+            test_bool(it.is_set(2), false);
+        } else if (e == e2) {
+            test_bool(it.is_set(1), false);
+            test_bool(it.is_set(2), true);
+        } else if (e == e3) {
+            test_bool(it.is_set(1), false);
+            test_bool(it.is_set(2), false);
+        } else {
+            test_assert(false);
+        }
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+
+void QueryBuilder_build_w_func_untyped(void) {
+    flecs::world ecs;
+
+    flecs::entity tag = ecs.entity();
+
+    flecs::query<> q = ecs.query_builder()
+        .build([&](flecs::query_builder<>& b) {
+            b.cache_kind(cache_kind);
+            b.with(tag);
+            b.without<Position>();
+        });
+
+    test_int(q.field_count(), 2);
+
+    auto e1 = ecs.entity().add(tag);
+    ecs.entity().add(tag).add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+
+    test_int(count, 1);
+}
