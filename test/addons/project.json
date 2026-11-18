@@ -381,9 +381,10 @@
                 "get_pipeline_stats_w_task_system",
                 "get_not_alive_entity_count",
                 "progress_stats_systems",
-                "get_worker_stats",
-                "get_worker_stats_w_threads",
-                "system_time_w_threads",
+                "system_time_spent_w_threads",
+                "system_time_spent_single_threaded_w_threads",
+                "system_time_spent_reset_each_frame",
+                "system_time_spent_change_threads",
                 "progress_stats_w_threads"
             ]
         }, {
@@ -586,7 +587,6 @@
                 "script_update_new_script",
                 "import_rest_after_mini",
                 "get_pipeline_stats_after_delete_system",
-                "get_worker_stats",
                 "request_world_summary_before_monitor_sys_run",
                 "escape_backslash",
                 "entity_name_w_spaces",

@@ -3888,11 +3888,6 @@ typedef struct ecs_stage_allocators_t {
 #endif
 } ecs_stage_allocators_t;
 
-typedef struct ecs_stage_system_time_t {
-    ecs_ftime_t *dst;
-    ecs_ftime_t time;
-} ecs_stage_system_time_t;
-
 typedef struct ecs_stage_ensure_t {
     ecs_entity_t entity;
     ecs_type_t ids;
@@ -3946,11 +3941,6 @@ struct ecs_stage_t {
     /* Thread-specific runtime for script execution */
     ecs_script_runtime_t *runtime;
 #endif
-
-    /* Statistics */
-    ecs_ftime_t system_time_total;   /* Time spent running systems on stage */
-    int64_t systems_ran_total;       /* Number of systems run on stage */
-    ecs_vec_t system_time_pending;   /* System time not yet added to systems */
 };
 
 #ifdef FLECS_SCRIPT
@@ -3980,10 +3970,6 @@ void flecs_stage_merge_post_frame(
 ecs_entity_t flecs_stage_set_system(
     ecs_stage_t *stage,
     ecs_entity_t system);
-
-/* Add time measured on stage to systems. */
-void flecs_stage_flush_system_time(
-    ecs_stage_t *stage);
 
 /* Get allocator from stage/world. */
 ecs_allocator_t* flecs_stage_get_allocator(
@@ -20178,7 +20164,6 @@ static void flecs_stage_merge(
     ecs_log_push_3();
 
     if (is_stage) {
-        flecs_stage_flush_system_time(stage);
         flecs_commands_flush(world, stage);
     } else {
         /* Merge all stages */
@@ -20186,7 +20171,6 @@ static void flecs_stage_merge(
         for (i = 0; i < count; i ++) {
             ecs_stage_t *s = (ecs_stage_t*)ecs_get_stage(world, i);
             flecs_poly_assert(s, ecs_stage_t);
-            flecs_stage_flush_system_time(s);
             flecs_commands_flush(world, s);
         }
     }
@@ -20213,19 +20197,6 @@ void flecs_stage_merge_post_frame(
     }
 
     ecs_vec_clear(&stage->post_frame_actions);
-}
-
-void flecs_stage_flush_system_time(
-    ecs_stage_t *stage)
-{
-    int32_t i, count = ecs_vec_count(&stage->system_time_pending);
-    ecs_stage_system_time_t *elems = ecs_vec_first(
-        &stage->system_time_pending);
-    for (i = 0; i < count; i ++) {
-        elems[i].dst[0] += elems[i].time;
-    }
-
-    ecs_vec_clear(&stage->system_time_pending);
 }
 
 ecs_entity_t flecs_stage_set_system(
@@ -20258,7 +20229,6 @@ static ecs_stage_t* flecs_stage_new(
 
     ecs_allocator_t *a = &stage->allocator;
     ecs_vec_init_t(a, &stage->post_frame_actions, ecs_action_elem_t, 0);
-    ecs_vec_init_t(a, &stage->system_time_pending, ecs_stage_system_time_t, 0);
 
     flecs_commands_init(stage, &stage->cmd_root);
     stage->cmd = &stage->cmd_root;
@@ -20278,7 +20248,6 @@ static void flecs_stage_free(
     ecs_allocator_t *a = &stage->allocator;
     
     ecs_vec_fini_t(a, &stage->post_frame_actions, ecs_action_elem_t);
-    ecs_vec_fini_t(a, &stage->system_time_pending, ecs_stage_system_time_t);
     ecs_vec_fini(NULL, &stage->variables, 0);
     ecs_vec_fini(NULL, &stage->operations, 0);
 
@@ -29546,8 +29515,7 @@ static void flecs_world_stats_to_json(
 
     ECS_GAUGE_APPEND(reply, stats, performance.fps, "Frames per second");
     ECS_COUNTER_APPEND(reply, stats, performance.frame_time, "Time spent in frame");
-    ECS_COUNTER_APPEND(reply, stats, performance.system_time, "Wall clock time spent on running systems in frame");
-    ECS_COUNTER_APPEND(reply, stats, performance.system_cpu_time, "Time spent on running systems in frame, summed over all threads");
+    ECS_COUNTER_APPEND(reply, stats, performance.system_time, "Time spent on running systems in frame");
     ECS_COUNTER_APPEND(reply, stats, performance.emit_time, "Time spent on notifying observers in frame");
     ECS_COUNTER_APPEND(reply, stats, performance.merge_time, "Time spent on merging commands in frame");
     ECS_COUNTER_APPEND(reply, stats, performance.rematch_time, "Time spent on revalidating query caches in frame");
@@ -29609,34 +29577,6 @@ static void flecs_world_stats_to_json(
     ECS_COUNTER_APPEND(reply, stats, http.busy_count, "Dropped requests due to full send queue (503)");
 
     ecs_strbuf_list_pop(reply, "}");
-}
-
-static void flecs_worker_stats_to_json(
-    ecs_strbuf_t *reply,
-    const EcsWorkerStats *monitor_stats)
-{
-    ecs_strbuf_list_push(reply, "[", ",");
-
-    if (monitor_stats) {
-        const ecs_worker_stats_t *stats = &monitor_stats->stats;
-        int32_t i, count = ecs_vec_count(&stats->threads);
-        const ecs_thread_stats_t *threads = ecs_vec_first_t(
-            &stats->threads, ecs_thread_stats_t);
-        for (i = 0; i < count; i ++) {
-            const ecs_thread_stats_t *thread = &threads[i];
-            ecs_strbuf_list_next(reply);
-            ecs_strbuf_list_push(reply, "{", ",");
-            ecs_strbuf_list_appendlit(reply, "\"id\":");
-            ecs_strbuf_appendint(reply, i);
-            ECS_COUNTER_APPEND_T(reply, thread, system_time, stats->t, 
-                "Time spent on running systems on thread");
-            ECS_COUNTER_APPEND_T(reply, thread, systems_ran, stats->t, 
-                "Systems ran on thread");
-            ecs_strbuf_list_pop(reply, "}");
-        }
-    }
-
-    ecs_strbuf_list_pop(reply, "]");
 }
 
 static void flecs_system_stats_to_json(
@@ -29817,12 +29757,6 @@ static bool flecs_rest_get_stats(
 
     } else if (!ecs_os_strcmp(category, "pipeline")) {
         flecs_pipeline_stats_to_json(world, req, reply, period);
-        return true;
-
-    } else if (!ecs_os_strcmp(category, "workers")) {
-        const EcsWorkerStats *stats = ecs_get_pair(world, EcsWorld, 
-            EcsWorkerStats, period);
-        flecs_worker_stats_to_json(&reply->body, stats);
         return true;
 
     } else {
@@ -31050,6 +30984,10 @@ ecs_entity_t flecs_run_system(
     int32_t stage_count,
     ecs_ftime_t delta_time,
     void *param);
+
+void flecs_system_reset_time_spent(
+    const ecs_world_t *world,
+    ecs_system_t *system_data);
 
 #endif
 
@@ -65151,14 +65089,8 @@ int32_t flecs_run_pipeline_ops(
     ecs_assert(!stage_index || op->multi_threaded, ECS_INTERNAL_ERROR, NULL);
 
     ecs_system_t **systems = ecs_vec_first_t(&pq->systems, ecs_system_t*);
-    int32_t start = i, end = op->offset + op->count;
+    int32_t end = op->offset + op->count;
     ecs_stage_t *s = op->immediate ? NULL : stage;
-
-    ecs_time_t st = { 0 };
-    bool measure_time = world->flags & EcsWorldMeasureSystemTime;
-    if (measure_time) {
-        ecs_time_measure(&st);
-    }
 
     for (; i < end; i++) {
         ecs_system_t* sys = systems[i];
@@ -65172,13 +65104,9 @@ int32_t flecs_run_pipeline_ops(
 
         flecs_run_system(world, s, sys->query->entity, sys, stage_index,
             stage_count, delta_time, NULL);
-    }
 
-    if (measure_time) {
-        stage->system_time_total += (ecs_ftime_t)ecs_time_measure(&st);
+        ecs_os_linc(&world->info.systems_ran_total);
     }
-
-    stage->systems_ran_total += i - start;
 
     return i - 1;
 }
@@ -65206,6 +65134,12 @@ void flecs_run_pipeline(
 
     // Update the pipeline before waking the workers.
     flecs_pipeline_update(world, pq, true);
+
+    int32_t sys_i, sys_count = ecs_vec_count(&pq->systems);
+    ecs_system_t **systems = ecs_vec_first_t(&pq->systems, ecs_system_t*);
+    for (sys_i = 0; sys_i < sys_count; sys_i ++) {
+        flecs_system_reset_time_spent(world, systems[sys_i]);
+    }
 
     // If there are no operations to execute in the pipeline bail early,
     // no need to wake the workers since they have nothing to do.
@@ -65239,16 +65173,12 @@ void flecs_run_pipeline(
             ecs_time_measure(&st);
         }
 
-        const int32_t start = pq->cur_i;
         const int32_t i = flecs_run_pipeline_ops(
             world, stage, stage_index, stage_count, delta_time);
 
         if (op_multi_threaded) {
             flecs_wait_for_sync(world);
         }
-
-        world->info.systems_ran_total += (i + 1 - start) * 
-            (op_multi_threaded ? stage_count : 1);
 
         if (measure_time) {
             /* Don't include merge time in system time */
@@ -75972,9 +75902,6 @@ typedef struct {
     bool is_pointer;
 } ecs_stats_api_t;
 
-double flecs_stats_system_cpu_time(
-    const ecs_world_t *world);
-
 void flecs_stats_api_import(
     ecs_world_t *world,
     ecs_stats_api_t *api);
@@ -75989,9 +75916,6 @@ void FlecsSystemMonitorImport(
     ecs_world_t *world);
 
 void FlecsPipelineMonitorImport(
-    ecs_world_t *world);
-
-void FlecsWorkerMonitorImport(
     ecs_world_t *world);
 
 void flecs_stats_memory_register_reflection(
@@ -77028,19 +76952,6 @@ static void flecs_stats_memory_get(
             }
         }
     }
-
-    for (p = 0; p < period_count; p ++) {
-        ecs_iter_t it = ecs_each_id(world, 
-            ecs_pair_t(EcsWorkerStats, periods[p]));
-        while (ecs_each_next(&it)) {
-            EcsWorkerStats *ws = ecs_field(&it, EcsWorkerStats, 0);
-            int32_t i, count = it.count;
-            for (i = 0; i < count; i ++) {
-                result->bytes_stats += ecs_vec_size(&ws[i].stats.threads) * 
-                    ECS_SIZEOF(ecs_thread_stats_t);
-            }
-        }
-    }
 }
 
 #ifdef FLECS_REST
@@ -77134,8 +77045,6 @@ ecs_misc_memory_t ecs_misc_memory_get(
     for (int32_t i = 0; i < stage_count; i++) {
         result.bytes_world += ecs_vec_size(&stages[i]->post_frame_actions) *
             ECS_SIZEOF(ecs_action_elem_t);
-        result.bytes_world += ecs_vec_size(&stages[i]->system_time_pending) *
-            ECS_SIZEOF(ecs_stage_system_time_t);
     }
     
     result.bytes_observers = flecs_observers_memory_get(world);
@@ -77801,7 +77710,6 @@ void FlecsStatsImport(
     FlecsWorldMonitorImport(world);
     FlecsSystemMonitorImport(world);
     FlecsPipelineMonitorImport(world);
-    FlecsWorkerMonitorImport(world);
     
     flecs_stats_memory_register_reflection(world);
 
@@ -78150,17 +78058,6 @@ static void flecs_stats_copy_last(
     }
 }
 
-double flecs_stats_system_cpu_time(
-    const ecs_world_t *world)
-{
-    double result = 0;
-    int32_t i, count = world->stage_count;
-    for (i = 0; i < count; i ++) {
-        result += (double)world->stages[i]->system_time_total;
-    }
-    return result;
-}
-
 void ecs_world_stats_get(
     const ecs_world_t *world,
     ecs_world_stats_t *s)
@@ -78186,7 +78083,6 @@ void ecs_world_stats_get(
     ECS_COUNTER_RECORD(&s->performance.world_time, t, world->info.world_time_total);
     ECS_COUNTER_RECORD(&s->performance.frame_time, t, world->info.frame_time_total);
     ECS_COUNTER_RECORD(&s->performance.system_time, t, world->info.system_time_total);
-    ECS_COUNTER_RECORD(&s->performance.system_cpu_time, t, flecs_stats_system_cpu_time(world));
     ECS_COUNTER_RECORD(&s->performance.emit_time, t, world->info.emit_time_total);
     ECS_COUNTER_RECORD(&s->performance.merge_time, t, world->info.merge_time_total);
     ECS_COUNTER_RECORD(&s->performance.rematch_time, t, world->info.rematch_time_total);
@@ -78294,131 +78190,6 @@ void ecs_world_stats_copy_last(
         ECS_METRIC_FIRST(src), dst->t, t_next(src->t));
 }
 
-static void flecs_worker_stats_set_count(
-    ecs_worker_stats_t *s,
-    int32_t count)
-{
-    ecs_vec_init_if_t(&s->threads, ecs_thread_stats_t);
-    if (count > ecs_vec_count(&s->threads)) {
-        ecs_vec_set_min_count_zeromem_t(
-            NULL, &s->threads, ecs_thread_stats_t, count);
-    } else {
-        ecs_vec_set_count_t(NULL, &s->threads, ecs_thread_stats_t, count);
-    }
-}
-
-void ecs_worker_stats_get(
-    const ecs_world_t *world,
-    ecs_worker_stats_t *s)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(s != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    world = ecs_get_world(world);
-
-    int32_t t = s->t = t_next(s->t);
-    int32_t i, count = world->stage_count;
-    flecs_worker_stats_set_count(s, count);
-
-    ecs_thread_stats_t *threads = ecs_vec_first_t(
-        &s->threads, ecs_thread_stats_t);
-    for (i = 0; i < count; i ++) {
-        ecs_stage_t *stage = world->stages[i];
-        ECS_COUNTER_RECORD(&threads[i].system_time, t, stage->system_time_total);
-        ECS_COUNTER_RECORD(&threads[i].systems_ran, t, stage->systems_ran_total);
-    }
-
-error:
-    return;
-}
-
-void ecs_worker_stats_fini(
-    ecs_worker_stats_t *stats)
-{
-    ecs_vec_fini_t(NULL, &stats->threads, ecs_thread_stats_t);
-}
-
-void ecs_worker_stats_reduce(
-    ecs_worker_stats_t *dst,
-    const ecs_worker_stats_t *src)
-{
-    int32_t i, count = ecs_vec_count(&src->threads);
-    flecs_worker_stats_set_count(dst, count);
-    ecs_thread_stats_t *dst_threads = ecs_vec_first_t(
-        &dst->threads, ecs_thread_stats_t);
-    ecs_thread_stats_t *src_threads = ecs_vec_first_t(
-        &src->threads, ecs_thread_stats_t);
-
-    dst->t = t_next(dst->t);
-
-    for (i = 0; i < count; i ++) {
-        ecs_thread_stats_t *dst_el = &dst_threads[i];
-        ecs_thread_stats_t *src_el = &src_threads[i];
-        flecs_stats_reduce(ECS_METRIC_FIRST(dst_el), ECS_METRIC_LAST(dst_el),
-            ECS_METRIC_FIRST(src_el), dst->t, src->t);
-    }
-}
-
-void ecs_worker_stats_reduce_last(
-    ecs_worker_stats_t *dst,
-    const ecs_worker_stats_t *src,
-    int32_t count)
-{
-    int32_t i, thread_count = ecs_vec_count(&src->threads);
-    if (ecs_vec_count(&dst->threads) < thread_count) {
-        thread_count = ecs_vec_count(&dst->threads);
-    }
-
-    ecs_thread_stats_t *dst_threads = ecs_vec_first_t(
-        &dst->threads, ecs_thread_stats_t);
-    ecs_thread_stats_t *src_threads = ecs_vec_first_t(
-        &src->threads, ecs_thread_stats_t);
-
-    dst->t = t_prev(dst->t);
-
-    for (i = 0; i < thread_count; i ++) {
-        ecs_thread_stats_t *dst_el = &dst_threads[i];
-        ecs_thread_stats_t *src_el = &src_threads[i];
-        flecs_stats_reduce_last(ECS_METRIC_FIRST(dst_el), ECS_METRIC_LAST(dst_el),
-            ECS_METRIC_FIRST(src_el), dst->t, src->t, count);
-    }
-}
-
-void ecs_worker_stats_repeat_last(
-    ecs_worker_stats_t *stats)
-{
-    int32_t i, count = ecs_vec_count(&stats->threads);
-    ecs_thread_stats_t *threads = ecs_vec_first_t(
-        &stats->threads, ecs_thread_stats_t);
-
-    stats->t = t_next(stats->t);
-
-    for (i = 0; i < count; i ++) {
-        ecs_thread_stats_t *el = &threads[i];
-        flecs_stats_repeat_last(ECS_METRIC_FIRST(el), ECS_METRIC_LAST(el),
-            stats->t);
-    }
-}
-
-void ecs_worker_stats_copy_last(
-    ecs_worker_stats_t *dst,
-    const ecs_worker_stats_t *src)
-{
-    int32_t i, count = ecs_vec_count(&src->threads);
-    flecs_worker_stats_set_count(dst, count);
-    ecs_thread_stats_t *dst_threads = ecs_vec_first_t(
-        &dst->threads, ecs_thread_stats_t);
-    ecs_thread_stats_t *src_threads = ecs_vec_first_t(
-        &src->threads, ecs_thread_stats_t);
-
-    for (i = 0; i < count; i ++) {
-        ecs_thread_stats_t *dst_el = &dst_threads[i];
-        ecs_thread_stats_t *src_el = &src_threads[i];
-        flecs_stats_copy_last(ECS_METRIC_FIRST(dst_el), ECS_METRIC_LAST(dst_el),
-            ECS_METRIC_FIRST(src_el), dst->t, t_next(src->t));
-    }
-}
-
 void ecs_query_stats_get(
     const ecs_world_t *world,
     const ecs_query_t *query,
@@ -78491,7 +78262,28 @@ bool ecs_system_stats_get(
     ecs_query_stats_get(world, ptr->query, &s->query);
     int32_t t = s->query.t;
 
-    ECS_COUNTER_RECORD(&s->time_spent, t, ptr->time_spent);
+    const ecs_ftime_t *time_spent = ecs_vec_first_t(
+        &ptr->time_spent, ecs_ftime_t);
+    int32_t i, count = ecs_vec_count(&ptr->time_spent);
+    if (!ptr->multi_threaded && count > 1) {
+        count = 1;
+    }
+
+    ecs_float_t min = 0, max = 0, sum = 0;
+    for (i = 0; i < count; i ++) {
+        ecs_float_t value = (ecs_float_t)time_spent[i];
+        if (!i || value < min) {
+            min = value;
+        }
+        if (value > max) {
+            max = value;
+        }
+        sum += value;
+    }
+
+    s->time_spent.gauge.avg[t] = count ? sum / (ecs_float_t)count : 0;
+    s->time_spent.gauge.min[t] = min;
+    s->time_spent.gauge.max[t] = max;
 
     s->task = !(ptr->query->flags & EcsQueryMatchThis);
 
@@ -78775,7 +78567,6 @@ void ecs_world_stats_log(
     flecs_gauge_print("actual FPS", t, &s->performance.fps);
     flecs_counter_print("frame time", t, &s->performance.frame_time);
     flecs_counter_print("system time", t, &s->performance.system_time);
-    flecs_counter_print("system cpu time", t, &s->performance.system_cpu_time);
     flecs_counter_print("merge time", t, &s->performance.merge_time);
     flecs_counter_print("simulation time elapsed", t, &s->performance.world_time);
     ecs_trace("");
@@ -78926,110 +78717,6 @@ void FlecsSystemMonitorImport(
 
 #ifdef FLECS_STATS
 
-ECS_COMPONENT_DECLARE(EcsWorkerStats);
-
-static ECS_CTOR(EcsWorkerStats, ptr, {
-    ecs_os_zeromem(ptr);
-})
-
-static ECS_COPY(EcsWorkerStats, dst, src, {
-    (void)dst;
-    (void)src;
-    ecs_abort(ECS_INVALID_OPERATION, "cannot copy worker stats component");
-})
-
-static ECS_MOVE(EcsWorkerStats, dst, src, {
-    ecs_worker_stats_fini(&dst->stats);
-    ecs_os_memcpy_t(dst, src, EcsWorkerStats);
-    ecs_os_zeromem(src);
-})
-
-static ECS_DTOR(EcsWorkerStats, ptr, {
-    ecs_worker_stats_fini(&ptr->stats);
-})
-
-static void flecs_worker_stats_get(
-    ecs_world_t *world, 
-    ecs_entity_t res, 
-    void *stats)
-{
-    (void)res;
-    ecs_worker_stats_get(world, stats);
-}
-
-static void flecs_worker_stats_set_t(
-    void *stats, int32_t t)
-{
-    ecs_assert(t >= 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(t < ECS_STAT_WINDOW, ECS_INTERNAL_ERROR, NULL);
-    ((ecs_worker_stats_t*)stats)->t = t;
-}
-
-static void flecs_worker_stats_copy_last(
-    void *stats, 
-    void *src) 
-{
-    ecs_worker_stats_copy_last(stats, src);
-}
-
-static void flecs_worker_stats_reduce(
-    void *stats, 
-    void *src) 
-{
-    ecs_worker_stats_reduce(stats, src);
-}
-
-static void flecs_worker_stats_reduce_last(
-    void *stats, 
-    void *last, 
-    int32_t reduce_count) 
-{
-    ecs_worker_stats_reduce_last(stats, last, reduce_count);
-}
-
-static void flecs_worker_stats_repeat_last(
-    void* stats) 
-{
-    ecs_worker_stats_repeat_last(stats);
-}
-
-static void flecs_worker_stats_fini(
-    void *stats) 
-{
-    ecs_worker_stats_fini(stats);
-}
-
-void FlecsWorkerMonitorImport(
-    ecs_world_t *world)
-{
-    ECS_COMPONENT_DEFINE(world, EcsWorkerStats);
-
-    ecs_set_hooks(world, EcsWorkerStats, {
-        .ctor = ecs_ctor(EcsWorkerStats),
-        .copy = ecs_copy(EcsWorkerStats),
-        .move = ecs_move(EcsWorkerStats),
-        .dtor = ecs_dtor(EcsWorkerStats)
-    });
-
-    ecs_stats_api_t api = {
-        .copy_last = flecs_worker_stats_copy_last,
-        .get = flecs_worker_stats_get,
-        .reduce = flecs_worker_stats_reduce,
-        .reduce_last = flecs_worker_stats_reduce_last,
-        .repeat_last = flecs_worker_stats_repeat_last,
-        .set_t = flecs_worker_stats_set_t,
-        .fini = flecs_worker_stats_fini,
-        .stats_size = ECS_SIZEOF(ecs_worker_stats_t),
-        .monitor_component_id = ecs_id(EcsWorkerStats)
-    };
-
-    flecs_stats_api_import(world, &api);
-}
-
-#endif
-
-#ifdef FLECS_STATS
-
 ECS_COMPONENT_DECLARE(EcsWorldStats);
 
 static ECS_CTOR(EcsWorldStats, ptr, {
@@ -79145,8 +78832,6 @@ static void flecs_copy_world_summary(
 
     dst->frame_time_frame = (double)info->frame_time_total - dst->frame_time_total;
     dst->system_time_frame = (double)info->system_time_total - dst->system_time_total;
-    double system_cpu_time_total = flecs_stats_system_cpu_time(world);
-    dst->system_cpu_time_frame = system_cpu_time_total - dst->system_cpu_time_total;
     dst->merge_time_frame = (double)info->merge_time_total - dst->merge_time_total;
 
     dst->merge_count_frame = info->merge_count_total - dst->merge_count;
@@ -79170,7 +78855,6 @@ static void flecs_copy_world_summary(
 
     dst->frame_time_total = (double)info->frame_time_total;
     dst->system_time_total = (double)info->system_time_total;
-    dst->system_cpu_time_total = system_cpu_time_total;
     dst->merge_time_total = (double)info->merge_time_total;
 
     dst->entity_count = flecs_entities_count(world);
@@ -79184,7 +78868,6 @@ static void flecs_copy_world_summary(
     dst->tag_count = info->tag_id_count;
     dst->component_count = info->component_id_count;
     dst->pair_count = info->pair_id_count;
-    dst->thread_count = world->stage_count;
 
     dst->simulation_time += (double)info->delta_time;
 
@@ -79232,7 +78915,6 @@ void FlecsWorldSummaryImport(
             /* Totals */
             { .name = "frame_time_total", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds },
             { .name = "system_time_total", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
-            { .name = "system_cpu_time_total", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
             { .name = "merge_time_total", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
 
             { .name = "entity_count", .type = ecs_id(ecs_i64_t) },
@@ -79251,7 +78933,6 @@ void FlecsWorldSummaryImport(
             /* Per frame */
             { .name = "frame_time_frame", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
             { .name = "system_time_frame", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
-            { .name = "system_cpu_time_frame", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
             { .name = "merge_time_frame", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
 
             { .name = "merge_count_frame", .type = ecs_id(ecs_i64_t) },
@@ -79259,8 +78940,6 @@ void FlecsWorldSummaryImport(
             { .name = "observers_ran_frame", .type = ecs_id(ecs_i64_t) },
             { .name = "queries_ran_frame", .type = ecs_id(ecs_i64_t) },
             { .name = "command_count_frame", .type = ecs_id(ecs_i64_t) },
-
-            { .name = "thread_count", .type = ecs_id(ecs_i32_t) },
 
             { .name = "simulation_time", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds },
             { .name = "uptime", .type = ecs_id(ecs_u32_t), .unit = EcsSeconds },
@@ -79448,20 +79127,35 @@ ecs_entity_t flecs_run_system(
 
     if (measure_time) {
         ecs_ftime_t time_spent = (ecs_ftime_t)ecs_time_measure(&time_start);
-        if (stage->id > 0 && ECS_BIT_IS_SET(world->flags, EcsWorldReadonly)) {
-            ecs_stage_system_time_t *elem = ecs_vec_append_t(
-                &stage->allocator, &stage->system_time_pending, 
-                ecs_stage_system_time_t);
-            elem->dst = &system_data->time_spent;
-            elem->time = time_spent;
-        } else {
-            system_data->time_spent += time_spent;
+        int32_t stage_id = stage->id;
+        if (stage_id >= 0) {
+            if (stage_id >= ecs_vec_count(&system_data->time_spent) &&
+                !ECS_BIT_IS_SET(world->flags, EcsWorldReadonly))
+            {
+                ecs_vec_set_min_count_zeromem_t(NULL, 
+                    &system_data->time_spent, ecs_ftime_t, stage_id + 1);
+            }
+
+            if (stage_id < ecs_vec_count(&system_data->time_spent)) {
+                ecs_vec_get_t(&system_data->time_spent, ecs_ftime_t, 
+                    stage_id)[0] += time_spent;
+            }
         }
     }
 
     ecs_os_perf_trace_pop(system_data->name);
 
     return it->interrupted_by;
+}
+
+void flecs_system_reset_time_spent(
+    const ecs_world_t *world,
+    ecs_system_t *system_data)
+{
+    int32_t count = world->stage_count;
+    ecs_vec_set_count_t(NULL, &system_data->time_spent, ecs_ftime_t, count);
+    ecs_os_memset_n(ecs_vec_first(&system_data->time_spent), 0, 
+        ecs_ftime_t, count);
 }
 
 /* -- Public API -- */
@@ -79527,6 +79221,8 @@ static void flecs_system_fini(ecs_system_t *sys) {
 
     /* Safe cast, type owns name */
     ecs_os_free(ECS_CONST_CAST(char*, sys->name));
+
+    ecs_vec_fini_t(NULL, &sys->time_spent, ecs_ftime_t);
 
     flecs_poly_free(sys, ecs_system_t);
 }
@@ -79643,6 +79339,9 @@ ecs_entity_t ecs_system_init(
     system->immediate = desc->immediate;
 
     system->name = ecs_get_path(world, entity);
+
+    ecs_vec_init_t(NULL, &system->time_spent, ecs_ftime_t, 0);
+    flecs_system_reset_time_spent(world, system);
 
     if (flecs_system_init_timer(world, entity, desc)) {
         ecs_delete(world, entity);

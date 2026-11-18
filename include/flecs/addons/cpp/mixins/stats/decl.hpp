@@ -21,9 +21,6 @@ using WorldStats = EcsWorldStats;
 /** Component that stores system/pipeline statistics. */
 using PipelineStats = EcsPipelineStats;
 
-/** Component that stores worker thread statistics. */
-using WorkerStats = EcsWorkerStats;
-
 /** Component with world summary stats. */
 using WorldSummary = EcsWorldSummary;
 

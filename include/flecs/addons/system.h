@@ -184,8 +184,10 @@ typedef struct ecs_system_t {
     /** Callback to free run ctx. */
     ecs_ctx_free_t run_ctx_free;
 
-    /** Time spent on running the system. */
-    ecs_ftime_t time_spent;
+    /** Time spent on running the system in the last frame, per thread. The
+     * vector contains an ecs_ftime_t element for each stage, where the element
+     * index is the stage id. */
+    ecs_vec_t time_spent;
 
     /** Time passed since the last invocation. */
     ecs_ftime_t time_passed;
