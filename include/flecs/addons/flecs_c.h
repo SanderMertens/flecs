@@ -400,6 +400,10 @@
 #define ecs_ref_get(world, ref, T)\
     (ECS_CAST(T*, ecs_ref_get_id(world, ref, ecs_id(T))))
 
+/** Signal that the component of a ref has been modified. */
+#define ecs_ref_modified(world, ref, T)\
+    ecs_ref_modified_id(world, ref, ecs_id(T))
+
 /** @} */
 
 /**

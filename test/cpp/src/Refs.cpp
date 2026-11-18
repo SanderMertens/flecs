@@ -370,3 +370,71 @@ void Refs_ref_world(void) {
     auto w = r.world();
     test_assert(w == world);
 }
+
+void Refs_ref_modified(void) {
+    flecs::world world;
+
+    int invoked = 0;
+    flecs::entity e = world.entity().set<Position>({10, 20});
+
+    world.observer<Position>()
+        .event(flecs::OnSet)
+        .each([&](flecs::entity src, Position& p) {
+            invoked ++;
+            test_assert(src == e);
+            test_int(p.x, 30);
+        });
+
+    flecs::ref<Position> r = e.get_ref<Position>();
+    r->x = 30;
+    test_int(invoked, 0);
+
+    r.modified();
+    test_int(invoked, 1);
+}
+
+void Refs_ref_modified_stage(void) {
+    flecs::world world;
+
+    int invoked = 0;
+    flecs::entity e = world.entity().set<Position>({10, 20});
+
+    world.observer<Position>()
+        .event(flecs::OnSet)
+        .each([&](flecs::entity src, Position& p) {
+            invoked ++;
+            test_assert(src == e);
+            test_int(p.x, 30);
+        });
+
+    flecs::ref<Position> r = e.get_ref<Position>();
+    r->x = 30;
+
+    flecs::world stage = world.get_stage(0);
+    r.modified(stage);
+    test_int(invoked, 0);
+    stage.merge();
+
+    test_int(invoked, 1);
+}
+
+void Refs_untyped_ref_modified(void) {
+    flecs::world world;
+
+    int invoked = 0;
+    flecs::entity e = world.entity().set<Position>({10, 20});
+
+    world.observer<Position>()
+        .event(flecs::OnSet)
+        .each([&](flecs::entity src, Position& p) {
+            invoked ++;
+            test_assert(src == e);
+            test_int(p.x, 30);
+        });
+
+    flecs::untyped_ref r = e.get_ref(world.id<Position>());
+    static_cast<Position*>(r.get())->x = 30;
+
+    r.modified();
+    test_int(invoked, 1);
+}

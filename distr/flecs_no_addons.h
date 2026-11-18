@@ -7673,6 +7673,23 @@ void ecs_ref_update(
     ecs_ref_t *ref,
     ecs_id_t component);
 
+/** Signal that the component of a ref has been modified.
+ * Same as ecs_modified_id(), but uses the data cached by the ref to avoid
+ * looking up the entity and component. The specified component must match the
+ * component with which the ref was created.
+ *
+ * @param world The world.
+ * @param ref The ref.
+ * @param component The component the ref was created with.
+ *
+ * @see ecs_modified_id()
+ */
+FLECS_API
+void ecs_ref_modified_id(
+    ecs_world_t *world,
+    ecs_ref_t *ref,
+    ecs_id_t component);
+
 /** Emplace a component.
  * Emplace is similar to ecs_ensure_id() except that the component constructor
  * is not invoked for the returned pointer, allowing the component to be 
@@ -10646,6 +10663,10 @@ void ecs_table_clear_entities(
 /** Get a component from a ref. */
 #define ecs_ref_get(world, ref, T)\
     (ECS_CAST(T*, ecs_ref_get_id(world, ref, ecs_id(T))))
+
+/** Signal that the component of a ref has been modified. */
+#define ecs_ref_modified(world, ref, T)\
+    ecs_ref_modified_id(world, ref, ecs_id(T))
 
 /** @} */
 
