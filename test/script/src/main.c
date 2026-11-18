@@ -3958,6 +3958,7 @@ void TemplateInheritance_template_in_entity_scope_w_base(void);
 void TemplateInheritance_template_in_entity_scope_w_base_body(void);
 void TemplateInheritance_template_in_kind_entity_scope_w_base(void);
 void TemplateInheritance_template_in_entity_scope_w_two_bases(void);
+void TemplateInheritance_derived_refers_to_base_child(void);
 
 // Testsuite 'TemplateProp'
 void TemplateProp_setup(void);
@@ -20428,6 +20429,10 @@ bake_test_case TemplateInheritance_testcases[] = {
     {
         "template_in_entity_scope_w_two_bases",
         TemplateInheritance_template_in_entity_scope_w_two_bases
+    },
+    {
+        "derived_refers_to_base_child",
+        TemplateInheritance_derived_refers_to_base_child
     }
 };
 
@@ -24287,7 +24292,7 @@ static bake_test_suite suites[] = {
         "TemplateInheritance",
         TemplateInheritance_setup,
         NULL,
-        88,
+        89,
         TemplateInheritance_testcases,
         1,
         TemplateInheritance_params

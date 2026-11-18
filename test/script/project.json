@@ -4082,7 +4082,8 @@
                 "template_in_entity_scope_w_base",
                 "template_in_entity_scope_w_base_body",
                 "template_in_kind_entity_scope_w_base",
-                "template_in_entity_scope_w_two_bases"
+                "template_in_entity_scope_w_two_bases",
+                "derived_refers_to_base_child"
             ]
         }, {
             "id": "TemplateProp",

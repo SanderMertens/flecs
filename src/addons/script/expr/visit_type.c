@@ -2115,8 +2115,12 @@ static int flecs_expr_identifier_visit_type(
         return var_member_result;
     }
 
+    const ecs_script_eval_visitor_t *v = desc->script_visitor;
+    bool base_child = v && flecs_script_template_base_declares(
+        world, v->template, node->value);
+
     /* If unresolved identifiers aren't allowed here, throw error */
-    if (!desc->allow_unresolved_identifiers ||
+    if ((!desc->allow_unresolved_identifiers && !base_child) ||
         flecs_expr_is_skipped_var(script, desc, node->value))
     {
         if (!flecs_expr_unresolved_ref(script, desc,
