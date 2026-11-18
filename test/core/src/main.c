@@ -786,6 +786,8 @@ void Sparse_dont_fragment_tag_w_with_added_after_use(void);
 void Sparse_dont_fragment_pair_w_with_dont_fragment_pair(void);
 void Sparse_dont_fragment_tag_w_with_fragmenting_tag(void);
 void Sparse_dont_fragment_added_to_tag_w_with_fragmenting_tag(void);
+void Sparse_dont_fragment_tag_w_cyclic_with(void);
+void Sparse_dont_fragment_pair_w_cyclic_with(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_convert_storage_childof_observer(void);
@@ -2063,6 +2065,13 @@ void Pairs_with_relation(void);
 void Pairs_2_with_relation(void);
 void Pairs_with_for_existing(void);
 void Pairs_nested_with_relation(void);
+void Pairs_cyclic_with(void);
+void Pairs_cyclic_with_self(void);
+void Pairs_cyclic_with_3(void);
+void Pairs_cyclic_with_relation(void);
+void Pairs_cyclic_with_component(void);
+void Pairs_cyclic_with_deferred(void);
+void Pairs_cyclic_with_w_dont_fragment(void);
 void Pairs_65k_relations(void);
 void Pairs_add_not_alive_relation(void);
 void Pairs_remove_wildcard(void);
@@ -6823,6 +6832,14 @@ bake_test_case Sparse_testcases[] = {
     {
         "dont_fragment_added_to_tag_w_with_fragmenting_tag",
         Sparse_dont_fragment_added_to_tag_w_with_fragmenting_tag
+    },
+    {
+        "dont_fragment_tag_w_cyclic_with",
+        Sparse_dont_fragment_tag_w_cyclic_with
+    },
+    {
+        "dont_fragment_pair_w_cyclic_with",
+        Sparse_dont_fragment_pair_w_cyclic_with
     }
 };
 
@@ -11832,6 +11849,34 @@ bake_test_case Pairs_testcases[] = {
     {
         "nested_with_relation",
         Pairs_nested_with_relation
+    },
+    {
+        "cyclic_with",
+        Pairs_cyclic_with
+    },
+    {
+        "cyclic_with_self",
+        Pairs_cyclic_with_self
+    },
+    {
+        "cyclic_with_3",
+        Pairs_cyclic_with_3
+    },
+    {
+        "cyclic_with_relation",
+        Pairs_cyclic_with_relation
+    },
+    {
+        "cyclic_with_component",
+        Pairs_cyclic_with_component
+    },
+    {
+        "cyclic_with_deferred",
+        Pairs_cyclic_with_deferred
+    },
+    {
+        "cyclic_with_w_dont_fragment",
+        Pairs_cyclic_with_w_dont_fragment
     },
     {
         "65k_relations",
@@ -18673,7 +18718,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        252,
+        254,
         Sparse_testcases,
         1,
         Sparse_params
@@ -18780,7 +18825,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        140,
+        147,
         Pairs_testcases
     },
     {

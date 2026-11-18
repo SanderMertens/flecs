@@ -45147,15 +45147,20 @@ static ecs_flags32_t flecs_table_diff_ids(
     return flags;
 }
 
-static void flecs_add_with_property(
+static void flecs_add_with_property_recursive(
     ecs_world_t *world,
     ecs_component_record_t *cr_with_wildcard,
     ecs_type_t *dst_type,
     ecs_type_t *dont_fragment_type,
+    ecs_type_t *visited,
     ecs_entity_t r,
     ecs_entity_t o)
 {
     r = ecs_get_alive(world, r);
+
+    if (flecs_type_new_with(world, visited, visited, r) == -1) {
+        return;
+    }
 
     /* Check if component/relationship has With pairs, which contain ids
      * that need to be added to the table. */
@@ -45192,10 +45197,24 @@ static void flecs_add_with_property(
                 flecs_type_add(world, dont_fragment_type, a);
             }
 
-            flecs_add_with_property(world, cr_with_wildcard, dst_type,
-                dont_fragment_type, ra, o);
+            flecs_add_with_property_recursive(world, cr_with_wildcard,
+                dst_type, dont_fragment_type, visited, ra, o);
         }
     }
+}
+
+static void flecs_add_with_property(
+    ecs_world_t *world,
+    ecs_component_record_t *cr_with_wildcard,
+    ecs_type_t *dst_type,
+    ecs_type_t *dont_fragment_type,
+    ecs_entity_t r,
+    ecs_entity_t o)
+{
+    ecs_type_t visited = {0};
+    flecs_add_with_property_recursive(world, cr_with_wildcard, dst_type,
+        dont_fragment_type, &visited, r, o);
+    flecs_type_free(world, &visited);
 }
 
 static ecs_flags32_t flecs_table_graph_id_flags(

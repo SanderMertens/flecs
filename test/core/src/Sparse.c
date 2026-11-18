@@ -8208,3 +8208,47 @@ void Sparse_dont_fragment_added_to_tag_w_with_fragmenting_tag(void) {
     test_expect_abort();
     ecs_add_id(world, tag_b, EcsDontFragment);
 }
+
+void Sparse_dont_fragment_tag_w_cyclic_with(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tag_a = ecs_new(world);
+    ecs_add_id(world, tag_a, EcsDontFragment);
+    ecs_entity_t tag_b = ecs_new(world);
+    ecs_add_id(world, tag_b, EcsDontFragment);
+    ecs_add_pair(world, tag_a, EcsWith, tag_b);
+    ecs_add_pair(world, tag_b, EcsWith, tag_a);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, tag_a);
+    test_assert(ecs_has_id(world, e1, tag_a));
+    test_assert(ecs_has_id(world, e1, tag_b));
+
+    ecs_entity_t e2 = ecs_new_w_id(world, tag_b);
+    test_assert(ecs_has_id(world, e2, tag_a));
+    test_assert(ecs_has_id(world, e2, tag_b));
+
+    ecs_fini(world);
+}
+
+void Sparse_dont_fragment_pair_w_cyclic_with(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t rel_a = ecs_new(world);
+    ecs_add_id(world, rel_a, EcsDontFragment);
+    ecs_entity_t rel_b = ecs_new(world);
+    ecs_add_id(world, rel_b, EcsDontFragment);
+    ecs_add_pair(world, rel_a, EcsWith, rel_b);
+    ecs_add_pair(world, rel_b, EcsWith, rel_a);
+
+    ecs_entity_t tgt = ecs_new(world);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_table_t *table = ecs_get_table(world, e);
+
+    ecs_add_pair(world, e, rel_a, tgt);
+    test_assert(ecs_has_pair(world, e, rel_a, tgt));
+    test_assert(ecs_has_pair(world, e, rel_b, tgt));
+    test_assert(ecs_get_table(world, e) == table);
+
+    ecs_fini(world);
+}
