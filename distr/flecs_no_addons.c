@@ -17532,6 +17532,53 @@ error:
     return NULL;
 }
 
+void ecs_ref_modified_id(
+    ecs_world_t *world,
+    ecs_ref_t *ref,
+    ecs_id_t id)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ref != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ref->entity != 0, ECS_INVALID_PARAMETER, "ref not initialized");
+    ecs_check(id != 0, ECS_INVALID_PARAMETER, "ref not initialized");
+#ifdef FLECS_DEBUG
+    ecs_check(id == ref->id, ECS_INVALID_PARAMETER, "id does not match ref");
+#endif
+
+    bool deferred = ecs_is_stage(world);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+
+    if (id < FLECS_HI_COMPONENT_ID) {
+        if (!world->non_trivial_set[id]) {
+            return;
+        }
+    }
+
+    if (flecs_defer_modified(stage, deferred, ref->entity, id)) {
+        return;
+    }
+
+    ecs_ref_update(world, ref, id);
+
+    ecs_check(ref->ptr != NULL, ECS_INVALID_PARAMETER,
+        "invalid call to modified(), entity '%s' does not have component '%s'",
+            flecs_errstr(ecs_get_path(world, ref->entity)),
+            flecs_errstr_2(ecs_id_str(world, id)));
+
+    ecs_record_t *r = flecs_entities_get(world, ref->entity);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_table_t *table = r->table;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    flecs_notify_on_set(
+        world, table, ECS_RECORD_TO_ROW(r->row), id, true, ref->ptr);
+
+    flecs_table_mark_dirty(world, table, id);
+    flecs_commands_end(world, stage);
+error:
+    return;
+}
+
 static int32_t flecs_table_search_relation(
     const ecs_world_t *world,
     const ecs_record_t *record,

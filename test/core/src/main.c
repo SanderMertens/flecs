@@ -1390,6 +1390,15 @@ void Reference_ref_from_ptr_after_add(void);
 void Reference_ref_from_ptr_after_delete(void);
 void Reference_ref_from_ptr_inherited(void);
 void Reference_ref_from_ptr_invalid_ptr(void);
+void Reference_ref_modified(void);
+void Reference_ref_modified_w_on_set_hook(void);
+void Reference_ref_modified_after_add(void);
+void Reference_ref_modified_before_update(void);
+void Reference_ref_modified_deferred(void);
+void Reference_ref_modified_staged(void);
+void Reference_ref_modified_change_detection(void);
+void Reference_ref_modified_sparse(void);
+void Reference_ref_modified_after_remove(void);
 
 // Testsuite 'Delete'
 void Delete_setup(void);
@@ -9183,6 +9192,42 @@ bake_test_case Reference_testcases[] = {
     {
         "ref_from_ptr_invalid_ptr",
         Reference_ref_from_ptr_invalid_ptr
+    },
+    {
+        "ref_modified",
+        Reference_ref_modified
+    },
+    {
+        "ref_modified_w_on_set_hook",
+        Reference_ref_modified_w_on_set_hook
+    },
+    {
+        "ref_modified_after_add",
+        Reference_ref_modified_after_add
+    },
+    {
+        "ref_modified_before_update",
+        Reference_ref_modified_before_update
+    },
+    {
+        "ref_modified_deferred",
+        Reference_ref_modified_deferred
+    },
+    {
+        "ref_modified_staged",
+        Reference_ref_modified_staged
+    },
+    {
+        "ref_modified_change_detection",
+        Reference_ref_modified_change_detection
+    },
+    {
+        "ref_modified_sparse",
+        Reference_ref_modified_sparse
+    },
+    {
+        "ref_modified_after_remove",
+        Reference_ref_modified_after_remove
     }
 };
 
@@ -18679,7 +18724,7 @@ static bake_test_suite suites[] = {
         "Reference",
         Reference_setup,
         NULL,
-        31,
+        40,
         Reference_testcases
     },
     {

@@ -1405,7 +1405,10 @@
                 "untyped_get_ref_by_method",
                 "untyped_pair_ref",
                 "untyped_runtime_component_ref",
-                "ref_world"
+                "ref_world",
+                "ref_modified",
+                "ref_modified_stage",
+                "untyped_ref_modified"
             ]
         }, {
             "id": "Module",

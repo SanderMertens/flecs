@@ -847,3 +847,270 @@ void Reference_ref_from_ptr_invalid_ptr(void) {
     test_expect_abort();
     ecs_ref_from_ptr(world, e, ecs_id(Position), &p);
 }
+
+static int ref_on_set_invoked = 0;
+static ecs_entity_t ref_on_set_entity = 0;
+static int32_t ref_on_set_x = 0;
+
+static void RefOnSet(ecs_iter_t *it) {
+    Position *p = ecs_field(it, Position, 0);
+    test_int(it->count, 1);
+    ref_on_set_invoked ++;
+    ref_on_set_entity = it->entities[0];
+    ref_on_set_x = p[0].x;
+}
+
+void Reference_ref_modified(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = RefOnSet
+    });
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ref_on_set_invoked = 0;
+
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+    Position *p = ecs_ref_get(world, &ref, Position);
+    test_assert(p != NULL);
+    p->x = 30;
+
+    ecs_ref_modified(world, &ref, Position);
+    test_int(ref_on_set_invoked, 1);
+    test_uint(ref_on_set_entity, e);
+    test_int(ref_on_set_x, 30);
+
+    ecs_fini(world);
+}
+
+void Reference_ref_modified_w_on_set_hook(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_set = RefOnSet
+    });
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ref_on_set_invoked = 0;
+
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+    Position *p = ecs_ref_get(world, &ref, Position);
+    test_assert(p != NULL);
+    p->x = 30;
+
+    ecs_ref_modified(world, &ref, Position);
+    test_int(ref_on_set_invoked, 1);
+    test_uint(ref_on_set_entity, e);
+    test_int(ref_on_set_x, 30);
+
+    ecs_fini(world);
+}
+
+void Reference_ref_modified_after_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = RefOnSet
+    });
+
+    ecs_new_w(world, Position);
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ref_on_set_invoked = 0;
+
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+
+    ecs_add(world, e, Velocity);
+
+    Position *p = ecs_ref_get(world, &ref, Position);
+    test_assert(p != NULL);
+    p->x = 30;
+
+    ecs_ref_modified(world, &ref, Position);
+    test_int(ref_on_set_invoked, 1);
+    test_uint(ref_on_set_entity, e);
+    test_int(ref_on_set_x, 30);
+
+    ecs_fini(world);
+}
+
+void Reference_ref_modified_before_update(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = RefOnSet
+    });
+
+    ecs_new_w(world, Position);
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ref_on_set_invoked = 0;
+
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+
+    ecs_add(world, e, Velocity);
+    ecs_get_mut(world, e, Position)->x = 30;
+
+    ecs_ref_modified(world, &ref, Position);
+    test_int(ref_on_set_invoked, 1);
+    test_uint(ref_on_set_entity, e);
+    test_int(ref_on_set_x, 30);
+
+    ecs_fini(world);
+}
+
+void Reference_ref_modified_deferred(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = RefOnSet
+    });
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ref_on_set_invoked = 0;
+
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+    Position *p = ecs_ref_get(world, &ref, Position);
+    test_assert(p != NULL);
+    p->x = 30;
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_ref_modified(stage, &ref, Position);
+    test_int(ref_on_set_invoked, 0);
+    ecs_merge(stage);
+
+    test_int(ref_on_set_invoked, 1);
+    test_uint(ref_on_set_entity, e);
+    test_int(ref_on_set_x, 30);
+
+    ecs_fini(world);
+}
+
+void Reference_ref_modified_staged(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = RefOnSet
+    });
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ref_on_set_invoked = 0;
+
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+    Position *p = ecs_ref_get(world, &ref, Position);
+    test_assert(p != NULL);
+    p->x = 30;
+
+    ecs_readonly_begin(world, false);
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_ref_modified(stage, &ref, Position);
+    test_int(ref_on_set_invoked, 0);
+    ecs_readonly_end(world);
+
+    test_int(ref_on_set_invoked, 1);
+    test_uint(ref_on_set_entity, e);
+    test_int(ref_on_set_x, 30);
+
+    ecs_fini(world);
+}
+
+void Reference_ref_modified_change_detection(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .inout = EcsIn }},
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
+    });
+    test_bool(ecs_query_changed(q), true);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) { }
+    test_bool(ecs_query_changed(q), false);
+
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+    ecs_ref_modified(world, &ref, Position);
+    test_bool(ecs_query_changed(q), true);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Reference_ref_modified_sparse(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = RefOnSet
+    });
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ref_on_set_invoked = 0;
+
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+    Position *p = ecs_ref_get(world, &ref, Position);
+    test_assert(p != NULL);
+    p->x = 30;
+
+    ecs_ref_modified(world, &ref, Position);
+    test_int(ref_on_set_invoked, 1);
+    test_uint(ref_on_set_entity, e);
+    test_int(ref_on_set_x, 30);
+
+    ecs_fini(world);
+}
+
+void Reference_ref_modified_after_remove(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = RefOnSet
+    });
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+
+    ecs_remove(world, e, Position);
+
+    test_expect_abort();
+    ecs_ref_modified(world, &ref, Position);
+}

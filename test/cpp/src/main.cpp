@@ -1362,6 +1362,9 @@ void Refs_untyped_get_ref_by_method(void);
 void Refs_untyped_pair_ref(void);
 void Refs_untyped_runtime_component_ref(void);
 void Refs_ref_world(void);
+void Refs_ref_modified(void);
+void Refs_ref_modified_stage(void);
+void Refs_untyped_ref_modified(void);
 
 // Testsuite 'Module'
 void Module_import(void);
@@ -7116,6 +7119,18 @@ bake_test_case Refs_testcases[] = {
     {
         "ref_world",
         Refs_ref_world
+    },
+    {
+        "ref_modified",
+        Refs_ref_modified
+    },
+    {
+        "ref_modified_stage",
+        Refs_ref_modified_stage
+    },
+    {
+        "untyped_ref_modified",
+        Refs_untyped_ref_modified
     }
 };
 
@@ -8903,7 +8918,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        27,
+        30,
         Refs_testcases
     },
     {

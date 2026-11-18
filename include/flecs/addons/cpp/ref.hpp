@@ -68,6 +68,14 @@ struct untyped_ref {
         return ecs_ref_get_id(world_, &ref_, id_);
     }
 
+    /** Signal that the component value has been modified.
+     *
+     * @param world The world or stage to use (defaults to the ref's world).
+     */
+    void modified(world_t *world = nullptr) {
+        ecs_ref_modified_id(world ? world : world_, &ref_, id_);
+    }
+
     /** Check if the reference has a valid component value. */
     bool has() {
         return !!try_get();

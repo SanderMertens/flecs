@@ -1435,7 +1435,16 @@
                 "ref_from_ptr_after_add",
                 "ref_from_ptr_after_delete",
                 "ref_from_ptr_inherited",
-                "ref_from_ptr_invalid_ptr"
+                "ref_from_ptr_invalid_ptr",
+                "ref_modified",
+                "ref_modified_w_on_set_hook",
+                "ref_modified_after_add",
+                "ref_modified_before_update",
+                "ref_modified_deferred",
+                "ref_modified_staged",
+                "ref_modified_change_detection",
+                "ref_modified_sparse",
+                "ref_modified_after_remove"
             ]
         }, {
             "id": "Delete",
