@@ -114,15 +114,16 @@ ecs_expr_value_node_t* flecs_expr_char(
     if(value[0] == '\\' && value[1] == '\'') {
         result->storage.char_ = '\'';
     } else {
-        char ch = 0;
-        const char *ptr = flecs_chrparse(value, &ch);
-        if(!ptr) {
+        char ch[4] = {0};
+        int32_t len;
+        const char *ptr = flecs_chrparse(value, ch, &len);
+        if(!ptr || len != 1) {
             flecs_free_t(
                 &parser->script->allocator, ecs_expr_value_node_t, result);
             return NULL;
         }
 
-        result->storage.char_ = ch;
+        result->storage.char_ = ch[0];
     }
 
     result->ptr = &result->storage.char_;

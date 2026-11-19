@@ -696,6 +696,9 @@ void DeserializeFromJson_struct_double_scientific_notation(void);
 void DeserializeFromJson_struct_negative_int(void);
 void DeserializeFromJson_struct_negative_float(void);
 void DeserializeFromJson_struct_string(void);
+void DeserializeFromJson_struct_string_w_unicode_escape(void);
+void DeserializeFromJson_struct_string_w_unicode_escape_utf8(void);
+void DeserializeFromJson_struct_string_w_unicode_escape_large(void);
 void DeserializeFromJson_struct_entity(void);
 void DeserializeFromJson_struct_id(void);
 void DeserializeFromJson_struct_enum(void);
@@ -4352,6 +4355,18 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "struct_string",
         DeserializeFromJson_struct_string
+    },
+    {
+        "struct_string_w_unicode_escape",
+        DeserializeFromJson_struct_string_w_unicode_escape
+    },
+    {
+        "struct_string_w_unicode_escape_utf8",
+        DeserializeFromJson_struct_string_w_unicode_escape_utf8
+    },
+    {
+        "struct_string_w_unicode_escape_large",
+        DeserializeFromJson_struct_string_w_unicode_escape_large
     },
     {
         "struct_entity",

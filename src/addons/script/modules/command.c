@@ -413,7 +413,8 @@ static char* flecs_command_unescape(
     const char *ptr = start;
     while (ptr < end) {
         if (ptr[0] == '\\') {
-            const char *next = flecs_chrparse(ptr, out);
+            int32_t len;
+            const char *next = flecs_chrparse(ptr, out, &len);
             if (!next) {
                 ecs_err("invalid escape sequence '\\%c'", ptr[1]);
                 ecs_os_free(result);
@@ -421,12 +422,12 @@ static char* flecs_command_unescape(
             }
 
             ptr = next;
+            out += len;
         } else {
             out[0] = ptr[0];
             ptr ++;
+            out ++;
         }
-
-        out ++;
     }
 
     out[0] = '\0';

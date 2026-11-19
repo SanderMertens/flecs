@@ -63,24 +63,29 @@ const char* flecs_json_parse(
         char *token_ptr = token;
         json ++;
         for (; (ch = json[0]); ) {
-            if (token_ptr - token >= ECS_MAX_TOKEN_SIZE) {
-                /* Token doesn't fit in buffer, signal to app to try again with
-                 * dynamic buffer. */
-                token_kind[0] = JsonLargeString;
-                return start;
-            }
-
             if (ch == '"') {
                 json ++;
                 token_ptr[0] = '\0';
                 break;
             }
 
-            json = flecs_chrparse(json, token_ptr ++);
+            char ch_out[4];
+            int32_t len;
+            json = flecs_chrparse(json, ch_out, &len);
             if (!json) {
                 token_kind[0] = JsonInvalid;
                 return NULL;
             }
+
+            if (token_ptr - token + len >= ECS_MAX_TOKEN_SIZE) {
+                /* Token doesn't fit in buffer, signal to app to try again with
+                 * dynamic buffer. */
+                token_kind[0] = JsonLargeString;
+                return start;
+            }
+
+            ecs_os_memcpy(token_ptr, ch_out, len);
+            token_ptr += len;
         }
 
         if (!ch) {
@@ -141,7 +146,8 @@ const char* flecs_json_parse_large_string(
         return NULL; /* can only parse strings */
     }
 
-    char ch, ch_out;
+    char ch, ch_out[4];
+    int32_t len;
     json ++;
     for (; (ch = json[0]); ) {
         if (ch == '"') {
@@ -149,12 +155,12 @@ const char* flecs_json_parse_large_string(
             break;
         }
 
-        json = flecs_chrparse(json, &ch_out);
+        json = flecs_chrparse(json, ch_out, &len);
         if (!json) {
             return NULL;
         }
 
-        ecs_strbuf_appendch(buf, ch_out);
+        ecs_strbuf_appendstrn(buf, ch_out, len);
     }
 
     return ch ? json : NULL;
@@ -320,7 +326,7 @@ static const char* flecs_json_skip_string(
         return NULL; /* can only skip strings */
     }
 
-    char ch, ch_out;
+    char ch;
     json ++;
     for (; (ch = json[0]); ) {
         if (ch == '"') {
@@ -328,7 +334,7 @@ static const char* flecs_json_skip_string(
             break;
         }
 
-        json = flecs_chrparse(json, &ch_out);
+        json = flecs_chrparse(json, NULL, NULL);
         if (!json) {
             return NULL;
         }
