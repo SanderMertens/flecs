@@ -2786,7 +2786,6 @@ void SerializeToJson_ecs_struct_3_members(void) {
     ecs_fini(world);
 }
 
-<<<<<<< HEAD
 void SerializeToJson_map_string_i32(void) {
     ecs_world_t *world = ecs_init();
 
@@ -2931,7 +2930,7 @@ void SerializeToJson_struct_w_map_string_i32(void) {
 
     ecs_fini(world);
 }
-=======
+
 void SerializeToJson_pretty_struct(void) {
     typedef struct {
         int32_t x;
@@ -3078,4 +3077,3 @@ void SerializeToJson_pretty_scalar(void) {
 void SerializeToJson_pretty_null(void) {
     test_assert(ecs_json_pretty(NULL) == NULL);
 }
->>>>>>> bf1155f2c9d7f49764a8e2d69ffc6ce7b7c71be9

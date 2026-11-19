@@ -8298,7 +8298,6 @@ bake_test_case ValueType_testcases[] = {
     }
 };
 
-
 static bake_test_suite suites[] = {
     {
         "PrimitiveTypes",
@@ -8388,22 +8387,14 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-<<<<<<< HEAD
-        226,
-=======
-        223,
->>>>>>> bf1155f2c9d7f49764a8e2d69ffc6ce7b7c71be9
+        229,
         DeserializeFromJson_testcases
     },
     {
         "SerializeToJson",
         NULL,
         NULL,
-<<<<<<< HEAD
-        100,
-=======
-        101,
->>>>>>> bf1155f2c9d7f49764a8e2d69ffc6ce7b7c71be9
+        107,
         SerializeToJson_testcases
     },
     {
