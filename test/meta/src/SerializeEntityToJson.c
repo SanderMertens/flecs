@@ -2717,3 +2717,81 @@ void SerializeEntityToJson_serialize_more_than_256_components(void) {
     ecs_os_free(json);
     ecs_fini(world);
 }
+
+void SerializeEntityToJson_serialize_w_pretty(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
+    ecs_add(world, e, Tag);
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.pretty = true;
+
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_json(json,
+        "{\n"
+        "  \"name\": \"Foo\",\n"
+        "  \"tags\": [\n"
+        "    \"Tag\"\n"
+        "  ],\n"
+        "  \"components\": {\n"
+        "    \"Position\": {\n"
+        "      \"x\": 10,\n"
+        "      \"y\": 20\n"
+        "    }\n"
+        "  }\n"
+        "}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_w_pretty_type_info(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_type_info = true;
+
+    char *compact = ecs_entity_to_json(world, e, &desc);
+    test_assert(compact != NULL);
+
+    desc.pretty = true;
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+
+    char *expect = ecs_json_pretty(compact);
+    test_json(json, expect);
+    test_assert(strstr(json, "\n  \"type_info\": {\n") != NULL);
+
+    ecs_os_free(expect);
+    ecs_os_free(json);
+    ecs_os_free(compact);
+
+    ecs_fini(world);
+}

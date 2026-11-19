@@ -1507,6 +1507,48 @@ void Meta_query_to_json_w_default_desc(void) {
     test_str(q.to_json(&desc).c_str(), "{\"results\":[{\"name\":\"foo\", \"fields\":{\"values\":[0]}}]}");
 }
 
+void Meta_entity_to_json_w_pretty(void) {
+    flecs::world ecs;
+
+    flecs::entity e = ecs.entity("foo").set<Position>({10, 20});
+
+    flecs::entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.pretty = true;
+
+    test_str(e.to_json(&desc).c_str(),
+        "{\n"
+        "  \"name\": \"foo\",\n"
+        "  \"components\": {\n"
+        "    \"Position\": null\n"
+        "  }\n"
+        "}");
+}
+
+void Meta_query_to_json_w_pretty(void) {
+    flecs::world ecs;
+
+    ecs.entity("foo").set<Position>({10, 20});
+
+    auto q = ecs.query<Position>();
+
+    flecs::iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.pretty = true;
+
+    test_str(q.to_json(&desc).c_str(),
+        "{\n"
+        "  \"results\": [\n"
+        "    {\n"
+        "      \"name\": \"foo\",\n"
+        "      \"fields\": {\n"
+        "        \"values\": [\n"
+        "          0\n"
+        "        ]\n"
+        "      }\n"
+        "    }\n"
+        "  ]\n"
+        "}");
+}
+
 void Meta_script_to_std_vector_int(void) {
     flecs::world world;
 

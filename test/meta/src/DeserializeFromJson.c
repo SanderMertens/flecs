@@ -8701,6 +8701,7 @@ void DeserializeFromJson_entity_wildcard_component(void) {
     ecs_fini(world);
 }
 
+<<<<<<< HEAD
 void DeserializeFromJson_map_string_i32(void) {
     ecs_world_t *world = ecs_init();
 
@@ -8724,10 +8725,58 @@ void DeserializeFromJson_map_string_i32(void) {
     test_assert(meta_map_has(world, t, &value, "\"bar\":200"));
 
     ecs_ptr_fini(world, t, &value);
+=======
+void DeserializeFromJson_ser_deser_pretty_value(void) {
+    typedef struct {
+        int32_t x;
+        int32_t y;
+        char *name;
+        int32_t values[3];
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t vt = ecs_array(world, {
+        .type = ecs_id(ecs_i32_t),
+        .count = 3
+    });
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .members = {
+            { "x", ecs_id(ecs_i32_t) },
+            { "y", ecs_id(ecs_i32_t) },
+            { "name", ecs_id(ecs_string_t) },
+            { "values", vt }
+        }
+    });
+
+    T value = {10, 20, "{\"Hello\", World}", {1, 2, 3}};
+    char *json = ecs_ptr_to_json(world, t, &value);
+    test_assert(json != NULL);
+    char *pretty = ecs_json_pretty(json);
+    test_assert(pretty != NULL);
+    test_assert(strchr(pretty, '\n') != NULL);
+    ecs_os_free(json);
+
+    T result = {0};
+    const char *ptr = ecs_ptr_from_json(world, t, &result, pretty, NULL);
+    test_assert(ptr != NULL);
+    test_str(ptr, "");
+    test_int(result.x, 10);
+    test_int(result.y, 20);
+    test_str(result.name, "{\"Hello\", World}");
+    test_int(result.values[0], 1);
+    test_int(result.values[1], 2);
+    test_int(result.values[2], 3);
+    ecs_os_free(result.name);
+    ecs_os_free(pretty);
+>>>>>>> bf1155f2c9d7f49764a8e2d69ffc6ce7b7c71be9
 
     ecs_fini(world);
 }
 
+<<<<<<< HEAD
 void DeserializeFromJson_map_string_string(void) {
     ecs_world_t *world = ecs_init();
 
@@ -8760,12 +8809,23 @@ void DeserializeFromJson_map_string_struct(void) {
 
     ecs_entity_t s = ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "S" }),
+=======
+void DeserializeFromJson_ser_deser_pretty_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+>>>>>>> bf1155f2c9d7f49764a8e2d69ffc6ce7b7c71be9
         .members = {
             {"x", ecs_id(ecs_i32_t)},
             {"y", ecs_id(ecs_i32_t)}
         }
     });
 
+<<<<<<< HEAD
     ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
         .entity = ecs_entity(world, {.name = "T"}),
         .key_type = ecs_id(ecs_string_t),
@@ -8886,6 +8946,87 @@ void DeserializeFromJson_map_string_i32_roundtrip(void) {
 
     ecs_ptr_fini(world, t, &value);
     ecs_ptr_fini(world, t, &value_2);
+=======
+    ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
+    ecs_add(world, e, Tag);
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.pretty = true;
+
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_assert(strchr(json, '\n') != NULL);
+
+    ecs_entity_t e2 = ecs_new(world);
+    const char *r = ecs_entity_from_json(world, e2, json, NULL);
+    test_assert(r != NULL);
+    test_str(r, "");
+    ecs_os_free(json);
+
+    test_assert(ecs_has(world, e2, Tag));
+    const Position *p = ecs_get(world, e2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_ser_deser_pretty_world(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)},
+        }
+    });
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t child = ecs_entity(world, { .name = "child", .parent = parent });
+    ecs_set(world, child, Position, {10, 20});
+
+    ecs_world_to_json_desc_t desc = { .pretty = true };
+    char *json = ecs_world_to_json(world, &desc);
+    test_assert(json != NULL);
+    test_assert(strchr(json, '\n') != NULL);
+
+    char *compact = ecs_world_to_json(world, NULL);
+    test_assert(compact != NULL);
+    char *expect = ecs_json_pretty(compact);
+    test_str(json, expect);
+    ecs_os_free(expect);
+    ecs_os_free(compact);
+
+    ecs_fini(world);
+    world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position); /* pin Position id */
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)},
+        }
+    });
+
+    const char *r = ecs_world_from_json(world, json, NULL);
+    test_str(r, "");
+    ecs_os_free(json);
+
+    test_assert(ecs_is_alive(world, parent));
+    test_assert(ecs_is_alive(world, child));
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+    test_str(ecs_get_name(world, child), "child");
+
+    const Position *p = ecs_get(world, child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+>>>>>>> bf1155f2c9d7f49764a8e2d69ffc6ce7b7c71be9
 
     ecs_fini(world);
 }

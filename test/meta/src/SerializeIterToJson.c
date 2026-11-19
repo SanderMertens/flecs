@@ -3242,3 +3242,63 @@ void SerializeIterToJson_serialize_sparse_each(void) {
 
     ecs_fini(world);
 }
+
+void SerializeIterToJson_serialize_w_pretty(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {30, 40});
+
+    ecs_query_t *q = ecs_query(world, { .expr = "Position" });
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.pretty = true;
+
+    char *json = ecs_iter_to_json(&it, &desc);
+    test_assert(json != NULL);
+    test_json(json,
+        "{\n"
+        "  \"results\": [\n"
+        "    {\n"
+        "      \"name\": \"Foo\",\n"
+        "      \"fields\": {\n"
+        "        \"values\": [\n"
+        "          {\n"
+        "            \"x\": 10,\n"
+        "            \"y\": 20\n"
+        "          }\n"
+        "        ]\n"
+        "      }\n"
+        "    },\n"
+        "    {\n"
+        "      \"name\": \"Bar\",\n"
+        "      \"fields\": {\n"
+        "        \"values\": [\n"
+        "          {\n"
+        "            \"x\": 30,\n"
+        "            \"y\": 40\n"
+        "          }\n"
+        "        ]\n"
+        "      }\n"
+        "    }\n"
+        "  ]\n"
+        "}");
+    ecs_os_free(json);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

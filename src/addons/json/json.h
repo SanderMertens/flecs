@@ -311,7 +311,8 @@ void flecs_json_type_info_accum_fini(
 void flecs_json_assemble_output(
     ecs_strbuf_t *out,
     ecs_strbuf_t *type_info_buf,
-    ecs_strbuf_t *body_buf);
+    ecs_strbuf_t *body_buf,
+    bool pretty);
 
 #endif
 

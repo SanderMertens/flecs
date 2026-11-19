@@ -2786,6 +2786,7 @@ void SerializeToJson_ecs_struct_3_members(void) {
     ecs_fini(world);
 }
 
+<<<<<<< HEAD
 void SerializeToJson_map_string_i32(void) {
     ecs_world_t *world = ecs_init();
 
@@ -2930,3 +2931,151 @@ void SerializeToJson_struct_w_map_string_i32(void) {
 
     ecs_fini(world);
 }
+=======
+void SerializeToJson_pretty_struct(void) {
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .members = {
+            { "x", ecs_id(ecs_i32_t) },
+            { "y", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    T value = {10, 20};
+    char *json = ecs_ptr_to_json(world, t, &value);
+    test_assert(json != NULL);
+
+    char *pretty = ecs_json_pretty(json);
+    test_assert(pretty != NULL);
+    test_str(pretty,
+        "{\n"
+        "  \"x\": 10,\n"
+        "  \"y\": 20\n"
+        "}");
+
+    ecs_os_free(pretty);
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_pretty_nested(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *pretty = ecs_json_pretty(
+        "{\"a\":{\"b\":[1, 2.5, true]}, \"c\":[{\"d\":null}, {\"e\":-1}]}");
+    test_assert(pretty != NULL);
+    test_str(pretty,
+        "{\n"
+        "  \"a\": {\n"
+        "    \"b\": [\n"
+        "      1,\n"
+        "      2.5,\n"
+        "      true\n"
+        "    ]\n"
+        "  },\n"
+        "  \"c\": [\n"
+        "    {\n"
+        "      \"d\": null\n"
+        "    },\n"
+        "    {\n"
+        "      \"e\": -1\n"
+        "    }\n"
+        "  ]\n"
+        "}");
+    ecs_os_free(pretty);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_pretty_empty_scopes(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *pretty = ecs_json_pretty("{\"a\":[], \"b\":{}, \"c\":[ ], \"d\":[{}]}");
+    test_assert(pretty != NULL);
+    test_str(pretty,
+        "{\n"
+        "  \"a\": [],\n"
+        "  \"b\": {},\n"
+        "  \"c\": [],\n"
+        "  \"d\": [\n"
+        "    {}\n"
+        "  ]\n"
+        "}");
+    ecs_os_free(pretty);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_pretty_string_w_special_chars(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *pretty = ecs_json_pretty(
+        "{\"a{b\":\"{[,: ]} \\\"q\\\" \\\\\", \"c\":\"\\\\\"}");
+    test_assert(pretty != NULL);
+    test_str(pretty,
+        "{\n"
+        "  \"a{b\": \"{[,: ]} \\\"q\\\" \\\\\",\n"
+        "  \"c\": \"\\\\\"\n"
+        "}");
+    ecs_os_free(pretty);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_pretty_already_pretty(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expect =
+        "{\n"
+        "  \"a\": {\n"
+        "    \"b\": [\n"
+        "      1,\n"
+        "      2\n"
+        "    ]\n"
+        "  }\n"
+        "}";
+
+    char *pretty = ecs_json_pretty(expect);
+    test_assert(pretty != NULL);
+    test_str(pretty, expect);
+    ecs_os_free(pretty);
+
+    pretty = ecs_json_pretty(
+        "  {\r\n\t\"a\" :{ \"b\" : [ 1 ,\n2 ] } }  \n");
+    test_assert(pretty != NULL);
+    test_str(pretty, expect);
+    ecs_os_free(pretty);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_pretty_scalar(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *pretty = ecs_json_pretty("10");
+    test_str(pretty, "10");
+    ecs_os_free(pretty);
+
+    pretty = ecs_json_pretty("\"Hello World\"");
+    test_str(pretty, "\"Hello World\"");
+    ecs_os_free(pretty);
+
+    pretty = ecs_json_pretty("");
+    test_str(pretty, "");
+    ecs_os_free(pretty);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_pretty_null(void) {
+    test_assert(ecs_json_pretty(NULL) == NULL);
+}
+>>>>>>> bf1155f2c9d7f49764a8e2d69ffc6ce7b7c71be9
