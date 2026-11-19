@@ -9337,7 +9337,7 @@ ecs_entity_t ecs_entity_init(
     if (name && prefix) {
         ecs_size_t len = ecs_os_strlen(prefix);
         if (!ecs_os_strncmp(name, prefix, len) && 
-           (isupper(name[len]) || name[len] == '_')) 
+           (isupper((unsigned char)name[len]) || name[len] == '_')) 
         {
             if (name[len] == '_') {
                 name = name + len + 1;
@@ -11551,7 +11551,7 @@ bool flecs_name_is_id(
         const char *ptr;
         char ch;
         for (ptr = name + 1; (ch = ptr[0]); ptr ++) {
-            if (!isdigit(ch)) {
+            if (!isdigit((unsigned char)ch)) {
                 return false;
             }
         }
@@ -11787,7 +11787,7 @@ static ecs_entity_t flecs_get_parent_from_path(
         }
 
         path ++;
-        while (path[0] && isdigit(path[0])) {
+        while (path[0] && isdigit((unsigned char)path[0])) {
             path ++; /* Skip id part of path */
         }
 
@@ -14268,7 +14268,7 @@ char* flecs_to_snake_case(const char *str) {
     char ch, *out, *out_ptr;
 
     for (ptr = &str[1]; (ch = *ptr); ptr ++) {
-        if (isupper(ch)) {
+        if (isupper((unsigned char)ch)) {
             upper_count ++;
         }
 
@@ -14277,13 +14277,13 @@ char* flecs_to_snake_case(const char *str) {
 
     out = out_ptr = ecs_os_malloc_n(char, len + upper_count + 1);
     for (ptr = str; (ch = *ptr); ptr ++) {
-        if (isupper(ch)) {
+        if (isupper((unsigned char)ch)) {
             if ((ptr != str) && (out_ptr[-1] != '_')) {
                 out_ptr[0] = '_';
                 out_ptr ++;
             }
 
-            out_ptr[0] = (char)tolower(ch);
+            out_ptr[0] = (char)tolower((unsigned char)ch);
             out_ptr ++;
         } else {
             out_ptr[0] = ch;
@@ -24726,7 +24726,7 @@ static void ecs_cpp_trim_type_name(
         while ((ptr = strstr(ptr + 1, ECS_STRUCT_PREFIX)) != 0) {
             /* Make sure we're not matched with part of a longer identifier
              * that contains 'struct' */
-            if (ptr[-1] == '<' || ptr[-1] == ',' || isspace(ptr[-1])) {
+            if (ptr[-1] == '<' || ptr[-1] == ',' || isspace((unsigned char)ptr[-1])) {
                 ecs_os_memmove(ptr, ptr + ECS_STRUCT_LEN, 
                     ecs_os_strlen(ptr + ECS_STRUCT_LEN) + 1);
                 len -= ECS_STRUCT_LEN;
@@ -26089,7 +26089,7 @@ void flecs_colorize_buf(
         dontAppend = false;
 
         if (!overrideColor) {
-            if (isNum && !isdigit(ch) && !isalpha(ch) && (ch != '.') && (ch != '%')) {
+            if (isNum && !isdigit((unsigned char)ch) && !isalpha((unsigned char)ch) && (ch != '.') && (ch != '%')) {
                 if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
                 isNum = false;
             }
@@ -26097,27 +26097,27 @@ void flecs_colorize_buf(
             if (isStr && (isStr == ch) && prev != '\\') {
                 isStr = '\0';
             } else if (((ch == '\'') || (ch == '"')) && !isStr &&
-                !isalpha(prev) && (prev != '\\'))
+                !isalpha((unsigned char)prev) && (prev != '\\'))
             {
                 if (enable_colors) ecs_strbuf_appendlit(buf, ECS_CYAN);
                 isStr = ch;
             }
 
-            if ((isdigit(ch) || (ch == '%' && isdigit(prev)) ||
-                (ch == '-' && isdigit(ptr[1]))) && !isNum && !isStr && !isVar &&
-                 !isalpha(prev) && !isdigit(prev) && (prev != '_') &&
+            if ((isdigit((unsigned char)ch) || (ch == '%' && isdigit((unsigned char)prev)) ||
+                (ch == '-' && isdigit((unsigned char)ptr[1]))) && !isNum && !isStr && !isVar &&
+                 !isalpha((unsigned char)prev) && !isdigit((unsigned char)prev) && (prev != '_') &&
                  (prev != '.'))
             {
                 if (enable_colors) ecs_strbuf_appendlit(buf, ECS_GREEN);
                 isNum = true;
             }
 
-            if (isVar && !isalpha(ch) && !isdigit(ch) && ch != '_') {
+            if (isVar && !isalpha((unsigned char)ch) && !isdigit((unsigned char)ch) && ch != '_') {
                 if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
                 isVar = false;
             }
 
-            if (!isStr && !isVar && ch == '$' && isalpha(ptr[1])) {
+            if (!isStr && !isVar && ch == '$' && isalpha((unsigned char)ptr[1])) {
                 if (enable_colors) ecs_strbuf_appendlit(buf, ECS_CYAN);
                 isVar = true;
             }
@@ -27718,8 +27718,8 @@ char* flecs_module_path_from_c(
     char ch;
 
     for (ptr = c_name; (ch = *ptr); ptr++) {
-        if (isupper(ch)) {
-            ch = flecs_ito(char, tolower(ch));
+        if (isupper((unsigned char)ch)) {
+            ch = flecs_ito(char, tolower((unsigned char)ch));
             if (ptr != c_name) {
                 ecs_strbuf_appendstrn(&str, ".", 1);
             }
@@ -27810,11 +27810,11 @@ ecs_entity_t ecs_import_from_library(
                 capitalize = true;
             } else {
                 if (capitalize) {
-                    *bptr = flecs_ito(char, toupper(ch));
+                    *bptr = flecs_ito(char, toupper((unsigned char)ch));
                     bptr ++;
                     capitalize = false;
                 } else {
-                    *bptr = flecs_ito(char, tolower(ch));
+                    *bptr = flecs_ito(char, tolower((unsigned char)ch));
                     bptr ++;
                 }
             }
@@ -52696,7 +52696,7 @@ const char* flecs_json_parse(
             token_kind[0] = JsonString;
             return json;
         }
-    } else if (isdigit(ch) || (ch == '-')) {
+    } else if (isdigit((unsigned char)ch) || (ch == '-')) {
         token_kind[0] = JsonNumber;
         const char *result = flecs_parse_digit(json, token, ECS_MAX_TOKEN_SIZE);
         if (!result) {
@@ -52713,7 +52713,7 @@ const char* flecs_json_parse(
         }
 
         return result;
-    } else if (isalpha(ch)) {
+    } else if (isalpha((unsigned char)ch)) {
         if (!ecs_os_strncmp(json, "null", 4)) {
             token_kind[0] = JsonNull;
             json += 4;
@@ -52727,7 +52727,7 @@ const char* flecs_json_parse(
             json += 5;
         }
 
-        if (isalpha(json[0]) || isdigit(json[0])) {
+        if (isalpha((unsigned char)json[0]) || isdigit((unsigned char)json[0])) {
             token_kind[0] = JsonInvalid;
             return NULL;
         }
@@ -57106,7 +57106,7 @@ static int flecs_meta_cursor_from_str(
             flecs_meta_set_t(ecs_bool_t, ptr, true);
         } else if (!ecs_os_strcmp(value, "false")) {
             flecs_meta_set_t(ecs_bool_t, ptr, false);
-        } else if (isdigit(value[0])) {
+        } else if (isdigit((unsigned char)value[0])) {
             if (!ecs_os_strcmp(value, "0")) {
                 flecs_meta_set_t(ecs_bool_t, ptr, false);
             } else {
@@ -60081,7 +60081,7 @@ const char* flecs_meta_op_kind_str(
 bool flecs_meta_valid_digit(
     const char *str)
 {
-    return str[0] == '-' || isdigit(str[0]);
+    return str[0] == '-' || isdigit((unsigned char)str[0]);
 }
 
 bool flecs_meta_type_is_integer(
@@ -72062,12 +72062,12 @@ static const char* flecs_script_query_stmt(
     }
 
     const char *end = ptr;
-    while (start < end && isspace(start[0])) {
+    while (start < end && isspace((unsigned char)start[0])) {
         start ++;
     }
 
     const char *expr_end = end;
-    while (expr_end > start && isspace(expr_end[-1])) {
+    while (expr_end > start && isspace((unsigned char)expr_end[-1])) {
         expr_end --;
     }
 
@@ -123767,7 +123767,7 @@ int flecs_command_parse_value(
         return -1;
     }
 
-    while (isspace(ptr[0])) {
+    while (isspace((unsigned char)ptr[0])) {
         ptr ++;
     }
 
@@ -123997,7 +123997,7 @@ static const char* flecs_command_parse_group(
     int32_t depth = 0;
     while (ptr[0]) {
         char ch = ptr[0];
-        if (!depth && (isspace(ch) || ch == ';')) {
+        if (!depth && (isspace((unsigned char)ch) || ch == ';')) {
             break;
         }
 
@@ -124042,7 +124042,7 @@ static const char* flecs_command_parse_group(
 static const char* flecs_command_skip_separators(
     const char *ptr)
 {
-    while (isspace(ptr[0]) || ptr[0] == ';') {
+    while (isspace((unsigned char)ptr[0]) || ptr[0] == ';') {
         ptr ++;
     }
 
@@ -124056,7 +124056,7 @@ static int flecs_command_tokenize(
 {
     const char *ptr = cmd;
     while (true) {
-        while (isspace(ptr[0])) {
+        while (isspace((unsigned char)ptr[0])) {
             ptr ++;
         }
 
@@ -124513,7 +124513,7 @@ static int flecs_command_run_next(
     }
 
     *cmd = end;
-    while ((end > start) && isspace(end[-1])) {
+    while ((end > start) && isspace((unsigned char)end[-1])) {
         end --;
     }
 
@@ -126079,10 +126079,10 @@ static bool flecs_command_line_eq_trimmed(
 {
     const char *a_start = a->ptr, *a_end = a->ptr + a->len;
     const char *b_start = b->ptr, *b_end = b->ptr + b->len;
-    while (a_start < a_end && isspace(a_start[0])) a_start ++;
-    while (a_end > a_start && isspace(a_end[-1])) a_end --;
-    while (b_start < b_end && isspace(b_start[0])) b_start ++;
-    while (b_end > b_start && isspace(b_end[-1])) b_end --;
+    while (a_start < a_end && isspace((unsigned char)a_start[0])) a_start ++;
+    while (a_end > a_start && isspace((unsigned char)a_end[-1])) a_end --;
+    while (b_start < b_end && isspace((unsigned char)b_start[0])) b_start ++;
+    while (b_end > b_start && isspace((unsigned char)b_end[-1])) b_end --;
     return (a_end - a_start) == (b_end - b_start) &&
         !ecs_os_memcmp(a_start, b_start, (ecs_size_t)(a_end - a_start));
 }
@@ -126294,9 +126294,9 @@ static flecs_command_hunk_t* flecs_command_hunk_new(
     }
 
     const char *ptr = header, *end = header + header_len;
-    while (ptr < end && isspace(ptr[0])) ptr ++;
+    while (ptr < end && isspace((unsigned char)ptr[0])) ptr ++;
 
-    if (ptr < end && ptr[0] == '-' && isdigit(ptr[1])) {
+    if (ptr < end && ptr[0] == '-' && isdigit((unsigned char)ptr[1])) {
         const char *close = strstr(ptr, "@@");
         if (close && close < end) {
             ptr = close + 2;
@@ -126305,11 +126305,11 @@ static flecs_command_hunk_t* flecs_command_hunk_new(
         }
     }
 
-    while (ptr < end && isspace(ptr[0])) ptr ++;
-    while (end > ptr && isspace(end[-1])) end --;
+    while (ptr < end && isspace((unsigned char)ptr[0])) ptr ++;
+    while (end > ptr && isspace((unsigned char)end[-1])) end --;
     if (end - ptr >= 2 && end[-1] == '@' && end[-2] == '@') {
         end -= 2;
-        while (end > ptr && isspace(end[-1])) end --;
+        while (end > ptr && isspace((unsigned char)end[-1])) end --;
     }
 
     if (end > ptr) {
@@ -131658,7 +131658,7 @@ static bool flecs_script_query_name_is_entity(
         return false;
     }
 
-    return !isdigit(name[0]);
+    return !isdigit((unsigned char)name[0]);
 }
 
 static void flecs_script_query_unresolved(

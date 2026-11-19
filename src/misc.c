@@ -204,7 +204,7 @@ char* flecs_to_snake_case(const char *str) {
     char ch, *out, *out_ptr;
 
     for (ptr = &str[1]; (ch = *ptr); ptr ++) {
-        if (isupper(ch)) {
+        if (isupper((unsigned char)ch)) {
             upper_count ++;
         }
 
@@ -213,13 +213,13 @@ char* flecs_to_snake_case(const char *str) {
 
     out = out_ptr = ecs_os_malloc_n(char, len + upper_count + 1);
     for (ptr = str; (ch = *ptr); ptr ++) {
-        if (isupper(ch)) {
+        if (isupper((unsigned char)ch)) {
             if ((ptr != str) && (out_ptr[-1] != '_')) {
                 out_ptr[0] = '_';
                 out_ptr ++;
             }
 
-            out_ptr[0] = (char)tolower(ch);
+            out_ptr[0] = (char)tolower((unsigned char)ch);
             out_ptr ++;
         } else {
             out_ptr[0] = ch;

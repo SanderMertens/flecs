@@ -7666,7 +7666,7 @@ ecs_entity_t ecs_entity_init(
     if (name && prefix) {
         ecs_size_t len = ecs_os_strlen(prefix);
         if (!ecs_os_strncmp(name, prefix, len) && 
-           (isupper(name[len]) || name[len] == '_')) 
+           (isupper((unsigned char)name[len]) || name[len] == '_')) 
         {
             if (name[len] == '_') {
                 name = name + len + 1;
@@ -9838,7 +9838,7 @@ bool flecs_name_is_id(
         const char *ptr;
         char ch;
         for (ptr = name + 1; (ch = ptr[0]); ptr ++) {
-            if (!isdigit(ch)) {
+            if (!isdigit((unsigned char)ch)) {
                 return false;
             }
         }
@@ -10074,7 +10074,7 @@ static ecs_entity_t flecs_get_parent_from_path(
         }
 
         path ++;
-        while (path[0] && isdigit(path[0])) {
+        while (path[0] && isdigit((unsigned char)path[0])) {
             path ++; /* Skip id part of path */
         }
 
@@ -12280,7 +12280,7 @@ char* flecs_to_snake_case(const char *str) {
     char ch, *out, *out_ptr;
 
     for (ptr = &str[1]; (ch = *ptr); ptr ++) {
-        if (isupper(ch)) {
+        if (isupper((unsigned char)ch)) {
             upper_count ++;
         }
 
@@ -12289,13 +12289,13 @@ char* flecs_to_snake_case(const char *str) {
 
     out = out_ptr = ecs_os_malloc_n(char, len + upper_count + 1);
     for (ptr = str; (ch = *ptr); ptr ++) {
-        if (isupper(ch)) {
+        if (isupper((unsigned char)ch)) {
             if ((ptr != str) && (out_ptr[-1] != '_')) {
                 out_ptr[0] = '_';
                 out_ptr ++;
             }
 
-            out_ptr[0] = (char)tolower(ch);
+            out_ptr[0] = (char)tolower((unsigned char)ch);
             out_ptr ++;
         } else {
             out_ptr[0] = ch;

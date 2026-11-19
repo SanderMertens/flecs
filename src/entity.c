@@ -944,7 +944,7 @@ ecs_entity_t ecs_entity_init(
     if (name && prefix) {
         ecs_size_t len = ecs_os_strlen(prefix);
         if (!ecs_os_strncmp(name, prefix, len) && 
-           (isupper(name[len]) || name[len] == '_')) 
+           (isupper((unsigned char)name[len]) || name[len] == '_')) 
         {
             if (name[len] == '_') {
                 name = name + len + 1;

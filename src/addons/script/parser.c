@@ -476,12 +476,12 @@ static const char* flecs_script_query_stmt(
     }
 
     const char *end = ptr;
-    while (start < end && isspace(start[0])) {
+    while (start < end && isspace((unsigned char)start[0])) {
         start ++;
     }
 
     const char *expr_end = end;
-    while (expr_end > start && isspace(expr_end[-1])) {
+    while (expr_end > start && isspace((unsigned char)expr_end[-1])) {
         expr_end --;
     }
 

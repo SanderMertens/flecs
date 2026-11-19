@@ -1712,6 +1712,8 @@ void Lookup_duplicate_names_different_scopes(void);
 void Lookup_set_duplicate_name_via_explicit_id(void);
 void Lookup_set_duplicate_name_then_reparent_owner(void);
 void Lookup_set_duplicate_name_resets_to_self(void);
+void Lookup_lookup_hash_non_ascii(void);
+void Lookup_entity_init_hash_non_ascii(void);
 
 // Testsuite 'Singleton'
 void Singleton_add_singleton(void);
@@ -10475,6 +10477,14 @@ bake_test_case Lookup_testcases[] = {
     {
         "set_duplicate_name_resets_to_self",
         Lookup_set_duplicate_name_resets_to_self
+    },
+    {
+        "lookup_hash_non_ascii",
+        Lookup_lookup_hash_non_ascii
+    },
+    {
+        "entity_init_hash_non_ascii",
+        Lookup_entity_init_hash_non_ascii
     }
 };
 
@@ -18867,7 +18877,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        87,
+        89,
         Lookup_testcases
     },
     {
