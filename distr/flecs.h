@@ -5212,7 +5212,7 @@ char* flecs_chresc(
     char delimiter);
 
 /** Parse an escaped character.
- * Parse a character with a potential escape sequence. A \uXXXX escape is
+ * Parse a character with a potential escape sequence. A \\uXXXX escape is
  * written as UTF-8, which can be up to 4 characters.
  *
  * @param in Pointer to a character in the input string.
