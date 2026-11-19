@@ -484,7 +484,7 @@ static int flecs_rtt_map_key_cmp(
     const void *a,
     const void *b)
 {
-    if (info->hash) {
+    if (info->owns_key) {
         return flecs_type_info_cmp(a, b, info->key_ti);
     }
 
@@ -656,8 +656,8 @@ static bool flecs_rtt_map_has_hook(
         return false;
     }
 
-    /* Comparing maps with keys stored in entries requires comparing keys */
-    return equals || !info->hash || flecs_rtt_has_hook(info->key_ti, false);
+    /* Comparing maps with keys owned by the map requires comparing keys */
+    return equals || !info->owns_key || flecs_rtt_has_hook(info->key_ti, false);
 }
 
 static void flecs_rtt_map_hooks(

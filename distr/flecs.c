@@ -48663,33 +48663,21 @@ int flecs_meta_ser_map_key(
  * access to map values for all supported key types, and should be used instead
  * of accessing the ecs_map_t directly.
  *
- * Keys of integer types (bool, char, byte, integers, entities, ids, enums and
- * bitmasks) are stored directly as map key. Values that fit in an
- * ecs_map_val_t are stored inline, larger values are stored in a separate
- * allocation.
+ * The key value is stored as map key. For string keys this is the string
+ * pointer, which is owned by the map. Values that fit in an ecs_map_val_t are
+ * stored inline, larger values are stored in a separate allocation.
  *
- * Keys of other types (strings) cannot be stored as map key. These keys are
- * stored in an allocated entry, together with the value. The map key is the
- * hash of the key and the map value points to the entry. Hash collisions are
- * resolved by probing the next map key, so that each map element occupies
- * exactly one map key. Supporting a new key type only requires a hash function
- * for the type and type hooks for lifecycle and equality.
+ * Keys owned by the map are looked up by comparing them with the equals hook
+ * of the key type, which means that supporting a new key type only requires
+ * type hooks for lifecycle and equality.
  *
- * Functions that accept a key expect a pointer to a value of the key type. For
- * keys that are stored as map key, the key is read from the first bytes of the
- * pointed to value. */
-
-/* Hash function for keys that cannot be stored as map key. */
-typedef ecs_map_key_t (*flecs_meta_map_hash_t)(
-    const void *key);
+ * Functions that accept a key expect a pointer to a value of the key type. */
 
 /* Storage information for a map type. */
 typedef struct ecs_meta_map_info_t {
     const ecs_type_info_t *key_ti;   /* Key type info */
     const ecs_type_info_t *value_ti; /* Value type info */
-    flecs_meta_map_hash_t hash;      /* Set if keys are stored in entries */
-    ecs_size_t value_offset;         /* Offset of value in entry */
-    ecs_size_t entry_size;           /* Size of entry */
+    bool owns_key;                   /* Set if map owns key resources */
 } ecs_meta_map_info_t;
 
 /* Iterator for map values. */
@@ -48760,8 +48748,7 @@ ecs_meta_map_iter_t flecs_meta_map_iter(
 bool flecs_meta_map_next(
     ecs_meta_map_iter_t *it);
 
-/* Key of current element. For keys stored as map key, this points to the
- * ecs_map_key_t that stores the key. */
+/* Key of current element. Points to the ecs_map_key_t that stores the key. */
 void* flecs_meta_map_iter_key(
     const ecs_meta_map_iter_t *it);
 
@@ -57631,7 +57618,7 @@ int ecs_meta_key(
         return -1;
     }
 
-    if (info.hash) {
+    if (info.owns_key) {
         if (key->type != info.key_ti->component) {
             ecs_err("invalid key type '%s' for map with key type '%s'",
                 flecs_errstr(ecs_get_path(cursor->world, key->type)),
@@ -61193,7 +61180,7 @@ static int flecs_rtt_map_key_cmp(
     const void *a,
     const void *b)
 {
-    if (info->hash) {
+    if (info->owns_key) {
         return flecs_type_info_cmp(a, b, info->key_ti);
     }
 
@@ -61365,8 +61352,8 @@ static bool flecs_rtt_map_has_hook(
         return false;
     }
 
-    /* Comparing maps with keys stored in entries requires comparing keys */
-    return equals || !info->hash || flecs_rtt_has_hook(info->key_ti, false);
+    /* Comparing maps with keys owned by the map requires comparing keys */
+    return equals || !info->owns_key || flecs_rtt_has_hook(info->key_ti, false);
 }
 
 static void flecs_rtt_map_hooks(
@@ -94355,25 +94342,14 @@ void flecs_meta_enum_init(
 
 #ifdef FLECS_META
 
-static ecs_map_key_t flecs_meta_map_hash_string(
-    const void *key)
-{
-    const char *str = *(const char* const*)key;
-    if (!str) {
-        return 0;
-    }
-
-    return flecs_hash(str, ecs_os_strlen(str));
-}
-
-/* Returns -1 if type cannot be used as key type. If keys of the type cannot be
- * stored as map key, hash_out is set to the hash function for the type. */
+/* Returns -1 if type cannot be used as key type. If keys of the type have
+ * lifecycle hooks, owns_key_out is set to true. */
 static int flecs_meta_map_key_type(
     const ecs_world_t *world,
     ecs_entity_t key_type,
-    flecs_meta_map_hash_t *hash_out)
+    bool *owns_key_out)
 {
-    *hash_out = NULL;
+    *owns_key_out = false;
 
     const EcsType *kt = ecs_get(world, key_type, EcsType);
     if (kt && (kt->kind == EcsEnumType || kt->kind == EcsBitmaskType)) {
@@ -94403,7 +94379,7 @@ static int flecs_meta_map_key_type(
     case EcsId:
         return 0;
     case EcsString:
-        *hash_out = flecs_meta_map_hash_string;
+        *owns_key_out = true;
         return 0;
     case EcsF32:
     case EcsF64:
@@ -94417,8 +94393,8 @@ bool flecs_meta_map_key_type_is_valid(
     const ecs_world_t *world,
     ecs_entity_t key_type)
 {
-    flecs_meta_map_hash_t hash;
-    return flecs_meta_map_key_type(world, key_type, &hash) == 0;
+    bool owns_key;
+    return flecs_meta_map_key_type(world, key_type, &owns_key) == 0;
 }
 
 int flecs_meta_map_info_init(
@@ -94433,7 +94409,7 @@ int flecs_meta_map_info_init(
         return -1;
     }
 
-    if (flecs_meta_map_key_type(world, key_type, &info->hash)) {
+    if (flecs_meta_map_key_type(world, key_type, &info->owns_key)) {
         return -1;
     }
 
@@ -94443,13 +94419,10 @@ int flecs_meta_map_info_init(
         return -1;
     }
 
-    if (info->hash) {
-        ecs_assert(info->key_ti->hooks.equals != NULL, 
-            ECS_INTERNAL_ERROR, NULL);
-        info->value_offset = ECS_ALIGN(
-            info->key_ti->size, info->value_ti->alignment);
-        info->entry_size = info->value_offset + info->value_ti->size;
-    }
+    ecs_assert(info->key_ti->size <= ECS_SIZEOF(ecs_map_key_t),
+        ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!info->owns_key || info->key_ti->hooks.equals != NULL, 
+        ECS_INTERNAL_ERROR, NULL);
 
     return 0;
 }
@@ -94487,53 +94460,84 @@ static void* flecs_meta_map_value_ptr(
     const ecs_meta_map_info_t *info,
     ecs_map_val_t *val)
 {
-    if (info->hash) {
-        return ECS_OFFSET((void*)(uintptr_t)val[0], info->value_offset);
-    } else if (flecs_meta_map_alloc_value(info)) {
+    if (flecs_meta_map_alloc_value(info)) {
         return (void*)(uintptr_t)val[0];
     } else {
         return val;
     }
 }
 
-/* Find entry for key. If the key is not found, slot_out is set to the map key
- * at which the key should be inserted. */
-static void* flecs_meta_map_find_entry(
+/* Find map key for key. For keys owned by the map, the map key is the key
+ * value (e.g. the string pointer), so keys are looked up by comparing them
+ * with the keys in the map. */
+static bool flecs_meta_map_find_key(
     const ecs_meta_map_info_t *info,
     const ecs_map_t *map,
     const void *key,
-    ecs_map_key_t *slot_out)
+    ecs_map_key_t *map_key_out)
 {
-    ecs_map_key_t slot = info->hash(key);
-    ecs_map_val_t *val;
-    while ((val = ecs_map_get(map, slot))) {
-        void *entry = (void*)(uintptr_t)val[0];
-        if (flecs_type_info_equals(entry, key, info->key_ti)) {
-            *slot_out = slot;
-            return entry;
-        }
-
-        slot ++;
+    if (!info->owns_key) {
+        *map_key_out = flecs_meta_map_key(info, key);
+        return ecs_map_get(map, *map_key_out) != NULL;
     }
 
-    *slot_out = slot;
-    return NULL;
+    ecs_map_iter_t it = ecs_map_iter(map);
+    while (ecs_map_next(&it)) {
+        if (flecs_type_info_equals(&it.res[0], key, info->key_ti)) {
+            *map_key_out = it.res[0];
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static ecs_map_key_t flecs_meta_map_key_copy(
+    const ecs_meta_map_info_t *info,
+    const void *key)
+{
+    if (!info->owns_key) {
+        return flecs_meta_map_key(info, key);
+    }
+
+    ecs_map_key_t result = 0;
+    flecs_type_info_ctor(&result, 1, info->key_ti);
+    flecs_type_info_copy(&result, key, 1, info->key_ti);
+    return result;
+}
+
+static ecs_map_val_t* flecs_meta_map_insert_elem(
+    const ecs_meta_map_info_t *info,
+    ecs_map_t *map,
+    ecs_map_key_t map_key)
+{
+    ecs_map_val_t *val = ecs_map_ensure(map, map_key);
+    if (flecs_meta_map_alloc_value(info)) {
+        val[0] = (ecs_map_val_t)(uintptr_t)ecs_os_calloc(info->value_ti->size);
+    } else {
+        val[0] = 0;
+    }
+
+    flecs_type_info_ctor(flecs_meta_map_value_ptr(info, val), 1, 
+        info->value_ti);
+    return val;
 }
 
 /* Destruct and free element storage */
 static void flecs_meta_map_free_elem(
     const ecs_meta_map_info_t *info,
+    ecs_map_key_t map_key,
     ecs_map_val_t *val)
 {
     void *ptr = flecs_meta_map_value_ptr(info, val);
     flecs_type_info_dtor(ptr, 1, info->value_ti);
 
-    if (info->hash) {
-        void *entry = (void*)(uintptr_t)val[0];
-        flecs_type_info_dtor(entry, 1, info->key_ti);
-        ecs_os_free(entry);
-    } else if (flecs_meta_map_alloc_value(info)) {
+    if (flecs_meta_map_alloc_value(info)) {
         ecs_os_free(ptr);
+    }
+
+    if (info->owns_key) {
+        flecs_type_info_dtor(&map_key, 1, info->key_ti);
     }
 }
 
@@ -94546,14 +94550,12 @@ void* flecs_meta_map_get(
         return NULL;
     }
 
-    if (info->hash) {
-        ecs_map_key_t slot;
-        void *entry = flecs_meta_map_find_entry(info, map, key, &slot);
-        return entry ? ECS_OFFSET(entry, info->value_offset) : NULL;
+    ecs_map_key_t map_key;
+    if (!flecs_meta_map_find_key(info, map, key, &map_key)) {
+        return NULL;
     }
 
-    ecs_map_val_t *val = ecs_map_get(map, flecs_meta_map_key(info, key));
-    return val ? flecs_meta_map_value_ptr(info, val) : NULL;
+    return flecs_meta_map_value_ptr(info, ecs_map_get(map, map_key));
 }
 
 void* flecs_meta_map_ensure(
@@ -94564,46 +94566,21 @@ void* flecs_meta_map_ensure(
 {
     ecs_map_init_if(map, NULL);
 
-    void *ptr;
-    bool created;
-    if (info->hash) {
-        ecs_map_key_t slot;
-        void *entry = flecs_meta_map_find_entry(info, map, key, &slot);
-        created = entry == NULL;
-        if (created) {
-            entry = ecs_os_calloc(info->entry_size);
-            flecs_type_info_ctor(entry, 1, info->key_ti);
-            flecs_type_info_copy(entry, key, 1, info->key_ti);
-            ecs_map_insert(map, slot, (ecs_map_val_t)(uintptr_t)entry);
-        }
-
-        ptr = ECS_OFFSET(entry, info->value_offset);
-    } else {
-        int32_t count = ecs_map_count(map);
-        ecs_map_val_t *val = ecs_map_ensure(
-            map, flecs_meta_map_key(info, key));
-        created = count != ecs_map_count(map);
-        if (created) {
-            if (flecs_meta_map_alloc_value(info)) {
-                val[0] = (ecs_map_val_t)(uintptr_t)
-                    ecs_os_calloc(info->value_ti->size);
-            } else {
-                val[0] = 0;
-            }
-        }
-
-        ptr = flecs_meta_map_value_ptr(info, val);
-    }
-
+    ecs_map_key_t map_key;
+    ecs_map_val_t *val;
+    bool created = !flecs_meta_map_find_key(info, map, key, &map_key);
     if (created) {
-        flecs_type_info_ctor(ptr, 1, info->value_ti);
+        val = flecs_meta_map_insert_elem(info, map, 
+            flecs_meta_map_key_copy(info, key));
+    } else {
+        val = ecs_map_get(map, map_key);
     }
 
     if (is_new) {
         *is_new = created;
     }
 
-    return ptr;
+    return flecs_meta_map_value_ptr(info, val);
 }
 
 bool flecs_meta_map_remove(
@@ -94615,40 +94592,13 @@ bool flecs_meta_map_remove(
         return false;
     }
 
-    if (!info->hash) {
-        ecs_map_key_t map_key = flecs_meta_map_key(info, key);
-        ecs_map_val_t *val = ecs_map_get(map, map_key);
-        if (!val) {
-            return false;
-        }
-
-        flecs_meta_map_free_elem(info, val);
-        ecs_map_remove(map, map_key);
-        return true;
-    }
-
-    ecs_map_key_t slot;
-    if (!flecs_meta_map_find_entry(info, map, key, &slot)) {
+    ecs_map_key_t map_key;
+    if (!flecs_meta_map_find_key(info, map, key, &map_key)) {
         return false;
     }
 
-    flecs_meta_map_free_elem(info, ecs_map_get(map, slot));
-    ecs_map_remove(map, slot);
-
-    /* Entries after the removed entry may have been probed past it. Reinsert
-     * them so that they can still be found. */
-    ecs_map_val_t *val;
-    while ((val = ecs_map_get(map, ++ slot))) {
-        void *entry = (void*)(uintptr_t)val[0];
-        ecs_map_remove(map, slot);
-
-        ecs_map_key_t new_slot;
-        void *found = flecs_meta_map_find_entry(info, map, entry, &new_slot);
-        ecs_assert(found == NULL, ECS_INTERNAL_ERROR, NULL);
-        (void)found;
-        ecs_map_insert(map, new_slot, (ecs_map_val_t)(uintptr_t)entry);
-    }
-
+    flecs_meta_map_free_elem(info, map_key, ecs_map_get(map, map_key));
+    ecs_map_remove(map, map_key);
     return true;
 }
 
@@ -94662,7 +94612,7 @@ void flecs_meta_map_clear(
 
     ecs_map_iter_t it = ecs_map_iter(map);
     while (ecs_map_next(&it)) {
-        flecs_meta_map_free_elem(info, &it.res[1]);
+        flecs_meta_map_free_elem(info, it.res[0], &it.res[1]);
     }
 
     ecs_map_clear(map);
@@ -94695,24 +94645,9 @@ void flecs_meta_map_copy(
     const ecs_type_info_t *value_ti = info->value_ti;
     ecs_map_iter_t it = ecs_map_iter(src);
     while (ecs_map_next(&it)) {
-        /* Insert elements at the same map keys as the source map, which also
-         * preserves the probe sequences of keys stored in entries. */
-        ecs_map_val_t *val = ecs_map_ensure(dst, ecs_map_key(&it));
-        if (info->hash) {
-            const void *src_entry = (void*)(uintptr_t)it.res[1];
-            void *entry = ecs_os_calloc(info->entry_size);
-            flecs_type_info_ctor(entry, 1, info->key_ti);
-            flecs_type_info_copy(entry, src_entry, 1, info->key_ti);
-            val[0] = (ecs_map_val_t)(uintptr_t)entry;
-        } else if (flecs_meta_map_alloc_value(info)) {
-            val[0] = (ecs_map_val_t)(uintptr_t)ecs_os_calloc(value_ti->size);
-        } else {
-            val[0] = 0;
-        }
-
-        void *dst_value = flecs_meta_map_value_ptr(info, val);
-        flecs_type_info_ctor(dst_value, 1, value_ti);
-        flecs_type_info_copy(dst_value, 
+        ecs_map_val_t *val = flecs_meta_map_insert_elem(info, dst, 
+            flecs_meta_map_key_copy(info, &it.res[0]));
+        flecs_type_info_copy(flecs_meta_map_value_ptr(info, val), 
             flecs_meta_map_value_ptr(info, &it.res[1]), 1, value_ti);
     }
 }
@@ -94736,10 +94671,6 @@ bool flecs_meta_map_next(
 void* flecs_meta_map_iter_key(
     const ecs_meta_map_iter_t *it)
 {
-    if (it->info.hash) {
-        return (void*)(uintptr_t)it->it.res[1];
-    }
-
     return &it->it.res[0];
 }
 
@@ -111047,7 +110978,7 @@ const void* flecs_value_map_key(
     const ecs_value_t *key,
     ecs_map_key_t *key_storage)
 {
-    if (info->hash) {
+    if (info->owns_key) {
         ecs_assert(key->type == info->key_ti->component,
             ECS_INTERNAL_ERROR, NULL);
         return key->ptr;

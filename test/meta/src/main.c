@@ -288,6 +288,8 @@ void MapTypes_map_invalid_key_type_struct(void);
 void MapTypes_map_enum_i32(void);
 void MapTypes_map_bitmask_i32(void);
 void MapTypes_map_string_struct(void);
+void MapTypes_map_string_key_layout(void);
+void MapTypes_map_string_key_populate_from_c(void);
 
 // Testsuite 'Units'
 void Units_member_w_unit(void);
@@ -2769,6 +2771,14 @@ bake_test_case MapTypes_testcases[] = {
     {
         "map_string_struct",
         MapTypes_map_string_struct
+    },
+    {
+        "map_string_key_layout",
+        MapTypes_map_string_key_layout
+    },
+    {
+        "map_string_key_populate_from_c",
+        MapTypes_map_string_key_populate_from_c
     }
 };
 
@@ -8359,7 +8369,7 @@ static bake_test_suite suites[] = {
         "MapTypes",
         NULL,
         NULL,
-        13,
+        15,
         MapTypes_testcases
     },
     {

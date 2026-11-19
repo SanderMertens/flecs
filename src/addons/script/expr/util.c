@@ -975,7 +975,7 @@ const void* flecs_value_map_key(
     const ecs_value_t *key,
     ecs_map_key_t *key_storage)
 {
-    if (info->hash) {
+    if (info->owns_key) {
         ecs_assert(key->type == info->key_ti->component,
             ECS_INTERNAL_ERROR, NULL);
         return key->ptr;

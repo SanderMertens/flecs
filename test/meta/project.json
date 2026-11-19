@@ -308,7 +308,9 @@
                 "map_invalid_key_type_struct",
                 "map_enum_i32",
                 "map_bitmask_i32",
-                "map_string_struct"
+                "map_string_struct",
+                "map_string_key_layout",
+                "map_string_key_populate_from_c"
             ]
         },  {
             "id": "Units",

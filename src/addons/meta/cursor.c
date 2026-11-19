@@ -938,7 +938,7 @@ int ecs_meta_key(
         return -1;
     }
 
-    if (info.hash) {
+    if (info.owns_key) {
         if (key->type != info.key_ti->component) {
             ecs_err("invalid key type '%s' for map with key type '%s'",
                 flecs_errstr(ecs_get_path(cursor->world, key->type)),
