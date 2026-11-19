@@ -2109,6 +2109,20 @@ void Pairs_add_value_pair_w_0_target(void);
 void Pairs_add_value_pair_w_0_target_w_isa(void);
 void Pairs_add_to_entity_w_value_pair_0_target_w_isa(void);
 void Pairs_inherit_relationship_trait(void);
+void Pairs_childof_and_traversable_rel_in_opposite_directions(void);
+void Pairs_traversable_rel_and_childof_in_opposite_directions(void);
+void Pairs_childof_and_traversable_rel_in_opposite_directions_w_delete_parent(void);
+void Pairs_childof_and_traversable_rel_in_opposite_directions_w_delete_child(void);
+void Pairs_childof_and_traversable_rel_in_opposite_directions_w_up_query(void);
+void Pairs_childof_and_traversable_rel_in_opposite_directions_w_cascade_query(void);
+void Pairs_childof_and_traversable_rel_in_opposite_directions_w_observer(void);
+void Pairs_2_traversable_rels_in_opposite_directions(void);
+void Pairs_2_traversable_rels_in_opposite_directions_w_observer(void);
+void Pairs_2_traversable_rels_in_opposite_directions_w_delete(void);
+void Pairs_2_traversable_rels_in_opposite_directions_w_delete_target(void);
+void Pairs_2_traversable_rels_in_opposite_directions_w_childof(void);
+void Pairs_childof_and_isa_in_opposite_directions(void);
+void Pairs_isa_and_childof_in_opposite_directions(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -12025,6 +12039,62 @@ bake_test_case Pairs_testcases[] = {
     {
         "inherit_relationship_trait",
         Pairs_inherit_relationship_trait
+    },
+    {
+        "childof_and_traversable_rel_in_opposite_directions",
+        Pairs_childof_and_traversable_rel_in_opposite_directions
+    },
+    {
+        "traversable_rel_and_childof_in_opposite_directions",
+        Pairs_traversable_rel_and_childof_in_opposite_directions
+    },
+    {
+        "childof_and_traversable_rel_in_opposite_directions_w_delete_parent",
+        Pairs_childof_and_traversable_rel_in_opposite_directions_w_delete_parent
+    },
+    {
+        "childof_and_traversable_rel_in_opposite_directions_w_delete_child",
+        Pairs_childof_and_traversable_rel_in_opposite_directions_w_delete_child
+    },
+    {
+        "childof_and_traversable_rel_in_opposite_directions_w_up_query",
+        Pairs_childof_and_traversable_rel_in_opposite_directions_w_up_query
+    },
+    {
+        "childof_and_traversable_rel_in_opposite_directions_w_cascade_query",
+        Pairs_childof_and_traversable_rel_in_opposite_directions_w_cascade_query
+    },
+    {
+        "childof_and_traversable_rel_in_opposite_directions_w_observer",
+        Pairs_childof_and_traversable_rel_in_opposite_directions_w_observer
+    },
+    {
+        "2_traversable_rels_in_opposite_directions",
+        Pairs_2_traversable_rels_in_opposite_directions
+    },
+    {
+        "2_traversable_rels_in_opposite_directions_w_observer",
+        Pairs_2_traversable_rels_in_opposite_directions_w_observer
+    },
+    {
+        "2_traversable_rels_in_opposite_directions_w_delete",
+        Pairs_2_traversable_rels_in_opposite_directions_w_delete
+    },
+    {
+        "2_traversable_rels_in_opposite_directions_w_delete_target",
+        Pairs_2_traversable_rels_in_opposite_directions_w_delete_target
+    },
+    {
+        "2_traversable_rels_in_opposite_directions_w_childof",
+        Pairs_2_traversable_rels_in_opposite_directions_w_childof
+    },
+    {
+        "childof_and_isa_in_opposite_directions",
+        Pairs_childof_and_isa_in_opposite_directions
+    },
+    {
+        "isa_and_childof_in_opposite_directions",
+        Pairs_isa_and_childof_in_opposite_directions
     }
 };
 
@@ -18825,7 +18895,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        147,
+        161,
         Pairs_testcases
     },
     {

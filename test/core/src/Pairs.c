@@ -3759,3 +3759,494 @@ void Pairs_disable_toggle_component_and_toggle_pair(void) {
 
     ecs_fini(world);
 }
+
+void Pairs_childof_and_traversable_rel_in_opposite_directions(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t rel = ecs_entity(world, { .name = "relation" });
+    ecs_add_id(world, rel, EcsTraversable);
+
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+
+    ecs_add_pair(world, a, EcsChildOf, b);
+    ecs_add_pair(world, b, rel, a);
+
+    test_assert(ecs_has_pair(world, a, EcsChildOf, b));
+    test_assert(ecs_has_pair(world, b, rel, a));
+    test_uint(ecs_get_parent(world, a), b);
+    test_uint(ecs_get_target(world, b, rel, 0), a);
+
+    char *path = ecs_get_path(world, a);
+    test_str(path, "b.a");
+    ecs_os_free(path);
+
+    test_int(ecs_get_depth(world, a, EcsChildOf), 1);
+    test_int(ecs_get_depth(world, b, EcsChildOf), 0);
+    test_int(ecs_get_depth(world, b, rel), 1);
+    test_int(ecs_get_depth(world, a, rel), 0);
+
+    ecs_fini(world);
+}
+
+void Pairs_traversable_rel_and_childof_in_opposite_directions(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t rel = ecs_entity(world, { .name = "relation" });
+    ecs_add_id(world, rel, EcsTraversable);
+
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+
+    ecs_add_pair(world, b, rel, a);
+    ecs_add_pair(world, a, EcsChildOf, b);
+
+    test_assert(ecs_has_pair(world, a, EcsChildOf, b));
+    test_assert(ecs_has_pair(world, b, rel, a));
+
+    char *path = ecs_get_path(world, a);
+    test_str(path, "b.a");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Pairs_childof_and_traversable_rel_in_opposite_directions_w_delete_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t rel = ecs_new_w_id(world, EcsTraversable);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+
+    ecs_add_pair(world, a, EcsChildOf, b);
+    ecs_add_pair(world, b, rel, a);
+
+    ecs_delete(world, b);
+
+    test_assert(!ecs_is_alive(world, a));
+    test_assert(!ecs_is_alive(world, b));
+
+    ecs_fini(world);
+}
+
+void Pairs_childof_and_traversable_rel_in_opposite_directions_w_delete_child(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t rel = ecs_new_w_id(world, EcsTraversable);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+
+    ecs_add_pair(world, a, EcsChildOf, b);
+    ecs_add_pair(world, b, rel, a);
+
+    ecs_delete(world, a);
+
+    test_assert(!ecs_is_alive(world, a));
+    test_assert(ecs_is_alive(world, b));
+    test_assert(!ecs_has_pair(world, b, rel, EcsWildcard));
+
+    ecs_fini(world);
+}
+
+void Pairs_childof_and_traversable_rel_in_opposite_directions_w_up_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t rel = ecs_new_w_id(world, EcsTraversable);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+
+    ecs_add_pair(world, a, EcsChildOf, b);
+    ecs_add_pair(world, b, rel, a);
+
+    ecs_set(world, a, Position, {10, 20});
+    ecs_set(world, b, Position, {30, 40});
+
+    ecs_query_t *q_childof = ecs_query(world, {
+        .terms = {{ .id = ecs_id(Position), .src.id = EcsUp, .trav = EcsChildOf }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q_childof != NULL);
+
+    ecs_query_t *q_rel = ecs_query(world, {
+        .terms = {{ .id = ecs_id(Position), .src.id = EcsUp, .trav = rel }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q_rel != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q_childof);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], a);
+        test_uint(it.sources[0], b);
+        const Position *p = ecs_field(&it, Position, 0);
+        test_int(p->x, 30);
+        test_int(p->y, 40);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q_rel);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], b);
+        test_uint(it.sources[0], a);
+        const Position *p = ecs_field(&it, Position, 0);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q_childof);
+    ecs_query_fini(q_rel);
+
+    ecs_fini(world);
+}
+
+void Pairs_childof_and_traversable_rel_in_opposite_directions_w_cascade_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t rel = ecs_new_w_id(world, EcsTraversable);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+
+    ecs_add(world, a, Position);
+    ecs_add(world, b, Position);
+
+    ecs_query_t *q_childof = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Position), .src.id = EcsCascade, .trav = EcsChildOf, .oper = EcsOptional }
+        },
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q_childof != NULL);
+
+    ecs_query_t *q_rel = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Position), .src.id = EcsCascade, .trav = rel, .oper = EcsOptional }
+        },
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q_rel != NULL);
+
+    ecs_add_pair(world, a, EcsChildOf, b);
+    ecs_add_pair(world, b, rel, a);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q_childof);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], b);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], a);
+        test_uint(it.sources[1], b);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q_rel);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], a);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], b);
+        test_uint(it.sources[1], a);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q_childof);
+    ecs_query_fini(q_rel);
+
+    ecs_fini(world);
+}
+
+void Pairs_childof_and_traversable_rel_in_opposite_directions_w_observer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t rel = ecs_new_w_id(world, EcsTraversable);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+
+    ecs_add_pair(world, a, EcsChildOf, b);
+    ecs_add_pair(world, b, rel, a);
+
+    Probe ctx_childof = {0};
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(Position), .src.id = EcsUp, .trav = EcsChildOf }},
+        .events = { EcsOnSet },
+        .callback = PairTrigger,
+        .ctx = &ctx_childof
+    });
+
+    Probe ctx_rel = {0};
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(Position), .src.id = EcsUp, .trav = rel }},
+        .events = { EcsOnSet },
+        .callback = PairTrigger,
+        .ctx = &ctx_rel
+    });
+
+    ecs_set(world, b, Position, {10, 20});
+    test_int(ctx_childof.invoked, 1);
+    test_int(ctx_childof.count, 1);
+    test_uint(ctx_childof.e[0], a);
+    test_uint(ctx_childof.s[0][0], b);
+    test_int(ctx_rel.invoked, 0);
+
+    ecs_os_zeromem(&ctx_childof);
+
+    ecs_set(world, a, Position, {30, 40});
+    test_int(ctx_rel.invoked, 1);
+    test_int(ctx_rel.count, 1);
+    test_uint(ctx_rel.e[0], b);
+    test_uint(ctx_rel.s[0][0], a);
+    test_int(ctx_childof.invoked, 0);
+
+    ecs_fini(world);
+}
+
+void Pairs_2_traversable_rels_in_opposite_directions(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t r1 = ecs_new_w_id(world, EcsTraversable);
+    ecs_entity_t r2 = ecs_new_w_id(world, EcsTraversable);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+
+    ecs_add_pair(world, a, r1, b);
+    ecs_add_pair(world, b, r2, a);
+
+    test_assert(ecs_has_pair(world, a, r1, b));
+    test_assert(ecs_has_pair(world, b, r2, a));
+    test_int(ecs_get_depth(world, a, r1), 1);
+    test_int(ecs_get_depth(world, b, r2), 1);
+
+    ecs_set(world, a, Position, {10, 20});
+    ecs_set(world, b, Position, {30, 40});
+
+    ecs_query_t *q_r1 = ecs_query(world, {
+        .terms = {{ .id = ecs_id(Position), .src.id = EcsUp, .trav = r1 }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q_r1 != NULL);
+
+    ecs_query_t *q_r2 = ecs_query(world, {
+        .terms = {{ .id = ecs_id(Position), .src.id = EcsUp, .trav = r2 }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q_r2 != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q_r1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], a);
+        test_uint(it.sources[0], b);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q_r2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], b);
+        test_uint(it.sources[0], a);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q_r1);
+    ecs_query_fini(q_r2);
+
+    ecs_fini(world);
+}
+
+void Pairs_2_traversable_rels_in_opposite_directions_w_observer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t r1 = ecs_new_w_id(world, EcsTraversable);
+    ecs_entity_t r2 = ecs_new_w_id(world, EcsTraversable);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+
+    ecs_add_pair(world, a, r1, b);
+    ecs_add_pair(world, b, r2, a);
+
+    Probe ctx_r1 = {0};
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(Position), .src.id = EcsUp, .trav = r1 }},
+        .events = { EcsOnSet },
+        .callback = PairTrigger,
+        .ctx = &ctx_r1
+    });
+
+    Probe ctx_r2 = {0};
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(Position), .src.id = EcsUp, .trav = r2 }},
+        .events = { EcsOnSet },
+        .callback = PairTrigger,
+        .ctx = &ctx_r2
+    });
+
+    ecs_set(world, b, Position, {10, 20});
+    test_int(ctx_r1.invoked, 1);
+    test_int(ctx_r1.count, 1);
+    test_uint(ctx_r1.e[0], a);
+    test_uint(ctx_r1.s[0][0], b);
+    test_int(ctx_r2.invoked, 0);
+
+    ecs_os_zeromem(&ctx_r1);
+
+    ecs_set(world, a, Position, {30, 40});
+    test_int(ctx_r2.invoked, 1);
+    test_int(ctx_r2.count, 1);
+    test_uint(ctx_r2.e[0], b);
+    test_uint(ctx_r2.s[0][0], a);
+    test_int(ctx_r1.invoked, 0);
+
+    ecs_fini(world);
+}
+
+void Pairs_2_traversable_rels_in_opposite_directions_w_delete(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t r1 = ecs_new_w_id(world, EcsTraversable);
+    ecs_entity_t r2 = ecs_new_w_id(world, EcsTraversable);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+
+    ecs_add_pair(world, a, r1, b);
+    ecs_add_pair(world, b, r2, a);
+
+    ecs_delete(world, a);
+
+    test_assert(!ecs_is_alive(world, a));
+    test_assert(ecs_is_alive(world, b));
+    test_assert(!ecs_has_pair(world, b, r2, EcsWildcard));
+
+    ecs_fini(world);
+}
+
+void Pairs_2_traversable_rels_in_opposite_directions_w_delete_target(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t r1 = ecs_new_w_id(world, EcsTraversable);
+    ecs_add_pair(world, r1, EcsOnDeleteTarget, EcsDelete);
+    ecs_entity_t r2 = ecs_new_w_id(world, EcsTraversable);
+    ecs_add_pair(world, r2, EcsOnDeleteTarget, EcsDelete);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+
+    ecs_add_pair(world, a, r1, b);
+    ecs_add_pair(world, b, r2, a);
+
+    ecs_delete(world, a);
+
+    test_assert(!ecs_is_alive(world, a));
+    test_assert(!ecs_is_alive(world, b));
+
+    ecs_fini(world);
+}
+
+void Pairs_2_traversable_rels_in_opposite_directions_w_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t r1 = ecs_new_w_id(world, EcsTraversable);
+    ecs_entity_t r2 = ecs_new_w_id(world, EcsTraversable);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+    ecs_entity_t c = ecs_new(world);
+
+    ecs_add_pair(world, a, EcsChildOf, b);
+    ecs_add_pair(world, b, r1, c);
+    ecs_add_pair(world, c, r2, a);
+
+    test_assert(ecs_has_pair(world, a, EcsChildOf, b));
+    test_assert(ecs_has_pair(world, b, r1, c));
+    test_assert(ecs_has_pair(world, c, r2, a));
+
+    ecs_delete(world, b);
+
+    test_assert(!ecs_is_alive(world, a));
+    test_assert(!ecs_is_alive(world, b));
+    test_assert(ecs_is_alive(world, c));
+    test_assert(!ecs_has_pair(world, c, r2, EcsWildcard));
+
+    ecs_fini(world);
+}
+
+void Pairs_childof_and_isa_in_opposite_directions(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+    ecs_set(world, a, Position, {10, 20});
+
+    ecs_add_pair(world, a, EcsChildOf, b);
+    ecs_add_pair(world, b, EcsIsA, a);
+
+    test_assert(ecs_has_pair(world, a, EcsChildOf, b));
+    test_assert(ecs_has_pair(world, b, EcsIsA, a));
+    test_assert(ecs_has(world, b, Position));
+    test_assert(ecs_owns(world, b, Position));
+
+    const Position *p = ecs_get(world, b, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_delete(world, b);
+
+    test_assert(!ecs_is_alive(world, a));
+    test_assert(!ecs_is_alive(world, b));
+
+    ecs_fini(world);
+}
+
+void Pairs_isa_and_childof_in_opposite_directions(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+    ecs_set(world, b, Position, {10, 20});
+
+    ecs_add_pair(world, b, EcsIsA, a);
+    ecs_add_pair(world, a, EcsChildOf, b);
+
+    test_assert(ecs_has_pair(world, a, EcsChildOf, b));
+    test_assert(ecs_has_pair(world, b, EcsIsA, a));
+
+    ecs_delete(world, b);
+
+    test_assert(!ecs_is_alive(world, a));
+    test_assert(!ecs_is_alive(world, b));
+
+    ecs_fini(world);
+}

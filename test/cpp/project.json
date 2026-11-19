@@ -528,7 +528,9 @@
                 "set_R_existing_value",
                 "symmetric_w_childof",
                 "modified_tag_second",
-                "modified_tag_first"
+                "modified_tag_first",
+                "childof_and_traversable_rel_in_opposite_directions",
+                "2_traversable_rels_in_opposite_directions"
             ]
         }, {
             "id": "Enum",

@@ -2171,7 +2171,21 @@
                 "add_value_pair_w_0_target",
                 "add_value_pair_w_0_target_w_isa",
                 "add_to_entity_w_value_pair_0_target_w_isa",
-                "inherit_relationship_trait"
+                "inherit_relationship_trait",
+                "childof_and_traversable_rel_in_opposite_directions",
+                "traversable_rel_and_childof_in_opposite_directions",
+                "childof_and_traversable_rel_in_opposite_directions_w_delete_parent",
+                "childof_and_traversable_rel_in_opposite_directions_w_delete_child",
+                "childof_and_traversable_rel_in_opposite_directions_w_up_query",
+                "childof_and_traversable_rel_in_opposite_directions_w_cascade_query",
+                "childof_and_traversable_rel_in_opposite_directions_w_observer",
+                "2_traversable_rels_in_opposite_directions",
+                "2_traversable_rels_in_opposite_directions_w_observer",
+                "2_traversable_rels_in_opposite_directions_w_delete",
+                "2_traversable_rels_in_opposite_directions_w_delete_target",
+                "2_traversable_rels_in_opposite_directions_w_childof",
+                "childof_and_isa_in_opposite_directions",
+                "isa_and_childof_in_opposite_directions"
             ]
         }, {
            "id": "Trigger",
