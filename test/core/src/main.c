@@ -18895,11 +18895,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-<<<<<<< HEAD
-        154,
-=======
-        147,
->>>>>>> 434e9dbbfccd7e559e96343a50568644201eac6a
+        161,
         Pairs_testcases
     },
     {
