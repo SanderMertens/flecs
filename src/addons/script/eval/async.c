@@ -64,6 +64,7 @@ struct ecs_script_task_t {
     bool is_async_block;
     bool retains_script;
     bool free_pending;
+    bool disabled;
 };
 
 static void flecs_script_future_lock(
@@ -1265,6 +1266,10 @@ int flecs_script_async_spawn(
     ecs_entity_t entity = 0;
     ecs_entity_t owner_instance = 0, owner_template = 0;
 
+    if (impl->entity && ecs_has_id(world, impl->entity, EcsDisabled)) {
+        return 0;
+    }
+
     if (v->instance_template && v->body_template) {
         entity = v->entity ? v->entity->eval : 0;
         if (!entity || !ecs_is_alive(world, entity)) {
@@ -1872,7 +1877,7 @@ int32_t ecs_script_tasks_progress(
     int32_t cursor = 0, resumed = 0;
     ecs_script_task_t *task;
     while ((task = flecs_script_sched_next(rt, &cursor))) {
-        if (task->status != EcsScriptTaskPending) {
+        if (task->status != EcsScriptTaskPending || task->disabled) {
             continue;
         }
 
@@ -1909,6 +1914,40 @@ int32_t ecs_script_tasks_progress(
     return resumed;
 error:
     return 0;
+}
+
+static void flecs_script_on_disable(
+    ecs_iter_t *it)
+{
+    ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(it->world));
+    if (ecs_is_fini(world)) {
+        return;
+    }
+
+    bool disable = it->event == EcsOnAdd;
+    ecs_script_runtime_t *rt = flecs_script_runtime_get(world);
+    for (int32_t i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        if (!ecs_has(world, e, EcsScript)) {
+            continue;
+        }
+
+        ecs_script_task_t **tasks = ecs_vec_first(&rt->async_tasks);
+        int32_t t, task_count = ecs_vec_count(&rt->async_tasks);
+        for (t = 0; t < task_count; t ++) {
+            ecs_script_task_t *task = tasks[t];
+            if (!task || task->disabled == disable ||
+                flecs_script_impl(task->script)->entity != e)
+            {
+                continue;
+            }
+
+            task->disabled = disable;
+            if (!disable && !task->running) {
+                flecs_script_task_sched_wait(task);
+            }
+        }
+    }
 }
 
 #ifdef FLECS_PIPELINE
@@ -2059,6 +2098,12 @@ void flecs_script_async_import(
     });
     ecs_add_pair(world, ecs_id(EcsScriptAsyncTasks),
         EcsOnInstantiate, EcsDontInherit);
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = EcsDisabled }},
+        .events = { EcsOnAdd, EcsOnRemove },
+        .callback = flecs_script_on_disable
+    });
 
 #ifdef FLECS_PIPELINE
     ECS_IMPORT(world, FlecsPipeline);
