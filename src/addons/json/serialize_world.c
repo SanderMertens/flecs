@@ -49,7 +49,8 @@ int ecs_world_to_json_buf(
         .serialize_full_paths = true,
         .serialize_entity_ids = true,
         .serialize_values = true,
-        .serialize_parents_before_children = true
+        .serialize_parents_before_children = true,
+        .pretty = desc && desc->pretty
     };
 
     int ret = ecs_iter_to_json_buf(&it, buf_out, &json_desc);

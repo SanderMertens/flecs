@@ -1711,6 +1711,8 @@ void Meta_ecs_struct_macro_idempotent(void);
 void Meta_ecs_enum_macro(void);
 void Meta_ecs_bitmask_macro(void);
 void Meta_ecs_struct_macro_no_reflection_for_plain_struct(void);
+void Meta_entity_to_json_w_pretty(void);
+void Meta_query_to_json_w_pretty(void);
 
 // Testsuite 'Table'
 void Table_each(void);
@@ -8487,6 +8489,14 @@ bake_test_case Meta_testcases[] = {
     {
         "ecs_struct_macro_no_reflection_for_plain_struct",
         Meta_ecs_struct_macro_no_reflection_for_plain_struct
+    },
+    {
+        "entity_to_json_w_pretty",
+        Meta_entity_to_json_w_pretty
+    },
+    {
+        "query_to_json_w_pretty",
+        Meta_query_to_json_w_pretty
     }
 };
 
@@ -8970,7 +8980,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        75,
+        77,
         Meta_testcases
     },
     {

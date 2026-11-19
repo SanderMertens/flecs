@@ -332,7 +332,8 @@ int ecs_iter_to_json_buf(
         return -1;
     }
 
-    flecs_json_assemble_output(buf, ser_ctx.type_info_buf, &body_buf);
+    flecs_json_assemble_output(buf, ser_ctx.type_info_buf, &body_buf,
+        desc && desc->pretty);
 
     return 0;
 }

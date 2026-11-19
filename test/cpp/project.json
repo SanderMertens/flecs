@@ -1766,7 +1766,9 @@
                 "ecs_struct_macro_idempotent",
                 "ecs_enum_macro",
                 "ecs_bitmask_macro",
-                "ecs_struct_macro_no_reflection_for_plain_struct"
+                "ecs_struct_macro_no_reflection_for_plain_struct",
+                "entity_to_json_w_pretty",
+                "query_to_json_w_pretty"
             ]
         }, {
             "id": "Table",

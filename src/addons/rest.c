@@ -124,6 +124,7 @@ static void flecs_rest_parse_json_ser_entity_params(
     flecs_rest_bool_param(req, "type_info", &desc->serialize_type_info);
     flecs_rest_bool_param(req, "matches", &desc->serialize_matches);
     flecs_rest_bool_param(req, "alerts", &desc->serialize_alerts);
+    flecs_rest_bool_param(req, "pretty", &desc->pretty);
 
     char *rel = NULL;
     flecs_rest_string_param(req, "refs", &rel);
@@ -149,6 +150,7 @@ static void flecs_rest_parse_json_ser_iter_params(
     flecs_rest_bool_param(req, "query_profile", &desc->serialize_query_profile);
     flecs_rest_bool_param(req, "table", &desc->serialize_table);
     flecs_rest_bool_param(req, "fields", &desc->serialize_fields);
+    flecs_rest_bool_param(req, "pretty", &desc->pretty);
 
     bool results = true;
     flecs_rest_bool_param(req, "results", &results);
@@ -232,6 +234,7 @@ static void flecs_rest_parse_json_ser_world_params(
 {
     flecs_rest_bool_param(req, "builtin", &desc->serialize_builtin);
     flecs_rest_bool_param(req, "modules", &desc->serialize_modules);
+    flecs_rest_bool_param(req, "pretty", &desc->pretty);
 }
 
 static bool flecs_rest_get_world(

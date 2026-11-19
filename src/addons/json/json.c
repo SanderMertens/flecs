@@ -781,11 +781,124 @@ void flecs_json_type_info_accum_fini(
     }
 }
 
+static void flecs_json_pretty_newline(
+    ecs_strbuf_t *buf,
+    int32_t indent)
+{
+    ecs_strbuf_appendch(buf, '\n');
+    int32_t i;
+    for (i = 0; i < indent; i ++) {
+        ecs_strbuf_appendlit(buf, "  ");
+    }
+}
+
+void ecs_json_pretty_buf(
+    const char *json,
+    ecs_strbuf_t *buf)
+{
+    ecs_assert(json != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(buf != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const char *ptr = json;
+    int32_t indent = 0;
+    char ch;
+
+    while ((ch = ptr[0])) {
+        switch(ch) {
+        case '"': {
+            /* Copy strings verbatim, including escape sequences */
+            const char *start = ptr ++;
+            while ((ch = ptr[0]) && ch != '"') {
+                if (ch == '\\' && ptr[1]) {
+                    ptr ++;
+                }
+                ptr ++;
+            }
+
+            if (ch) {
+                ptr ++;
+            }
+
+            ecs_strbuf_appendstrn(buf, start, flecs_ito(int32_t, ptr - start));
+            continue;
+        }
+        case '{':
+        case '[': {
+            char close = (ch == '{') ? '}' : ']';
+            ecs_strbuf_appendch(buf, ch);
+            ptr = flecs_parse_ws_eol(ptr + 1);
+
+            /* Don't spread empty scopes out over multiple lines */
+            if (ptr[0] == close) {
+                ecs_strbuf_appendch(buf, close);
+                ptr ++;
+            } else {
+                indent ++;
+                flecs_json_pretty_newline(buf, indent);
+            }
+            continue;
+        }
+        case '}':
+        case ']':
+            if (indent) {
+                indent --;
+            }
+            flecs_json_pretty_newline(buf, indent);
+            ecs_strbuf_appendch(buf, ch);
+            break;
+        case ',':
+            ecs_strbuf_appendch(buf, ',');
+            flecs_json_pretty_newline(buf, indent);
+            break;
+        case ':':
+            ecs_strbuf_appendlit(buf, ": ");
+            break;
+        default:
+            if (!isspace((unsigned char)ch)) {
+                ecs_strbuf_appendch(buf, ch);
+            }
+            break;
+        }
+
+        ptr ++;
+    }
+}
+
+char* ecs_json_pretty(
+    const char *json)
+{
+    if (!json) {
+        return NULL;
+    }
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_json_pretty_buf(json, &buf);
+    char *result = ecs_strbuf_get(&buf);
+    if (!result) {
+        /* Empty input */
+        result = ecs_os_strdup("");
+    }
+
+    return result;
+}
+
 void flecs_json_assemble_output(
     ecs_strbuf_t *out,
     ecs_strbuf_t *type_info_buf,
-    ecs_strbuf_t *body_buf)
+    ecs_strbuf_t *body_buf,
+    bool pretty)
 {
+    if (pretty) {
+        ecs_strbuf_t compact = ECS_STRBUF_INIT;
+        flecs_json_assemble_output(&compact, type_info_buf, body_buf, false);
+        char *json = ecs_strbuf_get(&compact);
+        if (json) {
+            ecs_json_pretty_buf(json, out);
+            ecs_os_free(json);
+        }
+        return;
+    }
+
     flecs_json_object_push(out);
     if (type_info_buf) {
         flecs_json_memberl(out, "type_info");

@@ -416,6 +416,9 @@ static ecs_query_t* flecs_query_init(
 
     if (result->pub.cache_kind != EcsQueryCacheNone) {
         flecs_check_exclusive_world_access_write(result->pub.world);
+        ecs_check(!(world->flags & EcsWorldReadonly),
+            ECS_INVALID_WHILE_READONLY,
+            "cannot create cached query in readonly mode");
         if (stage != world->stages[0]) {
             flecs_commands_begin(world, world->stages[0]);
             main_scope = true;

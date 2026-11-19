@@ -2457,3 +2457,95 @@ void Rest_get_stats_wo_stats_import(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_get_pretty(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/entity/flecs/core?pretty=true", NULL, &reply));
+    test_int(reply.code, 200);
+
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+    test_str(reply_str,
+        "{\n"
+        "  \"parent\": \"flecs\",\n"
+        "  \"name\": \"core\",\n"
+        "  \"tags\": [\n"
+        "    \"flecs.core.Module\"\n"
+        "  ]\n"
+        "}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
+void Rest_query_pretty(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Foo);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/query?expr=Foo&pretty=true", NULL, &reply));
+    test_int(reply.code, 200);
+
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+    test_str(reply_str,
+        "{\n"
+        "  \"results\": [\n"
+        "    {\n"
+        "      \"name\": \"e\",\n"
+        "      \"fields\": {}\n"
+        "    }\n"
+        "  ]\n"
+        "}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
+void Rest_world_pretty(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/world?pretty=true", NULL, &reply));
+    test_int(reply.code, 200);
+
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+
+    char *compact = ecs_world_to_json(world, NULL);
+    test_assert(compact != NULL);
+    char *expect = ecs_json_pretty(compact);
+    test_str(reply_str, expect);
+    ecs_os_free(expect);
+    ecs_os_free(compact);
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}

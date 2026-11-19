@@ -817,7 +817,9 @@
                 "dont_fragment_tag_w_with_added_after_use",
                 "dont_fragment_pair_w_with_dont_fragment_pair",
                 "dont_fragment_tag_w_with_fragmenting_tag",
-                "dont_fragment_added_to_tag_w_with_fragmenting_tag"
+                "dont_fragment_added_to_tag_w_with_fragmenting_tag",
+                "dont_fragment_tag_w_cyclic_with",
+                "dont_fragment_pair_w_cyclic_with"
             ]
         }, {
             "id": "NonFragmentingChildOf",
@@ -2126,6 +2128,13 @@
                 "2_with_relation",
                 "with_for_existing",
                 "nested_with_relation",
+                "cyclic_with",
+                "cyclic_with_self",
+                "cyclic_with_3",
+                "cyclic_with_relation",
+                "cyclic_with_component",
+                "cyclic_with_deferred",
+                "cyclic_with_w_dont_fragment",
                 "65k_relations",
                 "add_not_alive_relation",
                 "remove_wildcard",

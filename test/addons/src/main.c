@@ -574,6 +574,9 @@ void Rest_command_run_multiple_error(void);
 void Rest_command_run_multiple_offset_limit(void);
 void Rest_root_shell_instructions(void);
 void Rest_get_stats_wo_stats_import(void);
+void Rest_get_pretty(void);
+void Rest_query_pretty(void);
+void Rest_world_pretty(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -2784,6 +2787,18 @@ bake_test_case Rest_testcases[] = {
     {
         "get_stats_wo_stats_import",
         Rest_get_stats_wo_stats_import
+    },
+    {
+        "get_pretty",
+        Rest_get_pretty
+    },
+    {
+        "query_pretty",
+        Rest_query_pretty
+    },
+    {
+        "world_pretty",
+        Rest_world_pretty
     }
 };
 
@@ -3244,7 +3259,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        71,
+        74,
         Rest_testcases
     },
     {
