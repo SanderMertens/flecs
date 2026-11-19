@@ -1927,6 +1927,7 @@ void ComponentLifecycle_on_validate_false_blocks_on_set(void);
 void ComponentLifecycle_on_validate_true_invokes_on_set_observer(void);
 void ComponentLifecycle_on_validate_false_blocks_on_set_observer(void);
 void ComponentLifecycle_on_validate_receives_value(void);
+void ComponentLifecycle_on_validate_receives_type_info(void);
 void ComponentLifecycle_on_validate_blocks_modified(void);
 void ComponentLifecycle_on_validate_per_entity_in_bulk(void);
 void ComponentLifecycle_on_validate_false_blocks_on_set_deferred(void);
@@ -3669,6 +3670,7 @@ void Stresstests_add_1k_tags(void);
 
 // Testsuite 'Table'
 void Table_get_index(void);
+void Table_get_index_from_stage(void);
 void Table_get_index_after_tag(void);
 void Table_get_index_not_in_table(void);
 void Table_get_index_tag(void);
@@ -11318,6 +11320,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_on_validate_receives_value
     },
     {
+        "on_validate_receives_type_info",
+        ComponentLifecycle_on_validate_receives_type_info
+    },
+    {
         "on_validate_blocks_modified",
         ComponentLifecycle_on_validate_blocks_modified
     },
@@ -18177,6 +18183,10 @@ bake_test_case Table_testcases[] = {
         Table_get_index
     },
     {
+        "get_index_from_stage",
+        Table_get_index_from_stage
+    },
+    {
         "get_index_after_tag",
         Table_get_index_after_tag
     },
@@ -18888,7 +18898,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        195,
+        196,
         ComponentLifecycle_testcases
     },
     {
@@ -19007,7 +19017,7 @@ static bake_test_suite suites[] = {
         "Table",
         NULL,
         NULL,
-        50,
+        51,
         Table_testcases
     },
     {

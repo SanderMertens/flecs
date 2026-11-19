@@ -5227,12 +5227,20 @@ void ComponentLifecycle_value_move_ctor_invokes_move_ctor(void) {
 static int on_validate_invoked = 0;
 static ecs_entity_t on_validate_last_entity = 0;
 static Position on_validate_last_value = {0, 0};
+static ecs_entity_t on_validate_last_component = 0;
 static int on_validate_observer_invoked = 0;
 
-static bool ValidatePosition(ecs_world_t *world, ecs_entity_t e, void *ptr) {
+static bool ValidatePosition(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    void *ptr,
+    const ecs_type_info_t *type_info)
+{
     test_assert(world != NULL);
     test_assert(e != 0);
     test_assert(ptr != NULL);
+    test_assert(type_info != NULL);
+    on_validate_last_component = type_info->component;
     Position *p = ptr;
     on_validate_invoked ++;
     on_validate_last_entity = e;
@@ -5357,6 +5365,28 @@ void ComponentLifecycle_on_validate_receives_value(void) {
     test_uint(on_validate_last_entity, e);
     test_int(on_validate_last_value.x, 10);
     test_int(on_validate_last_value.y, 20);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_validate_receives_type_info(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_validate = ValidatePosition
+    });
+
+    on_validate_invoked = 0;
+    on_validate_last_component = 0;
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+
+    test_int(on_validate_invoked, 1);
+    test_uint(on_validate_last_component, ecs_id(Position));
 
     ecs_fini(world);
 }
