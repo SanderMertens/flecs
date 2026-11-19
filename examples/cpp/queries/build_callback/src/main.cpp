@@ -16,11 +16,12 @@ int main(int, char *[]) {
 
     // The build method accepts a function that configures the builder. This
     // makes it possible to add terms as separate statements, which can be
-    // easier to read than one long chain of method calls.
+    // easier to read than one long chain of method calls. Because the builder
+    // is passed as auto, template methods are called with the template keyword.
     flecs::query<Position> q = ecs.query_builder<Position>()
-        .build([](flecs::query_builder<Position>& b) {
-            b.with<Velocity>().optional();
-            b.with<Npc>();
+        .build([](auto& b) {
+            b.template with<Velocity>().optional();
+            b.template with<Npc>();
         });
 
     // Create a few test entities for the Position, Npc query
