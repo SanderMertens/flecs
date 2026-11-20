@@ -3346,9 +3346,15 @@ Vector, array and map types are declared with the `vector`, `array` and `map` ki
 vector Points(type: f32)
 array Vec3(type: f32, count: 3)
 map Lookup(key_type: i32, type: string)
+map Prices(key_type: string, type: f32)
 ```
 
-The key type of a map must be a primitive (other than `string`, `f32` or `f64`), an enum or a bitmask.
+The key type of a map must be a primitive (other than `f32` or `f64`), an enum or a bitmask. Elements of a map with string keys are created and accessed with string expressions:
+
+```cpp
+const prices: map(string, f32) = ["apple": 1.5, "pear": 2.0]
+const apple = prices["apple"] // 1.5
+```
 
 ### Value types
 A value type stores a value together with its type. Value types are declared with the `value` kind and an optional type constraint:

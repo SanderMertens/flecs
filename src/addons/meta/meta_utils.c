@@ -427,9 +427,17 @@ error:
 int flecs_meta_ser_map_key(
     const ecs_world_t *world,
     const ecs_meta_op_t *op,
-    ecs_map_key_t key,
+    const void *key_ptr,
     ecs_strbuf_t *str)
 {
+    if (op->underlying_kind == EcsOpString) {
+        return flecs_meta_ser_scalar(
+            world, EcsOpString, key_ptr, str, true);
+    }
+
+    /* Keys of other types are stored as map key */
+    ecs_map_key_t key = *(const ecs_map_key_t*)key_ptr;
+
     if (op->underlying_kind == EcsOpEnum) {
         if (flecs_meta_ser_enum(
             world, 0, EcsOpU64, op->is.constants, &key, str)) 

@@ -186,10 +186,17 @@ int flecs_script_for_init(
         case EcsMapType: {
             const EcsMap *map = ecs_get(v->world, type, EcsMap);
             ecs_assert(map != NULL, ECS_INTERNAL_ERROR, NULL);
-            state->kind = FlecsScriptForMap;
-            if (collection->ptr) {
-                state->map_it = ecs_map_iter(collection->ptr);
+            ecs_meta_map_info_t map_info;
+            if (flecs_meta_map_info_init(
+                v->world, map->key_type, map->type, &map_info))
+            {
+                flecs_script_eval_error(v, node, "invalid map type '%s'",
+                    flecs_errstr(ecs_get_path(v->world, type)));
+                return -1;
             }
+
+            state->kind = FlecsScriptForMap;
+            state->map_it = flecs_meta_map_iter(&map_info, collection->ptr);
 
             key_type = map->key_type;
             elem_type = map->type;
@@ -237,9 +244,6 @@ int flecs_script_for_init(
     int32_t i = 0;
     state->key_var = state->index_var = -1;
     if (map && var_count >= 2) {
-        const ecs_type_info_t *key_ti = ecs_get_type_info(v->world, key_type);
-        ecs_assert(key_ti != NULL, ECS_INTERNAL_ERROR, NULL);
-        state->key_size = key_ti->size;
         state->var_types[i] = key_type;
         state->key_var = i ++;
     }
@@ -458,21 +462,20 @@ bool flecs_script_for_next(
     case FlecsScriptForQuery:
         return false;
     case FlecsScriptForMap:
-        if (!ecs_map_next(&state->map_it)) {
+        if (!flecs_meta_map_next(&state->map_it)) {
             return false;
         }
-        key = ecs_map_key(&state->map_it);
+
+        /* Use map key (or key hash) to identify iteration */
+        key = ecs_map_key(&state->map_it.it);
         if (state->key_var != -1) {
-            ecs_os_memcpy(vars[state->key_var].value.ptr, &key,
-                state->key_size);
+            ecs_script_var_t *key_var = &vars[state->key_var];
+            flecs_type_info_copy(key_var->value.ptr, 
+                flecs_meta_map_iter_key(&state->map_it), 1, 
+                state->map_it.info.key_ti);
         }
 
-        if (state->elem_size > ECS_SIZEOF(ecs_map_val_t)) {
-            elem->value.ptr = ecs_map_ptr(&state->map_it);
-        } else {
-            elem->value.ptr = &state->map_it.res[1];
-        }
-
+        elem->value.ptr = flecs_meta_map_iter_value(&state->map_it);
         elem->owned = false;
         break;
     }

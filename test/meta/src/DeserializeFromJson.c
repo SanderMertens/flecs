@@ -8801,6 +8801,195 @@ void DeserializeFromJson_entity_wildcard_component(void) {
     ecs_fini(world);
 }
 
+void DeserializeFromJson_map_string_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"foo\": 100, \"bar\": 200}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    test_assert(meta_map_has(world, t, &value, "\"foo\":100"));
+    test_assert(meta_map_has(world, t, &value, "\"bar\":200"));
+
+    ecs_ptr_fini(world, t, &value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_string_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_string_t)
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"foo\": \"Hello\", \"bar\": \"World\"}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    test_assert(meta_map_has(world, t, &value, "\"foo\":\"Hello\""));
+    test_assert(meta_map_has(world, t, &value, "\"bar\":\"World\""));
+
+    ecs_ptr_fini(world, t, &value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_string_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "S" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_string_t),
+        .type = s
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"foo\": {\"x\": 10, \"y\": 20}, \"bar\": {\"x\": 30, \"y\": 40}}", 
+        NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    test_assert(meta_map_has(world, t, &value, "\"foo\":{\"x\":10, \"y\":20}"));
+    test_assert(meta_map_has(world, t, &value, "\"bar\":{\"x\":30, \"y\":40}"));
+
+    ecs_ptr_fini(world, t, &value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_string_i32_into_populated(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"foo\": 100, \"bar\": 200}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+
+    ptr = ecs_ptr_from_json(world, t, &value, "{\"hello\": 300}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 1);
+    char *json = ecs_ptr_to_json(world, t, &value);
+    test_str(json, "{\"hello\":300}");
+    ecs_os_free(json);
+
+    ecs_ptr_fini(world, t, &value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_string_i32_escaped_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"foo.bar\": 100, \"hello world\": 200}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    test_assert(meta_map_has(world, t, &value, "\"foo.bar\":100"));
+    test_assert(meta_map_has(world, t, &value, "\"hello world\":200"));
+
+    ecs_ptr_fini(world, t, &value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_string_i32_roundtrip(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"a\": 1, \"b\": 2, \"c\": 3, \"d\": 4}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    char *json = ecs_ptr_to_json(world, t, &value);
+    test_assert(json != NULL);
+
+    ecs_map_t value_2 = {0};
+    ptr = ecs_ptr_from_json(world, t, &value_2, json, NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    ecs_os_free(json);
+
+    test_int(ecs_map_count(&value_2), 4);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, t);
+    test_assert(ti->hooks.equals(&value, &value_2, ti));
+
+    ecs_ptr_fini(world, t, &value);
+    ecs_ptr_fini(world, t, &value_2);
+
+    ecs_fini(world);
+}
+
 void DeserializeFromJson_ser_deser_pretty_value(void) {
     typedef struct {
         int32_t x;

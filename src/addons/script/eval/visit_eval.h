@@ -157,10 +157,9 @@ typedef struct flecs_script_for_state_t {
     int32_t from;
     int32_t count;
     ecs_size_t elem_size;
-    ecs_size_t key_size;
     void *elems;
     ecs_value_t collection;
-    ecs_map_iter_t map_it;
+    ecs_meta_map_iter_t map_it;
     int32_t for_slot;
     uint64_t outer_key;
     uint64_t key;

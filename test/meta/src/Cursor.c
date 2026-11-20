@@ -9410,3 +9410,359 @@ void Cursor_value_component_lifecycle(void) {
 
     ecs_fini(world);
 }
+
+void Cursor_map_string_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "foo"));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "bar"));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    test_assert(meta_map_has(world, t, &value, "\"foo\":10"));
+    test_assert(meta_map_has(world, t, &value, "\"bar\":20"));
+
+    ecs_ptr_fini(world, t, &value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_string_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_string_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "foo"));
+    test_int(0, ecs_meta_set_string(&cur, "Hello"));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "bar"));
+    test_int(0, ecs_meta_set_string(&cur, "World"));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    test_assert(meta_map_has(world, t, &value, "\"foo\":\"Hello\""));
+    test_assert(meta_map_has(world, t, &value, "\"bar\":\"World\""));
+
+    ecs_ptr_fini(world, t, &value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_string_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "S" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_string_t)},
+            {"z", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = s
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "foo"));
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_set_string(&cur, "Hello"));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_set_string(&cur, "World"));
+    test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 1);
+    char *json = ecs_ptr_to_json(world, t, &value);
+    test_str(json, "{\"foo\":{\"x\":10, \"y\":\"Hello\", \"z\":\"World\"}}");
+    ecs_os_free(json);
+
+    ecs_ptr_fini(world, t, &value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_string_i32_replace(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "foo"));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "foo"));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 1);
+    char *json = ecs_ptr_to_json(world, t, &value);
+    test_str(json, "{\"foo\":20}");
+    ecs_os_free(json);
+
+    ecs_ptr_fini(world, t, &value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_string_i32_into_populated(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    {
+        ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+        test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_member(&cur, "foo"));
+        test_int(0, ecs_meta_set_int(&cur, 10));
+        test_int(0, ecs_meta_next(&cur));
+        test_int(0, ecs_meta_member(&cur, "bar"));
+        test_int(0, ecs_meta_set_int(&cur, 20));
+        test_int(0, ecs_meta_pop(&cur));
+        test_int(ecs_map_count(&value), 2);
+    }
+
+    {
+        ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+        test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_member(&cur, "hello"));
+        test_int(0, ecs_meta_set_int(&cur, 30));
+        test_int(0, ecs_meta_pop(&cur));
+    }
+
+    test_int(ecs_map_count(&value), 1);
+    char *json = ecs_ptr_to_json(world, t, &value);
+    test_str(json, "{\"hello\":30}");
+    ecs_os_free(json);
+
+    ecs_ptr_fini(world, t, &value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_string_i32_empty_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, ""));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 1);
+    char *json = ecs_ptr_to_json(world, t, &value);
+    test_str(json, "{\"\":10}");
+    ecs_os_free(json);
+
+    ecs_ptr_fini(world, t, &value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_string_i32_many(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    int i;
+    for (i = 0; i < 1000; i ++) {
+        char key[32];
+        ecs_os_snprintf(key, 32, "key_%d", i);
+        if (i) {
+            test_int(0, ecs_meta_next(&cur));
+        }
+        test_int(0, ecs_meta_member(&cur, key));
+        test_int(0, ecs_meta_set_int(&cur, i));
+    }
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 1000);
+
+    for (i = 0; i < 1000; i += 99) {
+        char elem[64];
+        ecs_os_snprintf(elem, 64, "\"key_%d\":%d", i, i);
+        test_assert(meta_map_has(world, t, &value, elem));
+    }
+
+    ecs_ptr_fini(world, t, &value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_string_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    const char *key = NULL;
+    ecs_value_t key_value = { .type = ecs_id(ecs_string_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = "foo";
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    key = "bar";
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    test_assert(meta_map_has(world, t, &value, "\"foo\":10"));
+    test_assert(meta_map_has(world, t, &value, "\"bar\":20"));
+
+    ecs_ptr_fini(world, t, &value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_string_invalid_key_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    int32_t key = 10;
+    ecs_value_t key_value = { .type = ecs_id(ecs_i32_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    ecs_log_set_level(-4);
+    test_assert(0 != ecs_meta_key(&cur, &key_value));
+
+    test_int(ecs_map_count(&value), 0);
+
+    ecs_ptr_fini(world, t, &value);
+
+    ecs_fini(world);
+}
+
+void Cursor_struct_w_map_string_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "M" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .members = {
+            {"a", ecs_id(ecs_i32_t)},
+            {"b", m},
+            {"c", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    typedef struct {
+        int32_t a;
+        ecs_map_t b;
+        int32_t c;
+    } T;
+
+    T value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_set_int(&cur, 1));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "foo"));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_set_int(&cur, 2));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(value.a, 1);
+    test_int(value.c, 2);
+    test_int(ecs_map_count(&value.b), 1);
+
+    char *json = ecs_ptr_to_json(world, t, &value);
+    test_str(json, "{\"a\":1, \"b\":{\"foo\":10}, \"c\":2}");
+    ecs_os_free(json);
+
+    ecs_ptr_fini(world, t, &value);
+
+    ecs_fini(world);
+}

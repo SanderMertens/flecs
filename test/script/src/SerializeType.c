@@ -333,3 +333,16 @@ void SerializeType_typecache_struct_dep(void) {
 
     ecs_fini(world);
 }
+
+void SerializeType_map_string_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_int(ecs_script_run(world, NULL,
+        "map Lookup(key_type: string, type: f32)", NULL), 0);
+
+    char *str = ecs_type_to_script(world, ecs_lookup(world, "Lookup"));
+    test_str(str, "map Lookup(key_type: string, type: f32)\n");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}

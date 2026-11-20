@@ -62,16 +62,13 @@ void flecs_value_vec_splice(
     const void *src,
     int32_t src_count);
 
-void flecs_value_map_insert(
-    const ecs_type_info_t *elem_ti,
-    ecs_map_t *map,
-    ecs_map_key_t key,
-    const void *value);
-
-bool flecs_value_map_remove(
-    const ecs_type_info_t *elem_ti,
-    ecs_map_t *map,
-    ecs_map_key_t key);
+/* Get key for map operations from key value. Returns NULL if key value could
+ * not be converted. */
+const void* flecs_value_map_key(
+    const ecs_world_t *world,
+    const ecs_meta_map_info_t *info,
+    const ecs_value_t *key,
+    ecs_map_key_t *key_storage);
 
 const char* flecs_script_parse_expr(
     ecs_parser_t *parser,

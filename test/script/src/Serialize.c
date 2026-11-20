@@ -2864,3 +2864,83 @@ void Serialize_string_w_curly_brace_not_escaped(void) {
 
     ecs_fini(world);
 }
+
+void Serialize_map_string_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t m = {0};
+    test_assert(NULL != ecs_ptr_from_json(world, t, &m, 
+        "{\"Hello\": 10}", NULL));
+
+    char *expr = ecs_ptr_to_expr(world, t, &m);
+    test_assert(expr != NULL);
+    test_str(expr, "[\"Hello\": 10]");
+    ecs_os_free(expr);
+
+    ecs_ptr_fini(world, t, &m);
+
+    ecs_fini(world);
+}
+
+void Serialize_map_string_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_string_t)
+    });
+
+    ecs_map_t m = {0};
+    test_assert(NULL != ecs_ptr_from_json(world, t, &m, 
+        "{\"Hello\": \"World\"}", NULL));
+
+    char *expr = ecs_ptr_to_expr(world, t, &m);
+    test_assert(expr != NULL);
+    test_str(expr, "[\"Hello\": \"World\"]");
+    ecs_os_free(expr);
+
+    ecs_ptr_fini(world, t, &m);
+
+    ecs_fini(world);
+}
+
+void Serialize_map_string_escape_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t m = {0};
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &m);
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "Hello \"World\""));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_pop(&cur));
+
+    char *expr = ecs_ptr_to_expr(world, t, &m);
+    test_assert(expr != NULL);
+    test_str(expr, "[\"Hello \\\"World\\\"\": 10]");
+
+    /* Deserialize to verify the key roundtrips */
+    ecs_map_t m2 = {0};
+    const char *ptr = ecs_expr_run(world, expr, &(ecs_value_t){t, &m2}, NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    ecs_os_free(expr);
+
+    expr = ecs_ptr_to_expr(world, t, &m2);
+    test_str(expr, "[\"Hello \\\"World\\\"\": 10]");
+    ecs_os_free(expr);
+
+    ecs_ptr_fini(world, t, &m);
+    ecs_ptr_fini(world, t, &m2);
+
+    ecs_fini(world);
+}

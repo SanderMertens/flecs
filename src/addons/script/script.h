@@ -7,6 +7,7 @@
 #define FLECS_SCRIPT_PRIVATE_H
 
 #include "../../private_api.h"
+#include "../meta/meta.h"
 #include "../parser/parser.h"
 
 #ifdef FLECS_SCRIPT

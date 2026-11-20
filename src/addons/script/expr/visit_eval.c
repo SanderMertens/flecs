@@ -953,12 +953,12 @@ static void flecs_expr_iterate_assign(
 }
 
 static void* flecs_expr_iterate_append(
-    bool is_map,
+    const ecs_meta_map_info_t *map_info,
     void *result,
-    ecs_map_key_t key,
+    const void *key,
     const ecs_type_info_t *ti)
 {
-    if (!is_map) {
+    if (!map_info) {
         ecs_vec_t *vec = result;
         ecs_vec_init_if(vec, ti->size);
         int32_t count = ecs_vec_count(vec);
@@ -966,26 +966,8 @@ static void* flecs_expr_iterate_append(
         return ecs_vec_get(vec, ti->size, count);
     }
 
-    ecs_map_t *map = result;
-    ecs_map_init_if(map, NULL);
-    int32_t count = ecs_map_count(map);
-    ecs_map_val_t *val = ecs_map_ensure(map, key);
-    void *ptr;
-    if (ti->size <= ECS_SIZEOF(ecs_map_val_t)) {
-        ptr = val;
-    } else {
-        if (!*val) {
-            *val = (ecs_map_val_t)(uintptr_t)ecs_os_calloc(ti->size);
-        }
-
-        ptr = (void*)(uintptr_t)*val;
-    }
-
-    if (count != ecs_map_count(map) && ti->hooks.ctor) {
-        ti->hooks.ctor(ptr, 1, ti);
-    }
-
-    return ptr;
+    ecs_assert(map_info->value_ti == ti, ECS_INTERNAL_ERROR, NULL);
+    return flecs_meta_map_ensure(map_info, result, key, NULL);
 }
 
 static int flecs_expr_iterate_step(
@@ -994,9 +976,9 @@ static int flecs_expr_iterate_step(
     ecs_expr_value_t *val,
     void *elem,
     const ecs_type_info_t *elem_ti,
-    ecs_map_key_t key,
+    const void *key,
     void *result,
-    bool to_map,
+    const ecs_meta_map_info_t *to_map,
     bool *has_value)
 {
     const ecs_type_info_t *result_ti = node->node.type_info;
@@ -1172,13 +1154,19 @@ static int flecs_expr_iterate_collection_eval(
         ecs_assert(node->kind == EcsExprIterateContains,
             ECS_INTERNAL_ERROR, NULL);
         ecs_assert(init != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_map_key_t key = 0;
-        if (flecs_value_blit_u64(world, &init->value, &key)) {
+        ecs_meta_map_info_t info;
+        if (flecs_meta_map_info_from_type(world, left->value.type, &info)) {
             return -1;
         }
 
-        const ecs_map_t *map = left->value.ptr;
-        *(bool*)result = ecs_map_is_init(map) && ecs_map_get(map, key) != NULL;
+        ecs_map_key_t key_storage;
+        const void *key = flecs_value_map_key(
+            world, &info, &init->value, &key_storage);
+        if (!key) {
+            return -1;
+        }
+
+        *(bool*)result = flecs_meta_map_get(&info, left->value.ptr, key) != NULL;
         return 0;
     }
 
@@ -1286,6 +1274,23 @@ static FLECS_SCRIPT_NOINLINE int flecs_expr_iterate_visit_eval(
     bool to_map = node->kind == EcsExprIterateMapValues ||
         (node->kind == EcsExprIterateFilter && is_map);
 
+    ecs_meta_map_info_t map_info = {0}, result_map_info = {0};
+    if (is_map) {
+        if (flecs_meta_map_info_from_type(
+            world, left->value.type, &map_info)) 
+        {
+            return -1;
+        }
+    }
+
+    if (to_map) {
+        if (flecs_meta_map_info_from_type(
+            world, node->node.type, &result_map_info)) 
+        {
+            return -1;
+        }
+    }
+
     if (node->init) {
         ecs_expr_value_t *init = flecs_expr_eval_result(
             ctx, node->init, &(ecs_expr_value_t){0});
@@ -1301,7 +1306,7 @@ static FLECS_SCRIPT_NOINLINE int flecs_expr_iterate_visit_eval(
     }
 
     int32_t index = 0, count = 0;
-    ecs_map_key_t key = 0;
+    void *key = NULL;
 
     const ecs_expr_eval_desc_t *desc = ctx->desc;
     ecs_expr_eval_desc_t lambda_desc = {0};
@@ -1327,13 +1332,12 @@ static FLECS_SCRIPT_NOINLINE int flecs_expr_iterate_visit_eval(
             params[node->acc_var].value.ptr = result;
         }
 
-        if (node->key_var != -1) {
-            params[node->key_var].value.ptr = is_map
-                ? (void*)&key : (void*)&index;
+        if (node->key_var != -1 && !is_map) {
+            params[node->key_var].value.ptr = &index;
         }
     }
 
-    ecs_map_iter_t it = {0};
+    ecs_meta_map_iter_t it = {0};
     void *elems = NULL;
 
     if (node->collection_kind == EcsArrayType) {
@@ -1347,8 +1351,8 @@ static FLECS_SCRIPT_NOINLINE int flecs_expr_iterate_visit_eval(
             elems = ecs_vec_first(vec);
             count = ecs_vec_count(vec);
         }
-    } else if (left->value.ptr) {
-        it = ecs_map_iter(left->value.ptr);
+    } else {
+        it = flecs_meta_map_iter(&map_info, left->value.ptr);
     }
 
     bool is_sort = node->kind == EcsExprIterateSort;
@@ -1364,14 +1368,15 @@ static FLECS_SCRIPT_NOINLINE int flecs_expr_iterate_visit_eval(
     for (index = 0; ; index ++) {
         void *elem;
         if (is_map) {
-            if (!left->value.ptr || !ecs_map_next(&it)) {
+            if (!flecs_meta_map_next(&it)) {
                 break;
             }
 
-            key = ecs_map_key(&it);
-            elem = elem_ti->size > ECS_SIZEOF(ecs_map_val_t)
-                ? ecs_map_ptr(&it)
-                : (void*)&it.res[1];
+            key = flecs_meta_map_iter_key(&it);
+            elem = flecs_meta_map_iter_value(&it);
+            if (lambda && node->key_var != -1) {
+                params[node->key_var].value.ptr = key;
+            }
         } else {
             if (index >= count) {
                 break;
@@ -1402,7 +1407,7 @@ static FLECS_SCRIPT_NOINLINE int flecs_expr_iterate_visit_eval(
         }
 
         r = val ? flecs_expr_iterate_step(ctx, node, val, elem, elem_ti,
-            key, result, to_map, &has_value) : -1;
+            key, result, to_map ? &result_map_info : NULL, &has_value) : -1;
 
         flecs_expr_stack_pop(ctx->stack);
 
@@ -1525,18 +1530,27 @@ static int flecs_expr_mutate_action(
     ecs_assert(elem_ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (node->is_map) {
-        ecs_map_t *map = dst;
-        if (node->kind == EcsExprMutateClear) {
-            flecs_meta_map_clear(map, elem_ti);
-            return 0;
-        }
-
-        ecs_map_key_t key = 0;
-        if (flecs_value_blit_u64(world, &c->args[0], &key)) {
+        ecs_meta_map_info_t info;
+        if (flecs_meta_map_info_init(
+            world, node->key_type, node->elem_type, &info)) 
+        {
             return -1;
         }
 
-        flecs_value_map_remove(elem_ti, map, key);
+        ecs_map_t *map = dst;
+        if (node->kind == EcsExprMutateClear) {
+            flecs_meta_map_clear(&info, map);
+            return 0;
+        }
+
+        ecs_map_key_t key_storage;
+        const void *key = flecs_value_map_key(
+            world, &info, &c->args[0], &key_storage);
+        if (!key) {
+            return -1;
+        }
+
+        flecs_meta_map_remove(&info, map, key);
         return 0;
     }
 

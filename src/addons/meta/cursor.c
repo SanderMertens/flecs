@@ -621,37 +621,29 @@ static int flecs_meta_cursor_parse_map_key(
 static int flecs_meta_map_ensure_key(
     ecs_meta_cursor_t *cursor,
     ecs_meta_scope_t *scope,
-    ecs_map_key_t key)
+    const ecs_meta_map_info_t *info,
+    const void *key)
 {
     ecs_assert(cursor->scope != scope, ECS_INTERNAL_ERROR, NULL);
     ecs_meta_scope_t *parent = &scope[-1];
     ecs_map_t *map = flecs_meta_cursor_get_ptr(cursor->world, cursor, parent);
     ecs_assert(map != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_map_init_if(map, NULL);
+    scope->ptr = flecs_meta_map_ensure(info, map, key, NULL);
+    return 0;
+}
 
-    const ecs_type_info_t *vti = scope->ops[0].type_info;
-    ecs_assert(vti != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t count = ecs_map_count(map);
-    ecs_map_val_t *val = ecs_map_ensure(map, key);
-    void *ptr;
-    if (vti->size <= ECS_SIZEOF(ecs_map_val_t)) {
-        ptr = val;
-    } else {
-        if (!*val) {
-            *val = (ecs_map_val_t)(uintptr_t)ecs_os_calloc(vti->size);
-        }
-
-        ptr = (void*)(uintptr_t)*val;
+static int flecs_meta_map_scope_info(
+    ecs_meta_cursor_t *cursor,
+    const ecs_meta_scope_t *scope,
+    ecs_meta_map_info_t *info)
+{
+    const ecs_meta_op_t *op = &scope->ops[-1];
+    ecs_assert(op->kind == EcsOpPushMap, ECS_INTERNAL_ERROR, NULL);
+    if (flecs_meta_map_info_from_type(cursor->world, op->type, info)) {
+        ecs_err("invalid map type '%s'", 
+            flecs_errstr(ecs_get_path(cursor->world, op->type)));
+        return -1;
     }
-
-    if (count != ecs_map_count(map)) {
-        if (vti->hooks.ctor) {
-            vti->hooks.ctor(ptr, 1, vti);
-        }
-    }
-
-    scope->ptr = ptr;
 
     return 0;
 }
@@ -671,12 +663,21 @@ static int flecs_meta_map_member(
     ecs_meta_op_t *op = &scope->ops[-1];
     ecs_assert(op->kind == EcsOpPushMap, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_meta_map_info_t info;
+    if (flecs_meta_map_scope_info(cursor, scope, &info)) {
+        return -1;
+    }
+
+    if (op->underlying_kind == EcsOpString) {
+        return flecs_meta_map_ensure_key(cursor, scope, &info, &name);
+    }
+
     ecs_map_key_t key = 0;
     if (flecs_meta_cursor_parse_map_key(cursor, op, name, &key)) {
         return -1;
     }
 
-    return flecs_meta_map_ensure_key(cursor, scope, key);
+    return flecs_meta_map_ensure_key(cursor, scope, &info, &key);
 }
 
 static bool flecs_meta_op_is_value(
@@ -932,12 +933,29 @@ int ecs_meta_key(
         return 0;
     }
 
+    ecs_meta_map_info_t info;
+    if (flecs_meta_map_scope_info(cursor, scope, &info)) {
+        return -1;
+    }
+
+    if (info.owns_key) {
+        if (key->type != info.key_ti->component) {
+            ecs_err("invalid key type '%s' for map with key type '%s'",
+                flecs_errstr(ecs_get_path(cursor->world, key->type)),
+                flecs_errstr_1(ecs_get_path(
+                    cursor->world, info.key_ti->component)));
+            return -1;
+        }
+
+        return flecs_meta_map_ensure_key(cursor, scope, &info, key->ptr);
+    }
+
     ecs_map_key_t key_u64 = 0;
     if (flecs_value_blit_u64(cursor->world, key, &key_u64)) {
         return -1;
     }
 
-    return flecs_meta_map_ensure_key(cursor, scope, key_u64);
+    return flecs_meta_map_ensure_key(cursor, scope, &info, &key_u64);
 error:
     return -1;
 }
@@ -1095,36 +1113,6 @@ int ecs_meta_try_dotmember(
     return flecs_meta_dotmember(cursor, name, true);
 }
 
-void flecs_meta_map_clear(
-    ecs_map_t *map,
-    const ecs_type_info_t *value_ti)
-{
-    if (!ecs_map_is_init(map) || !ecs_map_count(map)) {
-        return;
-    }
-
-    bool is_alloc = value_ti->size > ECS_SIZEOF(ecs_map_val_t);
-    ecs_map_iter_t it = ecs_map_iter(map);
-    while (ecs_map_next(&it)) {
-        void *ptr;
-        if (is_alloc) {
-            ptr = ecs_map_ptr(&it);
-        } else {
-            ptr = &it.res[1];
-        }
-
-        if (value_ti->hooks.dtor) {
-            value_ti->hooks.dtor(ptr, 1, value_ti);
-        }
-
-        if (is_alloc) {
-            ecs_os_free(ptr);
-        }
-    }
-
-    ecs_map_clear(map);
-}
-
 int ecs_meta_push(
     ecs_meta_cursor_t *cursor)
 {
@@ -1224,8 +1212,13 @@ int ecs_meta_push(
         if (op->kind == EcsOpPushMap) {
             ecs_map_t *map = cursor->scope[0].ptr ? ptr : NULL;
             if (map) {
+                ecs_meta_map_info_t info;
+                if (flecs_meta_map_scope_info(cursor, next_scope, &info)) {
+                    goto error;
+                }
+
                 ecs_map_init_if(map, NULL);
-                flecs_meta_map_clear(map, next_scope->ops[0].type_info);
+                flecs_meta_map_clear(&info, map);
             }
 
             next_scope->ptr = NULL;

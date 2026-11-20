@@ -2698,3 +2698,68 @@ void RttCompare_map_key_order_precedes_values(void) {
     ecs_map_fini(&b);
     ecs_fini(world);
 }
+
+void RttCompare_map_w_string_keys(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t /* map<ecs_string_t, ecs_i32_t> */ map_type =
+        ecs_map_type(world, {
+            .key_type = ecs_id(ecs_string_t), 
+            .type = ecs_id(ecs_i32_t)
+        });
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, map_type);
+    test_assert(ti->hooks.cmp != NULL);
+    test_assert(ti->hooks.equals != NULL);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+
+    test_assert(NULL != ecs_ptr_from_json(world, map_type,
+        test_ecs_ensure(world, e1, map_type), "{\"a\": 1, \"b\": 2}", NULL));
+    test_assert(NULL != ecs_ptr_from_json(world, map_type,
+        test_ecs_ensure(world, e2, map_type), "{\"a\": 1, \"b\": 3}", NULL));
+    test_assert(NULL != ecs_ptr_from_json(world, map_type,
+        test_ecs_ensure(world, e3, map_type), "{\"b\": 2, \"a\": 1}", NULL));
+
+    test_assert(cmp(world, map_type, e1, e2) < 0);
+    test_assert(cmp(world, map_type, e2, e1) > 0);
+    test_assert(cmp(world, map_type, e1, e3) == 0);
+    test_assert(equals(world, map_type, e1, e3) == true);
+    test_assert(equals(world, map_type, e1, e2) == false);
+
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
+    ecs_delete(world, e3);
+
+    ecs_fini(world);
+}
+
+void RttCompare_map_w_string_keys_key_order(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t /* map<ecs_string_t, ecs_i32_t> */ map_type =
+        ecs_map_type(world, {
+            .key_type = ecs_id(ecs_string_t), 
+            .type = ecs_id(ecs_i32_t)
+        });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+
+    test_assert(NULL != ecs_ptr_from_json(world, map_type,
+        test_ecs_ensure(world, e1, map_type), "{\"a\": 1, \"c\": 0}", NULL));
+    test_assert(NULL != ecs_ptr_from_json(world, map_type,
+        test_ecs_ensure(world, e2, map_type), "{\"a\": 1, \"b\": 10}", NULL));
+
+    /* "b" < "c", so the map that has "b" is the smaller map */
+    test_assert(cmp(world, map_type, e1, e2) > 0);
+    test_assert(cmp(world, map_type, e2, e1) < 0);
+    test_assert(equals(world, map_type, e1, e2) == false);
+
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
+
+    ecs_fini(world);
+}

@@ -26322,3 +26322,218 @@ void Eval_typed_var_w_newline_after_assign(void) {
 
     ecs_fini(world);
 }
+
+void Eval_map_string_i32_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, { 
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t) 
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Map: [\"foo\": 100, \"bar\": 200]"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const ecs_map_t *ptr = ecs_get_id(world, e, m);
+    test_assert(ptr != NULL);
+    test_int(ecs_map_count(ptr), 2);
+    test_assert(script_map_has(world, m, ptr, "\"foo\": 100"));
+    test_assert(script_map_has(world, m, ptr, "\"bar\": 200"));
+
+    ecs_fini(world);
+}
+
+void Eval_map_string_string_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, { 
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_string_t) 
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Map: [\"foo\": \"Hello\", \"bar\": \"World\"]"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const ecs_map_t *ptr = ecs_get_id(world, e, m);
+    test_assert(ptr != NULL);
+    test_int(ecs_map_count(ptr), 2);
+    test_assert(script_map_has(world, m, ptr, "\"foo\": \"Hello\""));
+    test_assert(script_map_has(world, m, ptr, "\"bar\": \"World\""));
+
+    ecs_fini(world);
+}
+
+void Eval_map_string_struct_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Color" }),
+        .members = {
+            {"r", ecs_id(ecs_i32_t)},
+            {"g", ecs_id(ecs_i32_t)},
+            {"b", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t m = ecs_map_type(world, { 
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_lookup(world, "Color")
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Map: [\"red\": {255, 0, 0}, \"green\": {0, 255, 0}]"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const ecs_map_t *ptr = ecs_get_id(world, e, m);
+    test_assert(ptr != NULL);
+    test_int(ecs_map_count(ptr), 2);
+    test_assert(script_map_has(world, m, ptr, 
+        "\"red\": {r: 255, g: 0, b: 0}"));
+    test_assert(script_map_has(world, m, ptr, 
+        "\"green\": {r: 0, g: 255, b: 0}"));
+
+    ecs_fini(world);
+}
+
+void Eval_map_string_i32_component_w_expr_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, { 
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t) 
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Map: [\"foo\" + \"bar\": 100, \"key_{10 + 20}\": 200]"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const ecs_map_t *ptr = ecs_get_id(world, e, m);
+    test_assert(ptr != NULL);
+    test_int(ecs_map_count(ptr), 2);
+    test_assert(script_map_has(world, m, ptr, "\"foobar\": 100"));
+    test_assert(script_map_has(world, m, ptr, "\"key_30\": 200"));
+
+    ecs_fini(world);
+}
+
+void Eval_map_string_i32_component_w_var_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, { 
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t) 
+    });
+
+    const char *expr =
+    HEAD "const k1 = \"foo\""
+    LINE "const k2: string = \"bar\""
+    LINE "e {"
+    LINE " Map: [k1: 100, k2: 200]"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const ecs_map_t *ptr = ecs_get_id(world, e, m);
+    test_assert(ptr != NULL);
+    test_int(ecs_map_count(ptr), 2);
+    test_assert(script_map_has(world, m, ptr, "\"foo\": 100"));
+    test_assert(script_map_has(world, m, ptr, "\"bar\": 200"));
+
+    ecs_fini(world);
+}
+
+void Eval_map_string_component_element(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, { 
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_string_t),
+        .type = ecs_id(ecs_i32_t) 
+    });
+
+    test_assert(m != 0);
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Map: [\"foo\": 100, \"bar\": 200]"
+    LINE "}"
+    LINE "const v = e[Map][\"bar\"]"
+    LINE "o {"
+    LINE " Val: {v}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t o = ecs_lookup(world, "o");
+    test_assert(o != 0);
+
+    const int32_t *ptr = ecs_get_id(world, o, val);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 200);
+
+    ecs_fini(world);
+}
+
+void Eval_map_string_type_decl_in_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "map Lookup(key_type: string, type: f32)"
+    LINE "e { Lookup: [\"foo\": 1, \"bar\": 2] }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t lookup = ecs_lookup(world, "Lookup");
+    test_assert(lookup != 0);
+    const EcsMap *map = ecs_get(world, lookup, EcsMap);
+    test_assert(map != NULL);
+    test_uint(map->key_type, ecs_id(ecs_string_t));
+    test_uint(map->type, ecs_id(ecs_f32_t));
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    const ecs_map_t *v = ecs_get_id(world, e, lookup);
+    test_assert(v != NULL);
+    test_int(ecs_map_count(v), 2);
+    test_assert(script_map_has(world, lookup, v, "\"foo\": 1"));
+    test_assert(script_map_has(world, lookup, v, "\"bar\": 2"));
+
+    ecs_fini(world);
+}
