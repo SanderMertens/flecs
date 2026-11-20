@@ -1134,7 +1134,10 @@
                 "pred_eq_name",
                 "pred_match",
                 "value_pair_w_0_value",
-                "term_ref_flags_preserve_id"
+                "term_ref_flags_preserve_id",
+                "build_w_func",
+                "build_w_func_auto_param",
+                "build_w_func_untyped"
             ]
         }, {
             "id": "SystemBuilder",

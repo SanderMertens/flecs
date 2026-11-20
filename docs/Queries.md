@@ -299,6 +299,18 @@ if (add_npc) {
 q.build(); // Create query
 ```
 
+The `build` function also accepts a function that configures the builder before the query is created:
+
+```cpp
+flecs::query<Position> q = world.query_builder<Position>()
+  .build([](flecs::query_builder<Position>& b) {
+    b.with<Velocity>().optional();
+    b.with<Mass>().optional();
+  });
+```
+
+When the function has an `auto&` parameter, member templates of the builder must be called with the `template` keyword, as in `b.template with<Velocity>()`.
+
 </li>
 <li><b class="tab-title">Rust</b>
 

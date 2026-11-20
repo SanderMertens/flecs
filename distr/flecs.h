@@ -34944,6 +34944,30 @@ struct builder : IBuilder<Base, Components...> {
         return T(world_, &desc_);
     }
 
+    /** Build with a function that configures the builder.
+     * The function is invoked with a reference to the builder before the
+     * object is built, which allows for code like:
+     *
+     * @code
+     * world.query_builder<Position>()
+     *   .build([](flecs::query_builder<Position>& b) {
+     *     b.with<Velocity>().optional();
+     *     b.with<Mass>().optional();
+     *   });
+     * @endcode
+     *
+     * When the function has an auto parameter, member templates must be
+     * called with the template keyword, as in b.template with<Velocity>().
+     *
+     * @param func Function that accepts a reference to the builder.
+     * @return The built object.
+     */
+    template <typename Func>
+    T build(Func&& func) {
+        func(static_cast<Base&>(*this));
+        return build();
+    }
+
     template <typename Func, typename... Each>
     T run(Func&& func, Each&&... each_func) {
         using Delegate = run_delegate<decay_t<Func>>;
