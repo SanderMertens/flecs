@@ -896,6 +896,11 @@ void DeserializeFromJson_entity_wildcard_component(void);
 void DeserializeFromJson_ser_deser_pretty_value(void);
 void DeserializeFromJson_ser_deser_pretty_entity(void);
 void DeserializeFromJson_ser_deser_pretty_world(void);
+void DeserializeFromJson_large_string_w_unknown_escape_no_leak(void);
+void DeserializeFromJson_large_string_unterminated_no_leak(void);
+void DeserializeFromJson_large_string_to_int_no_leak(void);
+void DeserializeFromJson_large_member_name_strict_no_leak(void);
+void DeserializeFromJson_entity_large_name_w_unknown_escape_no_leak(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_string_w_control_char(void);
@@ -5155,6 +5160,26 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "ser_deser_pretty_world",
         DeserializeFromJson_ser_deser_pretty_world
+    },
+    {
+        "large_string_w_unknown_escape_no_leak",
+        DeserializeFromJson_large_string_w_unknown_escape_no_leak
+    },
+    {
+        "large_string_unterminated_no_leak",
+        DeserializeFromJson_large_string_unterminated_no_leak
+    },
+    {
+        "large_string_to_int_no_leak",
+        DeserializeFromJson_large_string_to_int_no_leak
+    },
+    {
+        "large_member_name_strict_no_leak",
+        DeserializeFromJson_large_member_name_strict_no_leak
+    },
+    {
+        "entity_large_name_w_unknown_escape_no_leak",
+        DeserializeFromJson_entity_large_name_w_unknown_escape_no_leak
     }
 };
 
@@ -8168,7 +8193,6 @@ bake_test_case ValueType_testcases[] = {
     }
 };
 
-
 static bake_test_suite suites[] = {
     {
         "PrimitiveTypes",
@@ -8258,7 +8282,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        223,
+        231,
         DeserializeFromJson_testcases
     },
     {
