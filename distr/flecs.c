@@ -47182,6 +47182,7 @@ static void http_recv_connection(
     char *recv_buf = ecs_os_malloc(ECS_HTTP_SEND_RECV_BUFFER_SIZE);
     ecs_http_fragment_t frag = {0};
     int32_t retries = 0;
+    bool done = false;
 
     ecs_os_sleep(0, 10 * 1000 * 1000);
 
@@ -47224,13 +47225,20 @@ static void http_recv_connection(
                         ecs_os_mutex_unlock(srv->lock);
                     }
                 }
-            } else {
+                done = true;
+            } else if (frag.invalid) {
                 ecs_os_linc(&ecs_http_request_invalid_count);
+                done = true;
             }
         }
 
-        ecs_os_sleep(0, 10 * 1000 * 1000);
-    } while ((bytes_read == -1) && (++retries < ECS_HTTP_REQUEST_RECV_RETRY));
+        /* A request can arrive in several fragments, such as the headers and
+         * then the body, so keep reading until it is complete */
+        if (!done && bytes_read <= 0) {
+            ecs_os_sleep(0, 10 * 1000 * 1000);
+        }
+    } while (!done && (bytes_read > 0 || ((bytes_read == -1) &&
+        (++retries < ECS_HTTP_REQUEST_RECV_RETRY))));
 
     if (bytes_read == ECS_HTTP_SEND_RECV_BUFFER_SIZE) {
         ecs_warn("request exceeded receive buffer size (%d)",
