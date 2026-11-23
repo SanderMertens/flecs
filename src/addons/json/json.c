@@ -157,13 +157,19 @@ const char* flecs_json_parse_large_string(
 
         json = flecs_chrparse(json, ch_out, &len);
         if (!json) {
+            ecs_strbuf_reset(buf);
             return NULL;
         }
 
         ecs_strbuf_appendstrn(buf, ch_out, len);
     }
 
-    return ch ? json : NULL;
+    if (!ch) {
+        ecs_strbuf_reset(buf);
+        return NULL;
+    }
+
+    return json;
 }
 
 const char* flecs_json_parse_next_member(
