@@ -8437,11 +8437,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-<<<<<<< HEAD
-        229,
-=======
-        231,
->>>>>>> 2674e3b2fa0b9f2cbc749f53dc334ba4a635551f
+        237,
         DeserializeFromJson_testcases
     },
     {
