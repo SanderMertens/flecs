@@ -13609,6 +13609,56 @@ void Variables_invalid_var_name_w_neq(void) {
     ecs_fini(world);
 }
 
+void Variables_first_empty_var_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    char buf[] = "x";
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_query_init(world, &(ecs_query_desc_t){
+        .terms[0].first.name = &buf[1],
+        .terms[0].first.id = EcsIsVariable
+    }));
+
+    ecs_fini(world);
+}
+
+void Variables_src_empty_var_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    char buf[] = "x";
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_query_init(world, &(ecs_query_desc_t){
+        .terms[0].first.id = Tag,
+        .terms[0].src.name = &buf[1],
+        .terms[0].src.id = EcsIsVariable
+    }));
+
+    ecs_fini(world);
+}
+
+void Variables_second_empty_var_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    char buf[] = "x";
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_query_init(world, &(ecs_query_desc_t){
+        .terms[0].first.id = Tag,
+        .terms[0].second.name = &buf[1],
+        .terms[0].second.id = EcsIsVariable
+    }));
+
+    ecs_fini(world);
+}
+
 void Variables_first_var_w_fixed_tgt_id_matching_var_id(void) {
     int32_t i;
 
