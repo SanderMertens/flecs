@@ -2773,7 +2773,11 @@
                 "set_optional_one_term_16_bytes",
                 "set_from_nothing",
                 "add_0_entity_in_on_set",
-                "on_set_prefab"
+                "on_set_prefab",
+                "on_set_event_for_auto_override",
+                "on_set_event_for_auto_override_self_up",
+                "on_set_event_for_remove_override",
+                "on_set_event_for_remove_override_self_up"
             ]
         }, {
             "id": "TriggerOnAdd",

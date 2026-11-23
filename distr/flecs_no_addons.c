@@ -13333,6 +13333,9 @@ static void flecs_emit_on_set_for_override_on_add(
     ecs_assert(cr && cr->type_info, ECS_INTERNAL_ERROR, NULL);
     ECS_CONST_CAST(ecs_size_t*, it->sizes)[0] = cr->type_info->size;
 
+    ecs_entity_t event = it->event;
+    it->event = er_onset->event;
+
     /* Invoke OnSet observers for new inherited component value. */
     for (ider_set_i = 0; ider_set_i < ider_set_count; ider_set_i ++) {
         ecs_event_id_record_t *ider = iders_set[ider_set_i];
@@ -13341,6 +13344,8 @@ static void flecs_emit_on_set_for_override_on_add(
         flecs_observers_invoke(world, &ider->self_up, it, table, 0);
         ecs_assert(it->event_cur == evtx, ECS_INTERNAL_ERROR, NULL);
     }
+
+    it->event = event;
 }
 
 static void flecs_emit_on_set_for_override_on_remove(
@@ -13386,6 +13391,9 @@ static void flecs_emit_on_set_for_override_on_remove(
     ecs_assert(cr && cr->type_info, ECS_INTERNAL_ERROR, NULL);
     ECS_CONST_CAST(ecs_size_t*, it->sizes)[0] = cr->type_info->size;
 
+    ecs_entity_t event = it->event;
+    it->event = er_onset->event;
+
     /* Invoke OnSet observers for previous inherited component value. */
     for (ider_set_i = 0; ider_set_i < ider_set_count; ider_set_i ++) {
         ecs_event_id_record_t *ider = iders_set[ider_set_i];
@@ -13394,6 +13402,8 @@ static void flecs_emit_on_set_for_override_on_remove(
         flecs_observers_invoke(world, &ider->up, it, table, EcsIsA);
         ecs_assert(it->event_cur == evtx, ECS_INTERNAL_ERROR, NULL);
     }
+
+    it->event = event;
 }
 
 bool flecs_lifecycle_observers_exist(

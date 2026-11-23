@@ -3222,7 +3222,7 @@ void Sparse_on_set_after_remove_override(void) {
 
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
-    test_uint(ctx.event, EcsOnRemove);
+    test_uint(ctx.event, EcsOnSet);
     test_uint(ctx.e[0], e);
     test_uint(ctx.c[0][0], ecs_id(Position));
 
