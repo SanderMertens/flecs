@@ -80,3 +80,16 @@ const char* doc_color() const {
 const char* doc_uuid() const {
     return ecs_doc_get_uuid(world_, id_);
 }
+
+/** Get source location.
+ *
+ * @see ecs_doc_get_source_location()
+ * @see flecs::doc::get_source_location()
+ * @see flecs::entity_builder::set_doc_source_location()
+ *
+ * @memberof flecs::entity_view
+ * @ingroup cpp_addons_doc
+ */
+const flecs::doc::SourceLocation* doc_source_location() const {
+    return ecs_doc_get_source_location(world_, id_);
+}

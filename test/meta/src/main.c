@@ -712,6 +712,9 @@ void DeserializeFromJson_struct_double_scientific_notation(void);
 void DeserializeFromJson_struct_negative_int(void);
 void DeserializeFromJson_struct_negative_float(void);
 void DeserializeFromJson_struct_string(void);
+void DeserializeFromJson_struct_string_w_unicode_escape(void);
+void DeserializeFromJson_struct_string_w_unicode_escape_utf8(void);
+void DeserializeFromJson_struct_string_w_unicode_escape_large(void);
 void DeserializeFromJson_struct_entity(void);
 void DeserializeFromJson_struct_id(void);
 void DeserializeFromJson_struct_enum(void);
@@ -915,6 +918,11 @@ void DeserializeFromJson_entity_wildcard_component(void);
 void DeserializeFromJson_ser_deser_pretty_value(void);
 void DeserializeFromJson_ser_deser_pretty_entity(void);
 void DeserializeFromJson_ser_deser_pretty_world(void);
+void DeserializeFromJson_large_string_w_unknown_escape_no_leak(void);
+void DeserializeFromJson_large_string_unterminated_no_leak(void);
+void DeserializeFromJson_large_string_to_int_no_leak(void);
+void DeserializeFromJson_large_member_name_strict_no_leak(void);
+void DeserializeFromJson_entity_large_name_w_unknown_escape_no_leak(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_string_w_control_char(void);
@@ -4449,6 +4457,18 @@ bake_test_case DeserializeFromJson_testcases[] = {
         DeserializeFromJson_struct_string
     },
     {
+        "struct_string_w_unicode_escape",
+        DeserializeFromJson_struct_string_w_unicode_escape
+    },
+    {
+        "struct_string_w_unicode_escape_utf8",
+        DeserializeFromJson_struct_string_w_unicode_escape_utf8
+    },
+    {
+        "struct_string_w_unicode_escape_large",
+        DeserializeFromJson_struct_string_w_unicode_escape_large
+    },
+    {
         "struct_entity",
         DeserializeFromJson_struct_entity
     },
@@ -5259,6 +5279,26 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "ser_deser_pretty_world",
         DeserializeFromJson_ser_deser_pretty_world
+    },
+    {
+        "large_string_w_unknown_escape_no_leak",
+        DeserializeFromJson_large_string_w_unknown_escape_no_leak
+    },
+    {
+        "large_string_unterminated_no_leak",
+        DeserializeFromJson_large_string_unterminated_no_leak
+    },
+    {
+        "large_string_to_int_no_leak",
+        DeserializeFromJson_large_string_to_int_no_leak
+    },
+    {
+        "large_member_name_strict_no_leak",
+        DeserializeFromJson_large_member_name_strict_no_leak
+    },
+    {
+        "entity_large_name_w_unknown_escape_no_leak",
+        DeserializeFromJson_entity_large_name_w_unknown_escape_no_leak
     }
 };
 
@@ -8397,7 +8437,11 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
+<<<<<<< HEAD
         229,
+=======
+        231,
+>>>>>>> 2674e3b2fa0b9f2cbc749f53dc334ba4a635551f
         DeserializeFromJson_testcases
     },
     {

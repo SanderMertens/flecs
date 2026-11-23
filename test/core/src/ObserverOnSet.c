@@ -1012,3 +1012,133 @@ void ObserverOnSet_on_set_prefab(void) {
 
     ecs_fini(world);
 }
+
+void ObserverOnSet_on_set_event_for_auto_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_auto_override(world, base, Position);
+
+    Probe ctx = { 0 };
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = probe_iter,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(ecs_owns(world, inst, Position));
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_uint(ctx.e[0], inst);
+    test_uint(ctx.event, EcsOnSet);
+    test_uint(ctx.event_id, ecs_id(Position));
+
+    ecs_fini(world);
+}
+
+void ObserverOnSet_on_set_event_for_auto_override_self_up(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_auto_override(world, base, Position);
+
+    Probe ctx = { 0 };
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position), .src.id = EcsSelf|EcsUp, .trav = EcsIsA },
+            { Tag, .oper = EcsOptional }
+        },
+        .events = { EcsOnSet },
+        .callback = probe_iter,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(ecs_owns(world, inst, Position));
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_uint(ctx.e[0], inst);
+    test_uint(ctx.event, EcsOnSet);
+    test_uint(ctx.event_id, ecs_id(Position));
+
+    ecs_fini(world);
+}
+
+void ObserverOnSet_on_set_event_for_remove_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_auto_override(world, base, Position);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(ecs_owns(world, inst, Position));
+
+    Probe ctx = { 0 };
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = probe_iter,
+        .ctx = &ctx
+    });
+
+    ecs_remove(world, inst, Position);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_uint(ctx.e[0], inst);
+    test_uint(ctx.s[0][0], base);
+    test_uint(ctx.event, EcsOnSet);
+    test_uint(ctx.event_id, ecs_id(Position));
+
+    ecs_fini(world);
+}
+
+void ObserverOnSet_on_set_event_for_remove_override_self_up(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_auto_override(world, base, Position);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(ecs_owns(world, inst, Position));
+
+    Probe ctx = { 0 };
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position), .src.id = EcsSelf|EcsUp, .trav = EcsIsA },
+            { Tag, .oper = EcsOptional }
+        },
+        .events = { EcsOnSet },
+        .callback = probe_iter,
+        .ctx = &ctx
+    });
+
+    ecs_remove(world, inst, Position);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_uint(ctx.e[0], inst);
+    test_uint(ctx.s[0][0], base);
+    test_uint(ctx.event, EcsOnSet);
+    test_uint(ctx.event_id, ecs_id(Position));
+
+    ecs_fini(world);
+}

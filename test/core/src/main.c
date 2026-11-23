@@ -786,6 +786,8 @@ void Sparse_dont_fragment_tag_w_with_added_after_use(void);
 void Sparse_dont_fragment_pair_w_with_dont_fragment_pair(void);
 void Sparse_dont_fragment_tag_w_with_fragmenting_tag(void);
 void Sparse_dont_fragment_added_to_tag_w_with_fragmenting_tag(void);
+void Sparse_dont_fragment_tag_w_cyclic_with(void);
+void Sparse_dont_fragment_pair_w_cyclic_with(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_convert_storage_childof_observer(void);
@@ -2063,6 +2065,13 @@ void Pairs_with_relation(void);
 void Pairs_2_with_relation(void);
 void Pairs_with_for_existing(void);
 void Pairs_nested_with_relation(void);
+void Pairs_cyclic_with(void);
+void Pairs_cyclic_with_self(void);
+void Pairs_cyclic_with_3(void);
+void Pairs_cyclic_with_relation(void);
+void Pairs_cyclic_with_component(void);
+void Pairs_cyclic_with_deferred(void);
+void Pairs_cyclic_with_w_dont_fragment(void);
 void Pairs_65k_relations(void);
 void Pairs_add_not_alive_relation(void);
 void Pairs_remove_wildcard(void);
@@ -2100,6 +2109,20 @@ void Pairs_add_value_pair_w_0_target(void);
 void Pairs_add_value_pair_w_0_target_w_isa(void);
 void Pairs_add_to_entity_w_value_pair_0_target_w_isa(void);
 void Pairs_inherit_relationship_trait(void);
+void Pairs_childof_and_traversable_rel_in_opposite_directions(void);
+void Pairs_traversable_rel_and_childof_in_opposite_directions(void);
+void Pairs_childof_and_traversable_rel_in_opposite_directions_w_delete_parent(void);
+void Pairs_childof_and_traversable_rel_in_opposite_directions_w_delete_child(void);
+void Pairs_childof_and_traversable_rel_in_opposite_directions_w_up_query(void);
+void Pairs_childof_and_traversable_rel_in_opposite_directions_w_cascade_query(void);
+void Pairs_childof_and_traversable_rel_in_opposite_directions_w_observer(void);
+void Pairs_2_traversable_rels_in_opposite_directions(void);
+void Pairs_2_traversable_rels_in_opposite_directions_w_observer(void);
+void Pairs_2_traversable_rels_in_opposite_directions_w_delete(void);
+void Pairs_2_traversable_rels_in_opposite_directions_w_delete_target(void);
+void Pairs_2_traversable_rels_in_opposite_directions_w_childof(void);
+void Pairs_childof_and_isa_in_opposite_directions(void);
+void Pairs_isa_and_childof_in_opposite_directions(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -2682,6 +2705,10 @@ void ObserverOnSet_set_optional_one_term_16_bytes(void);
 void ObserverOnSet_set_from_nothing(void);
 void ObserverOnSet_add_0_entity_in_on_set(void);
 void ObserverOnSet_on_set_prefab(void);
+void ObserverOnSet_on_set_event_for_auto_override(void);
+void ObserverOnSet_on_set_event_for_auto_override_self_up(void);
+void ObserverOnSet_on_set_event_for_remove_override(void);
+void ObserverOnSet_on_set_event_for_remove_override_self_up(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -6823,6 +6850,14 @@ bake_test_case Sparse_testcases[] = {
     {
         "dont_fragment_added_to_tag_w_with_fragmenting_tag",
         Sparse_dont_fragment_added_to_tag_w_with_fragmenting_tag
+    },
+    {
+        "dont_fragment_tag_w_cyclic_with",
+        Sparse_dont_fragment_tag_w_cyclic_with
+    },
+    {
+        "dont_fragment_pair_w_cyclic_with",
+        Sparse_dont_fragment_pair_w_cyclic_with
     }
 };
 
@@ -11834,6 +11869,34 @@ bake_test_case Pairs_testcases[] = {
         Pairs_nested_with_relation
     },
     {
+        "cyclic_with",
+        Pairs_cyclic_with
+    },
+    {
+        "cyclic_with_self",
+        Pairs_cyclic_with_self
+    },
+    {
+        "cyclic_with_3",
+        Pairs_cyclic_with_3
+    },
+    {
+        "cyclic_with_relation",
+        Pairs_cyclic_with_relation
+    },
+    {
+        "cyclic_with_component",
+        Pairs_cyclic_with_component
+    },
+    {
+        "cyclic_with_deferred",
+        Pairs_cyclic_with_deferred
+    },
+    {
+        "cyclic_with_w_dont_fragment",
+        Pairs_cyclic_with_w_dont_fragment
+    },
+    {
         "65k_relations",
         Pairs_65k_relations
     },
@@ -11980,6 +12043,62 @@ bake_test_case Pairs_testcases[] = {
     {
         "inherit_relationship_trait",
         Pairs_inherit_relationship_trait
+    },
+    {
+        "childof_and_traversable_rel_in_opposite_directions",
+        Pairs_childof_and_traversable_rel_in_opposite_directions
+    },
+    {
+        "traversable_rel_and_childof_in_opposite_directions",
+        Pairs_traversable_rel_and_childof_in_opposite_directions
+    },
+    {
+        "childof_and_traversable_rel_in_opposite_directions_w_delete_parent",
+        Pairs_childof_and_traversable_rel_in_opposite_directions_w_delete_parent
+    },
+    {
+        "childof_and_traversable_rel_in_opposite_directions_w_delete_child",
+        Pairs_childof_and_traversable_rel_in_opposite_directions_w_delete_child
+    },
+    {
+        "childof_and_traversable_rel_in_opposite_directions_w_up_query",
+        Pairs_childof_and_traversable_rel_in_opposite_directions_w_up_query
+    },
+    {
+        "childof_and_traversable_rel_in_opposite_directions_w_cascade_query",
+        Pairs_childof_and_traversable_rel_in_opposite_directions_w_cascade_query
+    },
+    {
+        "childof_and_traversable_rel_in_opposite_directions_w_observer",
+        Pairs_childof_and_traversable_rel_in_opposite_directions_w_observer
+    },
+    {
+        "2_traversable_rels_in_opposite_directions",
+        Pairs_2_traversable_rels_in_opposite_directions
+    },
+    {
+        "2_traversable_rels_in_opposite_directions_w_observer",
+        Pairs_2_traversable_rels_in_opposite_directions_w_observer
+    },
+    {
+        "2_traversable_rels_in_opposite_directions_w_delete",
+        Pairs_2_traversable_rels_in_opposite_directions_w_delete
+    },
+    {
+        "2_traversable_rels_in_opposite_directions_w_delete_target",
+        Pairs_2_traversable_rels_in_opposite_directions_w_delete_target
+    },
+    {
+        "2_traversable_rels_in_opposite_directions_w_childof",
+        Pairs_2_traversable_rels_in_opposite_directions_w_childof
+    },
+    {
+        "childof_and_isa_in_opposite_directions",
+        Pairs_childof_and_isa_in_opposite_directions
+    },
+    {
+        "isa_and_childof_in_opposite_directions",
+        Pairs_isa_and_childof_in_opposite_directions
     }
 };
 
@@ -14293,6 +14412,22 @@ bake_test_case ObserverOnSet_testcases[] = {
     {
         "on_set_prefab",
         ObserverOnSet_on_set_prefab
+    },
+    {
+        "on_set_event_for_auto_override",
+        ObserverOnSet_on_set_event_for_auto_override
+    },
+    {
+        "on_set_event_for_auto_override_self_up",
+        ObserverOnSet_on_set_event_for_auto_override_self_up
+    },
+    {
+        "on_set_event_for_remove_override",
+        ObserverOnSet_on_set_event_for_remove_override
+    },
+    {
+        "on_set_event_for_remove_override_self_up",
+        ObserverOnSet_on_set_event_for_remove_override_self_up
     }
 };
 
@@ -18673,7 +18808,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        252,
+        254,
         Sparse_testcases,
         1,
         Sparse_params
@@ -18780,7 +18915,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        140,
+        161,
         Pairs_testcases
     },
     {
@@ -18801,7 +18936,7 @@ static bake_test_suite suites[] = {
         "ObserverOnSet",
         NULL,
         NULL,
-        26,
+        30,
         ObserverOnSet_testcases
     },
     {

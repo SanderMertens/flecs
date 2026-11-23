@@ -664,6 +664,106 @@ void DeserializeFromJson_struct_string(void) {
     ecs_fini(world);
 }
 
+void DeserializeFromJson_struct_string_w_unicode_escape(void) {
+    typedef struct {
+        char* v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", ecs_id(ecs_string_t)}
+        }
+    });
+
+    test_assert(t != 0);
+
+    T value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": \"a\\u001bb\\u0041\"}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_str(value.v, "a\x1b" "bA");
+
+    ecs_os_free(value.v);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_struct_string_w_unicode_escape_utf8(void) {
+    typedef struct {
+        char* v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", ecs_id(ecs_string_t)}
+        }
+    });
+
+    test_assert(t != 0);
+
+    T value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"v\": \"\\u00e9\\u20AC\\ud83d\\ude00\"}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_str(value.v, "\xc3\xa9\xe2\x82\xac\xf0\x9f\x98\x80");
+
+    ecs_os_free(value.v);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_struct_string_w_unicode_escape_large(void) {
+    typedef struct {
+        char* v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", ecs_id(ecs_string_t)}
+        }
+    });
+
+    test_assert(t != 0);
+
+    char json[600];
+    char expect[400];
+    char *p = json;
+    p += sprintf(p, "{\"v\": \"");
+    int i;
+    for (i = 0; i < 300; i ++) {
+        *(p ++) = 'x';
+        expect[i] = 'x';
+    }
+    sprintf(p, "\\u001b\\u00e9\"}");
+    sprintf(&expect[300], "\x1b\xc3\xa9");
+
+    T value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, json, NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_str(value.v, expect);
+
+    ecs_os_free(value.v);
+
+    ecs_fini(world);
+}
+
 void DeserializeFromJson_struct_entity(void) {
     typedef struct {
         ecs_entity_t v;
@@ -7326,7 +7426,7 @@ void DeserializeFromJson_string_w_unknown_escape_large(void) {
     for (i = 0; i < 300; i ++) {
         *(p ++) = 'x';
     }
-    sprintf(p, "\\u0042\"}");
+    sprintf(p, "\\q\"}");
 
     T value = {0};
     const char *r = ecs_ptr_from_json(world, t, &value, json, NULL);
@@ -9032,6 +9132,204 @@ void DeserializeFromJson_ser_deser_pretty_world(void) {
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_large_string_w_unknown_escape_no_leak(void) {
+    typedef struct {
+        char *s;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"s", ecs_id(ecs_string_t)}
+        }
+    });
+
+    char json[1024];
+    char *p = json;
+    p += sprintf(p, "{\"s\": \"");
+    int i;
+    for (i = 0; i < 600; i ++) {
+        *(p ++) = 'x';
+    }
+    sprintf(p, "\\q\"}");
+
+    ecs_log_set_level(-4);
+
+    T value = {0};
+    test_assert(ecs_ptr_from_json(world, t, &value, json, NULL) == NULL);
+    ecs_os_free(value.s);
+    value.s = NULL;
+
+    int64_t balance_before = (ecs_os_api_malloc_count + 
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    test_assert(ecs_ptr_from_json(world, t, &value, json, NULL) == NULL);
+    ecs_os_free(value.s);
+
+    int64_t balance_after = (ecs_os_api_malloc_count + 
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_large_string_unterminated_no_leak(void) {
+    typedef struct {
+        char *s;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"s", ecs_id(ecs_string_t)}
+        }
+    });
+
+    char json[1024];
+    char *p = json;
+    p += sprintf(p, "{\"s\": \"");
+    int i;
+    for (i = 0; i < 600; i ++) {
+        *(p ++) = 'x';
+    }
+    *p = '\0';
+
+    ecs_log_set_level(-4);
+
+    T value = {0};
+    test_assert(ecs_ptr_from_json(world, t, &value, json, NULL) == NULL);
+    ecs_os_free(value.s);
+    value.s = NULL;
+
+    int64_t balance_before = (ecs_os_api_malloc_count + 
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    test_assert(ecs_ptr_from_json(world, t, &value, json, NULL) == NULL);
+    ecs_os_free(value.s);
+
+    int64_t balance_after = (ecs_os_api_malloc_count + 
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_large_string_to_int_no_leak(void) {
+    typedef struct {
+        int32_t x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    char json[1024];
+    char *p = json;
+    p += sprintf(p, "{\"x\": \"");
+    int i;
+    for (i = 0; i < 300; i ++) {
+        *(p ++) = 'a';
+    }
+    sprintf(p, "\"}");
+
+    ecs_log_set_level(-4);
+
+    T value = {0};
+    test_assert(ecs_ptr_from_json(world, t, &value, json, NULL) == NULL);
+
+    int64_t balance_before = (ecs_os_api_malloc_count + 
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    test_assert(ecs_ptr_from_json(world, t, &value, json, NULL) == NULL);
+
+    int64_t balance_after = (ecs_os_api_malloc_count + 
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_large_member_name_strict_no_leak(void) {
+    typedef struct {
+        int32_t x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    char json[1024];
+    char *p = json;
+    p += sprintf(p, "{\"");
+    int i;
+    for (i = 0; i < 300; i ++) {
+        *(p ++) = 'a';
+    }
+    sprintf(p, "\": 1}");
+
+    ecs_log_set_level(-4);
+
+    ecs_from_json_desc_t desc = { .strict = true };
+
+    T value = {0};
+    test_assert(ecs_ptr_from_json(world, t, &value, json, &desc) == NULL);
+
+    int64_t balance_before = (ecs_os_api_malloc_count + 
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    test_assert(ecs_ptr_from_json(world, t, &value, json, &desc) == NULL);
+
+    int64_t balance_after = (ecs_os_api_malloc_count + 
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_entity_large_name_w_unknown_escape_no_leak(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+
+    char json[1024];
+    char *p = json;
+    p += sprintf(p, "{\"name\": \"");
+    int i;
+    for (i = 0; i < 600; i ++) {
+        *(p ++) = 'x';
+    }
+    sprintf(p, "\\q\"}");
+
+    ecs_log_set_level(-4);
+
+    test_assert(ecs_entity_from_json(world, e, json, NULL) == NULL);
+
+    int64_t balance_before = (ecs_os_api_malloc_count + 
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    test_assert(ecs_entity_from_json(world, e, json, NULL) == NULL);
+
+    int64_t balance_after = (ecs_os_api_malloc_count + 
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
 
     ecs_fini(world);
 }

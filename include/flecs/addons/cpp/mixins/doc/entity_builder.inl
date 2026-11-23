@@ -92,3 +92,28 @@ const Self& set_doc_uuid(const char *uuid) const {
     ecs_doc_set_uuid(world_, id_, uuid);
     return to_base();
 }
+
+/** Set source location.
+ * This adds `flecs.doc.SourceLocation` to the entity, which makes it easier to
+ * refer back to the code where the entity (system, observer, query, ...) is
+ * defined.
+ *
+ * Example:
+ *
+ * @code
+ * world.system<Position>("Move")
+ *   .each([](Position& p) { })
+ *   .set_doc_source_location(__FILE__, __LINE__);
+ * @endcode
+ *
+ * @see ecs_doc_set_source_location()
+ * @see flecs::doc::set_source_location()
+ * @see flecs::entity_view::doc_source_location()
+ *
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_doc
+ */
+const Self& set_doc_source_location(const char *file, int32_t line) const {
+    ecs_doc_set_source_location(world_, id_, file, line);
+    return to_base();
+}

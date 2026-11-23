@@ -1289,6 +1289,16 @@ void AsyncBlock_error_assign_index_eval(void);
 void AsyncBlock_slice_assign_after_index(void);
 void AsyncBlock_call_fn_returning_string(void);
 void AsyncBlock_error_emit_value_eval(void);
+void AsyncBlock_disable_script_pauses_block(void);
+void AsyncBlock_enable_script_w_pending_future(void);
+void AsyncBlock_disable_script_before_first_resume(void);
+void AsyncBlock_disabled_script_creates_no_blocks(void);
+void AsyncBlock_update_disabled_script_creates_no_blocks(void);
+void AsyncBlock_disable_script_pauses_template_block(void);
+void AsyncBlock_disabled_script_creates_no_template_blocks(void);
+void AsyncBlock_disable_script_keeps_other_script_blocks(void);
+void AsyncBlock_delete_disabled_script_cancels_block(void);
+void AsyncBlock_disabled_script_keeps_app_tasks(void);
 
 // Testsuite 'Input'
 void Input_setup(void);
@@ -10004,6 +10014,46 @@ bake_test_case AsyncBlock_testcases[] = {
     {
         "error_emit_value_eval",
         AsyncBlock_error_emit_value_eval
+    },
+    {
+        "disable_script_pauses_block",
+        AsyncBlock_disable_script_pauses_block
+    },
+    {
+        "enable_script_w_pending_future",
+        AsyncBlock_enable_script_w_pending_future
+    },
+    {
+        "disable_script_before_first_resume",
+        AsyncBlock_disable_script_before_first_resume
+    },
+    {
+        "disabled_script_creates_no_blocks",
+        AsyncBlock_disabled_script_creates_no_blocks
+    },
+    {
+        "update_disabled_script_creates_no_blocks",
+        AsyncBlock_update_disabled_script_creates_no_blocks
+    },
+    {
+        "disable_script_pauses_template_block",
+        AsyncBlock_disable_script_pauses_template_block
+    },
+    {
+        "disabled_script_creates_no_template_blocks",
+        AsyncBlock_disabled_script_creates_no_template_blocks
+    },
+    {
+        "disable_script_keeps_other_script_blocks",
+        AsyncBlock_disable_script_keeps_other_script_blocks
+    },
+    {
+        "delete_disabled_script_cancels_block",
+        AsyncBlock_delete_disabled_script_cancels_block
+    },
+    {
+        "disabled_script_keeps_app_tasks",
+        AsyncBlock_disabled_script_keeps_app_tasks
     }
 };
 
@@ -24403,7 +24453,7 @@ static bake_test_suite suites[] = {
         "AsyncBlock",
         AsyncBlock_setup,
         NULL,
-        199,
+        209,
         AsyncBlock_testcases,
         1,
         AsyncBlock_params

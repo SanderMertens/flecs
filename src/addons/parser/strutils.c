@@ -68,12 +68,101 @@ char* flecs_chresc(
     return bptr;
 }
 
+static const char* flecs_hex4parse(
+    const char *in,
+    uint32_t *out)
+{
+    uint32_t result = 0;
+    int i;
+    for (i = 0; i < 4; i ++) {
+        char ch = in[i];
+        result <<= 4;
+        if (ch >= '0' && ch <= '9') {
+            result |= (uint32_t)(ch - '0');
+        } else if (ch >= 'a' && ch <= 'f') {
+            result |= (uint32_t)(ch - 'a' + 10);
+        } else if (ch >= 'A' && ch <= 'F') {
+            result |= (uint32_t)(ch - 'A' + 10);
+        } else {
+            return NULL;
+        }
+    }
+
+    *out = result;
+    return in + 4;
+}
+
+static const char* flecs_unicode_chrparse(
+    const char *in,
+    char *out,
+    int32_t *out_len)
+{
+    uint32_t cp;
+    in = flecs_hex4parse(in, &cp);
+    if (!in) {
+        return NULL;
+    }
+
+    if (cp >= 0xD800 && cp <= 0xDBFF) {
+        uint32_t lo;
+        if (in[0] != '\\' || in[1] != 'u') {
+            return NULL;
+        }
+
+        in = flecs_hex4parse(in + 2, &lo);
+        if (!in || lo < 0xDC00 || lo > 0xDFFF) {
+            return NULL;
+        }
+
+        cp = 0x10000 + ((cp - 0xD800) << 10) + (lo - 0xDC00);
+    } else if (cp >= 0xDC00 && cp <= 0xDFFF) {
+        return NULL;
+    }
+
+    char buf[4];
+    int32_t len;
+    if (cp < 0x80) {
+        buf[0] = (char)cp;
+        len = 1;
+    } else if (cp < 0x800) {
+        buf[0] = (char)(0xC0 | (cp >> 6));
+        buf[1] = (char)(0x80 | (cp & 0x3F));
+        len = 2;
+    } else if (cp < 0x10000) {
+        buf[0] = (char)(0xE0 | (cp >> 12));
+        buf[1] = (char)(0x80 | ((cp >> 6) & 0x3F));
+        buf[2] = (char)(0x80 | (cp & 0x3F));
+        len = 3;
+    } else {
+        buf[0] = (char)(0xF0 | (cp >> 18));
+        buf[1] = (char)(0x80 | ((cp >> 12) & 0x3F));
+        buf[2] = (char)(0x80 | ((cp >> 6) & 0x3F));
+        buf[3] = (char)(0x80 | (cp & 0x3F));
+        len = 4;
+    }
+
+    if (out) {
+        ecs_os_memcpy(out, buf, len);
+    }
+
+    if (out_len) {
+        *out_len = len;
+    }
+
+    return in;
+}
+
 const char* flecs_chrparse(
     const char *in,
-    char *out)
+    char *out,
+    int32_t *out_len)
 {
     const char *result = in + 1;
     char ch;
+
+    if (in[0] == '\\' && in[1] == 'u') {
+        return flecs_unicode_chrparse(in + 2, out, out_len);
+    }
 
     if (in[0] == '\\') {
         result ++;
@@ -127,6 +216,10 @@ const char* flecs_chrparse(
 
     if (out) {
         *out = ch;
+    }
+
+    if (out_len) {
+        *out_len = 1;
     }
 
     return result;

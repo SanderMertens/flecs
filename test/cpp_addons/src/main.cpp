@@ -102,6 +102,9 @@ void Doc_set_link(void);
 void Doc_set_color(void);
 void Doc_set_uuid(void);
 void Doc_get_name_no_doc_name(void);
+void Doc_set_source_location(void);
+void Doc_set_source_location_system(void);
+void Doc_set_source_location_observer(void);
 
 bake_test_case Misc_testcases[] = {
     {
@@ -466,6 +469,18 @@ bake_test_case Doc_testcases[] = {
     {
         "get_name_no_doc_name",
         Doc_get_name_no_doc_name
+    },
+    {
+        "set_source_location",
+        Doc_set_source_location
+    },
+    {
+        "set_source_location_system",
+        Doc_set_source_location_system
+    },
+    {
+        "set_source_location_observer",
+        Doc_set_source_location_observer
     }
 };
 
@@ -481,7 +496,7 @@ static bake_test_suite suites[] = {
         "Doc",
         NULL,
         NULL,
-        6,
+        9,
         Doc_testcases
     }
 };

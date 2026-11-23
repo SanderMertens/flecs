@@ -69,3 +69,53 @@ void Doc_get_name_no_doc_name(void) {
 
     test_str(e.doc_name(), "Foo");
 }
+
+void Doc_set_source_location(void) {
+    flecs::world ecs;
+
+    auto e = ecs.entity("Foo");
+
+    test_assert(e.doc_source_location() == nullptr);
+
+    e.set_doc_source_location("foo.cpp", 10);
+
+    test_assert(e.has<flecs::doc::SourceLocation>());
+
+    const flecs::doc::SourceLocation *loc = e.doc_source_location();
+    test_assert(loc != nullptr);
+    test_str(loc->file, "foo.cpp");
+    test_int(loc->line, 10);
+
+    test_assert(flecs::doc::get_source_location(e) == loc);
+
+    e.set_doc_source_location(nullptr, 0);
+    test_assert(!e.has<flecs::doc::SourceLocation>());
+}
+
+void Doc_set_source_location_system(void) {
+    flecs::world ecs;
+
+    int32_t line = __LINE__; auto s = ecs.system<Position>()
+        .each([](Position&) { });
+    s.set_doc_source_location(__FILE__, line);
+
+    const flecs::doc::SourceLocation *loc = s.doc_source_location();
+    test_assert(loc != nullptr);
+    test_str(loc->file, __FILE__);
+    test_int(loc->line, line);
+}
+
+void Doc_set_source_location_observer(void) {
+    flecs::world ecs;
+
+    auto o = ecs.observer<Position>()
+        .event(flecs::OnAdd)
+        .each([](Position&) { });
+    flecs::doc::set_source_location(o, "observers.cpp", 7);
+
+    const flecs::doc::SourceLocation *loc = 
+        flecs::doc::get_source_location(o);
+    test_assert(loc != nullptr);
+    test_str(loc->file, "observers.cpp");
+    test_int(loc->line, 7);
+}

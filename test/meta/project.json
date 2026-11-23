@@ -741,6 +741,9 @@
                 "struct_negative_int",
                 "struct_negative_float",
                 "struct_string",
+                "struct_string_w_unicode_escape",
+                "struct_string_w_unicode_escape_utf8",
+                "struct_string_w_unicode_escape_large",
                 "struct_entity",
                 "struct_id",
                 "struct_enum",
@@ -943,7 +946,12 @@
                 "entity_wildcard_component",
                 "ser_deser_pretty_value",
                 "ser_deser_pretty_entity",
-                "ser_deser_pretty_world"
+                "ser_deser_pretty_world",
+                "large_string_w_unknown_escape_no_leak",
+                "large_string_unterminated_no_leak",
+                "large_string_to_int_no_leak",
+                "large_member_name_strict_no_leak",
+                "entity_large_name_w_unknown_escape_no_leak"
             ]
         }, {
             "id": "SerializeToJson",

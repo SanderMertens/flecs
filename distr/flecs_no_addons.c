@@ -13333,6 +13333,9 @@ static void flecs_emit_on_set_for_override_on_add(
     ecs_assert(cr && cr->type_info, ECS_INTERNAL_ERROR, NULL);
     ECS_CONST_CAST(ecs_size_t*, it->sizes)[0] = cr->type_info->size;
 
+    ecs_entity_t event = it->event;
+    it->event = er_onset->event;
+
     /* Invoke OnSet observers for new inherited component value. */
     for (ider_set_i = 0; ider_set_i < ider_set_count; ider_set_i ++) {
         ecs_event_id_record_t *ider = iders_set[ider_set_i];
@@ -13341,6 +13344,8 @@ static void flecs_emit_on_set_for_override_on_add(
         flecs_observers_invoke(world, &ider->self_up, it, table, 0);
         ecs_assert(it->event_cur == evtx, ECS_INTERNAL_ERROR, NULL);
     }
+
+    it->event = event;
 }
 
 static void flecs_emit_on_set_for_override_on_remove(
@@ -13386,6 +13391,9 @@ static void flecs_emit_on_set_for_override_on_remove(
     ecs_assert(cr && cr->type_info, ECS_INTERNAL_ERROR, NULL);
     ECS_CONST_CAST(ecs_size_t*, it->sizes)[0] = cr->type_info->size;
 
+    ecs_entity_t event = it->event;
+    it->event = er_onset->event;
+
     /* Invoke OnSet observers for previous inherited component value. */
     for (ider_set_i = 0; ider_set_i < ider_set_count; ider_set_i ++) {
         ecs_event_id_record_t *ider = iders_set[ider_set_i];
@@ -13394,6 +13402,8 @@ static void flecs_emit_on_set_for_override_on_remove(
         flecs_observers_invoke(world, &ider->up, it, table, EcsIsA);
         ecs_assert(it->event_cur == evtx, ECS_INTERNAL_ERROR, NULL);
     }
+
+    it->event = event;
 }
 
 bool flecs_lifecycle_observers_exist(
@@ -25127,7 +25137,7 @@ static int flecs_term_ref_lookup(
         }
 
         ecs_size_t name_len = ecs_os_strlen(name);
-        if (name[0] == '.' || name[name_len - 1] == '.' ||
+        if (!name_len || name[0] == '.' || name[name_len - 1] == '.' ||
             strstr(name, "..") != NULL)
         {
             flecs_query_validator_error(ctx, "invalid variable name '%s'", name);
@@ -32810,15 +32820,20 @@ static ecs_flags32_t flecs_table_diff_ids(
     return flags;
 }
 
-static void flecs_add_with_property(
+static void flecs_add_with_property_recursive(
     ecs_world_t *world,
     ecs_component_record_t *cr_with_wildcard,
     ecs_type_t *dst_type,
     ecs_type_t *dont_fragment_type,
+    ecs_type_t *visited,
     ecs_entity_t r,
     ecs_entity_t o)
 {
     r = ecs_get_alive(world, r);
+
+    if (flecs_type_new_with(world, visited, visited, r) == -1) {
+        return;
+    }
 
     /* Check if component/relationship has With pairs, which contain ids
      * that need to be added to the table. */
@@ -32855,10 +32870,24 @@ static void flecs_add_with_property(
                 flecs_type_add(world, dont_fragment_type, a);
             }
 
-            flecs_add_with_property(world, cr_with_wildcard, dst_type,
-                dont_fragment_type, ra, o);
+            flecs_add_with_property_recursive(world, cr_with_wildcard,
+                dst_type, dont_fragment_type, visited, ra, o);
         }
     }
+}
+
+static void flecs_add_with_property(
+    ecs_world_t *world,
+    ecs_component_record_t *cr_with_wildcard,
+    ecs_type_t *dst_type,
+    ecs_type_t *dont_fragment_type,
+    ecs_entity_t r,
+    ecs_entity_t o)
+{
+    ecs_type_t visited = {0};
+    flecs_add_with_property_recursive(world, cr_with_wildcard, dst_type,
+        dont_fragment_type, &visited, r, o);
+    flecs_type_free(world, &visited);
 }
 
 static ecs_flags32_t flecs_table_graph_id_flags(

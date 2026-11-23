@@ -594,11 +594,15 @@ char* flecs_string_escape(
                 ch = '$';
                 ptr += 2;
             } else {
-                ptr = flecs_chrparse(ptr, &ch);
+                int32_t len;
+                ptr = flecs_chrparse(ptr, out, &len);
                 if (!ptr) {
                     ecs_err("invalid escape sequence in string '%s'", str);
                     return NULL;
                 }
+
+                out += len;
+                continue;
             }
         } else {
             ch = ptr[0];

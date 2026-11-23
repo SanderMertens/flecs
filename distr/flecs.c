@@ -15321,6 +15321,9 @@ static void flecs_emit_on_set_for_override_on_add(
     ecs_assert(cr && cr->type_info, ECS_INTERNAL_ERROR, NULL);
     ECS_CONST_CAST(ecs_size_t*, it->sizes)[0] = cr->type_info->size;
 
+    ecs_entity_t event = it->event;
+    it->event = er_onset->event;
+
     /* Invoke OnSet observers for new inherited component value. */
     for (ider_set_i = 0; ider_set_i < ider_set_count; ider_set_i ++) {
         ecs_event_id_record_t *ider = iders_set[ider_set_i];
@@ -15329,6 +15332,8 @@ static void flecs_emit_on_set_for_override_on_add(
         flecs_observers_invoke(world, &ider->self_up, it, table, 0);
         ecs_assert(it->event_cur == evtx, ECS_INTERNAL_ERROR, NULL);
     }
+
+    it->event = event;
 }
 
 static void flecs_emit_on_set_for_override_on_remove(
@@ -15374,6 +15379,9 @@ static void flecs_emit_on_set_for_override_on_remove(
     ecs_assert(cr && cr->type_info, ECS_INTERNAL_ERROR, NULL);
     ECS_CONST_CAST(ecs_size_t*, it->sizes)[0] = cr->type_info->size;
 
+    ecs_entity_t event = it->event;
+    it->event = er_onset->event;
+
     /* Invoke OnSet observers for previous inherited component value. */
     for (ider_set_i = 0; ider_set_i < ider_set_count; ider_set_i ++) {
         ecs_event_id_record_t *ider = iders_set[ider_set_i];
@@ -15382,6 +15390,8 @@ static void flecs_emit_on_set_for_override_on_remove(
         flecs_observers_invoke(world, &ider->up, it, table, EcsIsA);
         ecs_assert(it->event_cur == evtx, ECS_INTERNAL_ERROR, NULL);
     }
+
+    it->event = event;
 }
 
 bool flecs_lifecycle_observers_exist(
@@ -21685,6 +21695,7 @@ const ecs_entity_t EcsDocDetail =                   FLECS_HI_COMPONENT_ID + 117;
 const ecs_entity_t EcsDocLink =                     FLECS_HI_COMPONENT_ID + 118;
 const ecs_entity_t EcsDocColor =                    FLECS_HI_COMPONENT_ID + 119;
 const ecs_entity_t EcsDocUuid =                     FLECS_HI_COMPONENT_ID + 120;
+const ecs_entity_t ecs_id(EcsDocSourceLocation) =   FLECS_HI_COMPONENT_ID + 126;
 #endif
 
 /* REST module components */
@@ -24149,6 +24160,22 @@ static ECS_DTOR(EcsDocDescription, ptr, {
     ecs_os_free((char*)ptr->value);
 })
 
+static ECS_COPY(EcsDocSourceLocation, dst, src, {
+    ecs_os_strset(&dst->file, src->file);
+    dst->line = src->line;
+})
+
+static ECS_MOVE(EcsDocSourceLocation, dst, src, {
+    ecs_os_free(dst->file);
+    dst->file = src->file;
+    dst->line = src->line;
+    src->file = NULL;
+})
+
+static ECS_DTOR(EcsDocSourceLocation, ptr, {
+    ecs_os_free(ptr->file);
+})
+
 static void flecs_doc_set(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -24211,6 +24238,23 @@ void ecs_doc_set_color(
     const char *color)
 {
     flecs_doc_set(world, entity, EcsDocColor, color);
+}
+
+void ecs_doc_set_source_location(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *file,
+    int32_t line)
+{
+    if (file) {
+        ecs_set(world, entity, EcsDocSourceLocation, {
+            /* Safe, file gets copied by copy hook */
+            .file = ECS_CONST_CAST(char*, file),
+            .line = line
+        });
+    } else {
+        ecs_remove(world, entity, EcsDocSourceLocation);
+    }
 }
 
 const char* ecs_doc_get_uuid(
@@ -24291,6 +24335,13 @@ const char* ecs_doc_get_color(
     }
 }
 
+const EcsDocSourceLocation* ecs_doc_get_source_location(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    return ecs_get(world, entity, EcsDocSourceLocation);
+}
+
 void FlecsDocImport(
     ecs_world_t *world)
 {    
@@ -24304,12 +24355,20 @@ void FlecsDocImport(
     flecs_bootstrap_tag(world, EcsDocDetail);
     flecs_bootstrap_tag(world, EcsDocLink);
     flecs_bootstrap_tag(world, EcsDocColor);
+    flecs_bootstrap_component(world, EcsDocSourceLocation);
 
     ecs_set_hooks(world, EcsDocDescription, { 
         .ctor = flecs_default_ctor,
         .move = ecs_move(EcsDocDescription),
         .copy = ecs_copy(EcsDocDescription),
         .dtor = ecs_dtor(EcsDocDescription)
+    });
+
+    ecs_set_hooks(world, EcsDocSourceLocation, { 
+        .ctor = flecs_default_ctor,
+        .move = ecs_move(EcsDocSourceLocation),
+        .copy = ecs_copy(EcsDocSourceLocation),
+        .dtor = ecs_dtor(EcsDocSourceLocation)
     });
 
 #ifdef FLECS_META
@@ -24319,9 +24378,18 @@ void FlecsDocImport(
             { .name = "value", .type = ecs_id(ecs_string_t) }
         }
     });
+
+    ecs_struct(world, {
+        .entity = ecs_id(EcsDocSourceLocation),
+        .members = {
+            { .name = "file", .type = ecs_id(ecs_string_t) },
+            { .name = "line", .type = ecs_id(ecs_i32_t) }
+        }
+    });
 #endif
 
     ecs_add_pair(world, ecs_id(EcsDocDescription), EcsOnInstantiate, EcsDontInherit);
+    ecs_add_pair(world, ecs_id(EcsDocSourceLocation), EcsOnInstantiate, EcsDontInherit);
 #ifdef FLECS_CONSTRAINT_TRAITS
     ecs_add_id(world, ecs_id(EcsDocDescription), EcsRelationship);
 #endif
@@ -37058,7 +37126,7 @@ static int flecs_term_ref_lookup(
         }
 
         ecs_size_t name_len = ecs_os_strlen(name);
-        if (name[0] == '.' || name[name_len - 1] == '.' ||
+        if (!name_len || name[0] == '.' || name[name_len - 1] == '.' ||
             strstr(name, "..") != NULL)
         {
             flecs_query_validator_error(ctx, "invalid variable name '%s'", name);
@@ -45154,15 +45222,20 @@ static ecs_flags32_t flecs_table_diff_ids(
     return flags;
 }
 
-static void flecs_add_with_property(
+static void flecs_add_with_property_recursive(
     ecs_world_t *world,
     ecs_component_record_t *cr_with_wildcard,
     ecs_type_t *dst_type,
     ecs_type_t *dont_fragment_type,
+    ecs_type_t *visited,
     ecs_entity_t r,
     ecs_entity_t o)
 {
     r = ecs_get_alive(world, r);
+
+    if (flecs_type_new_with(world, visited, visited, r) == -1) {
+        return;
+    }
 
     /* Check if component/relationship has With pairs, which contain ids
      * that need to be added to the table. */
@@ -45199,10 +45272,24 @@ static void flecs_add_with_property(
                 flecs_type_add(world, dont_fragment_type, a);
             }
 
-            flecs_add_with_property(world, cr_with_wildcard, dst_type,
-                dont_fragment_type, ra, o);
+            flecs_add_with_property_recursive(world, cr_with_wildcard,
+                dst_type, dont_fragment_type, visited, ra, o);
         }
     }
+}
+
+static void flecs_add_with_property(
+    ecs_world_t *world,
+    ecs_component_record_t *cr_with_wildcard,
+    ecs_type_t *dst_type,
+    ecs_type_t *dont_fragment_type,
+    ecs_entity_t r,
+    ecs_entity_t o)
+{
+    ecs_type_t visited = {0};
+    flecs_add_with_property_recursive(world, cr_with_wildcard, dst_type,
+        dont_fragment_type, &visited, r, o);
+    flecs_type_free(world, &visited);
 }
 
 static ecs_flags32_t flecs_table_graph_id_flags(
@@ -52766,6 +52853,9 @@ const char* ecs_ptr_from_json(
 
     return json;
 error:
+    if (token != token_buffer) {
+        ecs_os_free(token);
+    }
     return NULL;
 }
 
@@ -52829,24 +52919,29 @@ const char* flecs_json_parse(
         char *token_ptr = token;
         json ++;
         for (; (ch = json[0]); ) {
-            if (token_ptr - token >= ECS_MAX_TOKEN_SIZE) {
-                /* Token doesn't fit in buffer, signal to app to try again with
-                 * dynamic buffer. */
-                token_kind[0] = JsonLargeString;
-                return start;
-            }
-
             if (ch == '"') {
                 json ++;
                 token_ptr[0] = '\0';
                 break;
             }
 
-            json = flecs_chrparse(json, token_ptr ++);
+            char ch_out[4];
+            int32_t len;
+            json = flecs_chrparse(json, ch_out, &len);
             if (!json) {
                 token_kind[0] = JsonInvalid;
                 return NULL;
             }
+
+            if (token_ptr - token + len >= ECS_MAX_TOKEN_SIZE) {
+                /* Token doesn't fit in buffer, signal to app to try again with
+                 * dynamic buffer. */
+                token_kind[0] = JsonLargeString;
+                return start;
+            }
+
+            ecs_os_memcpy(token_ptr, ch_out, len);
+            token_ptr += len;
         }
 
         if (!ch) {
@@ -52907,7 +53002,8 @@ const char* flecs_json_parse_large_string(
         return NULL; /* can only parse strings */
     }
 
-    char ch, ch_out;
+    char ch, ch_out[4];
+    int32_t len;
     json ++;
     for (; (ch = json[0]); ) {
         if (ch == '"') {
@@ -52915,15 +53011,21 @@ const char* flecs_json_parse_large_string(
             break;
         }
 
-        json = flecs_chrparse(json, &ch_out);
+        json = flecs_chrparse(json, ch_out, &len);
         if (!json) {
+            ecs_strbuf_reset(buf);
             return NULL;
         }
 
-        ecs_strbuf_appendch(buf, ch_out);
+        ecs_strbuf_appendstrn(buf, ch_out, len);
     }
 
-    return ch ? json : NULL;
+    if (!ch) {
+        ecs_strbuf_reset(buf);
+        return NULL;
+    }
+
+    return json;
 }
 
 const char* flecs_json_parse_next_member(
@@ -53086,7 +53188,7 @@ static const char* flecs_json_skip_string(
         return NULL; /* can only skip strings */
     }
 
-    char ch, ch_out;
+    char ch;
     json ++;
     for (; (ch = json[0]); ) {
         if (ch == '"') {
@@ -53094,7 +53196,7 @@ static const char* flecs_json_skip_string(
             break;
         }
 
-        json = flecs_chrparse(json, &ch_out);
+        json = flecs_chrparse(json, NULL, NULL);
         if (!json) {
             return NULL;
         }
@@ -64061,12 +64163,101 @@ char* flecs_chresc(
     return bptr;
 }
 
+static const char* flecs_hex4parse(
+    const char *in,
+    uint32_t *out)
+{
+    uint32_t result = 0;
+    int i;
+    for (i = 0; i < 4; i ++) {
+        char ch = in[i];
+        result <<= 4;
+        if (ch >= '0' && ch <= '9') {
+            result |= (uint32_t)(ch - '0');
+        } else if (ch >= 'a' && ch <= 'f') {
+            result |= (uint32_t)(ch - 'a' + 10);
+        } else if (ch >= 'A' && ch <= 'F') {
+            result |= (uint32_t)(ch - 'A' + 10);
+        } else {
+            return NULL;
+        }
+    }
+
+    *out = result;
+    return in + 4;
+}
+
+static const char* flecs_unicode_chrparse(
+    const char *in,
+    char *out,
+    int32_t *out_len)
+{
+    uint32_t cp;
+    in = flecs_hex4parse(in, &cp);
+    if (!in) {
+        return NULL;
+    }
+
+    if (cp >= 0xD800 && cp <= 0xDBFF) {
+        uint32_t lo;
+        if (in[0] != '\\' || in[1] != 'u') {
+            return NULL;
+        }
+
+        in = flecs_hex4parse(in + 2, &lo);
+        if (!in || lo < 0xDC00 || lo > 0xDFFF) {
+            return NULL;
+        }
+
+        cp = 0x10000 + ((cp - 0xD800) << 10) + (lo - 0xDC00);
+    } else if (cp >= 0xDC00 && cp <= 0xDFFF) {
+        return NULL;
+    }
+
+    char buf[4];
+    int32_t len;
+    if (cp < 0x80) {
+        buf[0] = (char)cp;
+        len = 1;
+    } else if (cp < 0x800) {
+        buf[0] = (char)(0xC0 | (cp >> 6));
+        buf[1] = (char)(0x80 | (cp & 0x3F));
+        len = 2;
+    } else if (cp < 0x10000) {
+        buf[0] = (char)(0xE0 | (cp >> 12));
+        buf[1] = (char)(0x80 | ((cp >> 6) & 0x3F));
+        buf[2] = (char)(0x80 | (cp & 0x3F));
+        len = 3;
+    } else {
+        buf[0] = (char)(0xF0 | (cp >> 18));
+        buf[1] = (char)(0x80 | ((cp >> 12) & 0x3F));
+        buf[2] = (char)(0x80 | ((cp >> 6) & 0x3F));
+        buf[3] = (char)(0x80 | (cp & 0x3F));
+        len = 4;
+    }
+
+    if (out) {
+        ecs_os_memcpy(out, buf, len);
+    }
+
+    if (out_len) {
+        *out_len = len;
+    }
+
+    return in;
+}
+
 const char* flecs_chrparse(
     const char *in,
-    char *out)
+    char *out,
+    int32_t *out_len)
 {
     const char *result = in + 1;
     char ch;
+
+    if (in[0] == '\\' && in[1] == 'u') {
+        return flecs_unicode_chrparse(in + 2, out, out_len);
+    }
 
     if (in[0] == '\\') {
         result ++;
@@ -64120,6 +64311,10 @@ const char* flecs_chrparse(
 
     if (out) {
         *out = ch;
+    }
+
+    if (out_len) {
+        *out_len = 1;
     }
 
     return result;
@@ -76591,6 +76786,23 @@ static ecs_size_t flecs_doc_string_memory_get(
     }
     return result;
 }
+
+static ecs_size_t flecs_doc_source_location_memory_get(
+    const ecs_world_t *world)
+{
+    ecs_size_t result = 0;
+    ecs_iter_t it = ecs_each(world, EcsDocSourceLocation);
+    while (ecs_each_next(&it)) {
+        EcsDocSourceLocation *ptr = ecs_field(&it, EcsDocSourceLocation, 0);
+        int32_t i, count = it.count;
+        for (i = 0; i < count; i ++) {
+            if (ptr[i].file) {
+                result += ecs_os_strlen(ptr[i].file) + 1;
+            }
+        }
+    }
+    return result;
+}
 #endif
 
 ecs_entities_memory_t ecs_entity_memory_get(
@@ -76648,6 +76860,7 @@ ecs_entities_memory_t ecs_entity_memory_get(
     result.bytes_doc_strings += flecs_doc_string_memory_get(world, EcsDocUuid);
     result.bytes_doc_strings += flecs_doc_string_memory_get(world, EcsDocLink);
     result.bytes_doc_strings += flecs_doc_string_memory_get(world, EcsDocColor);
+    result.bytes_doc_strings += flecs_doc_source_location_memory_get(world);
 #endif
 
 error:
@@ -96436,6 +96649,7 @@ struct ecs_script_task_t {
     bool is_async_block;
     bool retains_script;
     bool free_pending;
+    bool disabled;
 };
 
 static void flecs_script_future_lock(
@@ -97637,6 +97851,10 @@ int flecs_script_async_spawn(
     ecs_entity_t entity = 0;
     ecs_entity_t owner_instance = 0, owner_template = 0;
 
+    if (impl->entity && ecs_has_id(world, impl->entity, EcsDisabled)) {
+        return 0;
+    }
+
     if (v->instance_template && v->body_template) {
         entity = v->entity ? v->entity->eval : 0;
         if (!entity || !ecs_is_alive(world, entity)) {
@@ -98244,7 +98462,7 @@ int32_t ecs_script_tasks_progress(
     int32_t cursor = 0, resumed = 0;
     ecs_script_task_t *task;
     while ((task = flecs_script_sched_next(rt, &cursor))) {
-        if (task->status != EcsScriptTaskPending) {
+        if (task->status != EcsScriptTaskPending || task->disabled) {
             continue;
         }
 
@@ -98281,6 +98499,40 @@ int32_t ecs_script_tasks_progress(
     return resumed;
 error:
     return 0;
+}
+
+static void flecs_script_on_disable(
+    ecs_iter_t *it)
+{
+    ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(it->world));
+    if (ecs_is_fini(world)) {
+        return;
+    }
+
+    bool disable = it->event == EcsOnAdd;
+    ecs_script_runtime_t *rt = flecs_script_runtime_get(world);
+    for (int32_t i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        if (!ecs_has(world, e, EcsScript)) {
+            continue;
+        }
+
+        ecs_script_task_t **tasks = ecs_vec_first(&rt->async_tasks);
+        int32_t t, task_count = ecs_vec_count(&rt->async_tasks);
+        for (t = 0; t < task_count; t ++) {
+            ecs_script_task_t *task = tasks[t];
+            if (!task || task->disabled == disable ||
+                flecs_script_impl(task->script)->entity != e)
+            {
+                continue;
+            }
+
+            task->disabled = disable;
+            if (!disable && !task->running) {
+                flecs_script_task_sched_wait(task);
+            }
+        }
+    }
 }
 
 #ifdef FLECS_PIPELINE
@@ -98431,6 +98683,12 @@ void flecs_script_async_import(
     });
     ecs_add_pair(world, ecs_id(EcsScriptAsyncTasks),
         EcsOnInstantiate, EcsDontInherit);
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = EcsDisabled }},
+        .events = { EcsOnAdd, EcsOnRemove },
+        .callback = flecs_script_on_disable
+    });
 
 #ifdef FLECS_PIPELINE
     ECS_IMPORT(world, FlecsPipeline);
@@ -107657,15 +107915,16 @@ ecs_expr_value_node_t* flecs_expr_char(
     if(value[0] == '\\' && value[1] == '\'') {
         result->storage.char_ = '\'';
     } else {
-        char ch = 0;
-        const char *ptr = flecs_chrparse(value, &ch);
-        if(!ptr) {
+        char ch[4] = {0};
+        int32_t len;
+        const char *ptr = flecs_chrparse(value, ch, &len);
+        if(!ptr || len != 1) {
             flecs_free_t(
                 &parser->script->allocator, ecs_expr_value_node_t, result);
             return NULL;
         }
 
-        result->storage.char_ = ch;
+        result->storage.char_ = ch[0];
     }
 
     result->ptr = &result->storage.char_;
@@ -110597,11 +110856,15 @@ char* flecs_string_escape(
                 ch = '$';
                 ptr += 2;
             } else {
-                ptr = flecs_chrparse(ptr, &ch);
+                int32_t len;
+                ptr = flecs_chrparse(ptr, out, &len);
                 if (!ptr) {
                     ecs_err("invalid escape sequence in string '%s'", str);
                     return NULL;
                 }
+
+                out += len;
+                continue;
             }
         } else {
             ch = ptr[0];
@@ -124212,7 +124475,8 @@ static char* flecs_command_unescape(
     const char *ptr = start;
     while (ptr < end) {
         if (ptr[0] == '\\') {
-            const char *next = flecs_chrparse(ptr, out);
+            int32_t len;
+            const char *next = flecs_chrparse(ptr, out, &len);
             if (!next) {
                 ecs_err("invalid escape sequence '\\%c'", ptr[1]);
                 ecs_os_free(result);
@@ -124220,12 +124484,12 @@ static char* flecs_command_unescape(
             }
 
             ptr = next;
+            out += len;
         } else {
             out[0] = ptr[0];
             ptr ++;
+            out ++;
         }
-
-        out ++;
     }
 
     out[0] = '\0';

@@ -188,6 +188,9 @@ const char* ecs_ptr_from_json(
 
     return json;
 error:
+    if (token != token_buffer) {
+        ecs_os_free(token);
+    }
     return NULL;
 }
 
