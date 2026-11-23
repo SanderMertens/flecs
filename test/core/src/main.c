@@ -2705,6 +2705,10 @@ void ObserverOnSet_set_optional_one_term_16_bytes(void);
 void ObserverOnSet_set_from_nothing(void);
 void ObserverOnSet_add_0_entity_in_on_set(void);
 void ObserverOnSet_on_set_prefab(void);
+void ObserverOnSet_on_set_event_for_auto_override(void);
+void ObserverOnSet_on_set_event_for_auto_override_self_up(void);
+void ObserverOnSet_on_set_event_for_remove_override(void);
+void ObserverOnSet_on_set_event_for_remove_override_self_up(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -14408,6 +14412,22 @@ bake_test_case ObserverOnSet_testcases[] = {
     {
         "on_set_prefab",
         ObserverOnSet_on_set_prefab
+    },
+    {
+        "on_set_event_for_auto_override",
+        ObserverOnSet_on_set_event_for_auto_override
+    },
+    {
+        "on_set_event_for_auto_override_self_up",
+        ObserverOnSet_on_set_event_for_auto_override_self_up
+    },
+    {
+        "on_set_event_for_remove_override",
+        ObserverOnSet_on_set_event_for_remove_override
+    },
+    {
+        "on_set_event_for_remove_override_self_up",
+        ObserverOnSet_on_set_event_for_remove_override_self_up
     }
 };
 
@@ -18916,7 +18936,7 @@ static bake_test_suite suites[] = {
         "ObserverOnSet",
         NULL,
         NULL,
-        26,
+        30,
         ObserverOnSet_testcases
     },
     {
