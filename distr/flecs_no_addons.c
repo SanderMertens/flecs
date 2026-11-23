@@ -25127,7 +25127,7 @@ static int flecs_term_ref_lookup(
         }
 
         ecs_size_t name_len = ecs_os_strlen(name);
-        if (name[0] == '.' || name[name_len - 1] == '.' ||
+        if (!name_len || name[0] == '.' || name[name_len - 1] == '.' ||
             strstr(name, "..") != NULL)
         {
             flecs_query_validator_error(ctx, "invalid variable name '%s'", name);
