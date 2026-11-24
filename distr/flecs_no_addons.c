@@ -7473,6 +7473,21 @@ error:
     return 0;
 }
 
+/* Flags for a diff that adds all components of a table to new entities */
+static
+ecs_flags32_t flecs_new_w_table_added_flags(
+    const ecs_table_t *table)
+{
+    ecs_flags32_t flags = table->flags & EcsTableAddEdgeFlags;
+    if (table->flags & EcsTableHasIsA) {
+        flags |= EcsTableHasOnAdd;
+    }
+    if (table->flags & EcsTableHasChildOf) {
+        flags |= EcsTableEdgeReparent;
+    }
+    return flags;
+}
+
 ecs_entity_t ecs_new_w_table(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -7483,14 +7498,10 @@ ecs_entity_t ecs_new_w_table(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_entity_t entity = flecs_new_id(world);
     ecs_record_t *r = flecs_entities_get(world, entity);
-    ecs_flags32_t flags = table->flags & EcsTableAddEdgeFlags;
-    if (table->flags & EcsTableHasIsA) {
-        flags |= EcsTableHasOnAdd;
-    }
 
     ecs_table_diff_t table_diff = {
         .added = table->type,
-        .added_flags = flags
+        .added_flags = flecs_new_w_table_added_flags(table)
     };
 
     flecs_commands_begin(world, stage);
@@ -7858,8 +7869,8 @@ const ecs_entity_t* ecs_bulk_init(
         flecs_table_diff_builder_fini(world, &diff);
     } else {
         ecs_table_diff_t diff = {
-            .added.array = table->type.array,
-            .added.count = table->type.count
+            .added = table->type,
+            .added_flags = flecs_new_w_table_added_flags(table)
         };
 
         int32_t i = 0;

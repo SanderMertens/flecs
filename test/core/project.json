@@ -496,6 +496,13 @@
                 "bulk_init_w_alive_entity",
                 "bulk_init_w_cmd_in_on_add_hook",
                 "bulk_init_w_cmd_in_on_add_observer",
+                "bulk_init_w_table_w_childof_ordered_children",
+                "bulk_init_w_table_w_sparse",
+                "bulk_init_w_table_w_sparse_w_data",
+                "bulk_init_w_table_w_on_add_observer",
+                "bulk_init_w_table_w_on_add_hook",
+                "bulk_init_w_table_w_isa",
+                "new_w_table_w_childof_ordered_children",
                 "bulk_init_tag_w_data"
             ]
         }, {
