@@ -1301,6 +1301,9 @@ annotation: {
         // @brief value
         ecs_token_t value;
         pos = flecs_tokenizer_line(parser, pos, &value, false);
+        if (!pos) {
+            goto error;
+        }
         flecs_script_insert_annot(parser, Token(1), value.value);
         EndOfRule;
     })
@@ -1769,6 +1772,9 @@ include_stmt: {
     {
         ecs_token_t filename;
         pos = flecs_tokenizer_line(parser, pos, &filename, true);
+        if (!pos) {
+            goto error;
+        }
         if (!filename.value[0]) {
             Error("expected filename after 'include'");
         }
