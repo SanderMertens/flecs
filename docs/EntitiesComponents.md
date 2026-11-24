@@ -1430,14 +1430,14 @@ world.component(Position.class, hooks -> {
 </ul>
 </div>
 
-The `on_validate` hook has a different signature than the other component hooks. It is invoked once per entity with the entity and the new component value, and returns a boolean. When the hook returns false, the `on_set` hook and `OnSet` observers are not invoked for the entity. This makes it possible to guard application logic from component values that are invalid or irrelevant. The hook is invoked for all operations that trigger `OnSet` events, such as `set`, `assign` and `modified`. An example:
+The `on_validate` hook has a different signature than the other component hooks. It is invoked once per entity with the entity, the new component value and the component's type info, and returns a boolean. When the hook returns false, the `on_set` hook and `OnSet` observers are not invoked for the entity. This makes it possible to guard application logic from component values that are invalid or irrelevant. The hook is invoked for all operations that trigger `OnSet` events, such as `set`, `assign` and `modified`. An example:
 
 <div class="flecs-snippet-tabs">
 <ul>
 <li><b class="tab-title">C</b>
 
 ```c
-bool validate_position(ecs_world_t *world, ecs_entity_t e, void *ptr) {
+bool validate_position(ecs_world_t *world, ecs_entity_t e, void *ptr, const ecs_type_info_t *type_info) {
     Position *p = ptr;
     return p->x >= 0 && p->y >= 0;
 }

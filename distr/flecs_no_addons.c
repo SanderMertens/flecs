@@ -6261,7 +6261,7 @@ void flecs_notify_on_set_ids(
             for (j = 0; j < count; j ++) {
                 ecs_entity_t e = entities[j];
                 void *ptr = flecs_get_component(world, table, row + j, cr);
-                if (!on_validate(world, e, ptr)) {
+                if (!on_validate(world, e, ptr, ti)) {
                     continue;
                 }
 
@@ -6371,7 +6371,7 @@ void flecs_notify_on_set_w_cr(
             ptr = flecs_get_component(world, table, row, cr);
         }
 
-        if (!on_validate(world, entities[0], ptr)) {
+        if (!on_validate(world, entities[0], ptr, ti)) {
             return;
         }
     }
@@ -31711,8 +31711,10 @@ int32_t ecs_table_get_type_index(
     const ecs_table_t *table,
     ecs_id_t id)
 {
-    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    world = ecs_get_world(world);
 
     if (id < FLECS_HI_COMPONENT_ID) {
         int16_t res = table->component_map[id];
@@ -31743,9 +31745,11 @@ int32_t ecs_table_get_column_index(
     const ecs_table_t *table,
     ecs_id_t id)
 {
-    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+
+    world = ecs_get_world(world);
 
     if (id < FLECS_HI_COMPONENT_ID) {
         int16_t res = table->component_map[id];

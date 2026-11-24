@@ -11,8 +11,8 @@ typedef struct {
 } Position;
 
 // Returns false when the position is outside of the world bounds.
-bool validate_position(ecs_world_t *world, ecs_entity_t e, void *ptr) {
-    (void)world; (void)e;
+bool validate_position(ecs_world_t *world, ecs_entity_t e, void *ptr, const ecs_type_info_t *type_info) {
+    (void)world; (void)e; (void)type_info;
     Position *p = ptr;
     return p->x >= 0 && p->x <= 100 && p->y >= 0 && p->y <= 100;
 }
