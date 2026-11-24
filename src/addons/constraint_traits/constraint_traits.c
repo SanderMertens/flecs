@@ -124,7 +124,7 @@ static void flecs_register_singleton(ecs_iter_t *it) {
         /* Create observer that enforces that singleton is only added to self */
         ecs_observer(world, {
             .entity = ecs_entity(world, {
-                .name = "debug_only_SingletonInvariantCheck", .parent = component
+                .name = ".SingletonInvariantCheck", .parent = component, .sep = ""
             }),
             .query.terms[0] = {
                 .id = component, .src.id = EcsThis|EcsSelf
@@ -135,7 +135,7 @@ static void flecs_register_singleton(ecs_iter_t *it) {
 
         ecs_observer(world, {
             .entity = ecs_entity(world, {
-                .name = "debug_only_SingletonPairInvariantCheck", .parent = component
+                .name = ".SingletonPairInvariantCheck", .parent = component, .sep = ""
             }),
             .query.terms[0] = {
                 .id = ecs_pair(component, EcsWildcard), .src.id = EcsThis|EcsSelf

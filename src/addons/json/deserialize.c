@@ -509,8 +509,25 @@ static const char* flecs_entity_from_json(
                 if (e) ecs_add_pair(world, e, EcsChildOf, parent);
                 ecs_vec_append_t(ctx->a, &ctx->ids, ecs_id_t)[0] = ecs_pair(EcsChildOf, parent);
             } else if (str[0] != '#') {
-                if (!e) e = flecs_json_lookup(world, parent, str, desc);
-                else ecs_set_name(world, e, str);
+                if (!e) {
+                    if (strchr(str, '.')) {
+                        ecs_strbuf_t esc = ECS_STRBUF_INIT;
+                        const char *ptr;
+                        for (ptr = str; *ptr; ptr ++) {
+                            if (*ptr == '.') {
+                                ecs_strbuf_appendch(&esc, '\\');
+                            }
+                            ecs_strbuf_appendch(&esc, *ptr);
+                        }
+                        char *esc_str = ecs_strbuf_get(&esc);
+                        e = flecs_json_lookup(world, parent, esc_str, desc);
+                        ecs_os_free(esc_str);
+                    } else {
+                        e = flecs_json_lookup(world, parent, str, desc);
+                    }
+                } else {
+                    ecs_set_name(world, e, str);
+                }
                 ecs_vec_append_t(ctx->a, &ctx->ids, ecs_id_t)[0] = ecs_pair_t(EcsIdentifier, EcsName);
             }
 
