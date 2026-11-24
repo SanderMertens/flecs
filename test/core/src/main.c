@@ -475,6 +475,13 @@ void New_w_Count_bulk_init_w_table(void);
 void New_w_Count_bulk_init_w_alive_entity(void);
 void New_w_Count_bulk_init_w_cmd_in_on_add_hook(void);
 void New_w_Count_bulk_init_w_cmd_in_on_add_observer(void);
+void New_w_Count_bulk_init_w_table_w_childof_ordered_children(void);
+void New_w_Count_bulk_init_w_table_w_sparse(void);
+void New_w_Count_bulk_init_w_table_w_sparse_w_data(void);
+void New_w_Count_bulk_init_w_table_w_on_add_observer(void);
+void New_w_Count_bulk_init_w_table_w_on_add_hook(void);
+void New_w_Count_bulk_init_w_table_w_isa(void);
+void New_w_Count_new_w_table_w_childof_ordered_children(void);
 
 // Testsuite 'Add'
 void Add_component(void);
@@ -5630,6 +5637,34 @@ bake_test_case New_w_Count_testcases[] = {
     {
         "bulk_init_w_cmd_in_on_add_observer",
         New_w_Count_bulk_init_w_cmd_in_on_add_observer
+    },
+    {
+        "bulk_init_w_table_w_childof_ordered_children",
+        New_w_Count_bulk_init_w_table_w_childof_ordered_children
+    },
+    {
+        "bulk_init_w_table_w_sparse",
+        New_w_Count_bulk_init_w_table_w_sparse
+    },
+    {
+        "bulk_init_w_table_w_sparse_w_data",
+        New_w_Count_bulk_init_w_table_w_sparse_w_data
+    },
+    {
+        "bulk_init_w_table_w_on_add_observer",
+        New_w_Count_bulk_init_w_table_w_on_add_observer
+    },
+    {
+        "bulk_init_w_table_w_on_add_hook",
+        New_w_Count_bulk_init_w_table_w_on_add_hook
+    },
+    {
+        "bulk_init_w_table_w_isa",
+        New_w_Count_bulk_init_w_table_w_isa
+    },
+    {
+        "new_w_table_w_childof_ordered_children",
+        New_w_Count_new_w_table_w_childof_ordered_children
     }
 };
 
@@ -18780,7 +18815,7 @@ static bake_test_suite suites[] = {
         "New_w_Count",
         NULL,
         NULL,
-        25,
+        32,
         New_w_Count_testcases
     },
     {

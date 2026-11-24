@@ -799,3 +799,234 @@ void New_w_Count_bulk_init_w_cmd_in_on_add_observer(void) {
 
     ecs_fini(world);
 }
+
+void New_w_Count_bulk_init_w_table_w_childof_ordered_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, Tag);
+    table = ecs_table_add_id(world, table, ecs_childof(parent));
+
+    ecs_bulk_desc_t desc = {0};
+    desc.count = 3;
+    desc.table = table;
+    const ecs_entity_t *entities = ecs_bulk_init(world, &desc);
+    test_assert(entities != NULL);
+
+    ecs_entity_t e1 = entities[0];
+    ecs_entity_t e2 = entities[1];
+    ecs_entity_t e3 = entities[2];
+
+    test_assert(ecs_get_table(world, e1) == table);
+    test_assert(ecs_get_table(world, e2) == table);
+    test_assert(ecs_get_table(world, e3) == table);
+
+    {
+        ecs_iter_t it = ecs_children(world, parent);
+        test_bool(true, ecs_children_next(&it));
+        test_int(it.count, 3);
+        test_uint(it.entities[0], e1);
+        test_uint(it.entities[1], e2);
+        test_uint(it.entities[2], e3);
+        test_bool(false, ecs_children_next(&it));
+    }
+
+    ecs_delete(world, e2);
+
+    {
+        ecs_iter_t it = ecs_children(world, parent);
+        test_bool(true, ecs_children_next(&it));
+        test_int(it.count, 2);
+        test_uint(it.entities[0], e1);
+        test_uint(it.entities[1], e3);
+        test_bool(false, ecs_children_next(&it));
+    }
+
+    ecs_delete(world, parent);
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(!ecs_is_alive(world, e3));
+
+    ecs_fini(world);
+}
+
+void New_w_Count_bulk_init_w_table_w_sparse(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, ecs_id(Position));
+
+    ecs_bulk_desc_t desc = {0};
+    desc.count = 3;
+    desc.table = table;
+    const ecs_entity_t *entities = ecs_bulk_init(world, &desc);
+    test_assert(entities != NULL);
+
+    for (int i = 0; i < 3; i ++) {
+        test_assert(ecs_get_table(world, entities[i]) == table);
+        test_assert(ecs_has(world, entities[i], Position));
+        test_assert(ecs_get(world, entities[i], Position) != NULL);
+    }
+
+    ecs_fini(world);
+}
+
+void New_w_Count_bulk_init_w_table_w_sparse_w_data(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, ecs_id(Position));
+
+    Position p[] = {{10, 20}, {30, 40}, {50, 60}};
+
+    ecs_bulk_desc_t desc = {0};
+    desc.count = 3;
+    desc.table = table;
+    desc.ids[0] = ecs_id(Position);
+    desc.data = (void*[]){ p };
+    const ecs_entity_t *entities = ecs_bulk_init(world, &desc);
+    test_assert(entities != NULL);
+
+    for (int i = 0; i < 3; i ++) {
+        test_assert(ecs_get_table(world, entities[i]) == table);
+        const Position *ptr = ecs_get(world, entities[i], Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, p[i].x);
+        test_int(ptr->y, p[i].y);
+    }
+
+    ecs_fini(world);
+}
+
+static int bulk_on_add_invoked = 0;
+
+static void bulk_on_add(ecs_iter_t *it) {
+    bulk_on_add_invoked += it->count;
+}
+
+void New_w_Count_bulk_init_w_table_w_on_add_observer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = Tag }},
+        .events = { EcsOnAdd },
+        .callback = bulk_on_add
+    });
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, Tag);
+
+    bulk_on_add_invoked = 0;
+
+    ecs_bulk_desc_t desc = {0};
+    desc.count = 3;
+    desc.table = table;
+    const ecs_entity_t *entities = ecs_bulk_init(world, &desc);
+    test_assert(entities != NULL);
+
+    test_int(bulk_on_add_invoked, 3);
+
+    ecs_fini(world);
+}
+
+void New_w_Count_bulk_init_w_table_w_on_add_hook(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = bulk_on_add
+    });
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, ecs_id(Position));
+
+    bulk_on_add_invoked = 0;
+
+    ecs_bulk_desc_t desc = {0};
+    desc.count = 3;
+    desc.table = table;
+    const ecs_entity_t *entities = ecs_bulk_init(world, &desc);
+    test_assert(entities != NULL);
+
+    test_int(bulk_on_add_invoked, 3);
+
+    ecs_fini(world);
+}
+
+void New_w_Count_bulk_init_w_table_w_isa(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t base_child = ecs_new_w_pair(world, EcsChildOf, base);
+    ecs_add(world, base_child, Tag);
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, ecs_isa(base));
+
+    ecs_bulk_desc_t desc = {0};
+    desc.count = 3;
+    desc.table = table;
+    const ecs_entity_t *entities = ecs_bulk_init(world, &desc);
+    test_assert(entities != NULL);
+
+    for (int i = 0; i < 3; i ++) {
+        ecs_entity_t e = entities[i];
+        test_assert(ecs_has_pair(world, e, EcsIsA, base));
+
+        ecs_iter_t it = ecs_children(world, e);
+        test_bool(true, ecs_children_next(&it));
+        test_int(it.count, 1);
+        test_assert(ecs_has(world, it.entities[0], Tag));
+        test_bool(false, ecs_children_next(&it));
+    }
+
+    ecs_fini(world);
+}
+
+void New_w_Count_new_w_table_w_childof_ordered_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, Tag);
+    table = ecs_table_add_id(world, table, ecs_childof(parent));
+
+    ecs_entity_t e1 = ecs_new_w_table(world, table);
+    ecs_entity_t e2 = ecs_new_w_table(world, table);
+    ecs_entity_t e3 = ecs_new_w_table(world, table);
+
+    {
+        ecs_iter_t it = ecs_children(world, parent);
+        test_bool(true, ecs_children_next(&it));
+        test_int(it.count, 3);
+        test_uint(it.entities[0], e1);
+        test_uint(it.entities[1], e2);
+        test_uint(it.entities[2], e3);
+        test_bool(false, ecs_children_next(&it));
+    }
+
+    ecs_delete(world, e2);
+
+    {
+        ecs_iter_t it = ecs_children(world, parent);
+        test_bool(true, ecs_children_next(&it));
+        test_int(it.count, 2);
+        test_uint(it.entities[0], e1);
+        test_uint(it.entities[1], e3);
+        test_bool(false, ecs_children_next(&it));
+    }
+
+    ecs_fini(world);
+}
