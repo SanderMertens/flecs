@@ -636,7 +636,11 @@
                 "get_stats_wo_stats_import",
                 "get_pretty",
                 "query_pretty",
-                "world_pretty"
+                "world_pretty",
+                "put_component_copy_illegal",
+                "put_component_copy_ctor_illegal",
+                "put_component_script",
+                "put_component_ctor_illegal"
             ]
         }, {
             "id": "Metrics",

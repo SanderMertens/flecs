@@ -28691,15 +28691,35 @@ static bool flecs_rest_put_component(
         return true;
     }
 
+    /* Adding a component or constructing a temporary value aborts for types
+     * that cannot be constructed. */
+    const ecs_type_info_t *ti = ecs_get_type_info(world, id);
+    if (ti && (ti->hooks.flags & ECS_TYPE_HOOK_CTOR_ILLEGAL)) {
+        flecs_reply_error(reply,
+            "component '%s' cannot be constructed", component);
+        reply->code = 400;
+        return true;
+    }
+
     const char *data = ecs_http_get_param(req, "value");
     if (!data) {
         ecs_add_id(world, e, id);
         return true;
     }
 
-    const ecs_type_info_t *ti = ecs_get_type_info(world, id);
     if (!ti) {
         flecs_reply_error(reply, "component '%s' is not a type", component);
+        reply->code = 400;
+        return true;
+    }
+
+    /* The value is copied into the component, which aborts for types that
+     * cannot be copied. */
+    if (ti->hooks.flags &
+        (ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL))
+    {
+        flecs_reply_error(reply,
+            "cannot assign a value to component '%s'", component);
         reply->code = 400;
         return true;
     }
