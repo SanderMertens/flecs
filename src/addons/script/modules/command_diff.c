@@ -76,10 +76,10 @@ static bool flecs_command_line_eq_trimmed(
 {
     const char *a_start = a->ptr, *a_end = a->ptr + a->len;
     const char *b_start = b->ptr, *b_end = b->ptr + b->len;
-    while (a_start < a_end && isspace(a_start[0])) a_start ++;
-    while (a_end > a_start && isspace(a_end[-1])) a_end --;
-    while (b_start < b_end && isspace(b_start[0])) b_start ++;
-    while (b_end > b_start && isspace(b_end[-1])) b_end --;
+    while (a_start < a_end && isspace((unsigned char)a_start[0])) a_start ++;
+    while (a_end > a_start && isspace((unsigned char)a_end[-1])) a_end --;
+    while (b_start < b_end && isspace((unsigned char)b_start[0])) b_start ++;
+    while (b_end > b_start && isspace((unsigned char)b_end[-1])) b_end --;
     return (a_end - a_start) == (b_end - b_start) &&
         !ecs_os_memcmp(a_start, b_start, (ecs_size_t)(a_end - a_start));
 }
@@ -291,9 +291,9 @@ static flecs_command_hunk_t* flecs_command_hunk_new(
     }
 
     const char *ptr = header, *end = header + header_len;
-    while (ptr < end && isspace(ptr[0])) ptr ++;
+    while (ptr < end && isspace((unsigned char)ptr[0])) ptr ++;
 
-    if (ptr < end && ptr[0] == '-' && isdigit(ptr[1])) {
+    if (ptr < end && ptr[0] == '-' && isdigit((unsigned char)ptr[1])) {
         const char *close = strstr(ptr, "@@");
         if (close && close < end) {
             ptr = close + 2;
@@ -302,11 +302,11 @@ static flecs_command_hunk_t* flecs_command_hunk_new(
         }
     }
 
-    while (ptr < end && isspace(ptr[0])) ptr ++;
-    while (end > ptr && isspace(end[-1])) end --;
+    while (ptr < end && isspace((unsigned char)ptr[0])) ptr ++;
+    while (end > ptr && isspace((unsigned char)end[-1])) end --;
     if (end - ptr >= 2 && end[-1] == '@' && end[-2] == '@') {
         end -= 2;
-        while (end > ptr && isspace(end[-1])) end --;
+        while (end > ptr && isspace((unsigned char)end[-1])) end --;
     }
 
     if (end > ptr) {

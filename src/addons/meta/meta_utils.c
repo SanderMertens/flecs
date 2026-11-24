@@ -249,7 +249,7 @@ const char* flecs_meta_op_kind_str(
 bool flecs_meta_valid_digit(
     const char *str)
 {
-    return str[0] == '-' || isdigit(str[0]);
+    return str[0] == '-' || isdigit((unsigned char)str[0]);
 }
 
 bool flecs_meta_type_is_integer(

@@ -17,8 +17,8 @@ char* flecs_module_path_from_c(
     char ch;
 
     for (ptr = c_name; (ch = *ptr); ptr++) {
-        if (isupper(ch)) {
-            ch = flecs_ito(char, tolower(ch));
+        if (isupper((unsigned char)ch)) {
+            ch = flecs_ito(char, tolower((unsigned char)ch));
             if (ptr != c_name) {
                 ecs_strbuf_appendstrn(&str, ".", 1);
             }
@@ -109,11 +109,11 @@ ecs_entity_t ecs_import_from_library(
                 capitalize = true;
             } else {
                 if (capitalize) {
-                    *bptr = flecs_ito(char, toupper(ch));
+                    *bptr = flecs_ito(char, toupper((unsigned char)ch));
                     bptr ++;
                     capitalize = false;
                 } else {
-                    *bptr = flecs_ito(char, tolower(ch));
+                    *bptr = flecs_ito(char, tolower((unsigned char)ch));
                     bptr ++;
                 }
             }

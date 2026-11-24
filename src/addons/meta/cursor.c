@@ -429,7 +429,7 @@ static int flecs_meta_cursor_from_str(
             flecs_meta_set_t(ecs_bool_t, ptr, true);
         } else if (!ecs_os_strcmp(value, "false")) {
             flecs_meta_set_t(ecs_bool_t, ptr, false);
-        } else if (isdigit(value[0])) {
+        } else if (isdigit((unsigned char)value[0])) {
             if (!ecs_os_strcmp(value, "0")) {
                 flecs_meta_set_t(ecs_bool_t, ptr, false);
             } else {
