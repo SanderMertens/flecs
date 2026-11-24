@@ -250,11 +250,11 @@ void flecs_bfree_w_dbg_info(
     if (actual != ba) {
         if (type_name) {
             ecs_err("chunk %p returned to wrong allocator "
-                "(chunk = %ub, allocator = %ub, type = %s)",
+                "(chunk = %db, allocator = %db, type = %s)",
                     memory, actual->data_size, ba->data_size, type_name);
         } else {
             ecs_err("chunk %p returned to wrong allocator "
-                "(chunk = %ub, allocator = %ub)",
+                "(chunk = %db, allocator = %db)",
                     memory, actual->data_size, ba->chunk_size);
         }
 

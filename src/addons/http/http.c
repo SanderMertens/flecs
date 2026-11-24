@@ -84,9 +84,9 @@ static ecs_size_t http_recv(
     ret = flecs_itoi32(recv_bytes);
 #endif
     if (ret == -1) {
-        ecs_dbg("recv failed: %s (sock = %d)", ecs_os_strerror(errno), sock);
+        ecs_dbg("recv failed: %s (sock = %d)", ecs_os_strerror(errno), (int)sock);
     } else if (ret == 0) {
-        ecs_dbg("recv: received 0 bytes (sock = %d)", sock);
+        ecs_dbg("recv: received 0 bytes (sock = %d)", (int)sock);
     }
 
     return ret;
@@ -219,7 +219,7 @@ static void http_close(
 #if defined(ECS_TARGET_WINDOWS)
     closesocket(*sock);
 #else
-    ecs_dbg_2("http: closing socket %u", *sock);
+    ecs_dbg_2("http: closing socket %d", (int)*sock);
     shutdown(*sock, SHUT_RDWR);
     close(*sock);
 #endif
@@ -898,8 +898,8 @@ static http_conn_res_t http_init_connection(
         ecs_os_strcpy(remote_port, "unknown");
     }
 
-    ecs_dbg_2("http: connection established from '%s:%s' (socket %u)", 
-        remote_host, remote_port, sock_conn);
+    ecs_dbg_2("http: connection established from '%s:%s' (socket %d)", 
+        remote_host, remote_port, (int)sock_conn);
     
     return (http_conn_res_t){ .conn = conn, .id = conn_id };
 }
@@ -917,7 +917,7 @@ static int http_accept_connections(
         int result = WSAStartup(MAKEWORD(2, 2), &data);
         if (result) {
             ecs_warn("http: WSAStartup failed with GetLastError = %d\n", 
-                GetLastError());
+                (int)GetLastError());
             return 0;
         }
     } else {
@@ -977,7 +977,7 @@ static int http_accept_connections(
         if (result) {
             if (errno == EADDRINUSE) {
                 ret = 1;
-                ecs_warn("http: address '%s:%s' in use, retrying with port %u", 
+                ecs_warn("http: address '%s:%s' in use, retrying with port %d", 
                     addr_host, addr_port, srv->port + 1);
             } else {
                 ecs_err("http: failed to bind to '%s:%s': %s", 
@@ -1189,7 +1189,7 @@ static int32_t http_dequeue_requests(
              (conn->dequeue_retries > ECS_HTTP_CONNECTION_PURGE_RETRY_COUNT)) 
         {
             ecs_dbg("http: purging connection '%s:%s' (sock = %d)", 
-                conn->pub.host, conn->pub.port, conn->sock);
+                conn->pub.host, conn->pub.port, (int)conn->sock);
             http_connection_free(conn);
         }
     }
