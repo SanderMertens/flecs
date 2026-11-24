@@ -356,6 +356,20 @@ const ecs_entity_t* flecs_bulk_new(
                 ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
                 ptr = ECS_ELEM(column->data, size, row);
 
+                /* EcsParent uses its on_replace hook to register the child
+                 * with its parent and update ParentDepth. Bulk creation
+                 * initializes component storage directly, so run this hook
+                 * for each new Parent value before copying it, matching the
+                 * behavior of setting EcsParent on a newly created entity. */
+                if (id == ecs_id(EcsParent) && ti->hooks.on_replace) {
+                    int32_t e;
+                    for (e = 0; e < count; e ++) {
+                        flecs_invoke_replace_hook(world, table, entities[e],
+                            id, ECS_OFFSET(ptr, size * e),
+                            ECS_OFFSET(src_ptr, size * e), ti);
+                    }
+                }
+
                 ECS_TABLE_LOCK(world, table);
                 if (is_move) {
                     flecs_type_info_move(ptr, src_ptr, count, ti);
