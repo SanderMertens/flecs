@@ -38535,9 +38535,6 @@ bool flecs_query_finalize_simple(
     term_count = i;
     ecs_os_memcpy_n(q->terms, desc->terms, ecs_term_t, term_count);
 
-    /* All fields are InOut */
-    q->write_fields = UINT32_MAX >> (32 - term_count);
-
     /* Simple query that only queries for component ids */
 
     /* Populate terms */
@@ -38592,6 +38589,9 @@ bool flecs_query_finalize_simple(
             q->sizes[i] = type_info->size;
             q->flags |= EcsQueryHasOutTerms;
             q->data_fields |= (ecs_termset_t)(1llu << i);
+
+            /* All fields with data are InOut */
+            q->write_fields |= (ecs_termset_t)(1llu << i);
         }
 
         if (!is_self && cr_flags & EcsIdOnInstantiateInherit) {
