@@ -48263,7 +48263,7 @@ static const char* flecs_json_deser_components(
                 goto error;
             }
         } else {
-            char token_buffer[256];
+            char token_buffer[ECS_MAX_TOKEN_SIZE * 2];
             ecs_term_t term = {0};
             if (!flecs_term_parse(world, NULL, token, token_buffer, &term)) {
                 goto error;
@@ -64388,11 +64388,14 @@ static char* flecs_tokenizer_write(
     char *dst,
     char ch)
 {
-    (void)parser;
     ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_assert(!parser->token_end || dst < parser->token_end,
-        ECS_INVALID_OPERATION, "out of parser token storage");
+    if (parser->token_end && dst >= parser->token_end) {
+        ecs_parser_error(parser->name, parser->code,
+            flecs_parser_errpos(parser, parser->pos),
+            "token too long for parser storage");
+        return NULL;
+    }
 
     dst[0] = ch;
     return dst + 1;
@@ -64571,6 +64574,9 @@ const char* flecs_tokenizer_identifier(
 
                     if (outpos) {
                         outpos = flecs_tokenizer_write(parser, outpos, c);
+                        if (!outpos) {
+                            return NULL;
+                        }
                     }
 
                     pos ++;
@@ -64592,6 +64598,9 @@ const char* flecs_tokenizer_identifier(
 
         if (outpos) {
             outpos = flecs_tokenizer_write(parser, outpos, *pos);
+            if (!outpos) {
+                return NULL;
+            }
         }
 
         pos ++;
@@ -64600,6 +64609,9 @@ const char* flecs_tokenizer_identifier(
 done:
     if (outpos) {
         parser->token_cur = flecs_tokenizer_write(parser, outpos, '\0');
+        if (!parser->token_cur) {
+            return NULL;
+        }
     }
 
     return pos;
@@ -64611,9 +64623,14 @@ static char* flecs_tokenizer_copy(
     const char *end)
 {
     ecs_size_t length = flecs_ito(ecs_size_t, end - start);
-    ecs_assert(!parser->token_end ||
-        parser->token_cur + length < parser->token_end,
-            ECS_INVALID_OPERATION, "out of parser token storage");
+    if (parser->token_end &&
+        (parser->token_cur + length >= parser->token_end))
+    {
+        ecs_parser_error(parser->name, parser->code,
+            flecs_parser_errpos(parser, parser->pos),
+            "token too long for parser storage");
+        return NULL;
+    }
 
     char *result = parser->token_cur;
     ecs_os_memcpy(result, start, length);
@@ -64684,6 +64701,9 @@ static const char* flecs_script_number(
 
     out->kind = EcsTokNumber;
     out->value = flecs_tokenizer_copy(parser, start, pos);
+    if (!out->value) {
+        return NULL;
+    }
     return pos;
 }
 
@@ -64735,6 +64755,9 @@ static const char* flecs_script_string(
 
     out->kind = is_char ? EcsTokChar : EcsTokString;
     out->value = flecs_tokenizer_copy(parser, pos + 1, end);
+    if (!out->value) {
+        return NULL;
+    }
     return end + 1;
 }
 
@@ -64770,6 +64793,9 @@ const char* flecs_tokenizer_line(
 
     out->kind = EcsTokString;
     out->value = flecs_tokenizer_copy(parser, start, end);
+    if (!out->value) {
+        return NULL;
+    }
     parser->token_keep = parser->token_cur;
 
     return pos;
@@ -67955,6 +67981,7 @@ int flecs_terms_parse_at(
     };
 
     parser.token_cur = token_buffer;
+    parser.token_end = &token_buffer[ecs_os_strlen(expr) * 2 + 1];
 
     int32_t term_count = 0;
     const char *ptr = expr;
@@ -68045,7 +68072,8 @@ const char* flecs_term_parse(
         .name = name,
         .code = expr,
         .world = world,
-        .token_cur = token_buffer
+        .token_cur = token_buffer,
+        .token_end = &token_buffer[ecs_os_strlen(expr) * 2 + 1]
     };
 
     parser.term = term;
@@ -68209,7 +68237,8 @@ const char* ecs_query_args_parse(
         .name = q_name,
         .code = expr,
         .world = q->world,
-        .token_cur = token_buffer
+        .token_cur = token_buffer,
+        .token_end = &token_buffer[sizeof(token_buffer)]
     };
 
     return flecs_query_args_parse(&parser, q, it, expr);
@@ -72910,6 +72939,9 @@ annotation: {
         // @brief value
         ecs_token_t value;
         pos = flecs_tokenizer_line(parser, pos, &value, false);
+        if (!pos) {
+            goto error;
+        }
         flecs_script_insert_annot(parser, Token(1), value.value);
         EndOfRule;
     })
@@ -73378,6 +73410,9 @@ include_stmt: {
     {
         ecs_token_t filename;
         pos = flecs_tokenizer_line(parser, pos, &filename, true);
+        if (!pos) {
+            goto error;
+        }
         if (!filename.value[0]) {
             Error("expected filename after 'include'");
         }

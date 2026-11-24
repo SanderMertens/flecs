@@ -349,7 +349,7 @@ static const char* flecs_json_deser_components(
                 goto error;
             }
         } else {
-            char token_buffer[256];
+            char token_buffer[ECS_MAX_TOKEN_SIZE * 2];
             ecs_term_t term = {0};
             if (!flecs_term_parse(world, NULL, token, token_buffer, &term)) {
                 goto error;
