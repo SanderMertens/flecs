@@ -4089,3 +4089,119 @@ void ChangeDetection_mark_dirty_w_optional_up_src_changed_during_iteration(void)
 
     ecs_fini(world);
 }
+
+void ChangeDetection_tag_field_not_written(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q_simple = ecs_query(world, {
+        .terms = {{ Tag }, { ecs_id(Velocity) }}
+    });
+    test_assert(q_simple != NULL);
+
+    ecs_query_t *q_full = ecs_query(world, {
+        .terms = {{ Tag, .inout = EcsInOut }, { ecs_id(Velocity) }}
+    });
+    test_assert(q_full != NULL);
+
+    test_uint(q_simple->data_fields, 2);
+    test_uint(q_simple->write_fields, 2);
+    test_uint(q_full->data_fields, 2);
+    test_uint(q_full->write_fields, 2);
+
+    ecs_query_fini(q_simple);
+    ecs_query_fini(q_full);
+
+    ecs_fini(world);
+}
+
+void ChangeDetection_write_to_tag_w_component_does_not_change_other_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new_w(world, Tag);
+    ecs_set(world, e, Position, {1, 2});
+    ecs_set(world, e, Velocity, {3, 4});
+
+    ecs_query_t *q_write = ecs_query(world, {
+        .terms = {{ Tag }, { ecs_id(Velocity) }},
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
+    });
+    test_assert(q_write != NULL);
+
+    ecs_query_t *q_read = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .inout = EcsIn }},
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
+    });
+    test_assert(q_read != NULL);
+
+    test_bool(true, ecs_query_changed(q_read));
+    {
+        ecs_iter_t it = ecs_query_iter(world, q_read);
+        while (ecs_query_next(&it)) { }
+    }
+    test_bool(false, ecs_query_changed(q_read));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q_write);
+        while (ecs_query_next(&it)) { }
+    }
+
+    test_bool(false, ecs_query_changed(q_read));
+
+    ecs_query_fini(q_write);
+    ecs_query_fini(q_read);
+
+    ecs_fini(world);
+}
+
+void ChangeDetection_write_to_wildcard_w_tag_does_not_change_other_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Tgt);
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new_w_pair(world, Tag, Tgt);
+    ecs_set(world, e, Position, {1, 2});
+
+    ecs_query_t *q_write = ecs_query(world, {
+        .terms = {{ ecs_pair(EcsWildcard, Tgt), .inout = EcsInOut }},
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
+    });
+    test_assert(q_write != NULL);
+
+    ecs_query_t *q_read = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .inout = EcsIn }},
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
+    });
+    test_assert(q_read != NULL);
+
+    test_bool(true, ecs_query_changed(q_read));
+    {
+        ecs_iter_t it = ecs_query_iter(world, q_read);
+        while (ecs_query_next(&it)) { }
+    }
+    test_bool(false, ecs_query_changed(q_read));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q_write);
+        while (ecs_query_next(&it)) { }
+    }
+
+    test_bool(false, ecs_query_changed(q_read));
+
+    ecs_query_fini(q_write);
+    ecs_query_fini(q_read);
+
+    ecs_fini(world);
+}
