@@ -2549,3 +2549,144 @@ void Rest_world_pretty(void) {
 
     ecs_fini(world);
 }
+
+void Rest_put_component_copy_illegal(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_i32_t) },
+            { "y", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/e?component=Position&value=%7B%22x%22%3A10%7D",
+        NULL, &reply));
+    test_int(reply.code, 400);
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str,
+        "{\"error\":\"cannot assign a value to component 'Position'\"}");
+    ecs_os_free(reply_str);
+
+    test_assert(!ecs_has(world, e, Position));
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
+void Rest_put_component_copy_ctor_illegal(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL | ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_i32_t) },
+            { "y", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/e?component=Position&value=%7B%22x%22%3A10%7D",
+        NULL, &reply));
+    test_int(reply.code, 400);
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str,
+        "{\"error\":\"cannot assign a value to component 'Position'\"}");
+    ecs_os_free(reply_str);
+
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
+void Rest_put_component_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main.flecs", .sep = "/" }),
+        .code = "e {}"
+    });
+    test_assert(s != 0);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/main.flecs?component=flecs.script.Script&value=%7B%7D",
+        NULL, &reply));
+    test_int(reply.code, 400);
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str,
+        "{\"error\":\"cannot assign a value to component 'flecs.script.Script'\"}");
+    ecs_os_free(reply_str);
+
+    const EcsScript *script = ecs_get(world, s, EcsScript);
+    test_assert(script != NULL);
+    test_assert(script->script != NULL);
+    test_str(script->script->code, "e {}");
+
+    test_int(0, ecs_script_update(world, s, 0, "f {}"));
+    test_assert(ecs_lookup(world, "f") != 0);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
+void Rest_put_component_ctor_illegal(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_CTOR_ILLEGAL
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/e?component=Position", NULL, &reply));
+    test_int(reply.code, 400);
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str,
+        "{\"error\":\"component 'Position' cannot be constructed\"}");
+    ecs_os_free(reply_str);
+
+    test_assert(!ecs_has(world, e, Position));
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
