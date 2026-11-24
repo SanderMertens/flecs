@@ -79,6 +79,18 @@
     #define ECS_NORETURN
 #endif
 
+/* Lets GCC and Clang check the arguments of printf-style functions against
+ * their format string. Disabled for MinGW, which by default checks against the
+ * MSVC runtime format rules that don't accept the C99 length modifiers used by
+ * Flecs. */
+#if (defined(ECS_TARGET_GNU) || defined(ECS_TARGET_CLANG)) && \
+    !defined(ECS_TARGET_MINGW)
+    #define ECS_FORMAT(fmt_index, args_index)\
+        __attribute__((format(printf, fmt_index, args_index)))
+#else
+    #define ECS_FORMAT(fmt_index, args_index)
+#endif
+
 /* Ignored warnings */
 #if defined(ECS_TARGET_CLANG) || (defined(ECS_TARGET_GNU) && !defined(__cplusplus))
 /* This is valid in C99, and Flecs must be compiled as C99. */

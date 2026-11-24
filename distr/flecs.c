@@ -8363,6 +8363,8 @@ error:
     return 0;
 }
 
+#include <inttypes.h>
+
 #ifdef FLECS_QUERY_DSL
 
 #ifndef FLECS_QUERY_DSL_H
@@ -8738,11 +8740,11 @@ const ecs_entity_t* flecs_bulk_new(
                 ecs_assert(tr->column != -1, ECS_INVALID_PARAMETER, 
                     "component '%s' passed to bulk_new() at index %d is a "
                         "tag/zero sized",
-                            flecs_errstr(ecs_id_str(world, id)));
+                            flecs_errstr(ecs_id_str(world, id)), c_i);
                 ecs_assert(tr->count == 1, ECS_INVALID_PARAMETER,
-                    "component passed to bulk_new() at index %d is "
+                    "component '%s' passed to bulk_new() at index %d is "
                     "invalid/a wildcard",
-                        flecs_errstr(ecs_id_str(world, id)));
+                        flecs_errstr(ecs_id_str(world, id)), c_i);
 
                 int32_t index = tr->column;
                 ecs_column_t *column = &table->data.columns[index];
@@ -10849,8 +10851,8 @@ ecs_entity_t ecs_get_parent(
         EcsParent *p = ecs_table_get_column(
             table, column - 1, ECS_RECORD_TO_ROW(r->row));
         ecs_assert(ecs_is_valid(world, p->value), ECS_INVALID_OPERATION, 
-            "Parent component points to invalid parent %u",
-                p->value, entity);
+            "Parent component of '%s' points to invalid parent %" PRIu64,
+                flecs_errstr(ecs_id_str(world, entity)), p->value);
         return p->value;
     }
 
@@ -21509,8 +21511,6 @@ const ecs_type_info_t* ecs_get_type_info(
 error:
     return NULL;
 }
-
-#include <inttypes.h>
 
 /* Id flags */
 const ecs_id_t ECS_PAIR =                                          (1ull << 63);
@@ -39680,7 +39680,7 @@ int32_t flecs_component_release(
 {
     int32_t rc = -- cr->refcount;
 
-    ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, 
+    ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, "%s",
         flecs_errstr(ecs_id_str(world, cr->id)));
 
     if (!rc) {
@@ -42950,7 +42950,8 @@ void flecs_table_fini(
     if (ecs_should_log_2()) {
         char *expr = ecs_type_str(world, &table->type);
         ecs_dbg_2(
-            "#[green]table#[normal] [%s] #[red]deleted#[reset] with id %d", 
+            "#[green]table#[normal] [%s] #[red]deleted#[reset] with id "
+                "%" PRIu64,
             expr, table->id);
         ecs_os_free(expr);
         ecs_log_push_2();
@@ -45129,7 +45130,8 @@ static ecs_table_t *flecs_table_new(
     if (ecs_should_log_2()) {
         char *expr = ecs_type_str(world, &result->type);
         ecs_dbg_2(
-            "#[green]table#[normal] [%s] #[green]created#[reset] with id %d", 
+            "#[green]table#[normal] [%s] #[green]created#[reset] with id "
+                "%" PRIu64,
             expr, result->id);
         ecs_os_free(expr);
     }
@@ -60248,8 +60250,8 @@ int flecs_meta_ser_enum(
         ecs_enum_constant_t, value);
     if (!constant) {
         char *name = enum_type ? ecs_get_path(world, enum_type) : NULL;
-        ecs_err("enumeration value '%d' of type '%s' is not a valid constant", 
-            value, name ? name : "unknown");
+        ecs_err("enumeration value '%" PRId64 "' of type '%s' is not a valid "
+            "constant", (int64_t)value, name ? name : "unknown");
         ecs_os_free(name);
         return -1;
     }
@@ -67077,9 +67079,9 @@ ecs_entity_t flecs_get_prefab_instance_child(
         flecs_errstr(ecs_id_str(world, prefab_child)));
 
     ecs_check(ecs_owns_id(world, prefab, EcsPrefab), ECS_INVALID_OPERATION,
-        "cannot get target for '%s': parent is not/no longer a prefab",
-        flecs_errstr(ecs_id_str(world, prefab)),
-        flecs_errstr_1(ecs_id_str(world, prefab_child)));
+        "cannot get target for '%s': parent '%s' is not/no longer a prefab",
+        flecs_errstr(ecs_id_str(world, prefab_child)),
+        flecs_errstr_1(ecs_id_str(world, prefab)));
 
     ecs_check(ecs_has_pair(world, entity, EcsIsA, prefab),
         ECS_INVALID_OPERATION,
@@ -79171,35 +79173,35 @@ void ecs_world_stats_log(
     ecs_trace("-------------------------------------");
     flecs_counter_print("pipeline rebuilds", t, &s->frame.pipeline_build_count);
     flecs_counter_print("systems ran", t, &s->frame.systems_ran);
-    ecs_trace("");
+    ecs_trace("%s", "");
     flecs_metric_print("target FPS", (ecs_float_t)world->info.target_fps);
     flecs_metric_print("time scale", (ecs_float_t)world->info.time_scale);
-    ecs_trace("");
+    ecs_trace("%s", "");
     flecs_gauge_print("actual FPS", t, &s->performance.fps);
     flecs_counter_print("frame time", t, &s->performance.frame_time);
     flecs_counter_print("system time", t, &s->performance.system_time);
     flecs_counter_print("merge time", t, &s->performance.merge_time);
     flecs_counter_print("simulation time elapsed", t, &s->performance.world_time);
-    ecs_trace("");
+    ecs_trace("%s", "");
     flecs_gauge_print("tag id count", t, &s->components.tag_count);
     flecs_gauge_print("component id count", t, &s->components.component_count);
     flecs_gauge_print("pair id count", t, &s->components.pair_count);
     flecs_gauge_print("type count", t, &s->components.type_count);
     flecs_counter_print("id create count", t, &s->components.create_count);
     flecs_counter_print("id delete count", t, &s->components.delete_count);
-    ecs_trace("");
+    ecs_trace("%s", "");
     flecs_gauge_print("alive entity count", t, &s->entities.count);
     flecs_gauge_print("not alive entity count", t, &s->entities.not_alive_count);
-    ecs_trace("");
+    ecs_trace("%s", "");
     flecs_gauge_print("query count", t, &s->queries.query_count);
     flecs_gauge_print("observer count", t, &s->queries.observer_count);
     flecs_gauge_print("system count", t, &s->queries.system_count);
-    ecs_trace("");
+    ecs_trace("%s", "");
     flecs_gauge_print("table count", t, &s->tables.count);
     flecs_gauge_print("empty table count", t, &s->tables.empty_count);
     flecs_counter_print("table create count", t, &s->tables.create_count);
     flecs_counter_print("table delete count", t, &s->tables.delete_count);
-    ecs_trace("");
+    ecs_trace("%s", "");
     flecs_counter_print("add commands", t, &s->commands.add_count);
     flecs_counter_print("remove commands", t, &s->commands.remove_count);
     flecs_counter_print("delete commands", t, &s->commands.delete_count);
@@ -79211,7 +79213,7 @@ void ecs_world_stats_log(
     flecs_counter_print("discarded commands", t, &s->commands.discard_count);
     flecs_counter_print("batched entities", t, &s->commands.batched_entity_count);
     flecs_counter_print("batched commands", t, &s->commands.batched_count);
-    ecs_trace("");
+    ecs_trace("%s", "");
     
 error:
     return;
@@ -94275,7 +94277,8 @@ ecs_entity_t ecs_enum_init(
                 char *type_str = ecs_get_path(world, t);
                 char *utype_str = ecs_get_path(world, underlying);
                 ecs_err("value for constant '%s' for enum '%s' is not valid "
-                    "for underlying type '%s'", type_str, utype_str);
+                    "for underlying type '%s'",
+                        m_desc->name, type_str, utype_str);
                 ecs_os_free(utype_str);
                 ecs_os_free(type_str);
                 continue;

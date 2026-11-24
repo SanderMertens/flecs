@@ -431,7 +431,8 @@ ecs_entity_t ecs_enum_init(
                 char *type_str = ecs_get_path(world, t);
                 char *utype_str = ecs_get_path(world, underlying);
                 ecs_err("value for constant '%s' for enum '%s' is not valid "
-                    "for underlying type '%s'", type_str, utype_str);
+                    "for underlying type '%s'",
+                        m_desc->name, type_str, utype_str);
                 ecs_os_free(utype_str);
                 ecs_os_free(type_str);
                 continue;

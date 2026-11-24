@@ -40,7 +40,7 @@ struct untyped_field {
         ecs_assert(!is_shared_ || !index, ECS_INVALID_PARAMETER,
             "invalid usage of [] operator for shared component field");
         ecs_assert(index < count_, ECS_COLUMN_INDEX_OUT_OF_RANGE,
-            "index %d out of range for field", index);
+            "index %d out of range for field", static_cast<int>(index));
         return ECS_OFFSET(data_, size_ * index);
     }
 

@@ -137,7 +137,8 @@ void ecs_print_(
     const char *file,
     int32_t line,
     const char *fmt,
-    ...);
+    ...)
+    ECS_FORMAT(4, 5);
 
 /** Print at the provided log level (va_list).
  *
@@ -168,7 +169,8 @@ void ecs_log_(
     const char *file,
     int32_t line,
     const char *fmt,
-    ...);
+    ...)
+    ECS_FORMAT(4, 5);
 
 /** Log at the provided level (va_list).
  *
@@ -199,7 +201,8 @@ void ecs_abort_(
     const char *file,
     int32_t line,
     const char *fmt,
-    ...);
+    ...)
+    ECS_FORMAT(4, 5);
 
 /** Log an assertion failure.
  *
@@ -216,7 +219,8 @@ void ecs_assert_log_(
     const char *file,
     int32_t line,
     const char *fmt,
-    ...);
+    ...)
+    ECS_FORMAT(5, 6);
 
 /** Log a parser error.
  *
@@ -231,7 +235,8 @@ void ecs_parser_error_(
     const char *expr,
     int64_t column,
     const char *fmt,
-    ...);
+    ...)
+    ECS_FORMAT(4, 5);
 
 /** Log a parser error (va_list).
  *
@@ -262,7 +267,8 @@ void ecs_parser_warning_(
     const char *expr,
     int64_t column,
     const char *fmt,
-    ...);
+    ...)
+    ECS_FORMAT(4, 5);
 
 /** Log a parser warning (va_list).
  *

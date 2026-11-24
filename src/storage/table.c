@@ -18,6 +18,7 @@
  */
 
 #include "../private_api.h"
+#include <inttypes.h>
 
 const int16_t flecs_table_empty_component_map[FLECS_HI_COMPONENT_ID] = {0};
 
@@ -1295,7 +1296,8 @@ void flecs_table_fini(
     if (ecs_should_log_2()) {
         char *expr = ecs_type_str(world, &table->type);
         ecs_dbg_2(
-            "#[green]table#[normal] [%s] #[red]deleted#[reset] with id %d", 
+            "#[green]table#[normal] [%s] #[red]deleted#[reset] with id "
+                "%" PRIu64,
             expr, table->id);
         ecs_os_free(expr);
         ecs_log_push_2();

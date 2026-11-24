@@ -105,7 +105,9 @@
                 "constant_to_entity_w_underlying_u32",
                 "constant_to_entity_w_underlying_u64",
                 "constant_to_entity_w_bitmask",
-                "unsigned_enum_duplicate_constant_value"
+                "unsigned_enum_duplicate_constant_value",
+                "constant_out_of_range_for_underlying_type",
+                "serialize_invalid_negative_constant"
             ]
         }, {
             "id": "BitmaskTypes",
