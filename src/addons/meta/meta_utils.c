@@ -4,6 +4,7 @@
  */
 
 #include "meta.h"
+#include <inttypes.h>
 
 #ifdef FLECS_META
 
@@ -372,8 +373,8 @@ int flecs_meta_ser_enum(
         ecs_enum_constant_t, value);
     if (!constant) {
         char *name = enum_type ? ecs_get_path(world, enum_type) : NULL;
-        ecs_err("enumeration value '%d' of type '%s' is not a valid constant", 
-            value, name ? name : "unknown");
+        ecs_err("enumeration value '%" PRId64 "' of type '%s' is not a valid "
+            "constant", (int64_t)value, name ? name : "unknown");
         ecs_os_free(name);
         return -1;
     }

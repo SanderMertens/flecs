@@ -475,6 +475,7 @@ void New_w_Count_bulk_init_w_table(void);
 void New_w_Count_bulk_init_w_alive_entity(void);
 void New_w_Count_bulk_init_w_cmd_in_on_add_hook(void);
 void New_w_Count_bulk_init_w_cmd_in_on_add_observer(void);
+void New_w_Count_bulk_init_tag_w_data(void);
 
 // Testsuite 'Add'
 void Add_component(void);
@@ -5630,6 +5631,10 @@ bake_test_case New_w_Count_testcases[] = {
     {
         "bulk_init_w_cmd_in_on_add_observer",
         New_w_Count_bulk_init_w_cmd_in_on_add_observer
+    },
+    {
+        "bulk_init_tag_w_data",
+        New_w_Count_bulk_init_tag_w_data
     }
 };
 
@@ -18780,7 +18785,7 @@ static bake_test_suite suites[] = {
         "New_w_Count",
         NULL,
         NULL,
-        25,
+        26,
         New_w_Count_testcases
     },
     {

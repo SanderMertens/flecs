@@ -799,3 +799,26 @@ void New_w_Count_bulk_init_w_cmd_in_on_add_observer(void) {
 
     ecs_fini(world);
 }
+
+void New_w_Count_bulk_init_tag_w_data(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    Position p[] = {
+        {10, 20},
+        {30, 40}
+    };
+
+    void *data[] = {p};
+
+    test_expect_abort();
+
+    ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 2,
+        .ids = {Tag},
+        .data = data
+    });
+}

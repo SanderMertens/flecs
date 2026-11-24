@@ -8,6 +8,7 @@
  */
 
 #include "private_api.h"
+#include <inttypes.h>
 
 #ifdef FLECS_QUERY_DSL
 #include "addons/query_dsl/query_dsl.h"
@@ -345,11 +346,11 @@ const ecs_entity_t* flecs_bulk_new(
                 ecs_assert(tr->column != -1, ECS_INVALID_PARAMETER, 
                     "component '%s' passed to bulk_new() at index %d is a "
                         "tag/zero sized",
-                            flecs_errstr(ecs_id_str(world, id)));
+                            flecs_errstr(ecs_id_str(world, id)), c_i);
                 ecs_assert(tr->count == 1, ECS_INVALID_PARAMETER,
-                    "component passed to bulk_new() at index %d is "
+                    "component '%s' passed to bulk_new() at index %d is "
                     "invalid/a wildcard",
-                        flecs_errstr(ecs_id_str(world, id)));
+                        flecs_errstr(ecs_id_str(world, id)), c_i);
 
                 int32_t index = tr->column;
                 ecs_column_t *column = &table->data.columns[index];
@@ -2456,8 +2457,8 @@ ecs_entity_t ecs_get_parent(
         EcsParent *p = ecs_table_get_column(
             table, column - 1, ECS_RECORD_TO_ROW(r->row));
         ecs_assert(ecs_is_valid(world, p->value), ECS_INVALID_OPERATION, 
-            "Parent component points to invalid parent %u",
-                p->value, entity);
+            "Parent component of '%s' points to invalid parent %" PRIu64,
+                flecs_errstr(ecs_id_str(world, entity)), p->value);
         return p->value;
     }
 
