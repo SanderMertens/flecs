@@ -587,15 +587,12 @@ void Rest_get_stats_wo_stats_import(void);
 void Rest_get_pretty(void);
 void Rest_query_pretty(void);
 void Rest_world_pretty(void);
-<<<<<<< HEAD
 void Rest_script_save_file(void);
 void Rest_script_save_file_cannot_open(void);
-=======
 void Rest_put_component_copy_illegal(void);
 void Rest_put_component_copy_ctor_illegal(void);
 void Rest_put_component_script(void);
 void Rest_put_component_ctor_illegal(void);
->>>>>>> dfb287f3c942ca7a12237ffd5e142071376947cf
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -2860,14 +2857,14 @@ bake_test_case Rest_testcases[] = {
         Rest_world_pretty
     },
     {
-<<<<<<< HEAD
         "script_save_file",
         Rest_script_save_file
     },
     {
         "script_save_file_cannot_open",
         Rest_script_save_file_cannot_open
-=======
+    },
+    {
         "put_component_copy_illegal",
         Rest_put_component_copy_illegal
     },
@@ -2882,7 +2879,6 @@ bake_test_case Rest_testcases[] = {
     {
         "put_component_ctor_illegal",
         Rest_put_component_ctor_illegal
->>>>>>> dfb287f3c942ca7a12237ffd5e142071376947cf
     }
 };
 
@@ -3343,11 +3339,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-<<<<<<< HEAD
-        76,
-=======
-        78,
->>>>>>> dfb287f3c942ca7a12237ffd5e142071376947cf
+        80,
         Rest_testcases
     },
     {

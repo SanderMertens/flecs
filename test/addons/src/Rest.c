@@ -2550,7 +2550,6 @@ void Rest_world_pretty(void) {
     ecs_fini(world);
 }
 
-<<<<<<< HEAD
 void Rest_script_save_file(void) {
     ecs_world_t *world = ecs_init();
 
@@ -2563,7 +2562,71 @@ void Rest_script_save_file(void) {
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
         .filename = "proj/main.flecs"
-=======
+    });
+    test_assert(s != 0);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/script/main?save_file=true", "f {}", &reply));
+    test_int(reply.code, 200);
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str, "{}");
+    ecs_os_free(reply_str);
+
+    Rest_fs_file_t *file = Rest_fs_file_find("proj/main.flecs");
+    test_assert(file != NULL);
+    test_int(file->size, 4);
+    test_assert(!memcmp(file->data, "f {}", 4));
+    test_assert(ecs_lookup(world, "f") != 0);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
+void Rest_script_save_file_cannot_open(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_int(0, ecs_os_mkdir("proj"));
+    FILE *f = ecs_os_fopen("proj/main.flecs", "w");
+    test_assert(f != NULL);
+    ecs_os_fwrite("e {}", 4, 1, f);
+    ecs_os_fclose(f);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .filename = "proj/main.flecs"
+    });
+    test_assert(s != 0);
+
+    /* Remove the directory so the file can no longer be opened for writing */
+    test_int(0, ecs_os_remove("proj/main.flecs"));
+    test_int(0, ecs_os_rmdir("proj"));
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    ecs_log_set_level(-4);
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/script/main?save_file=true", "f {}", &reply));
+    test_int(reply.code, 500);
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str,
+        "{\"error\":\"cannot open file 'proj/main.flecs' for writing\"}");
+    ecs_os_free(reply_str);
+
+    test_assert(ecs_lookup(world, "f") == 0);
+    test_str(ecs_get(world, s, EcsScript)->code, "e {}");
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
 void Rest_put_component_copy_illegal(void) {
     ecs_world_t *world = ecs_init();
 
@@ -2647,7 +2710,6 @@ void Rest_put_component_script(void) {
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main.flecs", .sep = "/" }),
         .code = "e {}"
->>>>>>> dfb287f3c942ca7a12237ffd5e142071376947cf
     });
     test_assert(s != 0);
 
@@ -2655,19 +2717,6 @@ void Rest_put_component_script(void) {
     test_assert(srv != NULL);
 
     ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
-<<<<<<< HEAD
-    test_int(0, ecs_http_server_request(srv, "PUT",
-        "/script/main?save_file=true", "f {}", &reply));
-    test_int(reply.code, 200);
-    char *reply_str = ecs_strbuf_get(&reply.body);
-    test_str(reply_str, "{}");
-    ecs_os_free(reply_str);
-
-    Rest_fs_file_t *file = Rest_fs_file_find("proj/main.flecs");
-    test_assert(file != NULL);
-    test_int(file->size, 4);
-    test_assert(!memcmp(file->data, "f {}", 4));
-=======
     test_int(-1, ecs_http_server_request(srv, "PUT",
         "/component/main.flecs?component=flecs.script.Script&value=%7B%7D",
         NULL, &reply));
@@ -2683,7 +2732,6 @@ void Rest_put_component_script(void) {
     test_str(script->script->code, "e {}");
 
     test_int(0, ecs_script_update(world, s, 0, "f {}"));
->>>>>>> dfb287f3c942ca7a12237ffd5e142071376947cf
     test_assert(ecs_lookup(world, "f") != 0);
 
     ecs_rest_server_fini(srv);
@@ -2691,26 +2739,6 @@ void Rest_put_component_script(void) {
     ecs_fini(world);
 }
 
-<<<<<<< HEAD
-void Rest_script_save_file_cannot_open(void) {
-    ecs_world_t *world = ecs_init();
-
-    test_int(0, ecs_os_mkdir("proj"));
-    FILE *f = ecs_os_fopen("proj/main.flecs", "w");
-    test_assert(f != NULL);
-    ecs_os_fwrite("e {}", 4, 1, f);
-    ecs_os_fclose(f);
-
-    ecs_entity_t s = ecs_script(world, {
-        .entity = ecs_entity(world, { .name = "main" }),
-        .filename = "proj/main.flecs"
-    });
-    test_assert(s != 0);
-
-    /* Remove the directory so the file can no longer be opened for writing */
-    test_int(0, ecs_os_remove("proj/main.flecs"));
-    test_int(0, ecs_os_rmdir("proj"));
-=======
 void Rest_put_component_ctor_illegal(void) {
     ecs_world_t *world = ecs_init();
 
@@ -2720,25 +2748,11 @@ void Rest_put_component_ctor_illegal(void) {
     });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
->>>>>>> dfb287f3c942ca7a12237ffd5e142071376947cf
 
     ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
     test_assert(srv != NULL);
 
     ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
-<<<<<<< HEAD
-    ecs_log_set_level(-4);
-    test_int(-1, ecs_http_server_request(srv, "PUT",
-        "/script/main?save_file=true", "f {}", &reply));
-    test_int(reply.code, 500);
-    char *reply_str = ecs_strbuf_get(&reply.body);
-    test_str(reply_str,
-        "{\"error\":\"cannot open file 'proj/main.flecs' for writing\"}");
-    ecs_os_free(reply_str);
-
-    test_assert(ecs_lookup(world, "f") == 0);
-    test_str(ecs_get(world, s, EcsScript)->code, "e {}");
-=======
     test_int(-1, ecs_http_server_request(srv, "PUT",
         "/component/e?component=Position", NULL, &reply));
     test_int(reply.code, 400);
@@ -2748,7 +2762,6 @@ void Rest_put_component_ctor_illegal(void) {
     ecs_os_free(reply_str);
 
     test_assert(!ecs_has(world, e, Position));
->>>>>>> dfb287f3c942ca7a12237ffd5e142071376947cf
 
     ecs_rest_server_fini(srv);
 
