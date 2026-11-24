@@ -508,6 +508,8 @@ void Http_headers_and_body(void);
 void Http_headers_max_with_body(void);
 void Http_empty_target_encoded_path(void);
 void Http_stop_double_close(void);
+void Http_request_headers_then_body(void);
+void Http_request_body_in_chunks(void);
 
 // Testsuite 'Rest'
 void Rest_setup(void);
@@ -2540,6 +2542,14 @@ bake_test_case Http_testcases[] = {
     {
         "stop_double_close",
         Http_stop_double_close
+    },
+    {
+        "request_headers_then_body",
+        Http_request_headers_then_body
+    },
+    {
+        "request_body_in_chunks",
+        Http_request_body_in_chunks
     }
 };
 
@@ -3292,7 +3302,7 @@ static bake_test_suite suites[] = {
         "Http",
         NULL,
         NULL,
-        10,
+        12,
         Http_testcases
     },
     {

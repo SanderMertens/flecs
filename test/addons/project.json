@@ -555,7 +555,9 @@
                 "headers_and_body",
                 "headers_max_with_body",
                 "empty_target_encoded_path",
-                "stop_double_close"
+                "stop_double_close",
+                "request_headers_then_body",
+                "request_body_in_chunks"
             ]
         }, {
             "id": "Rest",

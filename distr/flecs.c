@@ -47190,6 +47190,8 @@ static void http_recv_connection(
         if ((bytes_read = http_recv(
             sock, recv_buf, ECS_HTTP_SEND_RECV_BUFFER_SIZE, 0)) > 0) 
         {
+            retries = 0;
+
             bool is_alive = conn->pub.id == conn_id;
             if (!is_alive) {
                 /* Connection has been purged by main thread */
@@ -47239,11 +47241,6 @@ static void http_recv_connection(
         }
     } while (!done && (bytes_read > 0 || ((bytes_read == -1) &&
         (++retries < ECS_HTTP_REQUEST_RECV_RETRY))));
-
-    if (bytes_read == ECS_HTTP_SEND_RECV_BUFFER_SIZE) {
-        ecs_warn("request exceeded receive buffer size (%d)",
-            ECS_HTTP_SEND_RECV_BUFFER_SIZE);
-    }
 
     if (retries == ECS_HTTP_REQUEST_RECV_RETRY) {
         ecs_os_mutex_lock(srv->lock);
