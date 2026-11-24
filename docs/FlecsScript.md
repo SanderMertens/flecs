@@ -1558,6 +1558,8 @@ The following table lists the most commonly used builtin commands. Run `help` to
 | `script_save`, `script_reload`, `script_undo` | Save, reload or undo changes to a script |
 | `click`, `key`, `type` | Simulate input events (see [Input](#input))                 |
 
+`script_save` only writes a script back to the file it was loaded from. A script that has no file can be saved to a new file, which must be a relative path without `..`.
+
 Commands are regular script functions. The builtin commands live in the `flecs.script.shell.commands` namespace. Applications can add their own commands by creating functions in a scope and adding that scope to the `command_paths` member of the `EcsScriptShell` singleton.
 
 ## Variables

@@ -28891,15 +28891,28 @@ static bool flecs_rest_script(
         code = "";
     }
 
-    ecs_strbuf_appendlit(&reply->body, "{");
-
     const EcsScript *s = ecs_get(world, script, EcsScript);
 
     if (s && s->filename && save_file) {
         FILE *f = ecs_os_fopen(s->filename, "w");
-        ecs_os_fwrite(code, strlen(code), 1, f);
+        if (!f) {
+            flecs_reply_error(reply, "cannot open file '%s' for writing",
+                s->filename);
+            reply->code = 500;
+            return true;
+        }
+
+        size_t len = strlen(code);
+        bool written = !len || ecs_os_fwrite(code, len, 1, f) == 1;
         ecs_os_fclose(f);
+        if (!written) {
+            flecs_reply_error(reply, "failed to write file '%s'", s->filename);
+            reply->code = 500;
+            return true;
+        }
     }
+
+    ecs_strbuf_appendlit(&reply->body, "{");
 
     if (s && check_file) {
         ecs_strbuf_appendlit(&reply->body, "\"changed\": ");
@@ -52412,6 +52425,14 @@ const char* flecs_script_stmt(
 
 void flecs_script_edit_cache_fini(
     ecs_script_impl_t *impl);
+
+/* Returns true if path starts at the root of a filesystem or drive. */
+bool flecs_script_path_is_absolute(
+    const char *path);
+
+/* Returns true if path contains a '..' component. */
+bool flecs_script_path_has_parent_dir(
+    const char *path);
 
 /* Write the shortest decimal string that parses back to the same value. */
 
@@ -103327,7 +103348,7 @@ int flecs_script_step_for(
 #define FLECS_SCRIPT_INCLUDE_DEPTH_MAX (32)
 #endif
 
-static bool flecs_script_include_has_parent_dir(
+bool flecs_script_path_has_parent_dir(
     const char *path)
 {
     const char *p = path;
@@ -103367,7 +103388,7 @@ static char* flecs_script_include_resolve(
         include_path, has_ext ? "" : ext);
 }
 
-static bool flecs_script_include_is_absolute(
+bool flecs_script_path_is_absolute(
     const char *path)
 {
     if (path[0] == '/' || path[0] == '\\') {
@@ -103400,13 +103421,13 @@ static int flecs_script_include_node(
     ecs_script_eval_visitor_t *v,
     ecs_script_include_t *node)
 {
-    if (flecs_script_include_is_absolute(node->filename)) {
+    if (flecs_script_path_is_absolute(node->filename)) {
         flecs_script_eval_error(v, node,
             "include path '%s' must be relative", node->filename);
         return -1;
     }
 
-    if (flecs_script_include_has_parent_dir(node->filename)) {
+    if (flecs_script_path_has_parent_dir(node->filename)) {
         flecs_script_eval_error(v, node,
             "include path '%s' must not contain '..'", node->filename);
         return -1;
@@ -127917,7 +127938,17 @@ static void flecs_command_script_save(
         return;
     }
 
-    if (s->filename && !ecs_os_strcmp(filename, s->filename)) {
+    /* Commands can be sent by remote clients, so don't let them pick an
+     * arbitrary file to write. A script that was loaded from a file can only
+     * be saved back to that file. A script that has no file can be saved to a
+     * new file below the working directory. */
+    if (s->filename) {
+        if (ecs_os_strcmp(filename, s->filename)) {
+            flecs_command_err(ctx, "script '%s' can only be saved to '%s'",
+                flecs_errstr(ecs_get_path(world, script)), s->filename);
+            return;
+        }
+
         FILE *f = ecs_os_fopen(filename, "r");
         if (f) {
             ecs_os_fclose(f);
@@ -127932,12 +127963,36 @@ static void flecs_command_script_save(
                 return;
             }
         }
-    } else {
-        EcsScript *ms = ecs_get_mut(world, script, EcsScript);
-        ecs_os_strset(&ms->filename, filename);
+
+        if (ecs_script_save(world, script)) {
+            flecs_command_fail(ctx);
+        }
+        return;
     }
 
+    if (flecs_script_path_is_absolute(filename) ||
+        flecs_script_path_has_parent_dir(filename))
+    {
+        flecs_command_err(ctx,
+            "file '%s' must be a relative path without '..'", filename);
+        return;
+    }
+
+    FILE *f = ecs_os_fopen(filename, "r");
+    if (f) {
+        ecs_os_fclose(f);
+        flecs_command_err(ctx, "file '%s' already exists", filename);
+        return;
+    }
+
+    EcsScript *ms = ecs_get_mut(world, script, EcsScript);
+    ecs_os_strset(&ms->filename, filename);
+
     if (ecs_script_save(world, script)) {
+        /* Don't leave the script pointing at a file it couldn't write, as a
+         * reload would read that file into the script. */
+        ms = ecs_get_mut(world, script, EcsScript);
+        ecs_os_strset(&ms->filename, NULL);
         flecs_command_fail(ctx);
     }
 }
@@ -128068,7 +128123,7 @@ void flecs_command_script_import(
         { "script_save", flecs_command_script_save, 0, "Save script to file", {
             { "script", entity_t, false, "Script" },
             { "filename", string_t, true,
-                "File to save to (default: script file)" }}},
+                "New relative file for a script without file" }}},
         { "script_reload", flecs_command_script_reload, 0,
             "Reload script from file", {
             { "script", entity_t, false, "Script" }}},

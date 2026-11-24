@@ -587,6 +587,8 @@ void Rest_get_stats_wo_stats_import(void);
 void Rest_get_pretty(void);
 void Rest_query_pretty(void);
 void Rest_world_pretty(void);
+void Rest_script_save_file(void);
+void Rest_script_save_file_cannot_open(void);
 void Rest_put_component_copy_illegal(void);
 void Rest_put_component_copy_ctor_illegal(void);
 void Rest_put_component_script(void);
@@ -2855,6 +2857,14 @@ bake_test_case Rest_testcases[] = {
         Rest_world_pretty
     },
     {
+        "script_save_file",
+        Rest_script_save_file
+    },
+    {
+        "script_save_file_cannot_open",
+        Rest_script_save_file_cannot_open
+    },
+    {
         "put_component_copy_illegal",
         Rest_put_component_copy_illegal
     },
@@ -3329,7 +3339,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        78,
+        80,
         Rest_testcases
     },
     {

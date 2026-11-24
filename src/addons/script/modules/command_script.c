@@ -650,7 +650,17 @@ static void flecs_command_script_save(
         return;
     }
 
-    if (s->filename && !ecs_os_strcmp(filename, s->filename)) {
+    /* Commands can be sent by remote clients, so don't let them pick an
+     * arbitrary file to write. A script that was loaded from a file can only
+     * be saved back to that file. A script that has no file can be saved to a
+     * new file below the working directory. */
+    if (s->filename) {
+        if (ecs_os_strcmp(filename, s->filename)) {
+            flecs_command_err(ctx, "script '%s' can only be saved to '%s'",
+                flecs_errstr(ecs_get_path(world, script)), s->filename);
+            return;
+        }
+
         FILE *f = ecs_os_fopen(filename, "r");
         if (f) {
             ecs_os_fclose(f);
@@ -665,12 +675,36 @@ static void flecs_command_script_save(
                 return;
             }
         }
-    } else {
-        EcsScript *ms = ecs_get_mut(world, script, EcsScript);
-        ecs_os_strset(&ms->filename, filename);
+
+        if (ecs_script_save(world, script)) {
+            flecs_command_fail(ctx);
+        }
+        return;
     }
 
+    if (flecs_script_path_is_absolute(filename) ||
+        flecs_script_path_has_parent_dir(filename))
+    {
+        flecs_command_err(ctx,
+            "file '%s' must be a relative path without '..'", filename);
+        return;
+    }
+
+    FILE *f = ecs_os_fopen(filename, "r");
+    if (f) {
+        ecs_os_fclose(f);
+        flecs_command_err(ctx, "file '%s' already exists", filename);
+        return;
+    }
+
+    EcsScript *ms = ecs_get_mut(world, script, EcsScript);
+    ecs_os_strset(&ms->filename, filename);
+
     if (ecs_script_save(world, script)) {
+        /* Don't leave the script pointing at a file it couldn't write, as a
+         * reload would read that file into the script. */
+        ms = ecs_get_mut(world, script, EcsScript);
+        ecs_os_strset(&ms->filename, NULL);
         flecs_command_fail(ctx);
     }
 }
@@ -801,7 +835,7 @@ void flecs_command_script_import(
         { "script_save", flecs_command_script_save, 0, "Save script to file", {
             { "script", entity_t, false, "Script" },
             { "filename", string_t, true,
-                "File to save to (default: script file)" }}},
+                "New relative file for a script without file" }}},
         { "script_reload", flecs_command_script_reload, 0,
             "Reload script from file", {
             { "script", entity_t, false, "Script" }}},

@@ -4507,6 +4507,11 @@ void Command_script_diff_patch_roundtrip(void);
 void Command_script_save(void);
 void Command_script_save_conflict(void);
 void Command_script_save_as(void);
+void Command_script_save_other_file(void);
+void Command_script_save_as_absolute_path(void);
+void Command_script_save_as_parent_dir(void);
+void Command_script_save_as_existing_file(void);
+void Command_script_save_as_cannot_open(void);
 void Command_script_reload(void);
 void Command_script_undo(void);
 void Command_focus_blur(void);
@@ -22599,6 +22604,26 @@ bake_test_case Command_testcases[] = {
         Command_script_save_as
     },
     {
+        "script_save_other_file",
+        Command_script_save_other_file
+    },
+    {
+        "script_save_as_absolute_path",
+        Command_script_save_as_absolute_path
+    },
+    {
+        "script_save_as_parent_dir",
+        Command_script_save_as_parent_dir
+    },
+    {
+        "script_save_as_existing_file",
+        Command_script_save_as_existing_file
+    },
+    {
+        "script_save_as_cannot_open",
+        Command_script_save_as_cannot_open
+    },
+    {
         "script_reload",
         Command_script_reload
     },
@@ -24528,7 +24553,7 @@ static bake_test_suite suites[] = {
         "Command",
         Command_setup,
         NULL,
-        148,
+        153,
         Command_testcases
     },
     {
