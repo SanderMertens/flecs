@@ -800,18 +800,11 @@ void New_w_Count_bulk_init_w_cmd_in_on_add_observer(void) {
     ecs_fini(world);
 }
 
-<<<<<<< HEAD
 void New_w_Count_bulk_init_w_table_w_childof_ordered_children(void) {
-=======
-void New_w_Count_bulk_init_tag_w_data(void) {
-    install_test_abort();
-
->>>>>>> 7d1bc7d80df5a5ac73a773c5dad87226903aa3f9
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
-<<<<<<< HEAD
     ecs_entity_t parent = ecs_new(world);
     ecs_add_id(world, parent, EcsOrderedChildren);
 
@@ -1036,7 +1029,15 @@ void New_w_Count_new_w_table_w_childof_ordered_children(void) {
     }
 
     ecs_fini(world);
-=======
+}
+
+void New_w_Count_bulk_init_tag_w_data(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
     Position p[] = {
         {10, 20},
         {30, 40}
@@ -1051,5 +1052,4 @@ void New_w_Count_new_w_table_w_childof_ordered_children(void) {
         .ids = {Tag},
         .data = data
     });
->>>>>>> 7d1bc7d80df5a5ac73a773c5dad87226903aa3f9
 }
