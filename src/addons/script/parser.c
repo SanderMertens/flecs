@@ -1835,7 +1835,7 @@ identifier_flag: {
 flagged_id: {
     ecs_script_tag_t *tag = flecs_script_insert_pair_tag(
         parser, component_first, component_second);
-    tag->id.flag = ECS_AUTO_OVERRIDE;
+    tag->id.flag = EcsAutoOverride;
 
     // auto_override | Position: {
     LookAhead_1(':',

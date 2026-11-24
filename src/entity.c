@@ -688,7 +688,7 @@ const char* flecs_entity_invalid_reason(
     }
 
     if (entity & ECS_ID_FLAGS_MASK) {
-        return "entity id contains flag bits (TOGGLE or AUTO_OVERRIDE)";
+        return "entity id contains flag bits (TOGGLE)";
     }
 
     /* Entities should not contain data in dead zone bits */
@@ -1370,6 +1370,8 @@ void ecs_delete(
             if (row_flags & EcsEntityIsId) {
                 flecs_on_delete(world, entity, 0, true, true);
                 flecs_on_delete(world, ecs_pair(entity, EcsWildcard), 0, true, true);
+                flecs_on_delete(world, 
+                    ECS_NESTED_PAIR | ecs_pair(entity, EcsWildcard), 0, true, true);
             }
 
             /* Merge operations before deleting entity */
@@ -1459,7 +1461,10 @@ void ecs_auto_override_id(
     ecs_id_t component)
 {
     flecs_assert_component_valid(world, entity, component, "auto_override");
-    ecs_add_id(world, entity, ECS_AUTO_OVERRIDE | component);
+    ecs_id_t id = ecs_nested_pair(world, EcsAutoOverride, component);
+    if (id) {
+        ecs_add_id(world, entity, id);
+    }
 error:
     return;
 }

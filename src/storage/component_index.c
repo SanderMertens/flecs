@@ -133,7 +133,11 @@ static ecs_id_t flecs_component_hash(
                 t = EcsWildcard;
             }
 
-            id = ecs_pair(r, t);
+            if (ECS_IS_NESTED_PAIR(id)) {
+                id = ECS_NESTED_PAIR | ecs_entity_t_comb(t, r);
+            } else {
+                id = ecs_pair(r, t);
+            }
         }
     }
 
@@ -438,7 +442,13 @@ static ecs_component_record_t* flecs_component_new(
 
         /* Link with (R, *) record so we can easily find all matching pairs. */
         if (!is_wildcard && (rel != EcsFlag)) {
+            /* Nested pairs are stored after regular pairs in table types, so
+             * they get their own wildcard record to keep the ids matched by a
+             * wildcard record contiguous in table types. */
             ecs_id_t parent_id = ecs_pair(rel, EcsWildcard);
+            if (ECS_IS_NESTED_PAIR(id)) {
+                parent_id |= ECS_NESTED_PAIR;
+            }
             ecs_component_record_t *cr_r = flecs_components_ensure(
                 world, parent_id);
             cr->pair->parent = cr_r;

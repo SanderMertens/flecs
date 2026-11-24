@@ -2692,3 +2692,36 @@ Entity e = world.obtainEntity(world.entity()).add(loves.id(), pears);
 </li>
 </ul>
 </div>
+
+The `With` relationship can also add a pair to the entity. Because the target of a pair can only store a single entity, this uses a nested pair, which stores the pair in a (deduplicated) handle entity. The handle is deleted when one of the elements of the pair is deleted, which also removes the nested pair from the component:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t Socket = ecs_new(world);
+ecs_entity_t ParentRelative = ecs_new(world);
+
+// Add (Position, ParentRelative) whenever Socket is added
+ecs_add_id(world, Socket, ecs_nested_pair(world, EcsWith,
+    ecs_pair(ecs_id(Position), ParentRelative)));
+
+// Create new entity with both Socket and (Position, ParentRelative)
+ecs_entity_t e = ecs_new_w_id(world, Socket);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+// Add (Position, ParentRelative) whenever Socket is added
+world.component<Socket>().with<Position, ParentRelative>();
+
+// Create new entity with both Socket and (Position, ParentRelative)
+auto e = world.entity().add<Socket>();
+```
+
+</li>
+</ul>
+</div>

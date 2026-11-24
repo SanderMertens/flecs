@@ -25,23 +25,26 @@ static ecs_type_t flecs_prefab_spawner_build_type(
         ecs_table_record_t *tr = &table->_->records[i];
         ecs_component_record_t *cr = tr->hdr.cr;
 
+        if (ECS_HAS_RELATION(id, EcsAutoOverride)) {
+            /* If component is auto overridden, add component to instances. 
+             * This allows instances to end up with an owned component, even if
+             * the component has the (OnInstantiate, Inherit) trait.
+             * Additionally, this also allows for adding components to instances
+             * that aren't copyable, since a prefab can have an auto override
+             * for a component, but not have the actual component (which then
+             * isn't copied). */
+            ecs_id_t concrete_id = ecs_pair_second_id(world, id);
+            if (concrete_id) {
+                flecs_type_add(world, &dst, concrete_id);
+            }
+            continue;
+        }
+
         if (cr->flags & EcsIdOnInstantiateDontInherit) {
             continue;
         }
 
         if (!copy && (cr->flags & EcsIdOnInstantiateInherit)) {
-            continue;
-        }
-
-        if (id & ECS_AUTO_OVERRIDE) {
-            /* If AUTO_OVERRIDE flag is set, add component to instances. This 
-             * allows instances to end up with an owned component, even if the
-             * component has the (OnInstantiate, Inherit) trait.
-             * Additionally, this also allows for adding components to instances
-             * that aren't copyable, since a prefab can have a component with
-             * AUTO_OVERRIDE flag, but not have the actual component (which then
-             * isn't copied). */
-            flecs_type_add(world, &dst, id & ~ECS_AUTO_OVERRIDE);
             continue;
         }
 

@@ -1083,7 +1083,7 @@ void Table_65_records_w_tgt(void) {
     }
 
     for (; i < 37; i ++) {
-        ids[i] = ECS_AUTO_OVERRIDE | ecs_new(world);
+        ids[i] = ecs_pair(EcsAutoOverride, ecs_new(world));
     }
 
     ids[i ++] = ecs_pair(RelA, TgtA);

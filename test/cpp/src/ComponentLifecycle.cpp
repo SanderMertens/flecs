@@ -1987,7 +1987,7 @@ void ComponentLifecycle_set_override_no_copy(void) {
     test_assert(ptr != NULL);
     test_int(ptr->x_, 10);
 
-    test_assert(e.has(flecs::AUTO_OVERRIDE | ecs.id<NoCopy>()));
+    test_assert(e.has(flecs::AutoOverride, ecs.id<NoCopy>()));
 }
 
 void ComponentLifecycle_set_override_pair_no_copy(void) {
@@ -2000,7 +2000,7 @@ void ComponentLifecycle_set_override_pair_no_copy(void) {
     test_assert(ptr != NULL);
     test_int(ptr->x_, 10);
 
-    test_assert(e.has(flecs::AUTO_OVERRIDE | ecs.pair<NoCopy, Tag>()));
+    test_assert(e.has(ecs.nested_pair(flecs::AutoOverride, ecs.pair<NoCopy, Tag>())));
 }
 
 void ComponentLifecycle_set_override_pair_w_entity_no_copy(void) {
@@ -2015,7 +2015,7 @@ void ComponentLifecycle_set_override_pair_w_entity_no_copy(void) {
     test_assert(ptr != NULL);
     test_int(ptr->x_, 10);
 
-    test_assert(e.has(flecs::AUTO_OVERRIDE | ecs.pair<NoCopy>(tag)));
+    test_assert(e.has(ecs.nested_pair(flecs::AutoOverride, ecs.pair<NoCopy>(tag))));
 }
 
 void ComponentLifecycle_dtor_after_defer_set(void) {

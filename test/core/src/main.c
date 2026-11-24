@@ -2124,6 +2124,35 @@ void Pairs_2_traversable_rels_in_opposite_directions_w_childof(void);
 void Pairs_childof_and_isa_in_opposite_directions(void);
 void Pairs_isa_and_childof_in_opposite_directions(void);
 
+// Testsuite 'NestedPairs'
+void NestedPairs_make_nested_pair(void);
+void NestedPairs_make_nested_pair_twice(void);
+void NestedPairs_make_nested_pair_w_entity(void);
+void NestedPairs_nested_pair_str(void);
+void NestedPairs_nested_pair_of_nested_pair(void);
+void NestedPairs_add_remove(void);
+void NestedPairs_add_nested_and_regular_pairs(void);
+void NestedPairs_query_nested_pair(void);
+void NestedPairs_delete_first_of_nested(void);
+void NestedPairs_delete_second_of_nested(void);
+void NestedPairs_delete_first(void);
+void NestedPairs_delete_first_w_delete_target(void);
+void NestedPairs_recreate_after_delete(void);
+void NestedPairs_delete_handle(void);
+void NestedPairs_create_in_deferred(void);
+void NestedPairs_exclusive(void);
+void NestedPairs_with_nested_pair(void);
+void NestedPairs_with_nested_pair_and_regular(void);
+void NestedPairs_with_nested_pair_component(void);
+void NestedPairs_with_nested_pair_on_pair(void);
+void NestedPairs_with_nested_pair_recursive(void);
+void NestedPairs_with_nested_pair_on_instance(void);
+void NestedPairs_with_nested_pair_dont_fragment(void);
+void NestedPairs_with_nested_pair_delete_element(void);
+void NestedPairs_auto_override_pair(void);
+void NestedPairs_auto_override_pair_child(void);
+void NestedPairs_auto_override_str(void);
+
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
 void Trigger_on_add_trigger_after_table(void);
@@ -12102,6 +12131,117 @@ bake_test_case Pairs_testcases[] = {
     }
 };
 
+bake_test_case NestedPairs_testcases[] = {
+    {
+        "make_nested_pair",
+        NestedPairs_make_nested_pair
+    },
+    {
+        "make_nested_pair_twice",
+        NestedPairs_make_nested_pair_twice
+    },
+    {
+        "make_nested_pair_w_entity",
+        NestedPairs_make_nested_pair_w_entity
+    },
+    {
+        "nested_pair_str",
+        NestedPairs_nested_pair_str
+    },
+    {
+        "nested_pair_of_nested_pair",
+        NestedPairs_nested_pair_of_nested_pair
+    },
+    {
+        "add_remove",
+        NestedPairs_add_remove
+    },
+    {
+        "add_nested_and_regular_pairs",
+        NestedPairs_add_nested_and_regular_pairs
+    },
+    {
+        "query_nested_pair",
+        NestedPairs_query_nested_pair
+    },
+    {
+        "delete_first_of_nested",
+        NestedPairs_delete_first_of_nested
+    },
+    {
+        "delete_second_of_nested",
+        NestedPairs_delete_second_of_nested
+    },
+    {
+        "delete_first",
+        NestedPairs_delete_first
+    },
+    {
+        "delete_first_w_delete_target",
+        NestedPairs_delete_first_w_delete_target
+    },
+    {
+        "recreate_after_delete",
+        NestedPairs_recreate_after_delete
+    },
+    {
+        "delete_handle",
+        NestedPairs_delete_handle
+    },
+    {
+        "create_in_deferred",
+        NestedPairs_create_in_deferred
+    },
+    {
+        "exclusive",
+        NestedPairs_exclusive
+    },
+    {
+        "with_nested_pair",
+        NestedPairs_with_nested_pair
+    },
+    {
+        "with_nested_pair_and_regular",
+        NestedPairs_with_nested_pair_and_regular
+    },
+    {
+        "with_nested_pair_component",
+        NestedPairs_with_nested_pair_component
+    },
+    {
+        "with_nested_pair_on_pair",
+        NestedPairs_with_nested_pair_on_pair
+    },
+    {
+        "with_nested_pair_recursive",
+        NestedPairs_with_nested_pair_recursive
+    },
+    {
+        "with_nested_pair_on_instance",
+        NestedPairs_with_nested_pair_on_instance
+    },
+    {
+        "with_nested_pair_dont_fragment",
+        NestedPairs_with_nested_pair_dont_fragment
+    },
+    {
+        "with_nested_pair_delete_element",
+        NestedPairs_with_nested_pair_delete_element
+    },
+    {
+        "auto_override_pair",
+        NestedPairs_auto_override_pair
+    },
+    {
+        "auto_override_pair_child",
+        NestedPairs_auto_override_pair_child
+    },
+    {
+        "auto_override_str",
+        NestedPairs_auto_override_str
+    }
+};
+
 bake_test_case Trigger_testcases[] = {
     {
         "on_add_trigger_before_table",
@@ -18919,6 +19059,13 @@ static bake_test_suite suites[] = {
         Pairs_testcases
     },
     {
+        "NestedPairs",
+        NULL,
+        NULL,
+        27,
+        NestedPairs_testcases
+    },
+    {
         "Trigger",
         NULL,
         NULL,
@@ -19061,5 +19208,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("core", argc, argv, suites, 48);
+    return bake_test_run("core", argc, argv, suites, 49);
 }

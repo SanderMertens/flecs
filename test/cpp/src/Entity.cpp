@@ -3839,9 +3839,9 @@ void Entity_pair_id_str(void) {
 void Entity_role_id_str(void) {
     flecs::world ecs;
 
-    flecs::id id = flecs::id(ecs, ECS_AUTO_OVERRIDE | ecs.entity("Foo"));
+    flecs::id id = flecs::id(ecs, ECS_TOGGLE | ecs.entity("Foo"));
 
-    test_str("AUTO_OVERRIDE|Foo", id.str());
+    test_str("TOGGLE|Foo", id.str());
 }
 
 void Entity_id_str_from_entity_view(void) {
@@ -7490,5 +7490,5 @@ void Entity_set_auto_override_w_implicit_conversion(void) {
     flecs::entity e = world.entity().set_auto_override<double>(10);
 
     test_flt(e.get<double>(), 10.0);
-    test_assert(e.has(flecs::AUTO_OVERRIDE | world.id<double>()));
+    test_assert(e.has(flecs::AutoOverride, world.id<double>()));
 }

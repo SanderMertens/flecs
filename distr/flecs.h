@@ -1310,7 +1310,8 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_COMPONENT_MASK            (~ECS_ID_FLAGS_MASK)
 #define ECS_HAS_ID_FLAG(e, flag)      ((e) & ECS_##flag)
 #define ECS_IS_VALUE_PAIR(id)         (((id) & ECS_ID_FLAGS_MASK) == ECS_VALUE_PAIR)
-#define ECS_IS_PAIR(id)               ((((id) & ECS_ID_FLAGS_MASK) == ECS_PAIR) || ECS_IS_VALUE_PAIR(id))
+#define ECS_IS_NESTED_PAIR(id)        (((id) & ECS_ID_FLAGS_MASK) == ECS_NESTED_PAIR)
+#define ECS_IS_PAIR(id)               ((((id) & ECS_ID_FLAGS_MASK) == ECS_PAIR) || ECS_IS_VALUE_PAIR(id) || ECS_IS_NESTED_PAIR(id))
 #define ECS_PAIR_FIRST(e)             (ecs_entity_t_hi(e & ECS_COMPONENT_MASK))
 #define ECS_PAIR_SECOND(e)            (ecs_entity_t_lo(e))
 #define ECS_HAS_RELATION(e, rel)      (ECS_HAS_ID_FLAG(e, PAIR) && (ECS_PAIR_FIRST(e) == rel))
@@ -1341,6 +1342,7 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ecs_pair_target ecs_pair_second
 
 #define ecs_value_pair(rel, val) (ECS_VALUE_PAIR | ecs_entity_t_comb(val, rel))
+#define ecs_nested_pair(world, rel, id) ecs_make_nested_pair(world, rel, id)
 
 #define flecs_poly_id(tag) ecs_pair(ecs_id(EcsPoly), tag)
 
@@ -6662,8 +6664,10 @@ extern "C" {
 /** Indicate that the ID is a pair. */
 FLECS_API extern const ecs_id_t ECS_PAIR;
 
-/** Automatically override component when it is inherited. */
-FLECS_API extern const ecs_id_t ECS_AUTO_OVERRIDE;
+/** Indicate that the ID is a nested pair. The target of a nested pair is a
+ * handle to another (pair) ID. Nested pairs are created with ecs_nested_pair().
+ * This flag includes the ECS_PAIR bit, so nested pairs are also pairs. */
+FLECS_API extern const ecs_id_t ECS_NESTED_PAIR;
 
 /** Add a bitset to storage, which allows a component to be enabled or disabled. */
 FLECS_API extern const ecs_id_t ECS_TOGGLE;
@@ -6823,6 +6827,23 @@ FLECS_API extern const ecs_entity_t EcsTraversable;
  * @endcode
  */
 FLECS_API extern const ecs_entity_t EcsWith;
+
+/** Relationship used to automatically override a component when inherited.
+ * A prefab with `(AutoOverride, Position)` will add an owned `Position` to its
+ * instances. Pairs are auto overridden with a nested pair, for example:
+ *
+ * @code
+ * ecs_add_id(world, prefab,
+ *     ecs_nested_pair(world, EcsAutoOverride, ecs_pair(Likes, Apples)));
+ * @endcode
+ *
+ * @see ecs_auto_override_id()
+ */
+FLECS_API extern const ecs_entity_t EcsAutoOverride;
+
+/** Relationship that links a nested pair handle to the elements of the ID it
+ * stores. Used to clean up the handle when one of the elements is deleted. */
+FLECS_API extern const ecs_entity_t EcsNestedPairOf;
 
 /** Mark a component as toggleable with ecs_enable_id(). */
 FLECS_API extern const ecs_entity_t EcsCanToggle;
@@ -7527,6 +7548,52 @@ ecs_id_t ecs_make_pair(
     ecs_entity_t first,
     ecs_entity_t second);
 
+/** Make a nested pair ID.
+ * A nested pair is a pair of which the target is another ID, typically a pair.
+ * Because the target of a pair can only store a single entity, the nested ID
+ * is stored in a (deduplicated) handle entity, which is used as the target of
+ * the returned pair. The returned ID has the ECS_NESTED_PAIR flag set.
+ *
+ * Example:
+ *
+ * @code
+ * // Add (Position, ParentRelative) whenever Socket is added
+ * ecs_add_id(world, Socket, ecs_nested_pair(world, EcsWith,
+ *     ecs_pair(ecs_id(Position), ParentRelative)));
+ * @endcode
+ *
+ * Calling this function multiple times for the same ID returns the same handle.
+ * The handle is deleted when one of the elements of the nested ID is deleted,
+ * which in turn removes the nested pair from all entities.
+ *
+ * If the provided ID is not a pair, a regular pair is returned.
+ *
+ * The ecs_nested_pair() macro is an alias for this function.
+ *
+ * @param world The world.
+ * @param first The first element of the pair.
+ * @param second The ID to use as target of the pair.
+ * @return A nested pair ID.
+ */
+FLECS_API
+ecs_id_t ecs_make_nested_pair(
+    ecs_world_t *world,
+    ecs_entity_t first,
+    ecs_id_t second);
+
+/** Get the target ID of a pair.
+ * For a nested pair, this operation returns the ID stored by the handle of the
+ * pair target. For a regular pair, this operation returns the (alive) target.
+ *
+ * @param world The world.
+ * @param pair The pair.
+ * @return The target ID, or 0 if the target is not alive.
+ */
+FLECS_API
+ecs_id_t ecs_pair_second_id(
+    const ecs_world_t *world,
+    ecs_id_t pair);
+
 /** Begin exclusive thread access.
  * This operation ensures that only the thread from which this operation is 
  * called can access the world. Attempts to access the world from other threads
@@ -7892,11 +7959,11 @@ void ecs_remove_id(
  * assert(ecs_owns(world, inst, Mass)); // false
  * @endcode
  * 
- * This operation is equivalent to manually adding the ID with the AUTO_OVERRIDE
- * bit applied:
+ * This operation is equivalent to manually adding the AutoOverride
+ * relationship with the ID as target:
  *
  * @code
- * ecs_add_id(world, entity, ECS_AUTO_OVERRIDE | id);
+ * ecs_add_id(world, entity, ecs_nested_pair(world, EcsAutoOverride, id));
  * @endcode
  * 
  * When a component is overridden and inherited from a prefab, the value from 
@@ -9226,8 +9293,9 @@ ecs_flags32_t ecs_id_get_flags(
  * This operation converts a component flag to a string. Possible outputs are:
  * 
  * - PAIR
+ * - NESTED_PAIR
+ * - VALUE_PAIR
  * - TOGGLE
- * - AUTO_OVERRIDE
  *
  * @param component_flags The component flag.
  * @return The ID flag string, or NULL if no valid ID is provided.
@@ -11501,7 +11569,7 @@ void ecs_table_clear_entities(
 
 /** Set a component with auto-override. */
 #define ecs_set_override(world, entity, T, ...)\
-    ecs_add_id(world, entity, ECS_AUTO_OVERRIDE | ecs_id(T));\
+    ecs_auto_override_id(world, entity, ecs_id(T));\
     ecs_set(world, entity, T, __VA_ARGS__)
 
 /** Emplace a component. */
@@ -22602,7 +22670,7 @@ enum query_cache_kind_t {
 
 /** ID bit flags. */
 static const flecs::entity_t PAIR = ECS_PAIR;                   /**< Pair flag. */
-static const flecs::entity_t AUTO_OVERRIDE = ECS_AUTO_OVERRIDE; /**< Auto override flag. */
+static const flecs::entity_t NESTED_PAIR = ECS_NESTED_PAIR;     /**< Nested pair flag. */
 static const flecs::entity_t TOGGLE = ECS_TOGGLE;               /**< Toggle flag. */
 static const flecs::entity_t VALUE_PAIR = ECS_VALUE_PAIR;       /**< Value pair flag. */
 
@@ -22728,6 +22796,10 @@ static const flecs::entity_t Exclusive = EcsExclusive;
 static const flecs::entity_t Traversable = EcsTraversable;
 /** With trait. */
 static const flecs::entity_t With = EcsWith;
+/** AutoOverride relationship. */
+static const flecs::entity_t AutoOverride = EcsAutoOverride;
+/** NestedPairOf relationship (links nested pair handles to pair elements). */
+static const flecs::entity_t NestedPairOf = EcsNestedPairOf;
 /** CanToggle trait. */
 static const flecs::entity_t CanToggle = EcsCanToggle;
 
@@ -24131,7 +24203,8 @@ struct entity;
  * A flecs ID is an identifier that can be added to entities. IDs can be:
  * - entities (including components, tags)
  * - pair IDs
- * - entities with ID flags set (like flecs::AUTO_OVERRIDE, flecs::TOGGLE)
+ * - nested pair IDs
+ * - entities with ID flags set (like flecs::TOGGLE)
  */
 struct id {
     id()
@@ -24170,6 +24243,11 @@ struct id {
     /** Test if ID is a value pair (has first, value). */
     bool is_value_pair() const {
         return (id_ & ECS_ID_FLAGS_MASK) == flecs::VALUE_PAIR;
+    }
+
+    /** Test if ID is a nested pair (has first, nested ID). */
+    bool is_nested_pair() const {
+        return (id_ & ECS_ID_FLAGS_MASK) == flecs::NESTED_PAIR;
     }
 
     /** Test if ID is a wildcard. */
@@ -27802,6 +27880,19 @@ flecs::id pair(entity_t o) const;
  */
 flecs::id pair(entity_t r, entity_t o) const;
 
+/** Get nested pair ID from relationship and (pair) ID.
+ * 
+ * @memberof flecs::world
+ */
+flecs::id nested_pair(entity_t first, id_t second) const;
+
+/** Get nested pair ID from relationship and (pair) ID.
+ * 
+ * @memberof flecs::world
+ */
+template <typename First>
+flecs::id nested_pair(id_t second) const;
+
 /** Find or register a component.
  * 
  * @ingroup cpp_components
@@ -30649,7 +30740,26 @@ struct entity_builder : entity_view {
 
     template <typename... T, typename... Args>
     const Self& auto_override(Args... args) const {
-        return add(ECS_AUTO_OVERRIDE | _::make_id<T...>(this->world_, args...).id);
+        ecs_auto_override_id(this->world_, this->id_,
+            _::make_id<T...>(this->world_, args...).id);
+        return to_base();
+    }
+
+    /** Add the With trait.
+     * When the entity (component) is added to another entity, the specified
+     * component, tag or pair is added as well. Pairs are added with a nested 
+     * pair, for example:
+     *
+     * @code
+     * // Add (Position, ParentRelative) whenever Socket is added
+     * world.component<Socket>().with<Position, ParentRelative>();
+     * @endcode
+     */
+    template <typename... T, typename... Args>
+    const Self& with(Args... args) const {
+        ecs_add_id(this->world_, this->id_, ecs_nested_pair(this->world_, 
+            flecs::With, _::make_id<T...>(this->world_, args...).id));
+        return to_base();
     }
 
     template <typename Second>
@@ -34060,7 +34170,7 @@ inline flecs::id world::pair() const {
 template <typename First>
 inline flecs::id world::pair(entity_t o) const {
     ecs_assert(!ECS_IS_PAIR(o), ECS_INVALID_PARAMETER, 
-        "cannot create nested pairs");
+        "cannot create nested pairs with pair() (use nested_pair())");
 
     return flecs::id(
         world_,
@@ -34071,11 +34181,20 @@ inline flecs::id world::pair(entity_t o) const {
 
 inline flecs::id world::pair(entity_t r, entity_t o) const {
     ecs_assert(!ECS_IS_PAIR(r) && !ECS_IS_PAIR(o), ECS_INVALID_PARAMETER, 
-        "cannot create nested pairs");
+        "cannot create nested pairs with pair() (use nested_pair())");
 
     return flecs::id(
         world_,
         ecs_pair(r, o));
+}
+
+inline flecs::id world::nested_pair(entity_t first, id_t second) const {
+    return flecs::id(world_, ecs_nested_pair(world_, first, second));
+}
+
+template <typename First>
+inline flecs::id world::nested_pair(id_t second) const {
+    return this->nested_pair(_::type<First>::id(world_), second);
 }
 
 }

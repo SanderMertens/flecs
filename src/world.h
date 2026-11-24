@@ -143,6 +143,10 @@ struct ecs_world_t {
     /* Index of prefab children in ordered children vector. Used by ecs_get_target. */
     ecs_map_t prefab_child_indices;
 
+    /* Handles for nested pairs. Handles are used as target of nested pairs. */
+    ecs_map_t nested_pairs;          /* map<id, handle> */
+    ecs_map_t nested_pair_ids;       /* map<(uint32_t)handle, id> */
+
     /* Internal callback for command inspection. Only one callback can be set at
      * a time. After assignment, the action will become active at the start of
      * the next frame, set by ecs_frame_begin, and will be reset by

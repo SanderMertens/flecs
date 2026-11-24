@@ -191,7 +191,26 @@ struct entity_builder : entity_view {
 
     template <typename... T, typename... Args>
     const Self& auto_override(Args... args) const {
-        return add(ECS_AUTO_OVERRIDE | _::make_id<T...>(this->world_, args...).id);
+        ecs_auto_override_id(this->world_, this->id_,
+            _::make_id<T...>(this->world_, args...).id);
+        return to_base();
+    }
+
+    /** Add the With trait.
+     * When the entity (component) is added to another entity, the specified
+     * component, tag or pair is added as well. Pairs are added with a nested 
+     * pair, for example:
+     *
+     * @code
+     * // Add (Position, ParentRelative) whenever Socket is added
+     * world.component<Socket>().with<Position, ParentRelative>();
+     * @endcode
+     */
+    template <typename... T, typename... Args>
+    const Self& with(Args... args) const {
+        ecs_add_id(this->world_, this->id_, ecs_nested_pair(this->world_, 
+            flecs::With, _::make_id<T...>(this->world_, args...).id));
+        return to_base();
     }
 
     template <typename Second>

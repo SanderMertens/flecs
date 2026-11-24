@@ -9556,7 +9556,7 @@ void Eval_auto_override_tag(void) {
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
     ecs_has_id(world, foo, EcsPrefab);
-    test_assert(ecs_has_id(world, foo, ECS_AUTO_OVERRIDE | Tag));
+    test_assert(ecs_has_id(world, foo, ecs_pair(EcsAutoOverride, Tag)));
     test_assert(!ecs_has(world, foo, Tag));
 
     ecs_fini(world);
@@ -9583,7 +9583,7 @@ void Eval_auto_override_component(void) {
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
     ecs_has_id(world, foo, EcsPrefab);
-    test_assert(ecs_has_id(world, foo, ECS_AUTO_OVERRIDE | ecs_id(Position)));
+    test_assert(ecs_has_id(world, foo, ecs_pair(EcsAutoOverride, ecs_id(Position))));
     test_assert(ecs_has(world, foo, Position));
 
     const Position *p = ecs_get(world, foo, Position);
@@ -9610,7 +9610,7 @@ void Eval_auto_override_pair(void) {
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
     ecs_has_id(world, foo, EcsPrefab);
-    test_assert(ecs_has_id(world, foo, ECS_AUTO_OVERRIDE | ecs_pair(Rel, Tgt)));
+    test_assert(ecs_has_id(world, foo, ecs_nested_pair(world, EcsAutoOverride, ecs_pair(Rel, Tgt))));
     test_assert(!ecs_has_pair(world, foo, Rel, Tgt));
 
     ecs_fini(world);
@@ -9639,7 +9639,7 @@ void Eval_auto_override_pair_component(void) {
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
     ecs_has_id(world, foo, EcsPrefab);
-    test_assert(ecs_has_id(world, foo, ECS_AUTO_OVERRIDE | ecs_pair_t(Position, Tgt)));
+    test_assert(ecs_has_id(world, foo, ecs_nested_pair(world, EcsAutoOverride, ecs_pair_t(Position, Tgt))));
     test_assert(ecs_has_pair(world, foo, ecs_id(Position), Tgt));
 
     const Position *p = ecs_get_pair(world, foo, Position, Tgt);
@@ -16210,7 +16210,7 @@ void Eval_auto_override_tag_w_comment(void) {
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
-    test_assert(ecs_has_id(world, foo, ECS_AUTO_OVERRIDE | TagA));
+    test_assert(ecs_has_id(world, foo, ecs_pair(EcsAutoOverride, TagA)));
     test_assert(!ecs_has(world, foo, TagA));
     test_assert(ecs_has(world, foo, TagB));
 
@@ -21160,7 +21160,7 @@ void Eval_auto_override_before_scope_close_same_line(void) {
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
-    test_assert(ecs_has_id(world, foo, ECS_AUTO_OVERRIDE | Tag));
+    test_assert(ecs_has_id(world, foo, ecs_pair(EcsAutoOverride, Tag)));
 
     ecs_fini(world);
 }
@@ -21198,7 +21198,7 @@ void Eval_auto_override_pair_before_scope_close_same_line(void) {
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
     test_assert(ecs_has_id(world, foo,
-        ECS_AUTO_OVERRIDE | ecs_pair(Rel, Tgt)));
+        ecs_nested_pair(world, EcsAutoOverride, ecs_pair(Rel, Tgt))));
 
     ecs_fini(world);
 }

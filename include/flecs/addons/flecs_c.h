@@ -327,7 +327,7 @@
 
 /** Set a component with auto-override. */
 #define ecs_set_override(world, entity, T, ...)\
-    ecs_add_id(world, entity, ECS_AUTO_OVERRIDE | ecs_id(T));\
+    ecs_auto_override_id(world, entity, ecs_id(T));\
     ecs_set(world, entity, T, __VA_ARGS__)
 
 /** Emplace a component. */

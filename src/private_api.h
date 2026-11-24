@@ -159,6 +159,15 @@ const char* flecs_id_invalid_reason(
     const ecs_world_t *world,
     ecs_id_t id);
 
+/* Get the ID stored by a nested pair handle. Returns 0 if not a handle. */
+ecs_id_t flecs_nested_pair_handle_id(
+    const ecs_world_t *world,
+    ecs_entity_t handle);
+
+/* Observer that cleans up nested pair handle administration. */
+void flecs_on_remove_nested_pair_of(
+    ecs_iter_t *it);
+
 /* Generate 64bit hash from buffer. */
 uint64_t flecs_hash(
     const void *data,

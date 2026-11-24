@@ -276,8 +276,16 @@ static void flecs_instantiate_children(
     /* Copy in component identifiers. Find the base index in the component
      * array, since we'll need this to replace the base with the instance id */
     int j, i, childof_base_index = -1;
+    bool has_overrides = false;
     for (i = 0; i < type_count; i ++) {
         ecs_id_t id = ids[i];
+
+        /* Auto overrides are added after the other components, so that a
+         * concrete component that's already in the type isn't added twice. */
+        if (ECS_HAS_RELATION(id, EcsAutoOverride)) {
+            has_overrides = true;
+            continue;
+        }
 
         /* If id has DontInherit flag don't inherit it, except for the name
          * and ChildOf pairs. The name is preserved so applications can lookup
@@ -301,23 +309,6 @@ static void flecs_instantiate_children(
             childof_base_index = diff.added.count;
         }
 
-        /* If this is a pure override, make sure we have a concrete version of the
-         * component. This relies on the fact that overrides always come after
-         * concrete components in the table type so we can check the components
-         * that have already been added to the child table type. */
-        if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
-            ecs_id_t concreteId = id & ~ECS_AUTO_OVERRIDE;
-            int32_t insert_index = flecs_child_type_insert(
-                &diff.added, component_data, concreteId);
-            if (childof_base_index != -1 && insert_index != -1 &&
-                insert_index <= childof_base_index)
-            {
-                childof_base_index ++;
-            }
-
-            continue;
-        }
-
         int32_t column = ecs_table_type_to_column_index(child_table, i);
         if (column != -1) {
             component_data[diff.added.count] = ecs_table_get_column(
@@ -333,6 +324,29 @@ static void flecs_instantiate_children(
 
     /* Table must contain children of base */
     ecs_assert(childof_base_index != -1, ECS_INTERNAL_ERROR, NULL);
+
+    /* For each auto override, make sure we have a concrete version of the
+     * component. */
+    for (i = 0; has_overrides && i < type_count; i ++) {
+        ecs_id_t id = ids[i];
+        if (!ECS_HAS_RELATION(id, EcsAutoOverride)) {
+            continue;
+        }
+
+        ecs_id_t concrete_id = ecs_pair_second_id(world, id);
+        if (!concrete_id) {
+            continue;
+        }
+
+        int32_t insert_index = flecs_child_type_insert(
+            &diff.added, component_data, concrete_id);
+        if (insert_index != -1) {
+            diff.added_flags |= flecs_id_flags_get(world, concrete_id);
+            if (insert_index <= childof_base_index) {
+                childof_base_index ++;
+            }
+        }
+    }
 
     /* If children are added to a prefab, make sure they are prefabs too */
     if (table->flags & EcsTableIsPrefab) {
@@ -486,11 +500,14 @@ static void flecs_instantiate_override_dont_fragment(
     int32_t i, type_count = base_table->type.count;
     for (i = 0; i < type_count; i ++) {
         ecs_id_t id = base_table->type.array[i];
-        if (!(id & ECS_AUTO_OVERRIDE)) {
+        if (!ECS_HAS_RELATION(id, EcsAutoOverride)) {
             continue;
         }
 
-        id &= ~ECS_AUTO_OVERRIDE;
+        id = ecs_pair_second_id(world, id);
+        if (!id) {
+            continue;
+        }
 
         ecs_flags32_t flags = flecs_component_get_flags(world, id);
         if (!(flags & EcsIdDontFragment)) {

@@ -8,7 +8,7 @@
 
 /* Id flags */
 const ecs_id_t ECS_PAIR =                                          (1ull << 63);
-const ecs_id_t ECS_AUTO_OVERRIDE =                                 (1ull << 62);
+const ecs_id_t ECS_NESTED_PAIR =                                   ((1ull << 62) | (1ull << 63));
 const ecs_id_t ECS_TOGGLE =                                        (1ull << 61);
 const ecs_id_t ECS_VALUE_PAIR =                                    ((1ull << 60) | (1ull << 63));
 
@@ -60,6 +60,8 @@ const ecs_entity_t EcsExclusive =                   FLECS_HI_COMPONENT_ID + 26;
 const ecs_entity_t EcsTraversable =                 FLECS_HI_COMPONENT_ID + 27;
 const ecs_entity_t EcsWith =                        FLECS_HI_COMPONENT_ID + 28;
 const ecs_entity_t EcsCanToggle =                   FLECS_HI_COMPONENT_ID + 29;
+const ecs_entity_t EcsAutoOverride =                FLECS_HI_COMPONENT_ID + 6;
+const ecs_entity_t EcsNestedPairOf =                FLECS_HI_COMPONENT_ID + 8;
 
 /* Builtin relationships */
 const ecs_entity_t EcsChildOf =                     FLECS_HI_COMPONENT_ID + 30;
@@ -945,6 +947,8 @@ ecs_world_t *ecs_mini(void) {
     }
 
     ecs_map_init(&world->prefab_child_indices, a);
+    ecs_map_init(&world->nested_pairs, a);
+    ecs_map_init(&world->nested_pair_ids, a);
 
     ecs_set_stage_count(world, 1);
     ecs_default_lookup_path[0] = EcsFlecsCore;
@@ -1170,6 +1174,8 @@ int ecs_fini(
     flecs_name_index_fini(&world->symbols);
     ecs_set_stage_count(world, 0);
     ecs_map_fini(&world->prefab_child_indices);
+    ecs_map_fini(&world->nested_pairs);
+    ecs_map_fini(&world->nested_pair_ids);
     flecs_multi_world_fini(world);
     ecs_log_pop_1();
 

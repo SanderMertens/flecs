@@ -2188,6 +2188,37 @@
                 "isa_and_childof_in_opposite_directions"
             ]
         }, {
+            "id": "NestedPairs",
+            "testcases": [
+                "make_nested_pair",
+                "make_nested_pair_twice",
+                "make_nested_pair_w_entity",
+                "nested_pair_str",
+                "nested_pair_of_nested_pair",
+                "add_remove",
+                "add_nested_and_regular_pairs",
+                "query_nested_pair",
+                "delete_first_of_nested",
+                "delete_second_of_nested",
+                "delete_first",
+                "delete_first_w_delete_target",
+                "recreate_after_delete",
+                "delete_handle",
+                "create_in_deferred",
+                "exclusive",
+                "with_nested_pair",
+                "with_nested_pair_and_regular",
+                "with_nested_pair_component",
+                "with_nested_pair_on_pair",
+                "with_nested_pair_recursive",
+                "with_nested_pair_on_instance",
+                "with_nested_pair_dont_fragment",
+                "with_nested_pair_delete_element",
+                "auto_override_pair",
+                "auto_override_pair_child",
+                "auto_override_str"
+            ]
+        }, {
            "id": "Trigger",
            "testcases": [
                "on_add_trigger_before_table",

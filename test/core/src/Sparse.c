@@ -2144,7 +2144,7 @@ void Sparse_auto_override_component(void) {
 
     ecs_entity_t base = ecs_new(world);
     ecs_set(world, base, Position, {10, 20});
-    ecs_add_id(world, base, ECS_AUTO_OVERRIDE | ecs_id(Position));
+    ecs_add_id(world, base, ecs_pair(EcsAutoOverride, ecs_id(Position)));
 
     ecs_entity_t e = ecs_new(world);
     ecs_add_pair(world, e, EcsIsA, base);
@@ -2181,7 +2181,7 @@ void Sparse_auto_override_component_no_value(void) {
     if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
 
     ecs_entity_t base = ecs_new(world);
-    ecs_add_id(world, base, ECS_AUTO_OVERRIDE | ecs_id(Position));
+    ecs_add_id(world, base, ecs_pair(EcsAutoOverride, ecs_id(Position)));
 
     ecs_entity_t e = ecs_new(world);
     ecs_add_pair(world, e, EcsIsA, base);

@@ -3610,7 +3610,7 @@ void ComponentLifecycle_on_set_hook_on_auto_override(void) {
     });
 
     ecs_entity_t p = ecs_insert(world, ecs_value(Position, {10, 20}));
-    ecs_add_id(world, p, ECS_AUTO_OVERRIDE | ecs_id(Position));
+    ecs_add_id(world, p, ecs_pair(EcsAutoOverride, ecs_id(Position)));
     ecs_add_id(world, p, EcsPrefab);
     test_int(on_set_position_invoked, 1);
 
@@ -3724,7 +3724,7 @@ void ComponentLifecycle_on_nested_prefab_copy_test_invokes_copy_count(void) {
     });
 
     ecs_entity_t child = ecs_new_w(world, Position);
-    ecs_add_id(world, child, ECS_AUTO_OVERRIDE | ecs_id(Position));
+    ecs_add_id(world, child, ecs_pair(EcsAutoOverride, ecs_id(Position)));
     ecs_add_id(world, child, EcsPrefab);
     test_int(ctx.copy.invoked, 0);
 

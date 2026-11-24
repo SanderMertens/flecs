@@ -68,7 +68,7 @@ enum query_cache_kind_t {
 
 /** ID bit flags. */
 static const flecs::entity_t PAIR = ECS_PAIR;                   /**< Pair flag. */
-static const flecs::entity_t AUTO_OVERRIDE = ECS_AUTO_OVERRIDE; /**< Auto override flag. */
+static const flecs::entity_t NESTED_PAIR = ECS_NESTED_PAIR;     /**< Nested pair flag. */
 static const flecs::entity_t TOGGLE = ECS_TOGGLE;               /**< Toggle flag. */
 static const flecs::entity_t VALUE_PAIR = ECS_VALUE_PAIR;       /**< Value pair flag. */
 
@@ -194,6 +194,10 @@ static const flecs::entity_t Exclusive = EcsExclusive;
 static const flecs::entity_t Traversable = EcsTraversable;
 /** With trait. */
 static const flecs::entity_t With = EcsWith;
+/** AutoOverride relationship. */
+static const flecs::entity_t AutoOverride = EcsAutoOverride;
+/** NestedPairOf relationship (links nested pair handles to pair elements). */
+static const flecs::entity_t NestedPairOf = EcsNestedPairOf;
 /** CanToggle trait. */
 static const flecs::entity_t CanToggle = EcsCanToggle;
 

@@ -46,6 +46,13 @@ static void flecs_id_mark_for_delete(
         flecs_component_mark_for_delete(world, cr,
             ECS_ID_ON_DELETE(cr->flags), true, force_delete);
     }
+
+    if ((cr = flecs_components_get(world, 
+        ECS_NESTED_PAIR | ecs_pair(e, EcsWildcard)))) 
+    {
+        flecs_component_mark_for_delete(world, cr,
+            ECS_ID_ON_DELETE(cr->flags), true, force_delete);
+    }
 }
 
 static void flecs_target_mark_for_delete(

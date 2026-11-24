@@ -1675,8 +1675,10 @@ typedef struct EcsTreeSpawner {
 /** Indicate that the ID is a pair. */
 FLECS_API extern const ecs_id_t ECS_PAIR;
 
-/** Automatically override component when it is inherited. */
-FLECS_API extern const ecs_id_t ECS_AUTO_OVERRIDE;
+/** Indicate that the ID is a nested pair. The target of a nested pair is a
+ * handle to another (pair) ID. Nested pairs are created with ecs_nested_pair().
+ * This flag includes the ECS_PAIR bit, so nested pairs are also pairs. */
+FLECS_API extern const ecs_id_t ECS_NESTED_PAIR;
 
 /** Add a bitset to storage, which allows a component to be enabled or disabled. */
 FLECS_API extern const ecs_id_t ECS_TOGGLE;
@@ -1836,6 +1838,23 @@ FLECS_API extern const ecs_entity_t EcsTraversable;
  * @endcode
  */
 FLECS_API extern const ecs_entity_t EcsWith;
+
+/** Relationship used to automatically override a component when inherited.
+ * A prefab with `(AutoOverride, Position)` will add an owned `Position` to its
+ * instances. Pairs are auto overridden with a nested pair, for example:
+ *
+ * @code
+ * ecs_add_id(world, prefab,
+ *     ecs_nested_pair(world, EcsAutoOverride, ecs_pair(Likes, Apples)));
+ * @endcode
+ *
+ * @see ecs_auto_override_id()
+ */
+FLECS_API extern const ecs_entity_t EcsAutoOverride;
+
+/** Relationship that links a nested pair handle to the elements of the ID it
+ * stores. Used to clean up the handle when one of the elements is deleted. */
+FLECS_API extern const ecs_entity_t EcsNestedPairOf;
 
 /** Mark a component as toggleable with ecs_enable_id(). */
 FLECS_API extern const ecs_entity_t EcsCanToggle;
@@ -2540,6 +2559,52 @@ ecs_id_t ecs_make_pair(
     ecs_entity_t first,
     ecs_entity_t second);
 
+/** Make a nested pair ID.
+ * A nested pair is a pair of which the target is another ID, typically a pair.
+ * Because the target of a pair can only store a single entity, the nested ID
+ * is stored in a (deduplicated) handle entity, which is used as the target of
+ * the returned pair. The returned ID has the ECS_NESTED_PAIR flag set.
+ *
+ * Example:
+ *
+ * @code
+ * // Add (Position, ParentRelative) whenever Socket is added
+ * ecs_add_id(world, Socket, ecs_nested_pair(world, EcsWith,
+ *     ecs_pair(ecs_id(Position), ParentRelative)));
+ * @endcode
+ *
+ * Calling this function multiple times for the same ID returns the same handle.
+ * The handle is deleted when one of the elements of the nested ID is deleted,
+ * which in turn removes the nested pair from all entities.
+ *
+ * If the provided ID is not a pair, a regular pair is returned.
+ *
+ * The ecs_nested_pair() macro is an alias for this function.
+ *
+ * @param world The world.
+ * @param first The first element of the pair.
+ * @param second The ID to use as target of the pair.
+ * @return A nested pair ID.
+ */
+FLECS_API
+ecs_id_t ecs_make_nested_pair(
+    ecs_world_t *world,
+    ecs_entity_t first,
+    ecs_id_t second);
+
+/** Get the target ID of a pair.
+ * For a nested pair, this operation returns the ID stored by the handle of the
+ * pair target. For a regular pair, this operation returns the (alive) target.
+ *
+ * @param world The world.
+ * @param pair The pair.
+ * @return The target ID, or 0 if the target is not alive.
+ */
+FLECS_API
+ecs_id_t ecs_pair_second_id(
+    const ecs_world_t *world,
+    ecs_id_t pair);
+
 /** Begin exclusive thread access.
  * This operation ensures that only the thread from which this operation is 
  * called can access the world. Attempts to access the world from other threads
@@ -2905,11 +2970,11 @@ void ecs_remove_id(
  * assert(ecs_owns(world, inst, Mass)); // false
  * @endcode
  * 
- * This operation is equivalent to manually adding the ID with the AUTO_OVERRIDE
- * bit applied:
+ * This operation is equivalent to manually adding the AutoOverride
+ * relationship with the ID as target:
  *
  * @code
- * ecs_add_id(world, entity, ECS_AUTO_OVERRIDE | id);
+ * ecs_add_id(world, entity, ecs_nested_pair(world, EcsAutoOverride, id));
  * @endcode
  * 
  * When a component is overridden and inherited from a prefab, the value from 
@@ -4240,8 +4305,9 @@ ecs_flags32_t ecs_id_get_flags(
  * This operation converts a component flag to a string. Possible outputs are:
  * 
  * - PAIR
+ * - NESTED_PAIR
+ * - VALUE_PAIR
  * - TOGGLE
- * - AUTO_OVERRIDE
  *
  * @param component_flags The component flag.
  * @return The ID flag string, or NULL if no valid ID is provided.

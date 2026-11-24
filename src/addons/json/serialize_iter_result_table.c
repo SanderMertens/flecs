@@ -57,7 +57,10 @@ static ecs_component_record_t* flecs_json_type_next(
         ecs_id_t id = cr->id;
         bool data = it->column != -1 ||
             ((cr->flags & EcsIdSparse) && cr->type_info);
-        if ((data ? 2 : ECS_IS_PAIR(id) ? 1 : 0) != kind ||
+        /* Auto overrides are serialized as tags (auto_override|C) */
+        bool is_pair = ECS_IS_PAIR(id) && 
+            !ECS_HAS_RELATION(id, EcsAutoOverride);
+        if ((data ? 2 : is_pair ? 1 : 0) != kind ||
             (it->inherited && !(cr->flags & EcsIdOnInstantiateInherit)))
         {
             continue;
@@ -156,6 +159,11 @@ static void flecs_json_emit_pair_entry(
         ecs_strbuf_appendch(buf, '\"');
         ecs_strbuf_appendch(buf, '@');
         ecs_strbuf_appendint(buf, ECS_PAIR_SECOND(id));
+        ecs_strbuf_appendch(buf, '\"');
+    } else if (ECS_IS_NESTED_PAIR(id)) {
+        ecs_strbuf_appendch(buf, '\"');
+        flecs_json_id_member(buf, world, 
+            ecs_pair_second_id(world, id), full_paths);
         ecs_strbuf_appendch(buf, '\"');
     } else {
         ecs_entity_t second = flecs_entities_get_alive(

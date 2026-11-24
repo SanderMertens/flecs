@@ -217,12 +217,28 @@ void flecs_register_flag_for_trait(
                 } while ((cr = flecs_component_first_next(cr)));
             }
 
+            cr = flecs_components_get(world, 
+                ECS_NESTED_PAIR | ecs_pair(e, EcsWildcard));
+            if (cr) {
+                do {
+                    changed |= flecs_set_id_flag(world, cr, flag, trait);
+                } while ((cr = flecs_component_first_next(cr)));
+            }
+
             if (entity_flag) flecs_add_flag(world, e, entity_flag);
         } else if (event == EcsOnRemove) {
             ecs_component_record_t *cr = flecs_components_get(world, e);
             
             if (cr) changed |= flecs_unset_id_flag(cr, not_flag);
             cr = flecs_components_get(world, ecs_pair(e, EcsWildcard));
+            if (cr) {
+                do {
+                    changed |= flecs_unset_id_flag(cr, not_flag);
+                } while ((cr = flecs_component_first_next(cr)));
+            }
+
+            cr = flecs_components_get(world, 
+                ECS_NESTED_PAIR | ecs_pair(e, EcsWildcard));
             if (cr) {
                 do {
                     changed |= flecs_unset_id_flag(cr, not_flag);
@@ -292,6 +308,19 @@ static void flecs_register_trait_pair(ecs_iter_t *it) {
         it, ecs_pair_first(it->world, it->ids[0]), ctx->flag, ctx->not_flag, 0);
 }
 
+/* Returns the entity that determines whether the target of a With pair is
+ * non-fragmenting. For nested pairs this is the first element of the pair. */
+static ecs_entity_t flecs_with_target_storage_entity(
+    const ecs_world_t *world,
+    ecs_id_t with_pair)
+{
+    ecs_id_t tgt = ecs_pair_second_id(world, with_pair);
+    if (ECS_IS_PAIR(tgt)) {
+        return ecs_pair_first(world, tgt);
+    }
+    return tgt;
+}
+
 static void flecs_register_with(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
@@ -303,12 +332,14 @@ static void flecs_register_with(ecs_iter_t *it) {
         }
 
         if (it->event == EcsOnAdd) {
-            ecs_entity_t tgt = ecs_pair_second(world, it->ids[0]);
-            ecs_check(ecs_owns_id(world, tgt, EcsDontFragment),
+            ecs_entity_t tgt = flecs_with_target_storage_entity(
+                world, it->ids[0]);
+            ecs_check(tgt && ecs_owns_id(world, tgt, EcsDontFragment),
                 ECS_INVALID_OPERATION,
                 "cannot add (With, %s) to non-fragmenting component '%s': "
                 "target must also be non-fragmenting",
-                    flecs_errstr(ecs_get_path(world, tgt)),
+                    flecs_errstr(ecs_id_str(world, 
+                        ecs_pair_second_id(world, it->ids[0]))),
                     flecs_errstr_1(ecs_get_path(world, e)));
             (void)tgt;
         }
@@ -335,13 +366,14 @@ static void flecs_register_dont_fragment(ecs_iter_t *it) {
                 continue;
             }
 
-            ecs_entity_t tgt = ecs_pair_second(world, id);
-            ecs_check(ecs_owns_id(world, tgt, EcsDontFragment),
+            ecs_entity_t tgt = flecs_with_target_storage_entity(world, id);
+            ecs_check(tgt && ecs_owns_id(world, tgt, EcsDontFragment),
                 ECS_INVALID_OPERATION,
                 "cannot add DontFragment to component '%s' with "
                 "(With, %s): target must also be non-fragmenting",
                     flecs_errstr(ecs_get_path(world, e)),
-                    flecs_errstr_1(ecs_get_path(world, tgt)));
+                    flecs_errstr_1(ecs_id_str(world, 
+                        ecs_pair_second_id(world, id))));
             (void)tgt;
         }
     }
@@ -769,6 +801,8 @@ void flecs_bootstrap(
     flecs_bootstrap_trait(world, EcsExclusive);
     flecs_bootstrap_trait(world, EcsTraversable);
     flecs_bootstrap_trait(world, EcsWith);
+    flecs_bootstrap_trait(world, EcsAutoOverride);
+    flecs_bootstrap_trait(world, EcsNestedPairOf);
     flecs_bootstrap_trait(world, EcsCanToggle);
     flecs_bootstrap_trait(world, EcsOnDelete);
     flecs_bootstrap_trait(world, EcsOnDeleteTarget);
@@ -933,6 +967,18 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsDependsOn, EcsPairIsTag);
     ecs_add_id(world, EcsFlag, EcsPairIsTag);
     ecs_add_id(world, EcsWith, EcsPairIsTag);
+    ecs_add_id(world, EcsAutoOverride, EcsPairIsTag);
+    ecs_add_id(world, EcsNestedPairOf, EcsPairIsTag);
+
+    /* Nested pair handles are deleted when an element of the pair is deleted */
+    ecs_add_pair(world, EcsNestedPairOf, EcsOnDeleteTarget, EcsDelete);
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_pair(EcsNestedPairOf, EcsWildcard) }},
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
+        .events = {EcsOnRemove},
+        .callback = flecs_on_remove_nested_pair_of,
+        .global_observer = true
+    });
 
     flecs_bootstrap_constraint_traits(world);
 

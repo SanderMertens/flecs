@@ -557,7 +557,7 @@ static inline int flecs_ir_id_get(
             : desc->first_eval;
         if (first && first != EcsWildcard && first != EcsAny) {
             if (!desc->has_second) {
-                *out = desc->flag | first;
+                *out = flecs_script_flag_id(vm->v.world, desc->flag, first);
                 return 0;
             }
 
@@ -566,7 +566,8 @@ static inline int flecs_ir_id_get(
                     ? flecs_script_symbol_entity(&vm->v, desc->second_symbol)
                     : desc->second_eval;
                 if (second && second != EcsWildcard && second != EcsAny) {
-                    *out = desc->flag | ecs_pair(first, second);
+                    *out = flecs_script_flag_id(
+                        vm->v.world, desc->flag, ecs_pair(first, second));
                     return 0;
                 }
             }

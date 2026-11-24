@@ -118,6 +118,12 @@ extern const int16_t flecs_table_empty_component_map[];
 #define flecs_table_record_is_inherited(table, tr)\
     (((tr) - (table)->_->records) >= (table)->_->inherited_start)
 
+/* Test whether a table has nested pairs. Nested pairs have the highest id flag
+ * bits, so they're always stored at the end of the table type. */
+#define flecs_table_has_nested_pairs(table)\
+    ((table)->type.count && ECS_IS_NESTED_PAIR(\
+        (table)->type.array[(table)->type.count - 1]))
+
 /* Init table */
 void flecs_table_init(
     ecs_world_t *world,
