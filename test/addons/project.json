@@ -555,7 +555,9 @@
                 "headers_and_body",
                 "headers_max_with_body",
                 "empty_target_encoded_path",
-                "stop_double_close"
+                "stop_double_close",
+                "request_headers_then_body",
+                "request_body_in_chunks"
             ]
         }, {
             "id": "Rest",
@@ -635,8 +637,15 @@
                 "get_pretty",
                 "query_pretty",
                 "world_pretty",
+<<<<<<< HEAD
                 "script_save_file",
                 "script_save_file_cannot_open"
+=======
+                "put_component_copy_illegal",
+                "put_component_copy_ctor_illegal",
+                "put_component_script",
+                "put_component_ctor_illegal"
+>>>>>>> dfb287f3c942ca7a12237ffd5e142071376947cf
             ]
         }, {
             "id": "Metrics",

@@ -28691,15 +28691,35 @@ static bool flecs_rest_put_component(
         return true;
     }
 
+    /* Adding a component or constructing a temporary value aborts for types
+     * that cannot be constructed. */
+    const ecs_type_info_t *ti = ecs_get_type_info(world, id);
+    if (ti && (ti->hooks.flags & ECS_TYPE_HOOK_CTOR_ILLEGAL)) {
+        flecs_reply_error(reply,
+            "component '%s' cannot be constructed", component);
+        reply->code = 400;
+        return true;
+    }
+
     const char *data = ecs_http_get_param(req, "value");
     if (!data) {
         ecs_add_id(world, e, id);
         return true;
     }
 
-    const ecs_type_info_t *ti = ecs_get_type_info(world, id);
     if (!ti) {
         flecs_reply_error(reply, "component '%s' is not a type", component);
+        reply->code = 400;
+        return true;
+    }
+
+    /* The value is copied into the component, which aborts for types that
+     * cannot be copied. */
+    if (ti->hooks.flags &
+        (ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL))
+    {
+        flecs_reply_error(reply,
+            "cannot assign a value to component '%s'", component);
         reply->code = 400;
         return true;
     }
@@ -38548,9 +38568,6 @@ bool flecs_query_finalize_simple(
     term_count = i;
     ecs_os_memcpy_n(q->terms, desc->terms, ecs_term_t, term_count);
 
-    /* All fields are InOut */
-    q->write_fields = UINT32_MAX >> (32 - term_count);
-
     /* Simple query that only queries for component ids */
 
     /* Populate terms */
@@ -38605,6 +38622,9 @@ bool flecs_query_finalize_simple(
             q->sizes[i] = type_info->size;
             q->flags |= EcsQueryHasOutTerms;
             q->data_fields |= (ecs_termset_t)(1llu << i);
+
+            /* All fields with data are InOut */
+            q->write_fields |= (ecs_termset_t)(1llu << i);
         }
 
         if (!is_self && cr_flags & EcsIdOnInstantiateInherit) {
@@ -47203,6 +47223,8 @@ static void http_recv_connection(
         if ((bytes_read = http_recv(
             sock, recv_buf, ECS_HTTP_SEND_RECV_BUFFER_SIZE, 0)) > 0) 
         {
+            retries = 0;
+
             bool is_alive = conn->pub.id == conn_id;
             if (!is_alive) {
                 /* Connection has been purged by main thread */
@@ -47252,11 +47274,6 @@ static void http_recv_connection(
         }
     } while (!done && (bytes_read > 0 || ((bytes_read == -1) &&
         (++retries < ECS_HTTP_REQUEST_RECV_RETRY))));
-
-    if (bytes_read == ECS_HTTP_SEND_RECV_BUFFER_SIZE) {
-        ecs_warn("request exceeded receive buffer size (%d)",
-            ECS_HTTP_SEND_RECV_BUFFER_SIZE);
-    }
 
     if (retries == ECS_HTTP_REQUEST_RECV_RETRY) {
         ecs_os_mutex_lock(srv->lock);
@@ -48279,7 +48296,7 @@ static const char* flecs_json_deser_components(
                 goto error;
             }
         } else {
-            char token_buffer[256];
+            char token_buffer[ECS_MAX_TOKEN_SIZE * 2];
             ecs_term_t term = {0};
             if (!flecs_term_parse(world, NULL, token, token_buffer, &term)) {
                 goto error;
@@ -64412,11 +64429,14 @@ static char* flecs_tokenizer_write(
     char *dst,
     char ch)
 {
-    (void)parser;
     ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_assert(!parser->token_end || dst < parser->token_end,
-        ECS_INVALID_OPERATION, "out of parser token storage");
+    if (parser->token_end && dst >= parser->token_end) {
+        ecs_parser_error(parser->name, parser->code,
+            flecs_parser_errpos(parser, parser->pos),
+            "token too long for parser storage");
+        return NULL;
+    }
 
     dst[0] = ch;
     return dst + 1;
@@ -64595,6 +64615,9 @@ const char* flecs_tokenizer_identifier(
 
                     if (outpos) {
                         outpos = flecs_tokenizer_write(parser, outpos, c);
+                        if (!outpos) {
+                            return NULL;
+                        }
                     }
 
                     pos ++;
@@ -64616,6 +64639,9 @@ const char* flecs_tokenizer_identifier(
 
         if (outpos) {
             outpos = flecs_tokenizer_write(parser, outpos, *pos);
+            if (!outpos) {
+                return NULL;
+            }
         }
 
         pos ++;
@@ -64624,6 +64650,9 @@ const char* flecs_tokenizer_identifier(
 done:
     if (outpos) {
         parser->token_cur = flecs_tokenizer_write(parser, outpos, '\0');
+        if (!parser->token_cur) {
+            return NULL;
+        }
     }
 
     return pos;
@@ -64635,9 +64664,14 @@ static char* flecs_tokenizer_copy(
     const char *end)
 {
     ecs_size_t length = flecs_ito(ecs_size_t, end - start);
-    ecs_assert(!parser->token_end ||
-        parser->token_cur + length < parser->token_end,
-            ECS_INVALID_OPERATION, "out of parser token storage");
+    if (parser->token_end &&
+        (parser->token_cur + length >= parser->token_end))
+    {
+        ecs_parser_error(parser->name, parser->code,
+            flecs_parser_errpos(parser, parser->pos),
+            "token too long for parser storage");
+        return NULL;
+    }
 
     char *result = parser->token_cur;
     ecs_os_memcpy(result, start, length);
@@ -64708,6 +64742,9 @@ static const char* flecs_script_number(
 
     out->kind = EcsTokNumber;
     out->value = flecs_tokenizer_copy(parser, start, pos);
+    if (!out->value) {
+        return NULL;
+    }
     return pos;
 }
 
@@ -64759,6 +64796,9 @@ static const char* flecs_script_string(
 
     out->kind = is_char ? EcsTokChar : EcsTokString;
     out->value = flecs_tokenizer_copy(parser, pos + 1, end);
+    if (!out->value) {
+        return NULL;
+    }
     return end + 1;
 }
 
@@ -64794,6 +64834,9 @@ const char* flecs_tokenizer_line(
 
     out->kind = EcsTokString;
     out->value = flecs_tokenizer_copy(parser, start, end);
+    if (!out->value) {
+        return NULL;
+    }
     parser->token_keep = parser->token_cur;
 
     return pos;
@@ -67979,6 +68022,7 @@ int flecs_terms_parse_at(
     };
 
     parser.token_cur = token_buffer;
+    parser.token_end = &token_buffer[ecs_os_strlen(expr) * 2 + 1];
 
     int32_t term_count = 0;
     const char *ptr = expr;
@@ -68069,7 +68113,8 @@ const char* flecs_term_parse(
         .name = name,
         .code = expr,
         .world = world,
-        .token_cur = token_buffer
+        .token_cur = token_buffer,
+        .token_end = &token_buffer[ecs_os_strlen(expr) * 2 + 1]
     };
 
     parser.term = term;
@@ -68233,7 +68278,8 @@ const char* ecs_query_args_parse(
         .name = q_name,
         .code = expr,
         .world = q->world,
-        .token_cur = token_buffer
+        .token_cur = token_buffer,
+        .token_end = &token_buffer[sizeof(token_buffer)]
     };
 
     return flecs_query_args_parse(&parser, q, it, expr);
@@ -72934,6 +72980,9 @@ annotation: {
         // @brief value
         ecs_token_t value;
         pos = flecs_tokenizer_line(parser, pos, &value, false);
+        if (!pos) {
+            goto error;
+        }
         flecs_script_insert_annot(parser, Token(1), value.value);
         EndOfRule;
     })
@@ -73402,6 +73451,9 @@ include_stmt: {
     {
         ecs_token_t filename;
         pos = flecs_tokenizer_line(parser, pos, &filename, true);
+        if (!pos) {
+            goto error;
+        }
         if (!filename.value[0]) {
             Error("expected filename after 'include'");
         }

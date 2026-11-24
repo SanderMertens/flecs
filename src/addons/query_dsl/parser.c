@@ -339,6 +339,7 @@ int flecs_terms_parse_at(
     };
 
     parser.token_cur = token_buffer;
+    parser.token_end = &token_buffer[ecs_os_strlen(expr) * 2 + 1];
 
     int32_t term_count = 0;
     const char *ptr = expr;
@@ -429,7 +430,8 @@ const char* flecs_term_parse(
         .name = name,
         .code = expr,
         .world = world,
-        .token_cur = token_buffer
+        .token_cur = token_buffer,
+        .token_end = &token_buffer[ecs_os_strlen(expr) * 2 + 1]
     };
 
     parser.term = term;
@@ -593,7 +595,8 @@ const char* ecs_query_args_parse(
         .name = q_name,
         .code = expr,
         .world = q->world,
-        .token_cur = token_buffer
+        .token_cur = token_buffer,
+        .token_end = &token_buffer[sizeof(token_buffer)]
     };
 
     return flecs_query_args_parse(&parser, q, it, expr);

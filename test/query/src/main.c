@@ -2037,6 +2037,9 @@ void ChangeDetection_query_changed_after_wildcard_matched_table_emptied(void);
 void ChangeDetection_detect_w_not_cached_fixed_src_term(void);
 void ChangeDetection_detect_changes_w_order_by(void);
 void ChangeDetection_mark_dirty_w_optional_up_src_changed_during_iteration(void);
+void ChangeDetection_tag_field_not_written(void);
+void ChangeDetection_write_to_tag_w_component_does_not_change_other_query(void);
+void ChangeDetection_write_to_wildcard_w_tag_does_not_change_other_query(void);
 
 // Testsuite 'GroupBy'
 void GroupBy_group_by(void);
@@ -11021,6 +11024,18 @@ bake_test_case ChangeDetection_testcases[] = {
     {
         "mark_dirty_w_optional_up_src_changed_during_iteration",
         ChangeDetection_mark_dirty_w_optional_up_src_changed_during_iteration
+    },
+    {
+        "tag_field_not_written",
+        ChangeDetection_tag_field_not_written
+    },
+    {
+        "write_to_tag_w_component_does_not_change_other_query",
+        ChangeDetection_write_to_tag_w_component_does_not_change_other_query
+    },
+    {
+        "write_to_wildcard_w_tag_does_not_change_other_query",
+        ChangeDetection_write_to_wildcard_w_tag_does_not_change_other_query
     }
 };
 
@@ -15084,7 +15099,7 @@ static bake_test_suite suites[] = {
         "ChangeDetection",
         NULL,
         NULL,
-        79,
+        82,
         ChangeDetection_testcases
     },
     {
