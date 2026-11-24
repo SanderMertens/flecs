@@ -2693,7 +2693,7 @@ Entity e = world.obtainEntity(world.entity()).add(loves.id(), pears);
 </ul>
 </div>
 
-The `With` relationship can also add a pair to the entity. Because the target of a pair can only store a single entity, this uses a nested pair, which stores the pair in a (deduplicated) handle entity. The handle is deleted when one of the elements of the pair is deleted, which also removes the nested pair from the component:
+The `With` relationship can also add a pair to the entity. Because the target of a pair can only store a single entity, this uses a nested pair, which stores the pair in a (deduplicated) handle. The handle is released when one of the elements of the pair is deleted, which also removes the nested pair from the component:
 
 <div class="flecs-snippet-tabs">
 <ul>

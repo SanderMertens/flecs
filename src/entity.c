@@ -1374,6 +1374,10 @@ void ecs_delete(
                     ECS_NESTED_PAIR | ecs_pair(entity, EcsWildcard), 0, true, true);
             }
 
+            if (row_flags & (EcsEntityIsId|EcsEntityIsTarget)) {
+                flecs_on_delete_nested_pairs(world, entity);
+            }
+
             /* Merge operations before deleting entity */
             flecs_commands_end(world, stage);
             flecs_commands_begin(world, stage);
@@ -2849,7 +2853,7 @@ void ecs_make_alive_id(
             ecs_make_alive(world, r);
         }
 
-        if (!ECS_IS_VALUE_PAIR(component)) {
+        if (!ECS_IS_VALUE_PAIR(component) && !ECS_IS_NESTED_PAIR(component)) {
             if (flecs_entities_get_alive(world, t) == 0) {
                 ecs_assert(!ecs_exists(world, t), ECS_INVALID_PARAMETER,
                     "second element of pair is not alive");

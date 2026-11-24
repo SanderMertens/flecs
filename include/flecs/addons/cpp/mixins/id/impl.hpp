@@ -33,7 +33,7 @@ inline flecs::entity id::second() const {
 
     flecs::entity_t e = ECS_PAIR_SECOND(id_);
     if (world_ && !is_value_pair()) {
-        return flecs::entity(world_, ecs_get_alive(world_, e));
+        return flecs::entity(world_, ecs_pair_second(world_, id_));
     } else {
         return flecs::entity(e);
     }

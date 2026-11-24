@@ -2138,7 +2138,14 @@ void NestedPairs_delete_second_of_nested(void);
 void NestedPairs_delete_first(void);
 void NestedPairs_delete_first_w_delete_target(void);
 void NestedPairs_recreate_after_delete(void);
-void NestedPairs_delete_handle(void);
+void NestedPairs_delete_entity_w_handle_id(void);
+void NestedPairs_no_entity_created(void);
+void NestedPairs_reuse_handle_after_delete(void);
+void NestedPairs_wildcard_target_query_w_handle_id(void);
+void NestedPairs_wildcard_target_observer_w_handle_id(void);
+void NestedPairs_delete_element_w_parent(void);
+void NestedPairs_delete_element_w_parent_component(void);
+void NestedPairs_delete_element_deferred(void);
 void NestedPairs_create_in_deferred(void);
 void NestedPairs_exclusive(void);
 void NestedPairs_with_nested_pair(void);
@@ -12185,8 +12192,36 @@ bake_test_case NestedPairs_testcases[] = {
         NestedPairs_recreate_after_delete
     },
     {
-        "delete_handle",
-        NestedPairs_delete_handle
+        "delete_entity_w_handle_id",
+        NestedPairs_delete_entity_w_handle_id
+    },
+    {
+        "no_entity_created",
+        NestedPairs_no_entity_created
+    },
+    {
+        "reuse_handle_after_delete",
+        NestedPairs_reuse_handle_after_delete
+    },
+    {
+        "wildcard_target_query_w_handle_id",
+        NestedPairs_wildcard_target_query_w_handle_id
+    },
+    {
+        "wildcard_target_observer_w_handle_id",
+        NestedPairs_wildcard_target_observer_w_handle_id
+    },
+    {
+        "delete_element_w_parent",
+        NestedPairs_delete_element_w_parent
+    },
+    {
+        "delete_element_w_parent_component",
+        NestedPairs_delete_element_w_parent_component
+    },
+    {
+        "delete_element_deferred",
+        NestedPairs_delete_element_deferred
     },
     {
         "create_in_deferred",
@@ -19062,7 +19097,7 @@ static bake_test_suite suites[] = {
         "NestedPairs",
         NULL,
         NULL,
-        27,
+        34,
         NestedPairs_testcases
     },
     {

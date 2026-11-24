@@ -43,6 +43,12 @@ bool ecs_id_match(
             return false;
         }
 
+        if (ECS_IS_NESTED_PAIR(id) && !ECS_IS_NESTED_PAIR(pattern) &&
+            pattern_second != EcsWildcard && pattern_second != EcsAny)
+        {
+            return false;
+        }
+
         bool pattern_first_wildcard = pattern_first == EcsWildcard;
         bool pattern_second_wc = pattern_second == EcsWildcard;
         if (ECS_IS_VALUE_PAIR(pattern)) {
@@ -158,7 +164,7 @@ const char* flecs_id_invalid_reason(
                 return "invalid nested pair: first element is 0";
             }
 
-            if (!flecs_nested_pair_handle_id(world, ECS_PAIR_SECOND(id))) {
+            if (!flecs_nested_pair_get(world, ECS_PAIR_SECOND(id))) {
                 return "invalid nested pair: target is not a nested pair "
                     "handle (use ecs_nested_pair())";
             }
@@ -281,7 +287,7 @@ void ecs_id_str_buf(
             ecs_strbuf_appendlit(buf, "@");
             ecs_strbuf_appendint(buf, (uint32_t)tgt);
         } else if (ECS_IS_NESTED_PAIR(id) && 
-            (nested = flecs_nested_pair_handle_id(world, tgt))) 
+            (nested = flecs_nested_pair_get(world, (uint32_t)tgt))) 
         {
             ecs_id_str_buf(world, nested, buf);
         } else {
@@ -321,95 +327,6 @@ ecs_id_t ecs_make_pair(
     return ecs_pair(relationship, target);
 }
 
-ecs_id_t flecs_nested_pair_handle_id(
-    const ecs_world_t *world,
-    ecs_entity_t handle)
-{
-    world = ecs_get_world(world);
-    ecs_map_val_t *id = ecs_map_get(
-        &world->nested_pair_ids, (uint32_t)handle);
-    if (!id) {
-        return 0;
-    }
-
-    return id[0];
-}
-
-static void flecs_nested_pair_handle_remove(
-    ecs_world_t *world,
-    ecs_entity_t handle)
-{
-    ecs_map_val_t *id = ecs_map_get(
-        &world->nested_pair_ids, (uint32_t)handle);
-    if (!id) {
-        return;
-    }
-
-    ecs_map_val_t *h = ecs_map_get(&world->nested_pairs, id[0]);
-    if (h && ((uint32_t)h[0] == (uint32_t)handle)) {
-        ecs_map_remove(&world->nested_pairs, id[0]);
-    }
-
-    ecs_map_remove(&world->nested_pair_ids, (uint32_t)handle);
-}
-
-void flecs_on_remove_nested_pair_of(
-    ecs_iter_t *it)
-{
-    ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, 
-        ecs_get_world(it->world));
-    int32_t i;
-    for (i = 0; i < it->count; i ++) {
-        flecs_nested_pair_handle_remove(world, it->entities[i]);
-    }
-}
-
-static ecs_entity_t flecs_nested_pair_handle_ensure(
-    ecs_world_t *world,
-    ecs_id_t id)
-{
-    ecs_world_t *real_world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world));
-
-    ecs_map_val_t *h = ecs_map_get(&real_world->nested_pairs, id);
-    if (h) {
-        if (ecs_is_alive(world, h[0])) {
-            return h[0];
-        }
-
-        /* Handle was deleted without cleaning up the administration */
-        flecs_nested_pair_handle_remove(real_world, h[0]);
-    }
-
-    ecs_check(!ecs_id_is_wildcard(id), ECS_INVALID_PARAMETER,
-        "target of nested pair cannot be a wildcard");
-
-    ecs_entity_t first = ecs_get_alive(world, ECS_PAIR_FIRST(id));
-    ecs_check(first != 0, ECS_INVALID_PARAMETER,
-        "first element of nested pair target is not alive");
-
-    ecs_entity_t second = 0;
-    if (!ECS_IS_VALUE_PAIR(id)) {
-        second = ecs_get_alive(world, ECS_PAIR_SECOND(id));
-        ecs_check(second != 0, ECS_INVALID_PARAMETER,
-            "second element of nested pair target is not alive");
-    }
-
-    ecs_entity_t handle = ecs_new(world);
-    ecs_map_insert(&real_world->nested_pairs, id, handle);
-    ecs_map_insert(&real_world->nested_pair_ids, (uint32_t)handle, id);
-
-    /* Delete the handle when one of the pair elements is deleted. This removes
-     * the nested pair from all entities that have it. */
-    ecs_add_pair(world, handle, EcsNestedPairOf, first);
-    if (second && second != first) {
-        ecs_add_pair(world, handle, EcsNestedPairOf, second);
-    }
-
-    return handle;
-error:
-    return 0;
-}
-
 ecs_id_t ecs_make_nested_pair(
     ecs_world_t *world,
     ecs_entity_t first,
@@ -429,10 +346,28 @@ ecs_id_t ecs_make_nested_pair(
         return ecs_pair(first, second);
     }
 
-    ecs_entity_t handle = flecs_nested_pair_handle_ensure(world, second);
-    if (!handle) {
-        return 0;
+    ecs_check((uint32_t)first != EcsChildOf && (uint32_t)first != EcsIsA,
+        ECS_INVALID_PARAMETER,
+        "ChildOf and IsA relationships cannot be used in a nested pair");
+    ecs_check(!ecs_id_is_wildcard(second), ECS_INVALID_PARAMETER,
+        "target of nested pair cannot be a wildcard");
+    ecs_check(ecs_get_alive(world, ECS_PAIR_FIRST(second)) != 0, 
+        ECS_INVALID_PARAMETER,
+        "first element of nested pair target is not alive");
+
+    if (ECS_IS_NESTED_PAIR(second)) {
+        ecs_check(flecs_nested_pair_get(world, ECS_PAIR_SECOND(second)) != 0,
+            ECS_INVALID_PARAMETER, 
+            "second element of nested pair target is not valid");
+    } else if (!ECS_IS_VALUE_PAIR(second)) {
+        ecs_check(ecs_get_alive(world, ECS_PAIR_SECOND(second)) != 0, 
+            ECS_INVALID_PARAMETER,
+            "second element of nested pair target is not alive");
     }
+
+    ecs_world_t *real_world = ECS_CONST_CAST(ecs_world_t*, 
+        ecs_get_world(world));
+    uint32_t handle = flecs_nested_pair_ensure(real_world, second);
 
     return ECS_NESTED_PAIR | ecs_entity_t_comb(handle, first);
 error:
@@ -447,7 +382,7 @@ ecs_id_t ecs_pair_second_id(
     ecs_check(ECS_IS_PAIR(pair), ECS_INVALID_PARAMETER, "id is not a pair");
 
     if (ECS_IS_NESTED_PAIR(pair)) {
-        return flecs_nested_pair_handle_id(world, ECS_PAIR_SECOND(pair));
+        return flecs_nested_pair_get(world, ECS_PAIR_SECOND(pair));
     }
 
     if (ECS_IS_VALUE_PAIR(pair)) {

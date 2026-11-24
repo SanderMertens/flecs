@@ -234,6 +234,10 @@ static int32_t flecs_event_observers_get(
             ecs_id_t id_fwc = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id));
             ecs_id_t id_swc = ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard);
             ecs_id_t id_pwc = ecs_pair(EcsWildcard, EcsWildcard);
+            if (ECS_IS_NESTED_PAIR(id)) {
+                id_fwc |= ECS_NESTED_PAIR;
+                id_swc |= ECS_NESTED_PAIR;
+            }
             if (id_fwc != id) {
                 iders[count] = flecs_event_id_record_get_if(er, id_fwc);
                 count += iders[count] != 0;

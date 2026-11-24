@@ -1366,6 +1366,47 @@ bool flecs_component_has_non_fragmenting_childof(
 
 #endif
 
+#ifndef FLECS_NESTED_PAIRS_H
+#define FLECS_NESTED_PAIRS_H
+
+#define FLECS_NESTED_PAIR_HANDLE_OFFSET ((uint32_t)EcsFirstUserEntityId)
+
+typedef struct ecs_nested_pairs_t {
+    ecs_vec_t ids;
+    ecs_vec_t free_handles;
+    ecs_vec_t pending_free;
+    ecs_map_t handles;
+    ecs_map_t elements;
+} ecs_nested_pairs_t;
+
+void flecs_nested_pairs_init(
+    ecs_world_t *world);
+
+void flecs_nested_pairs_fini(
+    ecs_world_t *world);
+
+ecs_id_t flecs_nested_pair_get(
+    const ecs_world_t *world,
+    uint32_t handle);
+
+uint32_t flecs_nested_pair_ensure(
+    ecs_world_t *world,
+    ecs_id_t id);
+
+bool flecs_nested_pairs_take_element(
+    ecs_world_t *world,
+    uint64_t element,
+    ecs_vec_t *out);
+
+bool flecs_nested_pair_release(
+    ecs_world_t *world,
+    uint32_t handle);
+
+void flecs_nested_pairs_flush(
+    ecs_world_t *world);
+
+#endif
+
 #ifndef FLECS_QUERY_H
 #define FLECS_QUERY_H
 
@@ -2048,6 +2089,10 @@ void flecs_on_delete(
     bool delete_id,
     bool force_delete);
 
+void flecs_on_delete_nested_pairs(
+    ecs_world_t *world,
+    ecs_entity_t entity);
+
 /* Delete all entities with id, including prefabs when force_delete is true. */
 void flecs_delete_with(
     ecs_world_t *world,
@@ -2695,8 +2740,7 @@ struct ecs_world_t {
     ecs_map_t prefab_child_indices;
 
     /* Handles for nested pairs. Handles are used as target of nested pairs. */
-    ecs_map_t nested_pairs;          /* map<id, handle> */
-    ecs_map_t nested_pair_ids;       /* map<(uint32_t)handle, id> */
+    ecs_nested_pairs_t nested_pairs;
 
     /* Internal callback for command inspection. Only one callback can be set at
      * a time. After assignment, the action will become active at the start of
@@ -3009,15 +3053,6 @@ uint64_t flecs_ito_(
 const char* flecs_id_invalid_reason(
     const ecs_world_t *world,
     ecs_id_t id);
-
-/* Get the ID stored by a nested pair handle. Returns 0 if not a handle. */
-ecs_id_t flecs_nested_pair_handle_id(
-    const ecs_world_t *world,
-    ecs_entity_t handle);
-
-/* Observer that cleans up nested pair handle administration. */
-void flecs_on_remove_nested_pair_of(
-    ecs_iter_t *it);
 
 /* Generate 64bit hash from buffer. */
 uint64_t flecs_hash(
@@ -3333,7 +3368,7 @@ void flecs_register_flag_for_trait(
 
             cr = flecs_components_get(world, 
                 ECS_NESTED_PAIR | ecs_pair(e, EcsWildcard));
-            if (cr) {
+            if (cr && !(flag & (EcsIdTraversable|EcsIdIsTransitive))) {
                 do {
                     changed |= flecs_set_id_flag(world, cr, flag, trait);
                 } while ((cr = flecs_component_first_next(cr)));
@@ -3916,7 +3951,6 @@ void flecs_bootstrap(
     flecs_bootstrap_trait(world, EcsTraversable);
     flecs_bootstrap_trait(world, EcsWith);
     flecs_bootstrap_trait(world, EcsAutoOverride);
-    flecs_bootstrap_trait(world, EcsNestedPairOf);
     flecs_bootstrap_trait(world, EcsCanToggle);
     flecs_bootstrap_trait(world, EcsOnDelete);
     flecs_bootstrap_trait(world, EcsOnDeleteTarget);
@@ -4082,17 +4116,6 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsFlag, EcsPairIsTag);
     ecs_add_id(world, EcsWith, EcsPairIsTag);
     ecs_add_id(world, EcsAutoOverride, EcsPairIsTag);
-    ecs_add_id(world, EcsNestedPairOf, EcsPairIsTag);
-
-    /* Nested pair handles are deleted when an element of the pair is deleted */
-    ecs_add_pair(world, EcsNestedPairOf, EcsOnDeleteTarget, EcsDelete);
-    ecs_observer(world, {
-        .query.terms = {{ .id = ecs_pair(EcsNestedPairOf, EcsWildcard) }},
-        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
-        .events = {EcsOnRemove},
-        .callback = flecs_on_remove_nested_pair_of,
-        .global_observer = true
-    });
 
     flecs_bootstrap_constraint_traits(world);
 
@@ -5020,10 +5043,19 @@ static bool flecs_remove_invalid(
             return true;
         } else {
             ecs_entity_t tgt = ECS_PAIR_SECOND(id);
-            if (!flecs_entities_is_valid(world, tgt)) {
+            ecs_id_t rel_wc = ecs_pair(rel, EcsWildcard);
+            bool tgt_valid;
+            if (ECS_IS_NESTED_PAIR(id)) {
+                rel_wc |= ECS_NESTED_PAIR;
+                tgt_valid = flecs_nested_pair_get(world, (uint32_t)tgt) != 0;
+            } else {
+                tgt_valid = flecs_entities_is_valid(world, tgt);
+            }
+
+            if (!tgt_valid) {
                 /* Check the relationship's policy for deleted targets */
-                ecs_component_record_t *cr = flecs_components_get(world, 
-                    ecs_pair(rel, EcsWildcard));
+                ecs_component_record_t *cr = flecs_components_get(
+                    world, rel_wc);
                 if (cr) {
                     ecs_entity_t action = ECS_ID_ON_DELETE_TARGET(cr->flags);
                     if (action == EcsDelete) {
@@ -8161,6 +8193,10 @@ void ecs_delete(
                     ECS_NESTED_PAIR | ecs_pair(entity, EcsWildcard), 0, true, true);
             }
 
+            if (row_flags & (EcsEntityIsId|EcsEntityIsTarget)) {
+                flecs_on_delete_nested_pairs(world, entity);
+            }
+
             /* Merge operations before deleting entity */
             flecs_commands_end(world, stage);
             flecs_commands_begin(world, stage);
@@ -9621,7 +9657,7 @@ void ecs_make_alive_id(
             ecs_make_alive(world, r);
         }
 
-        if (!ECS_IS_VALUE_PAIR(component)) {
+        if (!ECS_IS_VALUE_PAIR(component) && !ECS_IS_NESTED_PAIR(component)) {
             if (flecs_entities_get_alive(world, t) == 0) {
                 ecs_assert(!ecs_exists(world, t), ECS_INVALID_PARAMETER,
                     "second element of pair is not alive");
@@ -11009,6 +11045,12 @@ bool ecs_id_match(
             return false;
         }
 
+        if (ECS_IS_NESTED_PAIR(id) && !ECS_IS_NESTED_PAIR(pattern) &&
+            pattern_second != EcsWildcard && pattern_second != EcsAny)
+        {
+            return false;
+        }
+
         bool pattern_first_wildcard = pattern_first == EcsWildcard;
         bool pattern_second_wc = pattern_second == EcsWildcard;
         if (ECS_IS_VALUE_PAIR(pattern)) {
@@ -11124,7 +11166,7 @@ const char* flecs_id_invalid_reason(
                 return "invalid nested pair: first element is 0";
             }
 
-            if (!flecs_nested_pair_handle_id(world, ECS_PAIR_SECOND(id))) {
+            if (!flecs_nested_pair_get(world, ECS_PAIR_SECOND(id))) {
                 return "invalid nested pair: target is not a nested pair "
                     "handle (use ecs_nested_pair())";
             }
@@ -11232,7 +11274,7 @@ void ecs_id_str_buf(
             ecs_strbuf_appendlit(buf, "@");
             ecs_strbuf_appendint(buf, (uint32_t)tgt);
         } else if (ECS_IS_NESTED_PAIR(id) && 
-            (nested = flecs_nested_pair_handle_id(world, tgt))) 
+            (nested = flecs_nested_pair_get(world, (uint32_t)tgt))) 
         {
             ecs_id_str_buf(world, nested, buf);
         } else {
@@ -11272,95 +11314,6 @@ ecs_id_t ecs_make_pair(
     return ecs_pair(relationship, target);
 }
 
-ecs_id_t flecs_nested_pair_handle_id(
-    const ecs_world_t *world,
-    ecs_entity_t handle)
-{
-    world = ecs_get_world(world);
-    ecs_map_val_t *id = ecs_map_get(
-        &world->nested_pair_ids, (uint32_t)handle);
-    if (!id) {
-        return 0;
-    }
-
-    return id[0];
-}
-
-static void flecs_nested_pair_handle_remove(
-    ecs_world_t *world,
-    ecs_entity_t handle)
-{
-    ecs_map_val_t *id = ecs_map_get(
-        &world->nested_pair_ids, (uint32_t)handle);
-    if (!id) {
-        return;
-    }
-
-    ecs_map_val_t *h = ecs_map_get(&world->nested_pairs, id[0]);
-    if (h && ((uint32_t)h[0] == (uint32_t)handle)) {
-        ecs_map_remove(&world->nested_pairs, id[0]);
-    }
-
-    ecs_map_remove(&world->nested_pair_ids, (uint32_t)handle);
-}
-
-void flecs_on_remove_nested_pair_of(
-    ecs_iter_t *it)
-{
-    ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, 
-        ecs_get_world(it->world));
-    int32_t i;
-    for (i = 0; i < it->count; i ++) {
-        flecs_nested_pair_handle_remove(world, it->entities[i]);
-    }
-}
-
-static ecs_entity_t flecs_nested_pair_handle_ensure(
-    ecs_world_t *world,
-    ecs_id_t id)
-{
-    ecs_world_t *real_world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world));
-
-    ecs_map_val_t *h = ecs_map_get(&real_world->nested_pairs, id);
-    if (h) {
-        if (ecs_is_alive(world, h[0])) {
-            return h[0];
-        }
-
-        /* Handle was deleted without cleaning up the administration */
-        flecs_nested_pair_handle_remove(real_world, h[0]);
-    }
-
-    ecs_check(!ecs_id_is_wildcard(id), ECS_INVALID_PARAMETER,
-        "target of nested pair cannot be a wildcard");
-
-    ecs_entity_t first = ecs_get_alive(world, ECS_PAIR_FIRST(id));
-    ecs_check(first != 0, ECS_INVALID_PARAMETER,
-        "first element of nested pair target is not alive");
-
-    ecs_entity_t second = 0;
-    if (!ECS_IS_VALUE_PAIR(id)) {
-        second = ecs_get_alive(world, ECS_PAIR_SECOND(id));
-        ecs_check(second != 0, ECS_INVALID_PARAMETER,
-            "second element of nested pair target is not alive");
-    }
-
-    ecs_entity_t handle = ecs_new(world);
-    ecs_map_insert(&real_world->nested_pairs, id, handle);
-    ecs_map_insert(&real_world->nested_pair_ids, (uint32_t)handle, id);
-
-    /* Delete the handle when one of the pair elements is deleted. This removes
-     * the nested pair from all entities that have it. */
-    ecs_add_pair(world, handle, EcsNestedPairOf, first);
-    if (second && second != first) {
-        ecs_add_pair(world, handle, EcsNestedPairOf, second);
-    }
-
-    return handle;
-error:
-    return 0;
-}
-
 ecs_id_t ecs_make_nested_pair(
     ecs_world_t *world,
     ecs_entity_t first,
@@ -11380,10 +11333,28 @@ ecs_id_t ecs_make_nested_pair(
         return ecs_pair(first, second);
     }
 
-    ecs_entity_t handle = flecs_nested_pair_handle_ensure(world, second);
-    if (!handle) {
-        return 0;
+    ecs_check((uint32_t)first != EcsChildOf && (uint32_t)first != EcsIsA,
+        ECS_INVALID_PARAMETER,
+        "ChildOf and IsA relationships cannot be used in a nested pair");
+    ecs_check(!ecs_id_is_wildcard(second), ECS_INVALID_PARAMETER,
+        "target of nested pair cannot be a wildcard");
+    ecs_check(ecs_get_alive(world, ECS_PAIR_FIRST(second)) != 0, 
+        ECS_INVALID_PARAMETER,
+        "first element of nested pair target is not alive");
+
+    if (ECS_IS_NESTED_PAIR(second)) {
+        ecs_check(flecs_nested_pair_get(world, ECS_PAIR_SECOND(second)) != 0,
+            ECS_INVALID_PARAMETER, 
+            "second element of nested pair target is not valid");
+    } else if (!ECS_IS_VALUE_PAIR(second)) {
+        ecs_check(ecs_get_alive(world, ECS_PAIR_SECOND(second)) != 0, 
+            ECS_INVALID_PARAMETER,
+            "second element of nested pair target is not alive");
     }
+
+    ecs_world_t *real_world = ECS_CONST_CAST(ecs_world_t*, 
+        ecs_get_world(world));
+    uint32_t handle = flecs_nested_pair_ensure(real_world, second);
 
     return ECS_NESTED_PAIR | ecs_entity_t_comb(handle, first);
 error:
@@ -11398,7 +11369,7 @@ ecs_id_t ecs_pair_second_id(
     ecs_check(ECS_IS_PAIR(pair), ECS_INVALID_PARAMETER, "id is not a pair");
 
     if (ECS_IS_NESTED_PAIR(pair)) {
-        return flecs_nested_pair_handle_id(world, ECS_PAIR_SECOND(pair));
+        return flecs_nested_pair_get(world, ECS_PAIR_SECOND(pair));
     }
 
     if (ECS_IS_VALUE_PAIR(pair)) {
@@ -12855,6 +12826,10 @@ static int32_t flecs_event_observers_get(
             ecs_id_t id_fwc = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id));
             ecs_id_t id_swc = ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard);
             ecs_id_t id_pwc = ecs_pair(EcsWildcard, EcsWildcard);
+            if (ECS_IS_NESTED_PAIR(id)) {
+                id_fwc |= ECS_NESTED_PAIR;
+                id_swc |= ECS_NESTED_PAIR;
+            }
             if (id_fwc != id) {
                 iders[count] = flecs_event_id_record_get_if(er, id_fwc);
                 count += iders[count] != 0;
@@ -15835,6 +15810,38 @@ static void flecs_component_mark_for_delete(
     bool delete_id,
     bool force_delete);
 
+static void flecs_nested_pairs_mark_for_delete(
+    ecs_world_t *world,
+    uint64_t element,
+    bool force_delete)
+{
+    ecs_vec_t handles;
+    if (!flecs_nested_pairs_take_element(world, element, &handles)) {
+        return;
+    }
+
+    int32_t i, count = ecs_vec_count(&handles);
+    uint32_t *array = ecs_vec_first_t(&handles, uint32_t);
+    for (i = 0; i < count; i ++) {
+        uint32_t handle = array[i];
+        if (!flecs_nested_pair_release(world, handle)) {
+            continue;
+        }
+
+        ecs_component_record_t *cr = flecs_components_get(world, 
+            ECS_NESTED_PAIR | ecs_pair(EcsWildcard, handle));
+        if (cr) {
+            flecs_component_mark_for_delete(world, cr,
+                ECS_ID_ON_DELETE_TARGET(cr->flags), true, force_delete);
+        }
+
+        flecs_nested_pairs_mark_for_delete(
+            world, ECS_NESTED_PAIR | handle, force_delete);
+    }
+
+    ecs_vec_fini_t(&world->allocator, &handles, uint32_t);
+}
+
 static void flecs_id_mark_for_delete(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -15878,6 +15885,8 @@ static void flecs_target_mark_for_delete(
     if (flags & EcsEntityIsId) {
         flecs_id_mark_for_delete(world, e, force_delete);
     }
+
+    flecs_nested_pairs_mark_for_delete(world, (uint32_t)e, force_delete);
 
     if (flags & EcsEntityIsTarget) {
         if ((cr = flecs_components_get(world, ecs_pair(EcsWildcard, e)))) {
@@ -16055,6 +16064,10 @@ static void flecs_component_delete_non_fragmenting_childof(
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
 
         bool is_target = (r->row & EcsEntityIsTarget) != 0;
+        if (r->row & (EcsEntityIsId|EcsEntityIsTarget)) {
+            flecs_nested_pairs_mark_for_delete(world, (uint32_t)e, force_delete);
+        }
+
         if (r->row & EcsEntityIsId) {
             flecs_id_mark_for_delete(world, e, force_delete);
         }
@@ -16151,7 +16164,7 @@ static void flecs_component_mark_for_delete(
     ecs_id_t id = cr->id;
 
     bool delete_target = flecs_id_is_delete_target(id, action);
-    if (delete_target) {
+    if (delete_target && !ECS_IS_NESTED_PAIR(id)) {
         if (flecs_component_mark_non_fragmenting_childof(world, cr, force_delete)) {
             return;
         }
@@ -16400,6 +16413,7 @@ static bool flecs_on_delete_clear_entities(
             if (flecs_component_has_non_fragmenting_childof(cr)) {
                 childof_cr = cr;
             } else if (!ids[i].delete_id && action && ECS_IS_PAIR(cr->id) &&
+                !ECS_IS_NESTED_PAIR(cr->id) &&
                 ECS_PAIR_FIRST(cr->id) == EcsWildcard &&
                 ECS_PAIR_SECOND(cr->id) != EcsWildcard)
             {
@@ -16575,20 +16589,12 @@ error:
     return;
 }
 
-void flecs_on_delete(
+static void flecs_on_delete_clear(
     ecs_world_t *world,
-    ecs_id_t id,
-    ecs_entity_t action,
-    bool delete_id,
+    int32_t count,
     bool force_delete)
 {
-    /* Cleanup can happen recursively. If a cleanup action is already in 
-     * progress, only append ids to the marked_ids. The topmost cleanup
-     * frame will handle the actual cleanup. */
-    int32_t i, count = ecs_vec_count(&world->store.marked_ids);
-
-    /* Collect all ids that need to be deleted */
-    flecs_on_delete_mark(world, id, action, delete_id, force_delete);
+    int32_t i;
 
     /* Only perform cleanup if we're the first stack frame doing it */
     if (!count && ecs_vec_count(&world->store.marked_ids)) {
@@ -16616,6 +16622,37 @@ void flecs_on_delete(
 
         ecs_log_pop_2();
     }
+
+    if (!count) {
+        flecs_nested_pairs_flush(world);
+    }
+}
+
+void flecs_on_delete(
+    ecs_world_t *world,
+    ecs_id_t id,
+    ecs_entity_t action,
+    bool delete_id,
+    bool force_delete)
+{
+    /* Cleanup can happen recursively. If a cleanup action is already in 
+     * progress, only append ids to the marked_ids. The topmost cleanup
+     * frame will handle the actual cleanup. */
+    int32_t count = ecs_vec_count(&world->store.marked_ids);
+
+    /* Collect all ids that need to be deleted */
+    flecs_on_delete_mark(world, id, action, delete_id, force_delete);
+
+    flecs_on_delete_clear(world, count, force_delete);
+}
+
+void flecs_on_delete_nested_pairs(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    int32_t count = ecs_vec_count(&world->store.marked_ids);
+    flecs_nested_pairs_mark_for_delete(world, (uint32_t)entity, true);
+    flecs_on_delete_clear(world, count, true);
 }
 
 void flecs_delete_with(
@@ -19639,7 +19676,7 @@ const ecs_type_info_t* flecs_determine_type_info_for_component(
             return ti;
         }
 
-        if (!ECS_IS_VALUE_PAIR(id)) {
+        if (!ECS_IS_VALUE_PAIR(id) && !ECS_IS_NESTED_PAIR(id)) {
             ecs_entity_t tgt = ecs_pair_second(world, id);
             if (tgt) {
                 return flecs_type_info_get(world, tgt);
@@ -19720,7 +19757,6 @@ const ecs_entity_t EcsTraversable =                 FLECS_HI_COMPONENT_ID + 27;
 const ecs_entity_t EcsWith =                        FLECS_HI_COMPONENT_ID + 28;
 const ecs_entity_t EcsCanToggle =                   FLECS_HI_COMPONENT_ID + 29;
 const ecs_entity_t EcsAutoOverride =                FLECS_HI_COMPONENT_ID + 6;
-const ecs_entity_t EcsNestedPairOf =                FLECS_HI_COMPONENT_ID + 8;
 
 /* Builtin relationships */
 const ecs_entity_t EcsChildOf =                     FLECS_HI_COMPONENT_ID + 30;
@@ -20266,8 +20302,7 @@ ecs_world_t *ecs_mini(void) {
     }
 
     ecs_map_init(&world->prefab_child_indices, a);
-    ecs_map_init(&world->nested_pairs, a);
-    ecs_map_init(&world->nested_pair_ids, a);
+    flecs_nested_pairs_init(world);
 
     ecs_set_stage_count(world, 1);
     ecs_default_lookup_path[0] = EcsFlecsCore;
@@ -20453,8 +20488,7 @@ int ecs_fini(
     flecs_name_index_fini(&world->symbols);
     ecs_set_stage_count(world, 0);
     ecs_map_fini(&world->prefab_child_indices);
-    ecs_map_fini(&world->nested_pairs);
-    ecs_map_fini(&world->nested_pair_ids);
+    flecs_nested_pairs_fini(world);
     flecs_multi_world_fini(world);
     ecs_log_pop_1();
 
@@ -20887,7 +20921,9 @@ void flecs_component_lock(
     flecs_component_lock_inc(&world->locked_components, component);
     if (ECS_IS_PAIR(component)) {
         flecs_component_lock_inc(&world->locked_components, ECS_PAIR_FIRST(component));
-        flecs_component_lock_inc(&world->locked_entities, ECS_PAIR_SECOND(component));
+        if (!ECS_IS_NESTED_PAIR(component)) {
+            flecs_component_lock_inc(&world->locked_entities, ECS_PAIR_SECOND(component));
+        }
     }
 }
 
@@ -20898,7 +20934,9 @@ void flecs_component_unlock(
     flecs_component_lock_dec(world, &world->locked_components, component);
     if (ECS_IS_PAIR(component)) {
         flecs_component_lock_dec(world, &world->locked_components, ECS_PAIR_FIRST(component));
-        flecs_component_lock_dec(world, &world->locked_entities, ECS_PAIR_SECOND(component));
+        if (!ECS_IS_NESTED_PAIR(component)) {
+            flecs_component_lock_dec(world, &world->locked_entities, ECS_PAIR_SECOND(component));
+        }
     }
 }
 
@@ -27241,9 +27279,13 @@ static ecs_flags32_t flecs_component_get_flags_intern(
                 result |= EcsIdDontFragment;
             }
         }
-    } else if (!ECS_IS_VALUE_PAIR(id)) {
+    } else if (!ECS_IS_VALUE_PAIR(id) && !ECS_IS_NESTED_PAIR(id)) {
         /* Disable flags that only apply to pairs */
         result &= ~(EcsIdExclusive|EcsIdTraversable|EcsIdPairIsTag|EcsIdIsTransitive);
+    }
+
+    if (ECS_IS_NESTED_PAIR(id)) {
+        result &= ~(EcsIdTraversable|EcsIdIsTransitive);
     }
 
     return result;
@@ -27265,7 +27307,7 @@ ecs_flags32_t flecs_component_get_flags(
         rel = ECS_PAIR_FIRST(id);
         rel = flecs_entities_get_alive(world, rel);
 
-        if (!ECS_IS_VALUE_PAIR(id)) {
+        if (!ECS_IS_VALUE_PAIR(id) && !ECS_IS_NESTED_PAIR(id)) {
             tgt = ECS_PAIR_SECOND(id);
             tgt = flecs_entities_get_alive(world, tgt);
         }
@@ -27342,6 +27384,7 @@ static ecs_component_record_t* flecs_component_new(
     bool is_wildcard = ecs_id_is_wildcard(id);
     bool is_pair = ECS_IS_PAIR(id);
     bool is_value_pair = ECS_IS_VALUE_PAIR(id);
+    bool is_nested_pair = ECS_IS_NESTED_PAIR(id);
 
     ecs_entity_t rel = 0, tgt = 0;
     ecs_table_t *tgt_table = NULL;
@@ -27353,7 +27396,7 @@ static ecs_component_record_t* flecs_component_new(
         cr->pair->reachable.current = -1;
 
         rel = ECS_PAIR_FIRST(id);
-        if (!is_value_pair) {
+        if (!is_value_pair && !is_nested_pair) {
             tgt = ECS_PAIR_SECOND(id);
         }
 
@@ -27378,6 +27421,11 @@ static ecs_component_record_t* flecs_component_new(
 
             if (tgt) {
                 ecs_id_t wc_tgt = ecs_pair(EcsWildcard, tgt);
+                cr_t = flecs_components_ensure(world, wc_tgt);
+                flecs_insert_id_elem(world, cr, wc_tgt, cr_t);
+            } else if (is_nested_pair) {
+                ecs_id_t wc_tgt = ECS_NESTED_PAIR | 
+                    ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id));
                 cr_t = flecs_components_ensure(world, wc_tgt);
                 flecs_insert_id_elem(world, cr, wc_tgt, cr_t);
             }
@@ -28535,6 +28583,219 @@ const uint64_t* flecs_entity_index_ids(
     const ecs_entity_index_t *index)
 {
     return ecs_vec_get_t(&index->dense, uint64_t, 1);
+}
+
+void flecs_nested_pairs_init(
+    ecs_world_t *world)
+{
+    ecs_nested_pairs_t *np = &world->nested_pairs;
+    ecs_os_zeromem(np);
+    ecs_map_init(&np->handles, &world->allocator);
+    ecs_map_init(&np->elements, &world->allocator);
+    ecs_vec_init_if_t(&np->ids, ecs_id_t);
+    ecs_vec_init_if_t(&np->free_handles, uint32_t);
+    ecs_vec_init_if_t(&np->pending_free, uint32_t);
+}
+
+void flecs_nested_pairs_fini(
+    ecs_world_t *world)
+{
+    ecs_nested_pairs_t *np = &world->nested_pairs;
+    ecs_allocator_t *a = &world->allocator;
+
+    ecs_map_iter_t it = ecs_map_iter(&np->elements);
+    while (ecs_map_next(&it)) {
+        ecs_vec_t *handles = ecs_map_ptr(&it);
+        ecs_vec_fini_t(a, handles, uint32_t);
+        ecs_os_free(handles);
+    }
+
+    ecs_map_fini(&np->elements);
+    ecs_map_fini(&np->handles);
+    ecs_vec_fini_t(a, &np->ids, ecs_id_t);
+    ecs_vec_fini_t(a, &np->free_handles, uint32_t);
+    ecs_vec_fini_t(a, &np->pending_free, uint32_t);
+}
+
+ecs_id_t flecs_nested_pair_get(
+    const ecs_world_t *world,
+    uint32_t handle)
+{
+    world = ecs_get_world(world);
+    const ecs_nested_pairs_t *np = &world->nested_pairs;
+    if (handle < FLECS_NESTED_PAIR_HANDLE_OFFSET) {
+        return 0;
+    }
+
+    int32_t index = (int32_t)(handle - FLECS_NESTED_PAIR_HANDLE_OFFSET);
+    if (index >= ecs_vec_count(&np->ids)) {
+        return 0;
+    }
+
+    return ecs_vec_get_t(&np->ids, ecs_id_t, index)[0];
+}
+
+static void flecs_nested_pair_elements(
+    ecs_id_t id,
+    uint64_t *elements)
+{
+    elements[0] = ECS_PAIR_FIRST(id);
+    elements[1] = 0;
+
+    if (ECS_IS_NESTED_PAIR(id)) {
+        elements[1] = ECS_NESTED_PAIR | ECS_PAIR_SECOND(id);
+    } else if (!ECS_IS_VALUE_PAIR(id)) {
+        elements[1] = ECS_PAIR_SECOND(id);
+    }
+
+    if (elements[1] == elements[0]) {
+        elements[1] = 0;
+    }
+}
+
+static void flecs_nested_pair_element_add(
+    ecs_world_t *world,
+    uint64_t element,
+    uint32_t handle,
+    uint32_t flag)
+{
+    ecs_nested_pairs_t *np = &world->nested_pairs;
+    ecs_vec_t *handles = ecs_map_ensure_alloc_t(
+        &np->elements, ecs_vec_t, element);
+    ecs_vec_init_if_t(handles, uint32_t);
+    ecs_vec_append_t(&world->allocator, handles, uint32_t)[0] = handle;
+
+    if (!(element & ECS_ID_FLAGS_MASK)) {
+        flecs_add_flag(world, element, flag);
+    }
+}
+
+static void flecs_nested_pair_element_remove(
+    ecs_world_t *world,
+    uint64_t element,
+    uint32_t handle)
+{
+    ecs_nested_pairs_t *np = &world->nested_pairs;
+    ecs_vec_t *handles = ecs_map_get_deref(&np->elements, ecs_vec_t, element);
+    if (!handles) {
+        return;
+    }
+
+    int32_t i, count = ecs_vec_count(handles);
+    uint32_t *array = ecs_vec_first_t(handles, uint32_t);
+    for (i = 0; i < count; i ++) {
+        if (array[i] == handle) {
+            ecs_vec_remove_t(handles, uint32_t, i);
+            break;
+        }
+    }
+
+    if (!ecs_vec_count(handles)) {
+        ecs_vec_fini_t(&world->allocator, handles, uint32_t);
+        ecs_map_remove_free(&np->elements, element);
+    }
+}
+
+uint32_t flecs_nested_pair_ensure(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_nested_pairs_t *np = &world->nested_pairs;
+    ecs_map_val_t *existing = ecs_map_get(&np->handles, id);
+    if (existing) {
+        return (uint32_t)existing[0];
+    }
+
+    uint32_t handle;
+    if (ecs_vec_count(&np->free_handles)) {
+        handle = ecs_vec_last_t(&np->free_handles, uint32_t)[0];
+        ecs_vec_remove_last(&np->free_handles);
+        ecs_vec_get_t(&np->ids, ecs_id_t,
+            (int32_t)(handle - FLECS_NESTED_PAIR_HANDLE_OFFSET))[0] = id;
+    } else {
+        handle = FLECS_NESTED_PAIR_HANDLE_OFFSET +
+            (uint32_t)ecs_vec_count(&np->ids);
+        ecs_vec_append_t(&world->allocator, &np->ids, ecs_id_t)[0] = id;
+    }
+
+    ecs_map_insert(&np->handles, id, handle);
+
+    uint64_t elements[2];
+    flecs_nested_pair_elements(id, elements);
+    flecs_nested_pair_element_add(world, elements[0], handle, EcsEntityIsId);
+    if (elements[1]) {
+        flecs_nested_pair_element_add(
+            world, elements[1], handle, EcsEntityIsTarget);
+    }
+
+    return handle;
+}
+
+bool flecs_nested_pairs_take_element(
+    ecs_world_t *world,
+    uint64_t element,
+    ecs_vec_t *out)
+{
+    ecs_nested_pairs_t *np = &world->nested_pairs;
+    ecs_vec_t *handles = ecs_map_get_deref(&np->elements, ecs_vec_t, element);
+    if (!handles) {
+        return false;
+    }
+
+    *out = *handles;
+    ecs_map_remove_free(&np->elements, element);
+    return true;
+}
+
+bool flecs_nested_pair_release(
+    ecs_world_t *world,
+    uint32_t handle)
+{
+    ecs_nested_pairs_t *np = &world->nested_pairs;
+    ecs_id_t id = flecs_nested_pair_get(world, handle);
+    if (!id) {
+        return false;
+    }
+
+    ecs_map_val_t *existing = ecs_map_get(&np->handles, id);
+    if (!existing || ((uint32_t)existing[0] != handle)) {
+        return false;
+    }
+
+    ecs_map_remove(&np->handles, id);
+
+    uint64_t elements[2];
+    flecs_nested_pair_elements(id, elements);
+    flecs_nested_pair_element_remove(world, elements[0], handle);
+    if (elements[1]) {
+        flecs_nested_pair_element_remove(world, elements[1], handle);
+    }
+
+    ecs_vec_append_t(&world->allocator, &np->pending_free, uint32_t)[0] =
+        handle;
+
+    return true;
+}
+
+void flecs_nested_pairs_flush(
+    ecs_world_t *world)
+{
+    ecs_nested_pairs_t *np = &world->nested_pairs;
+    int32_t i, count = ecs_vec_count(&np->pending_free);
+    if (!count) {
+        return;
+    }
+
+    uint32_t *handles = ecs_vec_first_t(&np->pending_free, uint32_t);
+    for (i = 0; i < count; i ++) {
+        uint32_t handle = handles[i];
+        ecs_vec_get_t(&np->ids, ecs_id_t,
+            (int32_t)(handle - FLECS_NESTED_PAIR_HANDLE_OFFSET))[0] = 0;
+        ecs_vec_append_t(&world->allocator, &np->free_handles, uint32_t)[0] =
+            handle;
+    }
+
+    ecs_vec_clear(&np->pending_free);
 }
 
 void flecs_non_fragmenting_childof_count(
@@ -30138,7 +30399,7 @@ static void flecs_table_init_inherited(
         ecs_id_t id = type.array[ti];
         ecs_entity_t rel = id, tgt = 0;
         if (id & ECS_ID_FLAGS_MASK) {
-            if (!ECS_IS_PAIR(id)) {
+            if (!ECS_IS_PAIR(id) || ECS_IS_NESTED_PAIR(id)) {
                 continue;
             }
 
@@ -30271,7 +30532,10 @@ void flecs_table_init(
             }
 
             relationship->count ++;
-            if (!ECS_IS_VALUE_PAIR(id)) {
+            if (ECS_IS_NESTED_PAIR(id)) {
+                flecs_table_append_to_records(world, records, ECS_NESTED_PAIR | 
+                    ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id)), i, dst_count);
+            } else if (!ECS_IS_VALUE_PAIR(id)) {
                 flecs_table_append_to_records(world, records,
                     ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id)), i, dst_count);
             }
@@ -33034,6 +33298,10 @@ static bool flecs_id_is_alive(
             return false;
         }
 
+        if (ECS_IS_NESTED_PAIR(id)) {
+            return flecs_nested_pair_get(world, ECS_PAIR_SECOND(id)) != 0;
+        }
+
         if (!flecs_entities_get_alive(world, ECS_PAIR_SECOND(id))) {
             return false;
         }
@@ -33134,8 +33402,7 @@ static void flecs_add_with_property_for_record(
 
         if (ECS_IS_NESTED_PAIR(id)) {
             /* (With, (R, T)): add the nested pair as is. */
-            ecs_id_t a = flecs_nested_pair_handle_id(
-                world, ECS_PAIR_SECOND(id));
+            ecs_id_t a = flecs_nested_pair_get(world, ECS_PAIR_SECOND(id));
             if (!a) {
                 continue;
             }

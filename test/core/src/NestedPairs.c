@@ -17,11 +17,8 @@ void NestedPairs_make_nested_pair(void) {
     test_uint(ECS_PAIR_FIRST(id), Likes);
     test_uint(ecs_pair_second_id(world, id), ecs_pair(Eats, Pizza));
 
-    ecs_entity_t handle = ecs_pair_second(world, id);
-    test_assert(handle != 0);
-    test_assert(ecs_is_alive(world, handle));
-    test_assert(ecs_has_pair(world, handle, EcsNestedPairOf, Eats));
-    test_assert(ecs_has_pair(world, handle, EcsNestedPairOf, Pizza));
+    test_assert(ECS_PAIR_SECOND(id) != 0);
+    test_uint(ecs_pair_second(world, id), 0);
 
     ecs_fini(world);
 }
@@ -106,6 +103,8 @@ void NestedPairs_nested_pair_of_nested_pair(void) {
     ecs_delete(world, Pizza);
     test_assert(!ecs_has_id(world, e, id));
     test_int(ecs_get_type(world, e)->count, 0);
+    test_uint(ecs_pair_second_id(world, inner), 0);
+    test_uint(ecs_pair_second_id(world, id), 0);
 
     ecs_fini(world);
 }
@@ -225,7 +224,6 @@ void NestedPairs_delete_first_of_nested(void) {
     ECS_TAG(world, Tag);
 
     ecs_id_t id = ecs_nested_pair(world, Likes, ecs_pair(Eats, Pizza));
-    ecs_entity_t handle = ecs_pair_second(world, id);
 
     ecs_entity_t e = ecs_new(world);
     ecs_add_id(world, e, id);
@@ -234,7 +232,7 @@ void NestedPairs_delete_first_of_nested(void) {
 
     ecs_delete(world, Eats);
 
-    test_assert(!ecs_is_alive(world, handle));
+    test_uint(ecs_pair_second_id(world, id), 0);
     test_assert(ecs_is_alive(world, e));
     test_assert(ecs_is_alive(world, Pizza));
     test_assert(ecs_is_alive(world, Likes));
@@ -254,7 +252,6 @@ void NestedPairs_delete_second_of_nested(void) {
     ECS_TAG(world, Tag);
 
     ecs_id_t id = ecs_nested_pair(world, Likes, ecs_pair(Eats, Pizza));
-    ecs_entity_t handle = ecs_pair_second(world, id);
 
     ecs_entity_t e = ecs_new(world);
     ecs_add_id(world, e, id);
@@ -263,7 +260,7 @@ void NestedPairs_delete_second_of_nested(void) {
 
     ecs_delete(world, Pizza);
 
-    test_assert(!ecs_is_alive(world, handle));
+    test_uint(ecs_pair_second_id(world, id), 0);
     test_assert(ecs_is_alive(world, e));
     test_assert(ecs_is_alive(world, Eats));
     test_assert(!ecs_has_id(world, e, id));
@@ -282,7 +279,7 @@ void NestedPairs_delete_first(void) {
     ECS_TAG(world, Tag);
 
     ecs_id_t id = ecs_nested_pair(world, Likes, ecs_pair(Eats, Pizza));
-    ecs_entity_t handle = ecs_pair_second(world, id);
+    uint32_t handle = ECS_PAIR_SECOND(id);
 
     ecs_entity_t e = ecs_new(world);
     ecs_add_id(world, e, id);
@@ -297,10 +294,10 @@ void NestedPairs_delete_first(void) {
     test_int(ecs_get_type(world, e)->count, 1);
 
     /* Handle is still valid, as it's only tied to the nested pair */
-    test_assert(ecs_is_alive(world, handle));
+    test_uint(ecs_pair_second_id(world, id), ecs_pair(Eats, Pizza));
     ecs_entity_t Hates = ecs_new(world);
     ecs_id_t id_2 = ecs_nested_pair(world, Hates, ecs_pair(Eats, Pizza));
-    test_uint(ECS_PAIR_SECOND(id_2), (uint32_t)handle);
+    test_uint(ECS_PAIR_SECOND(id_2), handle);
 
     ecs_fini(world);
 }
@@ -334,11 +331,9 @@ void NestedPairs_recreate_after_delete(void) {
     ECS_TAG(world, Apples);
 
     ecs_id_t id = ecs_nested_pair(world, Likes, ecs_pair(Eats, Pizza));
-    ecs_entity_t handle = ecs_pair_second(world, id);
     ecs_id_t id_2 = ecs_nested_pair(world, Likes, ecs_pair(Eats, Apples));
 
     ecs_delete(world, Pizza);
-    test_assert(!ecs_is_alive(world, handle));
     test_uint(ecs_pair_second_id(world, id), 0);
     test_assert(!ecs_id_is_valid(world, id));
 
@@ -347,7 +342,7 @@ void NestedPairs_recreate_after_delete(void) {
 
     ecs_entity_t pizza = ecs_new(world);
     ecs_id_t id_3 = ecs_nested_pair(world, Likes, ecs_pair(Eats, pizza));
-    test_assert(ecs_is_alive(world, ecs_pair_second(world, id_3)));
+    test_assert(ecs_id_is_valid(world, id_3));
     test_uint(ecs_pair_second_id(world, id_3), ecs_pair(Eats, pizza));
 
     ecs_entity_t e = ecs_new_w_id(world, id_3);
@@ -356,7 +351,7 @@ void NestedPairs_recreate_after_delete(void) {
     ecs_fini(world);
 }
 
-void NestedPairs_delete_handle(void) {
+void NestedPairs_delete_entity_w_handle_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Likes);
@@ -364,20 +359,224 @@ void NestedPairs_delete_handle(void) {
     ECS_TAG(world, Pizza);
 
     ecs_id_t id = ecs_nested_pair(world, Likes, ecs_pair(Eats, Pizza));
-    ecs_entity_t handle = ecs_pair_second(world, id);
+    uint32_t handle = ECS_PAIR_SECOND(id);
+
+    ecs_entity_t tgt = handle;
+    test_assert(tgt != Likes && tgt != Eats && tgt != Pizza);
+    ecs_make_alive(world, tgt);
 
     ecs_entity_t e = ecs_new_w_id(world, id);
+    ecs_add_pair(world, e, Likes, tgt);
+    test_assert(ecs_has_id(world, e, id));
+    test_assert(ecs_has_pair(world, e, Likes, tgt));
+    test_int(ecs_get_type(world, e)->count, 2);
+
+    ecs_delete(world, tgt);
+    test_assert(!ecs_has_pair(world, e, Likes, tgt));
+    test_assert(ecs_has_id(world, e, id));
+    test_uint(ecs_pair_second_id(world, id), ecs_pair(Eats, Pizza));
+    test_int(ecs_get_type(world, e)->count, 1);
+
+    ecs_fini(world);
+}
+
+void NestedPairs_no_entity_created(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Eats);
+    ECS_TAG(world, Pizza);
+    ECS_TAG(world, Apples);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_id_t id_1 = ecs_nested_pair(world, Likes, ecs_pair(Eats, Pizza));
+    ecs_id_t id_2 = ecs_nested_pair(world, Likes, ecs_pair(Eats, Apples));
+    ecs_entity_t e2 = ecs_new(world);
+    test_uint(e2, e1 + 1);
+
+    ecs_add_id(world, e1, id_1);
+    ecs_add_id(world, e1, id_2);
+    ecs_entity_t e3 = ecs_new(world);
+    test_uint(e3, e2 + 1);
+
+    ecs_delete(world, Pizza);
+    test_assert(!ecs_has_id(world, e1, id_1));
+    test_assert(ecs_has_id(world, e1, id_2));
+    ecs_entity_t e4 = ecs_new(world);
+    test_uint((uint32_t)e4, (uint32_t)Pizza);
+
+    ecs_fini(world);
+}
+
+void NestedPairs_reuse_handle_after_delete(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Eats);
+    ECS_TAG(world, Pizza);
+    ECS_TAG(world, Apples);
+
+    ecs_id_t id_1 = ecs_nested_pair(world, Likes, ecs_pair(Eats, Pizza));
+    uint32_t handle = ECS_PAIR_SECOND(id_1);
+
+    ecs_delete(world, Pizza);
+    test_uint(ecs_pair_second_id(world, id_1), 0);
+
+    ecs_id_t id_2 = ecs_nested_pair(world, Likes, ecs_pair(Eats, Apples));
+    test_uint(ECS_PAIR_SECOND(id_2), handle);
+    test_uint(ecs_pair_second_id(world, id_2), ecs_pair(Eats, Apples));
+
+    ecs_entity_t e = ecs_new_w_id(world, id_2);
+    test_assert(ecs_has_id(world, e, id_2));
+
+    char *str = ecs_id_str(world, id_2);
+    test_str(str, "(Likes,(Eats,Apples))");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void NestedPairs_wildcard_target_query_w_handle_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Eats);
+    ECS_TAG(world, Pizza);
+
+    ecs_id_t id = ecs_nested_pair(world, Likes, ecs_pair(Eats, Pizza));
+    ecs_entity_t tgt = ECS_PAIR_SECOND(id);
+    test_assert(tgt != Likes && tgt != Eats && tgt != Pizza);
+    ecs_make_alive(world, tgt);
+
+    ecs_new_w_id(world, id);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Likes, tgt);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = ecs_pair(EcsWildcard, tgt) }}
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    test_uint(ecs_field_id(&it, 0), ecs_pair(Likes, tgt));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+static int nested_pairs_observer_invoked = 0;
+
+static void NestedPairs_observer(ecs_iter_t *it) {
+    nested_pairs_observer_invoked += it->count;
+}
+
+void NestedPairs_wildcard_target_observer_w_handle_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Eats);
+    ECS_TAG(world, Pizza);
+
+    ecs_id_t id = ecs_nested_pair(world, Likes, ecs_pair(Eats, Pizza));
+    ecs_entity_t tgt = ECS_PAIR_SECOND(id);
+    test_assert(tgt != Likes && tgt != Eats && tgt != Pizza);
+    ecs_make_alive(world, tgt);
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_pair(EcsWildcard, tgt) }},
+        .events = { EcsOnAdd },
+        .callback = NestedPairs_observer
+    });
+
+    ecs_new_w_id(world, id);
+    test_int(nested_pairs_observer_invoked, 0);
+
+    ecs_new_w_pair(world, Likes, tgt);
+    test_int(nested_pairs_observer_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void NestedPairs_delete_element_w_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Eats);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t pizza = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_id_t id = ecs_nested_pair(world, Likes, ecs_pair(Eats, pizza));
+
+    ecs_entity_t e = ecs_new_w_id(world, id);
+    ecs_add(world, e, Tag);
     test_assert(ecs_has_id(world, e, id));
 
-    ecs_delete(world, handle);
+    ecs_delete(world, parent);
+    test_assert(!ecs_is_alive(world, pizza));
+    test_assert(ecs_is_alive(world, e));
     test_assert(!ecs_has_id(world, e, id));
+    test_assert(ecs_has(world, e, Tag));
     test_uint(ecs_pair_second_id(world, id), 0);
 
-    /* A new handle is created for the same pair */
-    ecs_id_t id_2 = ecs_nested_pair(world, Likes, ecs_pair(Eats, Pizza));
-    test_assert(ecs_is_alive(world, ecs_pair_second(world, id_2)));
-    test_assert(ecs_pair_second(world, id_2) != handle);
-    test_uint(ecs_pair_second_id(world, id_2), ecs_pair(Eats, Pizza));
+    ecs_fini(world);
+}
+
+void NestedPairs_delete_element_w_parent_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Eats);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t pizza = ecs_insert(world, ecs_value(EcsParent, {parent}));
+
+    ecs_id_t id = ecs_nested_pair(world, Likes, ecs_pair(Eats, pizza));
+
+    ecs_entity_t e = ecs_new_w_id(world, id);
+    ecs_add(world, e, Tag);
+    test_assert(ecs_has_id(world, e, id));
+
+    ecs_delete(world, parent);
+    test_assert(!ecs_is_alive(world, pizza));
+    test_assert(ecs_is_alive(world, e));
+    test_assert(!ecs_has_id(world, e, id));
+    test_assert(ecs_has(world, e, Tag));
+    test_uint(ecs_pair_second_id(world, id), 0);
+
+    ecs_fini(world);
+}
+
+void NestedPairs_delete_element_deferred(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Eats);
+    ECS_TAG(world, Pizza);
+    ECS_TAG(world, Tag);
+
+    ecs_id_t id = ecs_nested_pair(world, Likes, ecs_pair(Eats, Pizza));
+
+    ecs_entity_t e = ecs_new_w_id(world, id);
+    ecs_add(world, e, Tag);
+
+    ecs_frame_begin(world, 1);
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_delete(stage, Pizza);
+    test_assert(ecs_has_id(stage, e, id));
+    test_uint(ecs_pair_second_id(stage, id), ecs_pair(Eats, Pizza));
+    ecs_merge(stage);
+    ecs_frame_end(world);
+
+    test_assert(!ecs_has_id(world, e, id));
+    test_assert(ecs_has(world, e, Tag));
+    test_uint(ecs_pair_second_id(world, id), 0);
 
     ecs_fini(world);
 }
@@ -401,10 +600,6 @@ void NestedPairs_create_in_deferred(void) {
     ecs_frame_end(world);
 
     test_assert(ecs_has_id(world, e, id));
-
-    ecs_entity_t handle = ecs_pair_second(world, id);
-    test_assert(ecs_has_pair(world, handle, EcsNestedPairOf, Eats));
-    test_assert(ecs_has_pair(world, handle, EcsNestedPairOf, Pizza));
 
     ecs_delete(world, Eats);
     test_assert(!ecs_has_id(world, e, id));

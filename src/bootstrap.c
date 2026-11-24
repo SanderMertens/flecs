@@ -219,7 +219,7 @@ void flecs_register_flag_for_trait(
 
             cr = flecs_components_get(world, 
                 ECS_NESTED_PAIR | ecs_pair(e, EcsWildcard));
-            if (cr) {
+            if (cr && !(flag & (EcsIdTraversable|EcsIdIsTransitive))) {
                 do {
                     changed |= flecs_set_id_flag(world, cr, flag, trait);
                 } while ((cr = flecs_component_first_next(cr)));
@@ -802,7 +802,6 @@ void flecs_bootstrap(
     flecs_bootstrap_trait(world, EcsTraversable);
     flecs_bootstrap_trait(world, EcsWith);
     flecs_bootstrap_trait(world, EcsAutoOverride);
-    flecs_bootstrap_trait(world, EcsNestedPairOf);
     flecs_bootstrap_trait(world, EcsCanToggle);
     flecs_bootstrap_trait(world, EcsOnDelete);
     flecs_bootstrap_trait(world, EcsOnDeleteTarget);
@@ -968,17 +967,6 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsFlag, EcsPairIsTag);
     ecs_add_id(world, EcsWith, EcsPairIsTag);
     ecs_add_id(world, EcsAutoOverride, EcsPairIsTag);
-    ecs_add_id(world, EcsNestedPairOf, EcsPairIsTag);
-
-    /* Nested pair handles are deleted when an element of the pair is deleted */
-    ecs_add_pair(world, EcsNestedPairOf, EcsOnDeleteTarget, EcsDelete);
-    ecs_observer(world, {
-        .query.terms = {{ .id = ecs_pair(EcsNestedPairOf, EcsWildcard) }},
-        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
-        .events = {EcsOnRemove},
-        .callback = flecs_on_remove_nested_pair_of,
-        .global_observer = true
-    });
 
     flecs_bootstrap_constraint_traits(world);
 

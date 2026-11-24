@@ -544,6 +544,10 @@ static bool flecs_id_is_alive(
             return false;
         }
 
+        if (ECS_IS_NESTED_PAIR(id)) {
+            return flecs_nested_pair_get(world, ECS_PAIR_SECOND(id)) != 0;
+        }
+
         if (!flecs_entities_get_alive(world, ECS_PAIR_SECOND(id))) {
             return false;
         }
@@ -644,8 +648,7 @@ static void flecs_add_with_property_for_record(
 
         if (ECS_IS_NESTED_PAIR(id)) {
             /* (With, (R, T)): add the nested pair as is. */
-            ecs_id_t a = flecs_nested_pair_handle_id(
-                world, ECS_PAIR_SECOND(id));
+            ecs_id_t a = flecs_nested_pair_get(world, ECS_PAIR_SECOND(id));
             if (!a) {
                 continue;
             }

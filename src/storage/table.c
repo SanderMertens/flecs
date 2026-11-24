@@ -626,7 +626,7 @@ static void flecs_table_init_inherited(
         ecs_id_t id = type.array[ti];
         ecs_entity_t rel = id, tgt = 0;
         if (id & ECS_ID_FLAGS_MASK) {
-            if (!ECS_IS_PAIR(id)) {
+            if (!ECS_IS_PAIR(id) || ECS_IS_NESTED_PAIR(id)) {
                 continue;
             }
 
@@ -759,7 +759,10 @@ void flecs_table_init(
             }
 
             relationship->count ++;
-            if (!ECS_IS_VALUE_PAIR(id)) {
+            if (ECS_IS_NESTED_PAIR(id)) {
+                flecs_table_append_to_records(world, records, ECS_NESTED_PAIR | 
+                    ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id)), i, dst_count);
+            } else if (!ECS_IS_VALUE_PAIR(id)) {
                 flecs_table_append_to_records(world, records,
                     ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id)), i, dst_count);
             }

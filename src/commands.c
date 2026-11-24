@@ -904,10 +904,19 @@ static bool flecs_remove_invalid(
             return true;
         } else {
             ecs_entity_t tgt = ECS_PAIR_SECOND(id);
-            if (!flecs_entities_is_valid(world, tgt)) {
+            ecs_id_t rel_wc = ecs_pair(rel, EcsWildcard);
+            bool tgt_valid;
+            if (ECS_IS_NESTED_PAIR(id)) {
+                rel_wc |= ECS_NESTED_PAIR;
+                tgt_valid = flecs_nested_pair_get(world, (uint32_t)tgt) != 0;
+            } else {
+                tgt_valid = flecs_entities_is_valid(world, tgt);
+            }
+
+            if (!tgt_valid) {
                 /* Check the relationship's policy for deleted targets */
-                ecs_component_record_t *cr = flecs_components_get(world, 
-                    ecs_pair(rel, EcsWildcard));
+                ecs_component_record_t *cr = flecs_components_get(
+                    world, rel_wc);
                 if (cr) {
                     ecs_entity_t action = ECS_ID_ON_DELETE_TARGET(cr->flags);
                     if (action == EcsDelete) {

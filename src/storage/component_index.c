@@ -314,9 +314,13 @@ static ecs_flags32_t flecs_component_get_flags_intern(
                 result |= EcsIdDontFragment;
             }
         }
-    } else if (!ECS_IS_VALUE_PAIR(id)) {
+    } else if (!ECS_IS_VALUE_PAIR(id) && !ECS_IS_NESTED_PAIR(id)) {
         /* Disable flags that only apply to pairs */
         result &= ~(EcsIdExclusive|EcsIdTraversable|EcsIdPairIsTag|EcsIdIsTransitive);
+    }
+
+    if (ECS_IS_NESTED_PAIR(id)) {
+        result &= ~(EcsIdTraversable|EcsIdIsTransitive);
     }
 
     return result;
@@ -338,7 +342,7 @@ ecs_flags32_t flecs_component_get_flags(
         rel = ECS_PAIR_FIRST(id);
         rel = flecs_entities_get_alive(world, rel);
 
-        if (!ECS_IS_VALUE_PAIR(id)) {
+        if (!ECS_IS_VALUE_PAIR(id) && !ECS_IS_NESTED_PAIR(id)) {
             tgt = ECS_PAIR_SECOND(id);
             tgt = flecs_entities_get_alive(world, tgt);
         }
@@ -425,6 +429,7 @@ static ecs_component_record_t* flecs_component_new(
     bool is_wildcard = ecs_id_is_wildcard(id);
     bool is_pair = ECS_IS_PAIR(id);
     bool is_value_pair = ECS_IS_VALUE_PAIR(id);
+    bool is_nested_pair = ECS_IS_NESTED_PAIR(id);
 
     ecs_entity_t rel = 0, tgt = 0;
     ecs_table_t *tgt_table = NULL;
@@ -436,7 +441,7 @@ static ecs_component_record_t* flecs_component_new(
         cr->pair->reachable.current = -1;
 
         rel = ECS_PAIR_FIRST(id);
-        if (!is_value_pair) {
+        if (!is_value_pair && !is_nested_pair) {
             tgt = ECS_PAIR_SECOND(id);
         }
 
@@ -461,6 +466,11 @@ static ecs_component_record_t* flecs_component_new(
 
             if (tgt) {
                 ecs_id_t wc_tgt = ecs_pair(EcsWildcard, tgt);
+                cr_t = flecs_components_ensure(world, wc_tgt);
+                flecs_insert_id_elem(world, cr, wc_tgt, cr_t);
+            } else if (is_nested_pair) {
+                ecs_id_t wc_tgt = ECS_NESTED_PAIR | 
+                    ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id));
                 cr_t = flecs_components_ensure(world, wc_tgt);
                 flecs_insert_id_elem(world, cr, wc_tgt, cr_t);
             }

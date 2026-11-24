@@ -1337,7 +1337,7 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ecs_pair(rel, tgt) (ECS_PAIR | ecs_entity_t_comb(tgt, rel))
 #define ecs_pair_t(rel, tgt) (ECS_PAIR | ecs_entity_t_comb(tgt, ecs_id(rel)))
 #define ecs_pair_first(world, pair) ecs_get_alive(world, ECS_PAIR_FIRST(pair))
-#define ecs_pair_second(world, pair) ecs_get_alive(world, ECS_PAIR_SECOND(pair))
+#define ecs_pair_second(world, pair) (ECS_IS_NESTED_PAIR(pair) ? 0 : ecs_get_alive(world, ECS_PAIR_SECOND(pair)))
 #define ecs_pair_relation ecs_pair_first
 #define ecs_pair_target ecs_pair_second
 
@@ -6841,10 +6841,6 @@ FLECS_API extern const ecs_entity_t EcsWith;
  */
 FLECS_API extern const ecs_entity_t EcsAutoOverride;
 
-/** Relationship that links a nested pair handle to the elements of the ID it
- * stores. Used to clean up the handle when one of the elements is deleted. */
-FLECS_API extern const ecs_entity_t EcsNestedPairOf;
-
 /** Mark a component as toggleable with ecs_enable_id(). */
 FLECS_API extern const ecs_entity_t EcsCanToggle;
 
@@ -7551,8 +7547,9 @@ ecs_id_t ecs_make_pair(
 /** Make a nested pair ID.
  * A nested pair is a pair of which the target is another ID, typically a pair.
  * Because the target of a pair can only store a single entity, the nested ID
- * is stored in a (deduplicated) handle entity, which is used as the target of
- * the returned pair. The returned ID has the ECS_NESTED_PAIR flag set.
+ * is stored in a (deduplicated) handle, which is used as the target of the
+ * returned pair. Handles are not entities, and creating them does not affect
+ * entity ID generation. The returned ID has the ECS_NESTED_PAIR flag set.
  *
  * Example:
  *
@@ -7563,7 +7560,7 @@ ecs_id_t ecs_make_pair(
  * @endcode
  *
  * Calling this function multiple times for the same ID returns the same handle.
- * The handle is deleted when one of the elements of the nested ID is deleted,
+ * The handle is released when one of the elements of the nested ID is deleted,
  * which in turn removes the nested pair from all entities.
  *
  * If the provided ID is not a pair, a regular pair is returned.
@@ -22798,8 +22795,6 @@ static const flecs::entity_t Traversable = EcsTraversable;
 static const flecs::entity_t With = EcsWith;
 /** AutoOverride relationship. */
 static const flecs::entity_t AutoOverride = EcsAutoOverride;
-/** NestedPairOf relationship (links nested pair handles to pair elements). */
-static const flecs::entity_t NestedPairOf = EcsNestedPairOf;
 /** CanToggle trait. */
 static const flecs::entity_t CanToggle = EcsCanToggle;
 
@@ -34114,7 +34109,7 @@ inline flecs::entity id::second() const {
 
     flecs::entity_t e = ECS_PAIR_SECOND(id_);
     if (world_ && !is_value_pair()) {
-        return flecs::entity(world_, ecs_get_alive(world_, e));
+        return flecs::entity(world_, ecs_pair_second(world_, id_));
     } else {
         return flecs::entity(e);
     }

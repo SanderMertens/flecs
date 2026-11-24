@@ -196,8 +196,6 @@ static const flecs::entity_t Traversable = EcsTraversable;
 static const flecs::entity_t With = EcsWith;
 /** AutoOverride relationship. */
 static const flecs::entity_t AutoOverride = EcsAutoOverride;
-/** NestedPairOf relationship (links nested pair handles to pair elements). */
-static const flecs::entity_t NestedPairOf = EcsNestedPairOf;
 /** CanToggle trait. */
 static const flecs::entity_t CanToggle = EcsCanToggle;
 

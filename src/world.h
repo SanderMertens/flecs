@@ -144,8 +144,7 @@ struct ecs_world_t {
     ecs_map_t prefab_child_indices;
 
     /* Handles for nested pairs. Handles are used as target of nested pairs. */
-    ecs_map_t nested_pairs;          /* map<id, handle> */
-    ecs_map_t nested_pair_ids;       /* map<(uint32_t)handle, id> */
+    ecs_nested_pairs_t nested_pairs;
 
     /* Internal callback for command inspection. Only one callback can be set at
      * a time. After assignment, the action will become active at the start of
