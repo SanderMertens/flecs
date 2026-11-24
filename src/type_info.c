@@ -889,7 +889,7 @@ const ecs_type_info_t* flecs_determine_type_info_for_component(
             return ti;
         }
 
-        if (!ECS_IS_VALUE_PAIR(id)) {
+        if (!ECS_IS_VALUE_PAIR(id) && !ECS_IS_NESTED_PAIR(id)) {
             ecs_entity_t tgt = ecs_pair_second(world, id);
             if (tgt) {
                 return flecs_type_info_get(world, tgt);

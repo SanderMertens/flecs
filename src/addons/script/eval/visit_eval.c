@@ -598,7 +598,7 @@ int flecs_script_eval_id_resolve(
     }
 
     if (!id->second) {
-        *out = id->flag | first;
+        *out = flecs_script_flag_id(v->world, id->flag, first);
         return 0;
     }
 
@@ -615,7 +615,8 @@ int flecs_script_eval_id_resolve(
         return -1;
     }
 
-    *out = id->flag | ecs_pair(first, second);
+    *out = flecs_script_flag_id(
+        v->world, id->flag, ecs_pair(first, second));
     return 0;
 }
 
@@ -689,7 +690,7 @@ int flecs_script_eval_interface_id(
     const char *expected = flecs_script_template_interface_error(
         v->world, tmpl, id->interface);
     if (!expected) {
-        *out = id->flag | tmpl;
+        *out = flecs_script_flag_id(v->world, id->flag, tmpl);
         return 0;
     }
 

@@ -1334,3 +1334,69 @@ void Pairs_2_traversable_rels_in_opposite_directions(void) {
     test_assert(a.target(r1) == b);
     test_assert(b.target(r2) == a);
 }
+
+void Pairs_nested_pair(void) {
+    flecs::world world;
+
+    flecs::entity likes = world.entity("Likes");
+    flecs::entity eats = world.entity("Eats");
+    flecs::entity pizza = world.entity("Pizza");
+
+    flecs::id id = world.nested_pair(likes, world.pair(eats, pizza));
+    test_assert(id.is_pair());
+    test_assert(id.is_nested_pair());
+    test_assert(id.first() == likes);
+    test_str(id.str().c_str(), "(Likes,(Eats,Pizza))");
+
+    flecs::entity e = world.entity().add(id);
+    test_assert(e.has(id));
+    test_assert(!e.has(eats, pizza));
+
+    pizza.destruct();
+    test_assert(!e.has(id));
+}
+
+void Pairs_with_nested_pair(void) {
+    flecs::world world;
+
+    struct Socket { };
+    struct ParentRelative { };
+
+    world.component<Socket>().with<Position, ParentRelative>();
+
+    flecs::entity e = world.entity().add<Socket>();
+    test_assert(e.has<Socket>());
+    test_assert((e.has<Position, ParentRelative>()));
+    test_assert(!e.has<Position>());
+}
+
+void Pairs_with_component(void) {
+    flecs::world world;
+
+    struct Socket { };
+
+    world.component<Socket>().with<Position>();
+
+    flecs::entity e = world.entity().add<Socket>();
+    test_assert(e.has<Socket>());
+    test_assert(e.has<Position>());
+}
+
+void Pairs_auto_override_nested_pair(void) {
+    flecs::world world;
+
+    world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
+
+    flecs::entity base = world.prefab()
+        .set_auto_override<Position, Tag>({10, 20});
+
+    test_assert(base.has(world.nested_pair(
+        flecs::AutoOverride, world.pair<Position, Tag>())));
+
+    flecs::entity inst = world.entity().is_a(base);
+    test_assert((inst.owns<Position, Tag>()));
+
+    const Position& p = inst.get<Position, Tag>();
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}

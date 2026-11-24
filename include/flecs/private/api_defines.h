@@ -336,7 +336,8 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_COMPONENT_MASK            (~ECS_ID_FLAGS_MASK)
 #define ECS_HAS_ID_FLAG(e, flag)      ((e) & ECS_##flag)
 #define ECS_IS_VALUE_PAIR(id)         (((id) & ECS_ID_FLAGS_MASK) == ECS_VALUE_PAIR)
-#define ECS_IS_PAIR(id)               ((((id) & ECS_ID_FLAGS_MASK) == ECS_PAIR) || ECS_IS_VALUE_PAIR(id))
+#define ECS_IS_NESTED_PAIR(id)        (((id) & ECS_ID_FLAGS_MASK) == ECS_NESTED_PAIR)
+#define ECS_IS_PAIR(id)               ((((id) & ECS_ID_FLAGS_MASK) == ECS_PAIR) || ECS_IS_VALUE_PAIR(id) || ECS_IS_NESTED_PAIR(id))
 #define ECS_PAIR_FIRST(e)             (ecs_entity_t_hi(e & ECS_COMPONENT_MASK))
 #define ECS_PAIR_SECOND(e)            (ecs_entity_t_lo(e))
 #define ECS_HAS_RELATION(e, rel)      (ECS_HAS_ID_FLAG(e, PAIR) && (ECS_PAIR_FIRST(e) == rel))
@@ -363,11 +364,12 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ecs_pair(rel, tgt) (ECS_PAIR | ecs_entity_t_comb(tgt, rel))
 #define ecs_pair_t(rel, tgt) (ECS_PAIR | ecs_entity_t_comb(tgt, ecs_id(rel)))
 #define ecs_pair_first(world, pair) ecs_get_alive(world, ECS_PAIR_FIRST(pair))
-#define ecs_pair_second(world, pair) ecs_get_alive(world, ECS_PAIR_SECOND(pair))
+#define ecs_pair_second(world, pair) (ECS_IS_NESTED_PAIR(pair) ? 0 : ecs_get_alive(world, ECS_PAIR_SECOND(pair)))
 #define ecs_pair_relation ecs_pair_first
 #define ecs_pair_target ecs_pair_second
 
 #define ecs_value_pair(rel, val) (ECS_VALUE_PAIR | ecs_entity_t_comb(val, rel))
+#define ecs_nested_pair(world, rel, id) ecs_make_nested_pair(world, rel, id)
 
 #define flecs_poly_id(tag) ecs_pair(ecs_id(EcsPoly), tag)
 

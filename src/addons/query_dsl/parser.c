@@ -172,7 +172,7 @@ static const char* flecs_query_term_parse(
 {
     flecs_term_parser_t p = { .parser = parser, .pos = pos };
     ecs_term_t *term = parser->term;
-    bool inout = false, unary = false, neq = false;
+    bool inout = false, unary = false, neq = false, auto_override = false;
     if (!flecs_term_next(&p)) return NULL;
     if (p.token.kind == '[') {
         inout = true;
@@ -225,9 +225,9 @@ static const char* flecs_query_term_parse(
         if (!ecs_os_strcmp(name, "and")) oper = EcsAndFrom;
         else if (!ecs_os_strcmp(name, "or")) oper = EcsOrFrom;
         else if (!ecs_os_strcmp(name, "not")) oper = EcsNotFrom;
-        else if (!ecs_os_strcmp(name, "auto_override")) flag = ECS_AUTO_OVERRIDE;
+        else if (!ecs_os_strcmp(name, "auto_override")) auto_override = true;
         else if (!ecs_os_strcmp(name, "toggle")) flag = ECS_TOGGLE;
-        if (oper || flag) {
+        if (oper || flag || auto_override) {
             if (!flecs_term_next(&p) || p.token.kind != '|' || !flecs_term_next(&p)) {
                 goto unexpected;
             }
@@ -283,6 +283,18 @@ static const char* flecs_query_term_parse(
         }
     } else {
         goto unexpected;
+    }
+
+    if (auto_override) {
+        /* auto_override|C is translated to (AutoOverride, C) */
+        if (ecs_term_ref_is_set(&term->second) || term->id) {
+            flecs_term_error(&p, 
+                "auto_override is not supported for pairs in query expressions");
+            return NULL;
+        }
+
+        term->second = term->first;
+        term->first = (ecs_term_ref_t){ .id = EcsAutoOverride };
     }
 
     switch (p.token.kind) {

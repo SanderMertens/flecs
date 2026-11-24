@@ -75,7 +75,7 @@ struct ecs_script_scope_t {
 typedef struct ecs_script_id_t {
     const char *first;
     const char *second;
-    ecs_id_t flag;
+    ecs_id_t flag; /* Relationship applied to id, e.g. EcsAutoOverride */
     ecs_id_t eval;
     ecs_entity_t first_eval;
     ecs_entity_t second_eval;

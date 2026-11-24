@@ -530,7 +530,11 @@
                 "modified_tag_second",
                 "modified_tag_first",
                 "childof_and_traversable_rel_in_opposite_directions",
-                "2_traversable_rels_in_opposite_directions"
+                "2_traversable_rels_in_opposite_directions",
+                "nested_pair",
+                "with_nested_pair",
+                "with_component",
+                "auto_override_nested_pair"
             ]
         }, {
             "id": "Enum",

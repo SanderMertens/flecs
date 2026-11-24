@@ -16,6 +16,22 @@ ECS_COMPONENT_DECLARE(EcsScriptFunction);
 ECS_COMPONENT_DECLARE(EcsScriptMethod);
 ECS_DECLARE(EcsScriptVectorType);
 
+ecs_id_t flecs_script_flag_id(
+    ecs_world_t *world,
+    ecs_id_t flag,
+    ecs_id_t id)
+{
+    if (!flag) {
+        return id;
+    }
+
+    if (flag == EcsAutoOverride) {
+        return ecs_nested_pair(world, EcsAutoOverride, id);
+    }
+
+    return flag | id;
+}
+
 static void flecs_script_undo_fini(
     ecs_vec_t *undo)
 {

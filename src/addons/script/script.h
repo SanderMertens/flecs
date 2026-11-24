@@ -248,6 +248,12 @@ ecs_value_t flecs_script_global_var_get(
     ecs_entity_t var,
     ecs_id_t *component);
 
+/* Apply id flag (such as auto_override) to id */
+ecs_id_t flecs_script_flag_id(
+    ecs_world_t *world,
+    ecs_id_t flag,
+    ecs_id_t id);
+
 ecs_entity_t flecs_script_array_type(
     ecs_world_t *world,
     ecs_entity_t elem_type,

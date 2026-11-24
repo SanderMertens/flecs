@@ -338,6 +338,8 @@ static void flecs_table_init_flags(
             if (r == EcsIsA) {
                 table->flags |= EcsTableHasIsA;
                 table->trait_flags |= EcsIdHasBases;
+            } else if (r == EcsAutoOverride) {
+                table->flags |= EcsTableHasOverrides;
             } else if (r == EcsChildOf) {
                 table->flags |= EcsTableHasChildOf;
                 table->childof_index = flecs_ito(int16_t, i);
@@ -382,10 +384,6 @@ static void flecs_table_init_flags(
                 }
 
                 meta->bs_count ++;
-            }
-
-            if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
-                table->flags |= EcsTableHasOverrides;
             }
         }
     }
@@ -628,7 +626,7 @@ static void flecs_table_init_inherited(
         ecs_id_t id = type.array[ti];
         ecs_entity_t rel = id, tgt = 0;
         if (id & ECS_ID_FLAGS_MASK) {
-            if (!ECS_IS_PAIR(id)) {
+            if (!ECS_IS_PAIR(id) || ECS_IS_NESTED_PAIR(id)) {
                 continue;
             }
 
@@ -737,12 +735,19 @@ void flecs_table_init(
     ecs_vec_set_min_size_t(&world->allocator, records, ecs_table_record_t,
         start + 3 * (dst_count - start) + 4);
     ecs_table_record_t *relationship = NULL;
-    ecs_entity_t last_relationship = 0;
+    ecs_id_t last_relationship = 0;
     for (int32_t i = start; i < dst_count; i ++) {
         ecs_id_t id = dst_ids[i];
         if (ECS_IS_PAIR(id)) {
             ecs_entity_t r = ECS_PAIR_FIRST(id);
-            if (r != last_relationship) {
+
+            /* Nested pairs have a separate (R, *) record */
+            ecs_id_t r_key = r;
+            if (ECS_IS_NESTED_PAIR(id)) {
+                r_key |= ECS_NESTED_PAIR;
+            }
+
+            if (r_key != last_relationship) {
                 cr = ecs_vec_get_t(records, ecs_table_record_t, i)->hdr.cr;
                 if (r == EcsChildOf) {
                     childof_cr = cr;
@@ -750,11 +755,14 @@ void flecs_table_init(
 
                 relationship = flecs_table_add_record(world, records,
                     cr->pair->parent, i, 0);
-                last_relationship = r;
+                last_relationship = r_key;
             }
 
             relationship->count ++;
-            if (!ECS_IS_VALUE_PAIR(id)) {
+            if (ECS_IS_NESTED_PAIR(id)) {
+                flecs_table_append_to_records(world, records, ECS_NESTED_PAIR | 
+                    ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id)), i, dst_count);
+            } else if (!ECS_IS_VALUE_PAIR(id)) {
                 flecs_table_append_to_records(world, records,
                     ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id)), i, dst_count);
             }

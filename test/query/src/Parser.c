@@ -5405,7 +5405,8 @@ void Parser_override_tag(void) {
     test_int(term_count(q), 1);
 
     ecs_term_t *terms = query_terms(q);
-    test_first(terms[0], Tag, EcsSelf|EcsIsEntity);
+    test_first(terms[0], EcsAutoOverride, EcsSelf|EcsIsEntity);
+    test_second(terms[0], Tag, EcsSelf|EcsIsEntity);
     test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -5421,21 +5422,12 @@ void Parser_override_pair(void) {
     ECS_TAG(world, Rel);
     ECS_TAG(world, Tgt);
 
+    /* Nested pairs aren't supported in query expressions */
+    ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .expr = "auto_override|(Rel, Tgt)"
     });
-    test_assert(q != NULL);
-
-    test_int(term_count(q), 1);
-
-    ecs_term_t *terms = query_terms(q);
-    test_first(terms[0], Rel, EcsSelf|EcsIsEntity);
-    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
-    test_second(terms[0], Tgt, EcsSelf|EcsIsEntity);
-    test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOutDefault);
-
-    ecs_query_fini(q);
+    test_assert(q == NULL);
 
     ecs_fini(world);
 }

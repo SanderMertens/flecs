@@ -31,6 +31,38 @@ static void flecs_component_mark_for_delete(
     bool delete_id,
     bool force_delete);
 
+static void flecs_nested_pairs_mark_for_delete(
+    ecs_world_t *world,
+    uint64_t element,
+    bool force_delete)
+{
+    ecs_vec_t handles;
+    if (!flecs_nested_pairs_take_element(world, element, &handles)) {
+        return;
+    }
+
+    int32_t i, count = ecs_vec_count(&handles);
+    uint32_t *array = ecs_vec_first_t(&handles, uint32_t);
+    for (i = 0; i < count; i ++) {
+        uint32_t handle = array[i];
+        if (!flecs_nested_pair_release(world, handle)) {
+            continue;
+        }
+
+        ecs_component_record_t *cr = flecs_components_get(world, 
+            ECS_NESTED_PAIR | ecs_pair(EcsWildcard, handle));
+        if (cr) {
+            flecs_component_mark_for_delete(world, cr,
+                ECS_ID_ON_DELETE_TARGET(cr->flags), true, force_delete);
+        }
+
+        flecs_nested_pairs_mark_for_delete(
+            world, ECS_NESTED_PAIR | handle, force_delete);
+    }
+
+    ecs_vec_fini_t(&world->allocator, &handles, uint32_t);
+}
+
 static void flecs_id_mark_for_delete(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -43,6 +75,13 @@ static void flecs_id_mark_for_delete(
     }
 
     if ((cr = flecs_components_get(world, ecs_pair(e, EcsWildcard)))) {
+        flecs_component_mark_for_delete(world, cr,
+            ECS_ID_ON_DELETE(cr->flags), true, force_delete);
+    }
+
+    if ((cr = flecs_components_get(world, 
+        ECS_NESTED_PAIR | ecs_pair(e, EcsWildcard)))) 
+    {
         flecs_component_mark_for_delete(world, cr,
             ECS_ID_ON_DELETE(cr->flags), true, force_delete);
     }
@@ -67,6 +106,8 @@ static void flecs_target_mark_for_delete(
     if (flags & EcsEntityIsId) {
         flecs_id_mark_for_delete(world, e, force_delete);
     }
+
+    flecs_nested_pairs_mark_for_delete(world, (uint32_t)e, force_delete);
 
     if (flags & EcsEntityIsTarget) {
         if ((cr = flecs_components_get(world, ecs_pair(EcsWildcard, e)))) {
@@ -244,6 +285,10 @@ static void flecs_component_delete_non_fragmenting_childof(
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
 
         bool is_target = (r->row & EcsEntityIsTarget) != 0;
+        if (r->row & (EcsEntityIsId|EcsEntityIsTarget)) {
+            flecs_nested_pairs_mark_for_delete(world, (uint32_t)e, force_delete);
+        }
+
         if (r->row & EcsEntityIsId) {
             flecs_id_mark_for_delete(world, e, force_delete);
         }
@@ -340,7 +385,7 @@ static void flecs_component_mark_for_delete(
     ecs_id_t id = cr->id;
 
     bool delete_target = flecs_id_is_delete_target(id, action);
-    if (delete_target) {
+    if (delete_target && !ECS_IS_NESTED_PAIR(id)) {
         if (flecs_component_mark_non_fragmenting_childof(world, cr, force_delete)) {
             return;
         }
@@ -589,6 +634,7 @@ static bool flecs_on_delete_clear_entities(
             if (flecs_component_has_non_fragmenting_childof(cr)) {
                 childof_cr = cr;
             } else if (!ids[i].delete_id && action && ECS_IS_PAIR(cr->id) &&
+                !ECS_IS_NESTED_PAIR(cr->id) &&
                 ECS_PAIR_FIRST(cr->id) == EcsWildcard &&
                 ECS_PAIR_SECOND(cr->id) != EcsWildcard)
             {
@@ -764,20 +810,12 @@ error:
     return;
 }
 
-void flecs_on_delete(
+static void flecs_on_delete_clear(
     ecs_world_t *world,
-    ecs_id_t id,
-    ecs_entity_t action,
-    bool delete_id,
+    int32_t count,
     bool force_delete)
 {
-    /* Cleanup can happen recursively. If a cleanup action is already in 
-     * progress, only append ids to the marked_ids. The topmost cleanup
-     * frame will handle the actual cleanup. */
-    int32_t i, count = ecs_vec_count(&world->store.marked_ids);
-
-    /* Collect all ids that need to be deleted */
-    flecs_on_delete_mark(world, id, action, delete_id, force_delete);
+    int32_t i;
 
     /* Only perform cleanup if we're the first stack frame doing it */
     if (!count && ecs_vec_count(&world->store.marked_ids)) {
@@ -805,6 +843,37 @@ void flecs_on_delete(
 
         ecs_log_pop_2();
     }
+
+    if (!count) {
+        flecs_nested_pairs_flush(world);
+    }
+}
+
+void flecs_on_delete(
+    ecs_world_t *world,
+    ecs_id_t id,
+    ecs_entity_t action,
+    bool delete_id,
+    bool force_delete)
+{
+    /* Cleanup can happen recursively. If a cleanup action is already in 
+     * progress, only append ids to the marked_ids. The topmost cleanup
+     * frame will handle the actual cleanup. */
+    int32_t count = ecs_vec_count(&world->store.marked_ids);
+
+    /* Collect all ids that need to be deleted */
+    flecs_on_delete_mark(world, id, action, delete_id, force_delete);
+
+    flecs_on_delete_clear(world, count, force_delete);
+}
+
+void flecs_on_delete_nested_pairs(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    int32_t count = ecs_vec_count(&world->store.marked_ids);
+    flecs_nested_pairs_mark_for_delete(world, (uint32_t)entity, true);
+    flecs_on_delete_clear(world, count, true);
 }
 
 void flecs_delete_with(

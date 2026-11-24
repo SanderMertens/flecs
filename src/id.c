@@ -39,6 +39,16 @@ bool ecs_id_match(
             ECS_INVALID_PARAMETER,
             "second element of pair cannot be 0");
 
+        if (ECS_IS_NESTED_PAIR(pattern) && !ECS_IS_NESTED_PAIR(id)) {
+            return false;
+        }
+
+        if (ECS_IS_NESTED_PAIR(id) && !ECS_IS_NESTED_PAIR(pattern) &&
+            pattern_second != EcsWildcard && pattern_second != EcsAny)
+        {
+            return false;
+        }
+
         bool pattern_first_wildcard = pattern_first == EcsWildcard;
         bool pattern_second_wc = pattern_second == EcsWildcard;
         if (ECS_IS_VALUE_PAIR(pattern)) {
@@ -149,6 +159,19 @@ const char* flecs_id_invalid_reason(
             return "invalid value pair: first element is 0 (is the relationship registered?)";
         }
     } else if (ECS_HAS_ID_FLAG(id, PAIR)) {
+        if (ECS_IS_NESTED_PAIR(id)) {
+            if (!ECS_PAIR_FIRST(id)) {
+                return "invalid nested pair: first element is 0";
+            }
+
+            if (!flecs_nested_pair_get(world, ECS_PAIR_SECOND(id))) {
+                return "invalid nested pair: target is not a nested pair "
+                    "handle (use ecs_nested_pair())";
+            }
+
+            return NULL;
+        }
+
         if (!ECS_PAIR_FIRST(id) && !ECS_PAIR_SECOND(id)) {
             return "invalid pair: both elements are 0";
         }
@@ -219,14 +242,14 @@ const char* ecs_id_flag_str(
     if (ECS_IS_VALUE_PAIR(entity)) {
         return "VALUE_PAIR";
     } else
+    if (ECS_IS_NESTED_PAIR(entity)) {
+        return "NESTED_PAIR";
+    } else
     if (ECS_HAS_ID_FLAG(entity, PAIR)) {
         return "PAIR";
     } else
     if (ECS_HAS_ID_FLAG(entity, TOGGLE)) {
         return "TOGGLE";
-    } else
-    if (ECS_HAS_ID_FLAG(entity, AUTO_OVERRIDE)) {
-        return "AUTO_OVERRIDE";
     } else {
         return "UNKNOWN";
     }
@@ -246,11 +269,6 @@ void ecs_id_str_buf(
         ecs_strbuf_appendch(buf, '|');
     }
 
-    if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
-        ecs_strbuf_appendstr(buf, ecs_id_flag_str(ECS_AUTO_OVERRIDE));
-        ecs_strbuf_appendch(buf, '|');
-    }
-
     if (ECS_HAS_ID_FLAG(id, PAIR)) {
         ecs_entity_t rel = ECS_PAIR_FIRST(id);
         ecs_entity_t tgt = ECS_PAIR_SECOND(id);
@@ -264,9 +282,14 @@ void ecs_id_str_buf(
         ecs_get_path_w_sep_buf(world, 0, rel, NULL, NULL, buf, false);
         ecs_strbuf_appendch(buf, ',');
 
+        ecs_id_t nested;
         if (ECS_IS_VALUE_PAIR(id)) {
             ecs_strbuf_appendlit(buf, "@");
             ecs_strbuf_appendint(buf, (uint32_t)tgt);
+        } else if (ECS_IS_NESTED_PAIR(id) && 
+            (nested = flecs_nested_pair_get(world, (uint32_t)tgt))) 
+        {
+            ecs_id_str_buf(world, nested, buf);
         } else {
             if ((e = ecs_get_alive(world, tgt))) {
                 tgt = e;
@@ -299,8 +322,76 @@ ecs_id_t ecs_make_pair(
     ecs_entity_t target)
 {
     ecs_assert(!ECS_IS_PAIR(relationship) && !ECS_IS_PAIR(target), 
-        ECS_INVALID_PARAMETER, "cannot create nested pairs");
+        ECS_INVALID_PARAMETER, 
+        "cannot create nested pairs with ecs_pair() (use ecs_nested_pair())");
     return ecs_pair(relationship, target);
+}
+
+ecs_id_t ecs_make_nested_pair(
+    ecs_world_t *world,
+    ecs_entity_t first,
+    ecs_id_t second)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(first != 0, ECS_INVALID_PARAMETER,
+        "first element of nested pair cannot be 0");
+    ecs_check(!(first & ECS_ID_FLAGS_MASK), ECS_INVALID_PARAMETER,
+        "first element of nested pair cannot be a pair or have flags");
+    ecs_check(second != 0, ECS_INVALID_PARAMETER,
+        "second element of nested pair cannot be 0");
+
+    if (!ECS_IS_PAIR(second)) {
+        ecs_check(!(second & ECS_ID_FLAGS_MASK), ECS_INVALID_PARAMETER,
+            "target of nested pair cannot have flags");
+        return ecs_pair(first, second);
+    }
+
+    ecs_check((uint32_t)first != EcsChildOf && (uint32_t)first != EcsIsA,
+        ECS_INVALID_PARAMETER,
+        "ChildOf and IsA relationships cannot be used in a nested pair");
+    ecs_check(!ecs_id_is_wildcard(second), ECS_INVALID_PARAMETER,
+        "target of nested pair cannot be a wildcard");
+    ecs_check(ecs_get_alive(world, ECS_PAIR_FIRST(second)) != 0, 
+        ECS_INVALID_PARAMETER,
+        "first element of nested pair target is not alive");
+
+    if (ECS_IS_NESTED_PAIR(second)) {
+        ecs_check(flecs_nested_pair_get(world, ECS_PAIR_SECOND(second)) != 0,
+            ECS_INVALID_PARAMETER, 
+            "second element of nested pair target is not valid");
+    } else if (!ECS_IS_VALUE_PAIR(second)) {
+        ecs_check(ecs_get_alive(world, ECS_PAIR_SECOND(second)) != 0, 
+            ECS_INVALID_PARAMETER,
+            "second element of nested pair target is not alive");
+    }
+
+    ecs_world_t *real_world = ECS_CONST_CAST(ecs_world_t*, 
+        ecs_get_world(world));
+    uint32_t handle = flecs_nested_pair_ensure(real_world, second);
+
+    return ECS_NESTED_PAIR | ecs_entity_t_comb(handle, first);
+error:
+    return 0;
+}
+
+ecs_id_t ecs_pair_second_id(
+    const ecs_world_t *world,
+    ecs_id_t pair)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ECS_IS_PAIR(pair), ECS_INVALID_PARAMETER, "id is not a pair");
+
+    if (ECS_IS_NESTED_PAIR(pair)) {
+        return flecs_nested_pair_get(world, ECS_PAIR_SECOND(pair));
+    }
+
+    if (ECS_IS_VALUE_PAIR(pair)) {
+        return ECS_PAIR_SECOND(pair);
+    }
+
+    return ecs_get_alive(world, ECS_PAIR_SECOND(pair));
+error:
+    return 0;
 }
 
 bool ecs_id_is_tag(

@@ -4296,7 +4296,7 @@ void Trigger_on_set_self_auto_override(void) {
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
-    ecs_add_id(world, base, ECS_AUTO_OVERRIDE | ecs_id(Position));
+    ecs_add_id(world, base, ecs_pair(EcsAutoOverride, ecs_id(Position)));
 
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -4328,7 +4328,7 @@ void Trigger_on_set_self_superset_auto_override(void) {
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
-    ecs_add_id(world, base, ECS_AUTO_OVERRIDE | ecs_id(Position));
+    ecs_add_id(world, base, ecs_pair(EcsAutoOverride, ecs_id(Position)));
 
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -4361,7 +4361,7 @@ void Trigger_on_set_superset_auto_override(void) {
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
-    ecs_add_id(world, base, ECS_AUTO_OVERRIDE | ecs_id(Position));
+    ecs_add_id(world, base, ecs_pair(EcsAutoOverride, ecs_id(Position)));
 
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){

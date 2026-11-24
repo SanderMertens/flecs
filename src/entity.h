@@ -163,6 +163,10 @@ void flecs_on_delete(
     bool delete_id,
     bool force_delete);
 
+void flecs_on_delete_nested_pairs(
+    ecs_world_t *world,
+    ecs_entity_t entity);
+
 /* Delete all entities with id, including prefabs when force_delete is true. */
 void flecs_delete_with(
     ecs_world_t *world,

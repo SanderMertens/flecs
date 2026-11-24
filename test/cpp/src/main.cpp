@@ -514,6 +514,10 @@ void Pairs_modified_tag_second(void);
 void Pairs_modified_tag_first(void);
 void Pairs_childof_and_traversable_rel_in_opposite_directions(void);
 void Pairs_2_traversable_rels_in_opposite_directions(void);
+void Pairs_nested_pair(void);
+void Pairs_with_nested_pair(void);
+void Pairs_with_component(void);
+void Pairs_auto_override_nested_pair(void);
 
 // Testsuite 'Enum'
 void Enum_standard_enum_reflection(void);
@@ -3795,6 +3799,22 @@ bake_test_case Pairs_testcases[] = {
     {
         "2_traversable_rels_in_opposite_directions",
         Pairs_2_traversable_rels_in_opposite_directions
+    },
+    {
+        "nested_pair",
+        Pairs_nested_pair
+    },
+    {
+        "with_nested_pair",
+        Pairs_with_nested_pair
+    },
+    {
+        "with_component",
+        Pairs_with_component
+    },
+    {
+        "auto_override_nested_pair",
+        Pairs_auto_override_nested_pair
     }
 };
 
@@ -8852,7 +8872,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        72,
+        76,
         Pairs_testcases
     },
     {

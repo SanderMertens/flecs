@@ -36,3 +36,16 @@ flecs::id pair(entity_t o) const;
  * @memberof flecs::world
  */
 flecs::id pair(entity_t r, entity_t o) const;
+
+/** Get nested pair ID from relationship and (pair) ID.
+ * 
+ * @memberof flecs::world
+ */
+flecs::id nested_pair(entity_t first, id_t second) const;
+
+/** Get nested pair ID from relationship and (pair) ID.
+ * 
+ * @memberof flecs::world
+ */
+template <typename First>
+flecs::id nested_pair(id_t second) const;

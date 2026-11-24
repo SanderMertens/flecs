@@ -1566,11 +1566,13 @@ void OnDelete_remove_rel_w_override_pair(void) {
     ecs_entity_t t = ecs_new(world);
     ecs_entity_t e = ecs_new(world);
 
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t));
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t));
+    ecs_id_t ao_r_1_t = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_1, t));
+    ecs_add_id(world, e, ao_r_1_t);
+    ecs_id_t ao_r_2_t = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_2, t));
+    ecs_add_id(world, e, ao_r_2_t);
 
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t)));
+    test_assert(ecs_has_id(world, e, ao_r_1_t));
+    test_assert(ecs_has_id(world, e, ao_r_2_t));
 
     ecs_delete(world, r_1);
 
@@ -1579,8 +1581,8 @@ void OnDelete_remove_rel_w_override_pair(void) {
     test_assert(ecs_is_alive(world, t));
     test_assert(ecs_is_alive(world, e));
 
-    test_assert(!ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t)));
+    test_assert(!ecs_has_id(world, e, ao_r_1_t));
+    test_assert(ecs_has_id(world, e, ao_r_2_t));
 
     ecs_fini(world);
 }
@@ -1593,11 +1595,13 @@ void OnDelete_remove_obj_w_override_pair(void) {
     ecs_entity_t t_2 = ecs_new(world);
     ecs_entity_t e = ecs_new(world);
 
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r, t_1));
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r, t_2));
+    ecs_id_t ao_r_t_1 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r, t_1));
+    ecs_add_id(world, e, ao_r_t_1);
+    ecs_id_t ao_r_t_2 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r, t_2));
+    ecs_add_id(world, e, ao_r_t_2);
 
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r, t_1)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r, t_2)));
+    test_assert(ecs_has_id(world, e, ao_r_t_1));
+    test_assert(ecs_has_id(world, e, ao_r_t_2));
 
     ecs_delete(world, t_1);
 
@@ -1606,8 +1610,8 @@ void OnDelete_remove_obj_w_override_pair(void) {
     test_assert(ecs_is_alive(world, t_2));
     test_assert(ecs_is_alive(world, e));
 
-    test_assert(!ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r, t_1)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r, t_2)));
+    test_assert(!ecs_has_id(world, e, ao_r_t_1));
+    test_assert(ecs_has_id(world, e, ao_r_t_2));
 
     ecs_fini(world);
 }
@@ -1620,11 +1624,13 @@ void OnDelete_remove_rel_w_override_pair_after_on_delete_target(void) {
     ecs_entity_t t = ecs_new(world);
     ecs_entity_t e = ecs_new(world);
 
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t));
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t));
+    ecs_id_t ao_r_1_t = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_1, t));
+    ecs_add_id(world, e, ao_r_1_t);
+    ecs_id_t ao_r_2_t = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_2, t));
+    ecs_add_id(world, e, ao_r_2_t);
 
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t)));
+    test_assert(ecs_has_id(world, e, ao_r_1_t));
+    test_assert(ecs_has_id(world, e, ao_r_2_t));
 
     ecs_entity_t p = ecs_new(world);
     ecs_add_pair(world, r_1, EcsChildOf, p);
@@ -1637,8 +1643,8 @@ void OnDelete_remove_rel_w_override_pair_after_on_delete_target(void) {
     test_assert(ecs_is_alive(world, t));
     test_assert(ecs_is_alive(world, e));
 
-    test_assert(!ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t)));
+    test_assert(!ecs_has_id(world, e, ao_r_1_t));
+    test_assert(ecs_has_id(world, e, ao_r_2_t));
 
     ecs_fini(world);
 }
@@ -1652,13 +1658,16 @@ void OnDelete_remove_rel_w_override_pair_2_ids(void) {
     ecs_entity_t t_2 = ecs_new(world);
     ecs_entity_t e = ecs_new(world);
 
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_1));
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_2));
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t_1));
+    ecs_id_t ao_r_1_t_1 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_1, t_1));
+    ecs_add_id(world, e, ao_r_1_t_1);
+    ecs_id_t ao_r_1_t_2 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_1, t_2));
+    ecs_add_id(world, e, ao_r_1_t_2);
+    ecs_id_t ao_r_2_t_1 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_2, t_1));
+    ecs_add_id(world, e, ao_r_2_t_1);
 
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_1)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_2)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t_1)));
+    test_assert(ecs_has_id(world, e, ao_r_1_t_1));
+    test_assert(ecs_has_id(world, e, ao_r_1_t_2));
+    test_assert(ecs_has_id(world, e, ao_r_2_t_1));
 
     ecs_delete(world, r_1);
 
@@ -1668,9 +1677,9 @@ void OnDelete_remove_rel_w_override_pair_2_ids(void) {
     test_assert(ecs_is_alive(world, t_2));
     test_assert(ecs_is_alive(world, e));
 
-    test_assert(!ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_1)));
-    test_assert(!ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_2)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t_1)));
+    test_assert(!ecs_has_id(world, e, ao_r_1_t_1));
+    test_assert(!ecs_has_id(world, e, ao_r_1_t_2));
+    test_assert(ecs_has_id(world, e, ao_r_2_t_1));
 
     ecs_fini(world);
 }
@@ -1684,13 +1693,16 @@ void OnDelete_remove_obj_w_override_pair_2_ids(void) {
     ecs_entity_t t_2 = ecs_new(world);
     ecs_entity_t e = ecs_new(world);
 
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_1));
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t_1));
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_2));
+    ecs_id_t ao_r_1_t_1 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_1, t_1));
+    ecs_add_id(world, e, ao_r_1_t_1);
+    ecs_id_t ao_r_2_t_1 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_2, t_1));
+    ecs_add_id(world, e, ao_r_2_t_1);
+    ecs_id_t ao_r_1_t_2 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_1, t_2));
+    ecs_add_id(world, e, ao_r_1_t_2);
 
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_1)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t_1)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_2)));
+    test_assert(ecs_has_id(world, e, ao_r_1_t_1));
+    test_assert(ecs_has_id(world, e, ao_r_2_t_1));
+    test_assert(ecs_has_id(world, e, ao_r_1_t_2));
 
     ecs_delete(world, t_1);
 
@@ -1700,9 +1712,9 @@ void OnDelete_remove_obj_w_override_pair_2_ids(void) {
     test_assert(ecs_is_alive(world, t_2));
     test_assert(ecs_is_alive(world, e));
 
-    test_assert(!ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_1)));
-    test_assert(!ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t_1)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_2)));
+    test_assert(!ecs_has_id(world, e, ao_r_1_t_1));
+    test_assert(!ecs_has_id(world, e, ao_r_2_t_1));
+    test_assert(ecs_has_id(world, e, ao_r_1_t_2));
 
     ecs_fini(world);
 }
@@ -1717,21 +1729,27 @@ void OnDelete_remove_obj_w_override_pair_3_ids(void) {
     ecs_entity_t t_2 = ecs_new(world);
     ecs_entity_t e = ecs_new(world);
 
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_1));
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t_1));
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_3, t_1));
+    ecs_id_t ao_r_1_t_1 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_1, t_1));
+    ecs_add_id(world, e, ao_r_1_t_1);
+    ecs_id_t ao_r_2_t_1 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_2, t_1));
+    ecs_add_id(world, e, ao_r_2_t_1);
+    ecs_id_t ao_r_3_t_1 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_3, t_1));
+    ecs_add_id(world, e, ao_r_3_t_1);
 
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_2));
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t_2));
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_3, t_2));
+    ecs_id_t ao_r_1_t_2 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_1, t_2));
+    ecs_add_id(world, e, ao_r_1_t_2);
+    ecs_id_t ao_r_2_t_2 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_2, t_2));
+    ecs_add_id(world, e, ao_r_2_t_2);
+    ecs_id_t ao_r_3_t_2 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_3, t_2));
+    ecs_add_id(world, e, ao_r_3_t_2);
 
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_1)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t_1)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_3, t_1)));
+    test_assert(ecs_has_id(world, e, ao_r_1_t_1));
+    test_assert(ecs_has_id(world, e, ao_r_2_t_1));
+    test_assert(ecs_has_id(world, e, ao_r_3_t_1));
 
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_2)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t_2)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_3, t_2)));
+    test_assert(ecs_has_id(world, e, ao_r_1_t_2));
+    test_assert(ecs_has_id(world, e, ao_r_2_t_2));
+    test_assert(ecs_has_id(world, e, ao_r_3_t_2));
 
     ecs_delete(world, t_1);
 
@@ -1742,13 +1760,13 @@ void OnDelete_remove_obj_w_override_pair_3_ids(void) {
     test_assert(ecs_is_alive(world, t_2));
     test_assert(ecs_is_alive(world, e));
 
-    test_assert(!ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_1)));
-    test_assert(!ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t_1)));
-    test_assert(!ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_3, t_1)));
+    test_assert(!ecs_has_id(world, e, ao_r_1_t_1));
+    test_assert(!ecs_has_id(world, e, ao_r_2_t_1));
+    test_assert(!ecs_has_id(world, e, ao_r_3_t_1));
 
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_2)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t_2)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_3, t_2)));
+    test_assert(ecs_has_id(world, e, ao_r_1_t_2));
+    test_assert(ecs_has_id(world, e, ao_r_2_t_2));
+    test_assert(ecs_has_id(world, e, ao_r_3_t_2));
 
     ecs_fini(world);
 }
@@ -1764,27 +1782,36 @@ void OnDelete_remove_mixed_w_override_pair_3_ids(void) {
     ecs_entity_t t_2 = ecs_new(world);
     ecs_entity_t e = ecs_new(world);
 
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_1));
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t_1));
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_3, t_1));
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(t_1, r_1));
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(t_1, r_2));
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(t_1, r_3));
+    ecs_id_t ao_r_1_t_1 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_1, t_1));
+    ecs_add_id(world, e, ao_r_1_t_1);
+    ecs_id_t ao_r_2_t_1 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_2, t_1));
+    ecs_add_id(world, e, ao_r_2_t_1);
+    ecs_id_t ao_r_3_t_1 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_3, t_1));
+    ecs_add_id(world, e, ao_r_3_t_1);
+    ecs_id_t ao_t_1_r_1 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(t_1, r_1));
+    ecs_add_id(world, e, ao_t_1_r_1);
+    ecs_id_t ao_t_1_r_2 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(t_1, r_2));
+    ecs_add_id(world, e, ao_t_1_r_2);
+    ecs_id_t ao_t_1_r_3 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(t_1, r_3));
+    ecs_add_id(world, e, ao_t_1_r_3);
 
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_2));
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t_2));
-    ecs_add_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_3, t_2));
+    ecs_id_t ao_r_1_t_2 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_1, t_2));
+    ecs_add_id(world, e, ao_r_1_t_2);
+    ecs_id_t ao_r_2_t_2 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_2, t_2));
+    ecs_add_id(world, e, ao_r_2_t_2);
+    ecs_id_t ao_r_3_t_2 = ecs_nested_pair(world, EcsAutoOverride, ecs_pair(r_3, t_2));
+    ecs_add_id(world, e, ao_r_3_t_2);
 
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_1)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t_1)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_3, t_1)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(t_1, r_1)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(t_1, r_2)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(t_1, r_3)));
+    test_assert(ecs_has_id(world, e, ao_r_1_t_1));
+    test_assert(ecs_has_id(world, e, ao_r_2_t_1));
+    test_assert(ecs_has_id(world, e, ao_r_3_t_1));
+    test_assert(ecs_has_id(world, e, ao_t_1_r_1));
+    test_assert(ecs_has_id(world, e, ao_t_1_r_2));
+    test_assert(ecs_has_id(world, e, ao_t_1_r_3));
 
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_2)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t_2)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_3, t_2)));
+    test_assert(ecs_has_id(world, e, ao_r_1_t_2));
+    test_assert(ecs_has_id(world, e, ao_r_2_t_2));
+    test_assert(ecs_has_id(world, e, ao_r_3_t_2));
 
     ecs_delete(world, t_1);
 
@@ -1795,16 +1822,16 @@ void OnDelete_remove_mixed_w_override_pair_3_ids(void) {
     test_assert(ecs_is_alive(world, t_2));
     test_assert(ecs_is_alive(world, e));
 
-    test_assert(!ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_1)));
-    test_assert(!ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t_1)));
-    test_assert(!ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_3, t_1)));
-    test_assert(!ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(t_1, r_1)));
-    test_assert(!ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(t_1, r_2)));
-    test_assert(!ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(t_1, r_3)));
+    test_assert(!ecs_has_id(world, e, ao_r_1_t_1));
+    test_assert(!ecs_has_id(world, e, ao_r_2_t_1));
+    test_assert(!ecs_has_id(world, e, ao_r_3_t_1));
+    test_assert(!ecs_has_id(world, e, ao_t_1_r_1));
+    test_assert(!ecs_has_id(world, e, ao_t_1_r_2));
+    test_assert(!ecs_has_id(world, e, ao_t_1_r_3));
 
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_1, t_2)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_2, t_2)));
-    test_assert(ecs_has_id(world, e, ECS_AUTO_OVERRIDE | ecs_pair(r_3, t_2)));
+    test_assert(ecs_has_id(world, e, ao_r_1_t_2));
+    test_assert(ecs_has_id(world, e, ao_r_2_t_2));
+    test_assert(ecs_has_id(world, e, ao_r_3_t_2));
 
     ecs_fini(world);
 }

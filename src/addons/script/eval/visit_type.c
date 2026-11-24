@@ -905,10 +905,11 @@ static int flecs_script_type_id(
         }
 
         if (first && second) {
-            id->eval = id->flag | ecs_pair(first, second);
+            id->eval = flecs_script_flag_id(
+                t->v->world, id->flag, ecs_pair(first, second));
         }
     } else if (first) {
-        id->eval = id->flag | first;
+        id->eval = flecs_script_flag_id(t->v->world, id->flag, first);
     }
 
     return 0;

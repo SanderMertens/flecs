@@ -8,7 +8,7 @@
 
 /* Id flags */
 const ecs_id_t ECS_PAIR =                                          (1ull << 63);
-const ecs_id_t ECS_AUTO_OVERRIDE =                                 (1ull << 62);
+const ecs_id_t ECS_NESTED_PAIR =                                   ((1ull << 62) | (1ull << 63));
 const ecs_id_t ECS_TOGGLE =                                        (1ull << 61);
 const ecs_id_t ECS_VALUE_PAIR =                                    ((1ull << 60) | (1ull << 63));
 
@@ -60,6 +60,7 @@ const ecs_entity_t EcsExclusive =                   FLECS_HI_COMPONENT_ID + 26;
 const ecs_entity_t EcsTraversable =                 FLECS_HI_COMPONENT_ID + 27;
 const ecs_entity_t EcsWith =                        FLECS_HI_COMPONENT_ID + 28;
 const ecs_entity_t EcsCanToggle =                   FLECS_HI_COMPONENT_ID + 29;
+const ecs_entity_t EcsAutoOverride =                FLECS_HI_COMPONENT_ID + 6;
 
 /* Builtin relationships */
 const ecs_entity_t EcsChildOf =                     FLECS_HI_COMPONENT_ID + 30;
@@ -945,6 +946,7 @@ ecs_world_t *ecs_mini(void) {
     }
 
     ecs_map_init(&world->prefab_child_indices, a);
+    flecs_nested_pairs_init(world);
 
     ecs_set_stage_count(world, 1);
     ecs_default_lookup_path[0] = EcsFlecsCore;
@@ -1170,6 +1172,7 @@ int ecs_fini(
     flecs_name_index_fini(&world->symbols);
     ecs_set_stage_count(world, 0);
     ecs_map_fini(&world->prefab_child_indices);
+    flecs_nested_pairs_fini(world);
     flecs_multi_world_fini(world);
     ecs_log_pop_1();
 
@@ -1677,7 +1680,9 @@ void flecs_component_lock(
     flecs_component_lock_inc(&world->locked_components, component);
     if (ECS_IS_PAIR(component)) {
         flecs_component_lock_inc(&world->locked_components, ECS_PAIR_FIRST(component));
-        flecs_component_lock_inc(&world->locked_entities, ECS_PAIR_SECOND(component));
+        if (!ECS_IS_NESTED_PAIR(component)) {
+            flecs_component_lock_inc(&world->locked_entities, ECS_PAIR_SECOND(component));
+        }
     }
 }
 
@@ -1688,7 +1693,9 @@ void flecs_component_unlock(
     flecs_component_lock_dec(world, &world->locked_components, component);
     if (ECS_IS_PAIR(component)) {
         flecs_component_lock_dec(world, &world->locked_components, ECS_PAIR_FIRST(component));
-        flecs_component_lock_dec(world, &world->locked_entities, ECS_PAIR_SECOND(component));
+        if (!ECS_IS_NESTED_PAIR(component)) {
+            flecs_component_lock_dec(world, &world->locked_entities, ECS_PAIR_SECOND(component));
+        }
     }
 }
 
