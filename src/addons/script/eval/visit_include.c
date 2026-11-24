@@ -14,7 +14,7 @@
 #define FLECS_SCRIPT_INCLUDE_DEPTH_MAX (32)
 #endif
 
-static bool flecs_script_include_has_parent_dir(
+bool flecs_script_path_has_parent_dir(
     const char *path)
 {
     const char *p = path;
@@ -54,7 +54,7 @@ static char* flecs_script_include_resolve(
         include_path, has_ext ? "" : ext);
 }
 
-static bool flecs_script_include_is_absolute(
+bool flecs_script_path_is_absolute(
     const char *path)
 {
     if (path[0] == '/' || path[0] == '\\') {
@@ -87,13 +87,13 @@ static int flecs_script_include_node(
     ecs_script_eval_visitor_t *v,
     ecs_script_include_t *node)
 {
-    if (flecs_script_include_is_absolute(node->filename)) {
+    if (flecs_script_path_is_absolute(node->filename)) {
         flecs_script_eval_error(v, node,
             "include path '%s' must be relative", node->filename);
         return -1;
     }
 
-    if (flecs_script_include_has_parent_dir(node->filename)) {
+    if (flecs_script_path_has_parent_dir(node->filename)) {
         flecs_script_eval_error(v, node,
             "include path '%s' must not contain '..'", node->filename);
         return -1;

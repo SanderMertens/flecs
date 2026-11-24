@@ -634,7 +634,9 @@
                 "get_stats_wo_stats_import",
                 "get_pretty",
                 "query_pretty",
-                "world_pretty"
+                "world_pretty",
+                "script_save_file",
+                "script_save_file_cannot_open"
             ]
         }, {
             "id": "Metrics",

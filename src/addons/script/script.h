@@ -282,6 +282,14 @@ const char* flecs_script_stmt(
 void flecs_script_edit_cache_fini(
     ecs_script_impl_t *impl);
 
+/* Returns true if path starts at the root of a filesystem or drive. */
+bool flecs_script_path_is_absolute(
+    const char *path);
+
+/* Returns true if path contains a '..' component. */
+bool flecs_script_path_has_parent_dir(
+    const char *path);
+
 /* Write the shortest decimal string that parses back to the same value. */
 
 /* Same as ecs_ptr_to_expr(), but writes floating point members with the

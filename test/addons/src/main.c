@@ -585,6 +585,8 @@ void Rest_get_stats_wo_stats_import(void);
 void Rest_get_pretty(void);
 void Rest_query_pretty(void);
 void Rest_world_pretty(void);
+void Rest_script_save_file(void);
+void Rest_script_save_file_cannot_open(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -2839,6 +2841,14 @@ bake_test_case Rest_testcases[] = {
     {
         "world_pretty",
         Rest_world_pretty
+    },
+    {
+        "script_save_file",
+        Rest_script_save_file
+    },
+    {
+        "script_save_file_cannot_open",
+        Rest_script_save_file_cannot_open
     }
 };
 
@@ -3299,7 +3309,7 @@ static bake_test_suite suites[] = {
         "Rest",
         Rest_setup,
         NULL,
-        74,
+        76,
         Rest_testcases
     },
     {

@@ -543,15 +543,28 @@ static bool flecs_rest_script(
         code = "";
     }
 
-    ecs_strbuf_appendlit(&reply->body, "{");
-
     const EcsScript *s = ecs_get(world, script, EcsScript);
 
     if (s && s->filename && save_file) {
         FILE *f = ecs_os_fopen(s->filename, "w");
-        ecs_os_fwrite(code, strlen(code), 1, f);
+        if (!f) {
+            flecs_reply_error(reply, "cannot open file '%s' for writing",
+                s->filename);
+            reply->code = 500;
+            return true;
+        }
+
+        size_t len = strlen(code);
+        bool written = !len || ecs_os_fwrite(code, len, 1, f) == 1;
         ecs_os_fclose(f);
+        if (!written) {
+            flecs_reply_error(reply, "failed to write file '%s'", s->filename);
+            reply->code = 500;
+            return true;
+        }
     }
+
+    ecs_strbuf_appendlit(&reply->body, "{");
 
     if (s && check_file) {
         ecs_strbuf_appendlit(&reply->body, "\"changed\": ");

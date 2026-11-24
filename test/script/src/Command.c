@@ -13,6 +13,9 @@ typedef struct command_file_t {
 
 static command_file_t command_files[COMMAND_FILE_MAX];
 
+/* File that can be read but not opened for writing */
+static const char *command_file_readonly;
+
 static command_file_t* command_file_get(FILE *file) {
     int32_t i;
     for (i = 0; i < COMMAND_FILE_MAX; i ++) {
@@ -24,6 +27,12 @@ static command_file_t* command_file_get(FILE *file) {
 }
 
 static FILE* command_fopen(const char *file, const char *mode) {
+    if (strchr(mode, 'w') && command_file_readonly &&
+        !strcmp(file, command_file_readonly))
+    {
+        return NULL;
+    }
+
     int32_t i;
     for (i = 0; i < COMMAND_FILE_MAX; i ++) {
         if (command_files[i].name && !strcmp(file, command_files[i].name)) {
@@ -90,6 +99,7 @@ static void command_fclose(FILE *file) {
 
 void Command_setup(void) {
     memset(command_files, 0, sizeof(command_files));
+    command_file_readonly = NULL;
 
     ecs_os_set_api_defaults();
     ecs_os_api_t os_api = ecs_os_api;
@@ -3122,6 +3132,147 @@ void Command_script_save_as(void) {
     test_str(ecs_get(world, s, EcsScript)->filename, "out.flecs");
     test_str(command_files[0].name, "out.flecs");
     test_str(command_files[0].content, "a {}\n");
+
+    ecs_fini(world);
+}
+
+void Command_script_save_other_file(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    command_files[0].name = "s.flecs";
+    strcpy(command_files[0].content, "a {}\n");
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "s" }),
+        .filename = "s.flecs"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session,
+        "script_save s other.flecs");
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0],
+        "script 's' can only be saved to 's.flecs'");
+    ecs_shell_result_fini(world, &r);
+
+    test_str(ecs_get(world, s, EcsScript)->filename, "s.flecs");
+    test_assert(command_files[1].name == NULL);
+
+    ecs_fini(world);
+}
+
+void Command_script_save_as_absolute_path(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "s" }),
+        .code = "a {}\n"
+    });
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session,
+        "script_save s \"/tmp/out.flecs\"");
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0],
+        "file '/tmp/out.flecs' must be a relative path without '..'");
+    ecs_shell_result_fini(world, &r);
+
+    r = ecs_shell_run(world, session, "script_save s \"C:/out.flecs\"");
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0],
+        "file 'C:/out.flecs' must be a relative path without '..'");
+    ecs_shell_result_fini(world, &r);
+
+    test_assert(ecs_get(world, s, EcsScript)->filename == NULL);
+    test_assert(command_files[0].name == NULL);
+
+    ecs_fini(world);
+}
+
+void Command_script_save_as_parent_dir(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "s" }),
+        .code = "a {}\n"
+    });
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session,
+        "script_save s \"../out.flecs\"");
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0],
+        "file '../out.flecs' must be a relative path without '..'");
+    ecs_shell_result_fini(world, &r);
+
+    r = ecs_shell_run(world, session,
+        "script_save s \"sub/../../out.flecs\"");
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0],
+        "file 'sub/../../out.flecs' must be a relative path without '..'");
+    ecs_shell_result_fini(world, &r);
+
+    test_assert(ecs_get(world, s, EcsScript)->filename == NULL);
+    test_assert(command_files[0].name == NULL);
+
+    ecs_fini(world);
+}
+
+void Command_script_save_as_existing_file(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    command_files[0].name = "out.flecs";
+    strcpy(command_files[0].content, "x {}\n");
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "s" }),
+        .code = "a {}\n"
+    });
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_shell_result_t r = ecs_shell_run(world, session,
+        "script_save s out.flecs");
+    test_int(ecs_vec_count(&r.errors), 1);
+    test_str(ecs_vec_first_t(&r.errors, char*)[0],
+        "file 'out.flecs' already exists");
+    ecs_shell_result_fini(world, &r);
+
+    test_assert(ecs_get(world, s, EcsScript)->filename == NULL);
+    test_str(command_files[0].content, "x {}\n");
+
+    ecs_fini(world);
+}
+
+void Command_script_save_as_cannot_open(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptShell);
+
+    command_file_readonly = "out.flecs";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "s" }),
+        .code = "a {}\n"
+    });
+
+    ecs_entity_t session = ecs_shell_session_init(world, NULL);
+
+    ecs_log_set_level(-4);
+    ecs_shell_result_t r = ecs_shell_run(world, session,
+        "script_save s out.flecs");
+    test_assert(ecs_vec_count(&r.errors) != 0);
+    ecs_shell_result_fini(world, &r);
+
+    /* A failed save must not change the file the script reloads from */
+    test_assert(ecs_get(world, s, EcsScript)->filename == NULL);
 
     ecs_fini(world);
 }
