@@ -3,6 +3,10 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <errno.h>
 #endif
 
 static bool OnRequest(
@@ -24,6 +28,15 @@ static bool OnRequestEcho(
         ecs_strbuf_appendch(&reply->body, '|');
         ecs_strbuf_appendstr(&reply->body, q);
     }
+    return true;
+}
+
+static bool OnRequestBody(
+    const ecs_http_request_t* request,
+    ecs_http_reply_t *reply,
+    void *ctx)
+{
+    ecs_strbuf_appendstr(&reply->body, request->body);
     return true;
 }
 
@@ -276,4 +289,105 @@ void Http_stop_double_close(void) {
 }
 #else
 void Http_stop_double_close(void) { }
+#endif
+
+#ifndef _WIN32
+void Http_request_headers_then_body(void) {
+    ecs_set_os_api_impl();
+
+    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
+        .port = 27792,
+        .callback = OnRequestBody
+    });
+    test_assert(srv != NULL);
+    test_int(ecs_http_server_start(srv), 0);
+    ecs_os_sleep(0, 200 * 1000 * 1000);
+
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    test_assert(sock >= 0);
+    struct sockaddr_in addr = {0};
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(27792);
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    test_int(connect(sock, (struct sockaddr*)&addr, sizeof(addr)), 0);
+
+    const char *hdr = "PUT /body HTTP/1.1\r\nContent-Length: 8\r\n\r\n";
+    test_int(send(sock, hdr, strlen(hdr), 0), (int)strlen(hdr));
+    ecs_os_sleep(0, 50 * 1000 * 1000);
+    test_int(send(sock, "abcdefgh", 8, 0), 8);
+
+    char buf[512];
+    int32_t len = 0;
+    for (int i = 0; i < 300; i ++) {
+        ecs_http_server_dequeue(srv, (ecs_ftime_t)0.01);
+        ssize_t n = recv(sock, buf + len, sizeof(buf) - 1 - len, MSG_DONTWAIT);
+        if (n == 0 || (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK)) {
+            break;
+        }
+        if (n > 0) {
+            len += (int32_t)n;
+        }
+        ecs_os_sleep(0, 10 * 1000 * 1000);
+    }
+    buf[len] = '\0';
+    close(sock);
+
+    test_assert(strstr(buf, "HTTP/1.1 200 OK\r\n") == buf);
+    test_assert(strstr(buf, "\r\n\r\nabcdefgh") != NULL);
+
+    ecs_http_server_fini(srv);
+}
+
+void Http_request_body_in_chunks(void) {
+    ecs_set_os_api_impl();
+
+    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
+        .port = 27793,
+        .callback = OnRequestBody
+    });
+    test_assert(srv != NULL);
+    test_int(ecs_http_server_start(srv), 0);
+    ecs_os_sleep(0, 200 * 1000 * 1000);
+
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    test_assert(sock >= 0);
+    struct sockaddr_in addr = {0};
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(27793);
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    test_int(connect(sock, (struct sockaddr*)&addr, sizeof(addr)), 0);
+
+    const char *hdr = "PUT /body HTTP/1.1\r\nContent-Length: 8\r\n\r\n";
+    test_int(send(sock, hdr, strlen(hdr), 0), (int)strlen(hdr));
+    const char *body = "abcdefgh";
+    for (int i = 0; i < 8; i ++) {
+        ecs_os_sleep(0, 30 * 1000 * 1000);
+        test_int(send(sock, body + i, 1, 0), 1);
+    }
+
+    char buf[512];
+    int32_t len = 0;
+    for (int i = 0; i < 300; i ++) {
+        ecs_http_server_dequeue(srv, (ecs_ftime_t)0.01);
+        ssize_t n = recv(sock, buf + len, sizeof(buf) - 1 - len, MSG_DONTWAIT);
+        if (n == 0 || (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK)) {
+            break;
+        }
+        if (n > 0) {
+            len += (int32_t)n;
+        }
+        ecs_os_sleep(0, 10 * 1000 * 1000);
+    }
+    buf[len] = '\0';
+    close(sock);
+
+    test_assert(strstr(buf, "HTTP/1.1 200 OK\r\n") == buf);
+    test_assert(strstr(buf, "\r\n\r\nabcdefgh") != NULL);
+
+    ecs_http_server_fini(srv);
+}
+#else
+void Http_request_headers_then_body(void) { }
+
+void Http_request_body_in_chunks(void) { }
 #endif
