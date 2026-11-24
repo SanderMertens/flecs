@@ -1018,6 +1018,18 @@ extern "C" {
     #define ECS_NORETURN
 #endif
 
+/* Lets GCC and Clang check the arguments of printf-style functions against
+ * their format string. Disabled for MinGW, which by default checks against the
+ * MSVC runtime format rules that don't accept the C99 length modifiers used by
+ * Flecs. */
+#if (defined(ECS_TARGET_GNU) || defined(ECS_TARGET_CLANG)) && \
+    !defined(ECS_TARGET_MINGW)
+    #define ECS_FORMAT(fmt_index, args_index)\
+        __attribute__((format(printf, fmt_index, args_index)))
+#else
+    #define ECS_FORMAT(fmt_index, args_index)
+#endif
+
 /* Ignored warnings */
 #if defined(ECS_TARGET_CLANG) || (defined(ECS_TARGET_GNU) && !defined(__cplusplus))
 /* This is valid in C99, and Flecs must be compiled as C99. */
@@ -12209,7 +12221,8 @@ void ecs_print_(
     const char *file,
     int32_t line,
     const char *fmt,
-    ...);
+    ...)
+    ECS_FORMAT(4, 5);
 
 /** Print at the provided log level (va_list).
  *
@@ -12240,7 +12253,8 @@ void ecs_log_(
     const char *file,
     int32_t line,
     const char *fmt,
-    ...);
+    ...)
+    ECS_FORMAT(4, 5);
 
 /** Log at the provided level (va_list).
  *
@@ -12271,7 +12285,8 @@ void ecs_abort_(
     const char *file,
     int32_t line,
     const char *fmt,
-    ...);
+    ...)
+    ECS_FORMAT(4, 5);
 
 /** Log an assertion failure.
  *
@@ -12288,7 +12303,8 @@ void ecs_assert_log_(
     const char *file,
     int32_t line,
     const char *fmt,
-    ...);
+    ...)
+    ECS_FORMAT(5, 6);
 
 /** Log a parser error.
  *
@@ -12303,7 +12319,8 @@ void ecs_parser_error_(
     const char *expr,
     int64_t column,
     const char *fmt,
-    ...);
+    ...)
+    ECS_FORMAT(4, 5);
 
 /** Log a parser error (va_list).
  *
@@ -12334,7 +12351,8 @@ void ecs_parser_warning_(
     const char *expr,
     int64_t column,
     const char *fmt,
-    ...);
+    ...)
+    ECS_FORMAT(4, 5);
 
 /** Log a parser warning (va_list).
  *
@@ -28674,7 +28692,7 @@ struct untyped_field {
         ecs_assert(!is_shared_ || !index, ECS_INVALID_PARAMETER,
             "invalid usage of [] operator for shared component field");
         ecs_assert(index < count_, ECS_COLUMN_INDEX_OUT_OF_RANGE,
-            "index %d out of range for field", index);
+            "index %d out of range for field", static_cast<int>(index));
         return ECS_OFFSET(data_, size_ * index);
     }
 
@@ -38141,7 +38159,7 @@ T& field<T>::operator[](size_t index) const {
             _::type_name<T>());
     ecs_assert(index < count_, ECS_COLUMN_INDEX_OUT_OF_RANGE,
         "index %d out of range for array of component type %s",
-            index, _::type_name<T>());
+            static_cast<int>(index), _::type_name<T>());
     ecs_assert(!index || !is_shared_, ECS_INVALID_PARAMETER,
         "non-zero index invalid for shared field of component type %s",
             _::type_name<T>());
@@ -38190,7 +38208,7 @@ T& base_field<T>::operator[](size_t index) const {
             _::type_name<T>());
     ecs_assert(index < count_, ECS_COLUMN_INDEX_OUT_OF_RANGE,
         "index %d out of range for array of component type %s",
-            index, _::type_name<T>());
+            static_cast<int>(index), _::type_name<T>());
     ecs_assert(!index || !is_shared_, ECS_INVALID_PARAMETER,
         "non-zero index invalid for shared field of component type %s",
             _::type_name<T>());

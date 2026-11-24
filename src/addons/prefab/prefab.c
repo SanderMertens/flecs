@@ -94,9 +94,9 @@ ecs_entity_t flecs_get_prefab_instance_child(
         flecs_errstr(ecs_id_str(world, prefab_child)));
 
     ecs_check(ecs_owns_id(world, prefab, EcsPrefab), ECS_INVALID_OPERATION,
-        "cannot get target for '%s': parent is not/no longer a prefab",
-        flecs_errstr(ecs_id_str(world, prefab)),
-        flecs_errstr_1(ecs_id_str(world, prefab_child)));
+        "cannot get target for '%s': parent '%s' is not/no longer a prefab",
+        flecs_errstr(ecs_id_str(world, prefab_child)),
+        flecs_errstr_1(ecs_id_str(world, prefab)));
 
     ecs_check(ecs_has_pair(world, entity, EcsIsA, prefab),
         ECS_INVALID_OPERATION,

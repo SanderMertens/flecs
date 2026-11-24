@@ -4709,7 +4709,7 @@ static FLECS_ALWAYS_INLINE void* flecs_defer_set_impl(
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER,
         "provided component is not a type");
     ecs_assert(size == ti->size, ECS_INVALID_PARAMETER,
-        "mismatching size specified for component in ensure/emplace/set (%u vs %u)",
+        "mismatching size specified for component in ensure/emplace/set (%d vs %d)",
             size, ti->size);
 
     if (id < FLECS_HI_COMPONENT_ID) {
@@ -6735,6 +6735,8 @@ error:
     return 0;
 }
 
+#include <inttypes.h>
+
 flecs_component_ptr_t flecs_table_get_component(
     ecs_table_t *table,
     int32_t column_index,
@@ -7067,11 +7069,11 @@ const ecs_entity_t* flecs_bulk_new(
                 ecs_assert(tr->column != -1, ECS_INVALID_PARAMETER, 
                     "component '%s' passed to bulk_new() at index %d is a "
                         "tag/zero sized",
-                            flecs_errstr(ecs_id_str(world, id)));
+                            flecs_errstr(ecs_id_str(world, id)), c_i);
                 ecs_assert(tr->count == 1, ECS_INVALID_PARAMETER,
-                    "component passed to bulk_new() at index %d is "
+                    "component '%s' passed to bulk_new() at index %d is "
                     "invalid/a wildcard",
-                        flecs_errstr(ecs_id_str(world, id)));
+                        flecs_errstr(ecs_id_str(world, id)), c_i);
 
                 int32_t index = tr->column;
                 ecs_column_t *column = &table->data.columns[index];
@@ -9180,8 +9182,8 @@ ecs_entity_t ecs_get_parent(
         EcsParent *p = ecs_table_get_column(
             table, column - 1, ECS_RECORD_TO_ROW(r->row));
         ecs_assert(ecs_is_valid(world, p->value), ECS_INVALID_OPERATION, 
-            "Parent component points to invalid parent %u",
-                p->value, entity);
+            "Parent component of '%s' points to invalid parent %" PRIu64,
+                flecs_errstr(ecs_id_str(world, entity)), p->value);
         return p->value;
     }
 
@@ -19448,8 +19450,6 @@ error:
     return NULL;
 }
 
-#include <inttypes.h>
-
 /* Id flags */
 const ecs_id_t ECS_PAIR =                                          (1ull << 63);
 const ecs_id_t ECS_AUTO_OVERRIDE =                                 (1ull << 62);
@@ -26339,9 +26339,6 @@ bool flecs_query_finalize_simple(
     term_count = i;
     ecs_os_memcpy_n(q->terms, desc->terms, ecs_term_t, term_count);
 
-    /* All fields are InOut */
-    q->write_fields = UINT32_MAX >> (32 - term_count);
-
     /* Simple query that only queries for component ids */
 
     /* Populate terms */
@@ -26387,6 +26384,9 @@ bool flecs_query_finalize_simple(
             q->sizes[i] = type_info->size;
             q->flags |= EcsQueryHasOutTerms;
             q->data_fields |= (ecs_termset_t)(1llu << i);
+
+            /* All fields with data are InOut */
+            q->write_fields |= (ecs_termset_t)(1llu << i);
         }
 
         if (!is_self && cr_flags & EcsIdOnInstantiateInherit) {
@@ -27429,7 +27429,7 @@ int32_t flecs_component_release(
 {
     int32_t rc = -- cr->refcount;
 
-    ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, 
+    ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, "%s",
         flecs_errstr(ecs_id_str(world, cr->id)));
 
     if (!rc) {
@@ -30564,7 +30564,8 @@ void flecs_table_fini(
     if (ecs_should_log_2()) {
         char *expr = ecs_type_str(world, &table->type);
         ecs_dbg_2(
-            "#[green]table#[normal] [%s] #[red]deleted#[reset] with id %d", 
+            "#[green]table#[normal] [%s] #[red]deleted#[reset] with id "
+                "%" PRIu64,
             expr, table->id);
         ecs_os_free(expr);
         ecs_log_push_2();
@@ -32718,7 +32719,8 @@ static ecs_table_t *flecs_table_new(
     if (ecs_should_log_2()) {
         char *expr = ecs_type_str(world, &result->type);
         ecs_dbg_2(
-            "#[green]table#[normal] [%s] #[green]created#[reset] with id %d", 
+            "#[green]table#[normal] [%s] #[green]created#[reset] with id "
+                "%" PRIu64,
             expr, result->id);
         ecs_os_free(expr);
     }

@@ -6332,7 +6332,7 @@ static FLECS_ALWAYS_INLINE void* flecs_defer_set_impl(
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER,
         "provided component is not a type");
     ecs_assert(size == ti->size, ECS_INVALID_PARAMETER,
-        "mismatching size specified for component in ensure/emplace/set (%u vs %u)",
+        "mismatching size specified for component in ensure/emplace/set (%d vs %d)",
             size, ti->size);
 
     if (id < FLECS_HI_COMPONENT_ID) {
@@ -8363,6 +8363,8 @@ error:
     return 0;
 }
 
+#include <inttypes.h>
+
 #ifdef FLECS_QUERY_DSL
 
 #ifndef FLECS_QUERY_DSL_H
@@ -8738,11 +8740,11 @@ const ecs_entity_t* flecs_bulk_new(
                 ecs_assert(tr->column != -1, ECS_INVALID_PARAMETER, 
                     "component '%s' passed to bulk_new() at index %d is a "
                         "tag/zero sized",
-                            flecs_errstr(ecs_id_str(world, id)));
+                            flecs_errstr(ecs_id_str(world, id)), c_i);
                 ecs_assert(tr->count == 1, ECS_INVALID_PARAMETER,
-                    "component passed to bulk_new() at index %d is "
+                    "component '%s' passed to bulk_new() at index %d is "
                     "invalid/a wildcard",
-                        flecs_errstr(ecs_id_str(world, id)));
+                        flecs_errstr(ecs_id_str(world, id)), c_i);
 
                 int32_t index = tr->column;
                 ecs_column_t *column = &table->data.columns[index];
@@ -10860,8 +10862,8 @@ ecs_entity_t ecs_get_parent(
         EcsParent *p = ecs_table_get_column(
             table, column - 1, ECS_RECORD_TO_ROW(r->row));
         ecs_assert(ecs_is_valid(world, p->value), ECS_INVALID_OPERATION, 
-            "Parent component points to invalid parent %u",
-                p->value, entity);
+            "Parent component of '%s' points to invalid parent %" PRIu64,
+                flecs_errstr(ecs_id_str(world, entity)), p->value);
         return p->value;
     }
 
@@ -21521,8 +21523,6 @@ error:
     return NULL;
 }
 
-#include <inttypes.h>
-
 /* Id flags */
 const ecs_id_t ECS_PAIR =                                          (1ull << 63);
 const ecs_id_t ECS_AUTO_OVERRIDE =                                 (1ull << 62);
@@ -28702,15 +28702,35 @@ static bool flecs_rest_put_component(
         return true;
     }
 
+    /* Adding a component or constructing a temporary value aborts for types
+     * that cannot be constructed. */
+    const ecs_type_info_t *ti = ecs_get_type_info(world, id);
+    if (ti && (ti->hooks.flags & ECS_TYPE_HOOK_CTOR_ILLEGAL)) {
+        flecs_reply_error(reply,
+            "component '%s' cannot be constructed", component);
+        reply->code = 400;
+        return true;
+    }
+
     const char *data = ecs_http_get_param(req, "value");
     if (!data) {
         ecs_add_id(world, e, id);
         return true;
     }
 
-    const ecs_type_info_t *ti = ecs_get_type_info(world, id);
     if (!ti) {
         flecs_reply_error(reply, "component '%s' is not a type", component);
+        reply->code = 400;
+        return true;
+    }
+
+    /* The value is copied into the component, which aborts for types that
+     * cannot be copied. */
+    if (ti->hooks.flags &
+        (ECS_TYPE_HOOK_COPY_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL))
+    {
+        flecs_reply_error(reply,
+            "cannot assign a value to component '%s'", component);
         reply->code = 400;
         return true;
     }
@@ -32407,11 +32427,11 @@ void flecs_bfree_w_dbg_info(
     if (actual != ba) {
         if (type_name) {
             ecs_err("chunk %p returned to wrong allocator "
-                "(chunk = %ub, allocator = %ub, type = %s)",
+                "(chunk = %db, allocator = %db, type = %s)",
                     memory, actual->data_size, ba->data_size, type_name);
         } else {
             ecs_err("chunk %p returned to wrong allocator "
-                "(chunk = %ub, allocator = %ub)",
+                "(chunk = %db, allocator = %db)",
                     memory, actual->data_size, ba->chunk_size);
         }
 
@@ -38546,9 +38566,6 @@ bool flecs_query_finalize_simple(
     term_count = i;
     ecs_os_memcpy_n(q->terms, desc->terms, ecs_term_t, term_count);
 
-    /* All fields are InOut */
-    q->write_fields = UINT32_MAX >> (32 - term_count);
-
     /* Simple query that only queries for component ids */
 
     /* Populate terms */
@@ -38603,6 +38620,9 @@ bool flecs_query_finalize_simple(
             q->sizes[i] = type_info->size;
             q->flags |= EcsQueryHasOutTerms;
             q->data_fields |= (ecs_termset_t)(1llu << i);
+
+            /* All fields with data are InOut */
+            q->write_fields |= (ecs_termset_t)(1llu << i);
         }
 
         if (!is_self && cr_flags & EcsIdOnInstantiateInherit) {
@@ -39671,7 +39691,7 @@ int32_t flecs_component_release(
 {
     int32_t rc = -- cr->refcount;
 
-    ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, 
+    ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, "%s",
         flecs_errstr(ecs_id_str(world, cr->id)));
 
     if (!rc) {
@@ -42941,7 +42961,8 @@ void flecs_table_fini(
     if (ecs_should_log_2()) {
         char *expr = ecs_type_str(world, &table->type);
         ecs_dbg_2(
-            "#[green]table#[normal] [%s] #[red]deleted#[reset] with id %d", 
+            "#[green]table#[normal] [%s] #[red]deleted#[reset] with id "
+                "%" PRIu64,
             expr, table->id);
         ecs_os_free(expr);
         ecs_log_push_2();
@@ -45120,7 +45141,8 @@ static ecs_table_t *flecs_table_new(
     if (ecs_should_log_2()) {
         char *expr = ecs_type_str(world, &result->type);
         ecs_dbg_2(
-            "#[green]table#[normal] [%s] #[green]created#[reset] with id %d", 
+            "#[green]table#[normal] [%s] #[green]created#[reset] with id "
+                "%" PRIu64,
             expr, result->id);
         ecs_os_free(expr);
     }
@@ -46496,9 +46518,9 @@ static ecs_size_t http_recv(
     ret = flecs_itoi32(recv_bytes);
 #endif
     if (ret == -1) {
-        ecs_dbg("recv failed: %s (sock = %d)", ecs_os_strerror(errno), sock);
+        ecs_dbg("recv failed: %s (sock = %d)", ecs_os_strerror(errno), (int)sock);
     } else if (ret == 0) {
-        ecs_dbg("recv: received 0 bytes (sock = %d)", sock);
+        ecs_dbg("recv: received 0 bytes (sock = %d)", (int)sock);
     }
 
     return ret;
@@ -46631,7 +46653,7 @@ static void http_close(
 #if defined(ECS_TARGET_WINDOWS)
     closesocket(*sock);
 #else
-    ecs_dbg_2("http: closing socket %u", *sock);
+    ecs_dbg_2("http: closing socket %d", (int)*sock);
     shutdown(*sock, SHUT_RDWR);
     close(*sock);
 #endif
@@ -47201,6 +47223,8 @@ static void http_recv_connection(
         if ((bytes_read = http_recv(
             sock, recv_buf, ECS_HTTP_SEND_RECV_BUFFER_SIZE, 0)) > 0) 
         {
+            retries = 0;
+
             bool is_alive = conn->pub.id == conn_id;
             if (!is_alive) {
                 /* Connection has been purged by main thread */
@@ -47250,11 +47274,6 @@ static void http_recv_connection(
         }
     } while (!done && (bytes_read > 0 || ((bytes_read == -1) &&
         (++retries < ECS_HTTP_REQUEST_RECV_RETRY))));
-
-    if (bytes_read == ECS_HTTP_SEND_RECV_BUFFER_SIZE) {
-        ecs_warn("request exceeded receive buffer size (%d)",
-            ECS_HTTP_SEND_RECV_BUFFER_SIZE);
-    }
 
     if (retries == ECS_HTTP_REQUEST_RECV_RETRY) {
         ecs_os_mutex_lock(srv->lock);
@@ -47313,8 +47332,8 @@ static http_conn_res_t http_init_connection(
         ecs_os_strcpy(remote_port, "unknown");
     }
 
-    ecs_dbg_2("http: connection established from '%s:%s' (socket %u)", 
-        remote_host, remote_port, sock_conn);
+    ecs_dbg_2("http: connection established from '%s:%s' (socket %d)", 
+        remote_host, remote_port, (int)sock_conn);
     
     return (http_conn_res_t){ .conn = conn, .id = conn_id };
 }
@@ -47332,7 +47351,7 @@ static int http_accept_connections(
         int result = WSAStartup(MAKEWORD(2, 2), &data);
         if (result) {
             ecs_warn("http: WSAStartup failed with GetLastError = %d\n", 
-                GetLastError());
+                (int)GetLastError());
             return 0;
         }
     } else {
@@ -47392,7 +47411,7 @@ static int http_accept_connections(
         if (result) {
             if (errno == EADDRINUSE) {
                 ret = 1;
-                ecs_warn("http: address '%s:%s' in use, retrying with port %u", 
+                ecs_warn("http: address '%s:%s' in use, retrying with port %d", 
                     addr_host, addr_port, srv->port + 1);
             } else {
                 ecs_err("http: failed to bind to '%s:%s': %s", 
@@ -47604,7 +47623,7 @@ static int32_t http_dequeue_requests(
              (conn->dequeue_retries > ECS_HTTP_CONNECTION_PURGE_RETRY_COUNT)) 
         {
             ecs_dbg("http: purging connection '%s:%s' (sock = %d)", 
-                conn->pub.host, conn->pub.port, conn->sock);
+                conn->pub.host, conn->pub.port, (int)conn->sock);
             http_connection_free(conn);
         }
     }
@@ -48277,7 +48296,7 @@ static const char* flecs_json_deser_components(
                 goto error;
             }
         } else {
-            char token_buffer[256];
+            char token_buffer[ECS_MAX_TOKEN_SIZE * 2];
             ecs_term_t term = {0};
             if (!flecs_term_parse(world, NULL, token, token_buffer, &term)) {
                 goto error;
@@ -60242,8 +60261,8 @@ int flecs_meta_ser_enum(
         ecs_enum_constant_t, value);
     if (!constant) {
         char *name = enum_type ? ecs_get_path(world, enum_type) : NULL;
-        ecs_err("enumeration value '%d' of type '%s' is not a valid constant", 
-            value, name ? name : "unknown");
+        ecs_err("enumeration value '%" PRId64 "' of type '%s' is not a valid "
+            "constant", (int64_t)value, name ? name : "unknown");
         ecs_os_free(name);
         return -1;
     }
@@ -64402,11 +64421,14 @@ static char* flecs_tokenizer_write(
     char *dst,
     char ch)
 {
-    (void)parser;
     ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_assert(!parser->token_end || dst < parser->token_end,
-        ECS_INVALID_OPERATION, "out of parser token storage");
+    if (parser->token_end && dst >= parser->token_end) {
+        ecs_parser_error(parser->name, parser->code,
+            flecs_parser_errpos(parser, parser->pos),
+            "token too long for parser storage");
+        return NULL;
+    }
 
     dst[0] = ch;
     return dst + 1;
@@ -64585,6 +64607,9 @@ const char* flecs_tokenizer_identifier(
 
                     if (outpos) {
                         outpos = flecs_tokenizer_write(parser, outpos, c);
+                        if (!outpos) {
+                            return NULL;
+                        }
                     }
 
                     pos ++;
@@ -64606,6 +64631,9 @@ const char* flecs_tokenizer_identifier(
 
         if (outpos) {
             outpos = flecs_tokenizer_write(parser, outpos, *pos);
+            if (!outpos) {
+                return NULL;
+            }
         }
 
         pos ++;
@@ -64614,6 +64642,9 @@ const char* flecs_tokenizer_identifier(
 done:
     if (outpos) {
         parser->token_cur = flecs_tokenizer_write(parser, outpos, '\0');
+        if (!parser->token_cur) {
+            return NULL;
+        }
     }
 
     return pos;
@@ -64625,9 +64656,14 @@ static char* flecs_tokenizer_copy(
     const char *end)
 {
     ecs_size_t length = flecs_ito(ecs_size_t, end - start);
-    ecs_assert(!parser->token_end ||
-        parser->token_cur + length < parser->token_end,
-            ECS_INVALID_OPERATION, "out of parser token storage");
+    if (parser->token_end &&
+        (parser->token_cur + length >= parser->token_end))
+    {
+        ecs_parser_error(parser->name, parser->code,
+            flecs_parser_errpos(parser, parser->pos),
+            "token too long for parser storage");
+        return NULL;
+    }
 
     char *result = parser->token_cur;
     ecs_os_memcpy(result, start, length);
@@ -64698,6 +64734,9 @@ static const char* flecs_script_number(
 
     out->kind = EcsTokNumber;
     out->value = flecs_tokenizer_copy(parser, start, pos);
+    if (!out->value) {
+        return NULL;
+    }
     return pos;
 }
 
@@ -64749,6 +64788,9 @@ static const char* flecs_script_string(
 
     out->kind = is_char ? EcsTokChar : EcsTokString;
     out->value = flecs_tokenizer_copy(parser, pos + 1, end);
+    if (!out->value) {
+        return NULL;
+    }
     return end + 1;
 }
 
@@ -64784,6 +64826,9 @@ const char* flecs_tokenizer_line(
 
     out->kind = EcsTokString;
     out->value = flecs_tokenizer_copy(parser, start, end);
+    if (!out->value) {
+        return NULL;
+    }
     parser->token_keep = parser->token_cur;
 
     return pos;
@@ -67045,9 +67090,9 @@ ecs_entity_t flecs_get_prefab_instance_child(
         flecs_errstr(ecs_id_str(world, prefab_child)));
 
     ecs_check(ecs_owns_id(world, prefab, EcsPrefab), ECS_INVALID_OPERATION,
-        "cannot get target for '%s': parent is not/no longer a prefab",
-        flecs_errstr(ecs_id_str(world, prefab)),
-        flecs_errstr_1(ecs_id_str(world, prefab_child)));
+        "cannot get target for '%s': parent '%s' is not/no longer a prefab",
+        flecs_errstr(ecs_id_str(world, prefab_child)),
+        flecs_errstr_1(ecs_id_str(world, prefab)));
 
     ecs_check(ecs_has_pair(world, entity, EcsIsA, prefab),
         ECS_INVALID_OPERATION,
@@ -67969,6 +68014,7 @@ int flecs_terms_parse_at(
     };
 
     parser.token_cur = token_buffer;
+    parser.token_end = &token_buffer[ecs_os_strlen(expr) * 2 + 1];
 
     int32_t term_count = 0;
     const char *ptr = expr;
@@ -68059,7 +68105,8 @@ const char* flecs_term_parse(
         .name = name,
         .code = expr,
         .world = world,
-        .token_cur = token_buffer
+        .token_cur = token_buffer,
+        .token_end = &token_buffer[ecs_os_strlen(expr) * 2 + 1]
     };
 
     parser.term = term;
@@ -68223,7 +68270,8 @@ const char* ecs_query_args_parse(
         .name = q_name,
         .code = expr,
         .world = q->world,
-        .token_cur = token_buffer
+        .token_cur = token_buffer,
+        .token_end = &token_buffer[sizeof(token_buffer)]
     };
 
     return flecs_query_args_parse(&parser, q, it, expr);
@@ -72924,6 +72972,9 @@ annotation: {
         // @brief value
         ecs_token_t value;
         pos = flecs_tokenizer_line(parser, pos, &value, false);
+        if (!pos) {
+            goto error;
+        }
         flecs_script_insert_annot(parser, Token(1), value.value);
         EndOfRule;
     })
@@ -73392,6 +73443,9 @@ include_stmt: {
     {
         ecs_token_t filename;
         pos = flecs_tokenizer_line(parser, pos, &filename, true);
+        if (!pos) {
+            goto error;
+        }
         if (!filename.value[0]) {
             Error("expected filename after 'include'");
         }
@@ -79130,35 +79184,35 @@ void ecs_world_stats_log(
     ecs_trace("-------------------------------------");
     flecs_counter_print("pipeline rebuilds", t, &s->frame.pipeline_build_count);
     flecs_counter_print("systems ran", t, &s->frame.systems_ran);
-    ecs_trace("");
+    ecs_trace("%s", "");
     flecs_metric_print("target FPS", (ecs_float_t)world->info.target_fps);
     flecs_metric_print("time scale", (ecs_float_t)world->info.time_scale);
-    ecs_trace("");
+    ecs_trace("%s", "");
     flecs_gauge_print("actual FPS", t, &s->performance.fps);
     flecs_counter_print("frame time", t, &s->performance.frame_time);
     flecs_counter_print("system time", t, &s->performance.system_time);
     flecs_counter_print("merge time", t, &s->performance.merge_time);
     flecs_counter_print("simulation time elapsed", t, &s->performance.world_time);
-    ecs_trace("");
+    ecs_trace("%s", "");
     flecs_gauge_print("tag id count", t, &s->components.tag_count);
     flecs_gauge_print("component id count", t, &s->components.component_count);
     flecs_gauge_print("pair id count", t, &s->components.pair_count);
     flecs_gauge_print("type count", t, &s->components.type_count);
     flecs_counter_print("id create count", t, &s->components.create_count);
     flecs_counter_print("id delete count", t, &s->components.delete_count);
-    ecs_trace("");
+    ecs_trace("%s", "");
     flecs_gauge_print("alive entity count", t, &s->entities.count);
     flecs_gauge_print("not alive entity count", t, &s->entities.not_alive_count);
-    ecs_trace("");
+    ecs_trace("%s", "");
     flecs_gauge_print("query count", t, &s->queries.query_count);
     flecs_gauge_print("observer count", t, &s->queries.observer_count);
     flecs_gauge_print("system count", t, &s->queries.system_count);
-    ecs_trace("");
+    ecs_trace("%s", "");
     flecs_gauge_print("table count", t, &s->tables.count);
     flecs_gauge_print("empty table count", t, &s->tables.empty_count);
     flecs_counter_print("table create count", t, &s->tables.create_count);
     flecs_counter_print("table delete count", t, &s->tables.delete_count);
-    ecs_trace("");
+    ecs_trace("%s", "");
     flecs_counter_print("add commands", t, &s->commands.add_count);
     flecs_counter_print("remove commands", t, &s->commands.remove_count);
     flecs_counter_print("delete commands", t, &s->commands.delete_count);
@@ -79170,7 +79224,7 @@ void ecs_world_stats_log(
     flecs_counter_print("discarded commands", t, &s->commands.discard_count);
     flecs_counter_print("batched entities", t, &s->commands.batched_entity_count);
     flecs_counter_print("batched commands", t, &s->commands.batched_count);
-    ecs_trace("");
+    ecs_trace("%s", "");
     
 error:
     return;
@@ -94234,7 +94288,8 @@ ecs_entity_t ecs_enum_init(
                 char *type_str = ecs_get_path(world, t);
                 char *utype_str = ecs_get_path(world, underlying);
                 ecs_err("value for constant '%s' for enum '%s' is not valid "
-                    "for underlying type '%s'", type_str, utype_str);
+                    "for underlying type '%s'",
+                        m_desc->name, type_str, utype_str);
                 ecs_os_free(utype_str);
                 ecs_os_free(type_str);
                 continue;

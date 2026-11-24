@@ -657,7 +657,7 @@ static FLECS_ALWAYS_INLINE void* flecs_defer_set_impl(
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER,
         "provided component is not a type");
     ecs_assert(size == ti->size, ECS_INVALID_PARAMETER,
-        "mismatching size specified for component in ensure/emplace/set (%u vs %u)",
+        "mismatching size specified for component in ensure/emplace/set (%d vs %d)",
             size, ti->size);
 
     if (id < FLECS_HI_COMPONENT_ID) {

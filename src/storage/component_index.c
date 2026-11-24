@@ -740,7 +740,7 @@ int32_t flecs_component_release(
 {
     int32_t rc = -- cr->refcount;
 
-    ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, 
+    ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, "%s",
         flecs_errstr(ecs_id_str(world, cr->id)));
 
     if (!rc) {

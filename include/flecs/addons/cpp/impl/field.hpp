@@ -30,7 +30,7 @@ T& field<T>::operator[](size_t index) const {
             _::type_name<T>());
     ecs_assert(index < count_, ECS_COLUMN_INDEX_OUT_OF_RANGE,
         "index %d out of range for array of component type %s",
-            index, _::type_name<T>());
+            static_cast<int>(index), _::type_name<T>());
     ecs_assert(!index || !is_shared_, ECS_INVALID_PARAMETER,
         "non-zero index invalid for shared field of component type %s",
             _::type_name<T>());
@@ -79,7 +79,7 @@ T& base_field<T>::operator[](size_t index) const {
             _::type_name<T>());
     ecs_assert(index < count_, ECS_COLUMN_INDEX_OUT_OF_RANGE,
         "index %d out of range for array of component type %s",
-            index, _::type_name<T>());
+            static_cast<int>(index), _::type_name<T>());
     ecs_assert(!index || !is_shared_, ECS_INVALID_PARAMETER,
         "non-zero index invalid for shared field of component type %s",
             _::type_name<T>());

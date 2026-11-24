@@ -1424,3 +1424,71 @@ void EnumTypes_unsigned_enum_duplicate_constant_value(void) {
 
     ecs_fini(world);
 }
+
+static bool errors_contain(
+    ecs_vec_t *errors,
+    const char *str)
+{
+    bool found = false;
+    int32_t i, count = ecs_vec_count(errors);
+    char **msgs = ecs_vec_first_t(errors, char*);
+    for (i = 0; i < count; i ++) {
+        if (strstr(msgs[i], str)) {
+            found = true;
+        }
+        ecs_os_free(msgs[i]);
+    }
+    ecs_vec_fini_t(NULL, errors, char*);
+    return found;
+}
+
+void EnumTypes_constant_out_of_range_for_underlying_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_vec_t errors;
+    ecs_vec_init_t(NULL, &errors, char*, 0);
+
+    ecs_log_start_collect_errors(&errors);
+    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .entity = ecs_entity(world, { .name = "Color" }),
+        .underlying_type = ecs_id(ecs_u8_t),
+        .constants = {
+            {"Red", .value_unsigned = 1},
+            {"Big", .value_unsigned = 1000}
+        }
+    });
+    ecs_log_stop_collect_errors();
+    test_assert(e != 0);
+    test_assert(errors_contain(&errors,
+        "value for constant 'Big' for enum 'Color' is not valid for "
+        "underlying type 'flecs.meta.u8'"));
+
+    ecs_fini(world);
+}
+
+void EnumTypes_serialize_invalid_negative_constant(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .entity = ecs_entity(world, { .name = "Color" }),
+        .underlying_type = ecs_id(ecs_i32_t),
+        .constants = {
+            {"Red", .value = 1},
+            {"Green", .value = 2}
+        }
+    });
+    test_assert(e != 0);
+
+    ecs_vec_t errors;
+    ecs_vec_init_t(NULL, &errors, char*, 0);
+
+    int32_t value = -100;
+    ecs_log_start_collect_errors(&errors);
+    char *json = ecs_ptr_to_json(world, e, &value);
+    ecs_log_stop_collect_errors();
+    test_assert(json == NULL);
+    test_assert(errors_contain(&errors,
+        "enumeration value '-100' of type 'Color' is not a valid constant"));
+
+    ecs_fini(world);
+}

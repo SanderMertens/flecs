@@ -9,6 +9,7 @@
  */
 
 #include "../private_api.h"
+#include <inttypes.h>
 
 ecs_type_t flecs_type_copy(
     ecs_world_t *world,
@@ -471,7 +472,8 @@ static ecs_table_t *flecs_table_new(
     if (ecs_should_log_2()) {
         char *expr = ecs_type_str(world, &result->type);
         ecs_dbg_2(
-            "#[green]table#[normal] [%s] #[green]created#[reset] with id %d", 
+            "#[green]table#[normal] [%s] #[green]created#[reset] with id "
+                "%" PRIu64,
             expr, result->id);
         ecs_os_free(expr);
     }

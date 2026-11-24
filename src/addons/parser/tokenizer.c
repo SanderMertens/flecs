@@ -126,11 +126,14 @@ static char* flecs_tokenizer_write(
     char *dst,
     char ch)
 {
-    (void)parser;
     ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_assert(!parser->token_end || dst < parser->token_end,
-        ECS_INVALID_OPERATION, "out of parser token storage");
+    if (parser->token_end && dst >= parser->token_end) {
+        ecs_parser_error(parser->name, parser->code,
+            flecs_parser_errpos(parser, parser->pos),
+            "token too long for parser storage");
+        return NULL;
+    }
 
     dst[0] = ch;
     return dst + 1;
@@ -309,6 +312,9 @@ const char* flecs_tokenizer_identifier(
 
                     if (outpos) {
                         outpos = flecs_tokenizer_write(parser, outpos, c);
+                        if (!outpos) {
+                            return NULL;
+                        }
                     }
 
                     pos ++;
@@ -330,6 +336,9 @@ const char* flecs_tokenizer_identifier(
 
         if (outpos) {
             outpos = flecs_tokenizer_write(parser, outpos, *pos);
+            if (!outpos) {
+                return NULL;
+            }
         }
 
         pos ++;
@@ -338,6 +347,9 @@ const char* flecs_tokenizer_identifier(
 done:
     if (outpos) {
         parser->token_cur = flecs_tokenizer_write(parser, outpos, '\0');
+        if (!parser->token_cur) {
+            return NULL;
+        }
     }
 
     return pos;
@@ -349,9 +361,14 @@ static char* flecs_tokenizer_copy(
     const char *end)
 {
     ecs_size_t length = flecs_ito(ecs_size_t, end - start);
-    ecs_assert(!parser->token_end ||
-        parser->token_cur + length < parser->token_end,
-            ECS_INVALID_OPERATION, "out of parser token storage");
+    if (parser->token_end &&
+        (parser->token_cur + length >= parser->token_end))
+    {
+        ecs_parser_error(parser->name, parser->code,
+            flecs_parser_errpos(parser, parser->pos),
+            "token too long for parser storage");
+        return NULL;
+    }
 
     char *result = parser->token_cur;
     ecs_os_memcpy(result, start, length);
@@ -422,6 +439,9 @@ static const char* flecs_script_number(
 
     out->kind = EcsTokNumber;
     out->value = flecs_tokenizer_copy(parser, start, pos);
+    if (!out->value) {
+        return NULL;
+    }
     return pos;
 }
 
@@ -473,6 +493,9 @@ static const char* flecs_script_string(
 
     out->kind = is_char ? EcsTokChar : EcsTokString;
     out->value = flecs_tokenizer_copy(parser, pos + 1, end);
+    if (!out->value) {
+        return NULL;
+    }
     return end + 1;
 }
 
@@ -508,6 +531,9 @@ const char* flecs_tokenizer_line(
 
     out->kind = EcsTokString;
     out->value = flecs_tokenizer_copy(parser, start, end);
+    if (!out->value) {
+        return NULL;
+    }
     parser->token_keep = parser->token_cur;
 
     return pos;

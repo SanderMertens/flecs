@@ -496,6 +496,7 @@
                 "bulk_init_w_alive_entity",
                 "bulk_init_w_cmd_in_on_add_hook",
                 "bulk_init_w_cmd_in_on_add_observer",
+<<<<<<< HEAD
                 "bulk_init_w_table_w_childof_ordered_children",
                 "bulk_init_w_table_w_sparse",
                 "bulk_init_w_table_w_sparse_w_data",
@@ -503,6 +504,9 @@
                 "bulk_init_w_table_w_on_add_hook",
                 "bulk_init_w_table_w_isa",
                 "new_w_table_w_childof_ordered_children"
+=======
+                "bulk_init_tag_w_data"
+>>>>>>> 7d1bc7d80df5a5ac73a773c5dad87226903aa3f9
             ]
         }, {
             "id": "Add",

@@ -508,6 +508,8 @@ void Http_headers_and_body(void);
 void Http_headers_max_with_body(void);
 void Http_empty_target_encoded_path(void);
 void Http_stop_double_close(void);
+void Http_request_headers_then_body(void);
+void Http_request_body_in_chunks(void);
 
 // Testsuite 'Rest'
 void Rest_setup(void);
@@ -585,6 +587,10 @@ void Rest_get_stats_wo_stats_import(void);
 void Rest_get_pretty(void);
 void Rest_query_pretty(void);
 void Rest_world_pretty(void);
+void Rest_put_component_copy_illegal(void);
+void Rest_put_component_copy_ctor_illegal(void);
+void Rest_put_component_script(void);
+void Rest_put_component_ctor_illegal(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -2540,6 +2546,14 @@ bake_test_case Http_testcases[] = {
     {
         "stop_double_close",
         Http_stop_double_close
+    },
+    {
+        "request_headers_then_body",
+        Http_request_headers_then_body
+    },
+    {
+        "request_body_in_chunks",
+        Http_request_body_in_chunks
     }
 };
 
@@ -2839,6 +2853,22 @@ bake_test_case Rest_testcases[] = {
     {
         "world_pretty",
         Rest_world_pretty
+    },
+    {
+        "put_component_copy_illegal",
+        Rest_put_component_copy_illegal
+    },
+    {
+        "put_component_copy_ctor_illegal",
+        Rest_put_component_copy_ctor_illegal
+    },
+    {
+        "put_component_script",
+        Rest_put_component_script
+    },
+    {
+        "put_component_ctor_illegal",
+        Rest_put_component_ctor_illegal
     }
 };
 
@@ -3292,14 +3322,14 @@ static bake_test_suite suites[] = {
         "Http",
         NULL,
         NULL,
-        10,
+        12,
         Http_testcases
     },
     {
         "Rest",
         Rest_setup,
         NULL,
-        74,
+        78,
         Rest_testcases
     },
     {
